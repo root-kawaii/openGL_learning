@@ -1,0 +1,3 @@
+/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles/hephaestus-openGL.dir
+/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles/edit_cache.dir
+/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles/rebuild_cache.dir
