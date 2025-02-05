@@ -711,8 +711,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/atomic \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/bit \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/bitset \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cassert \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cctype \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cerrno \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cfloat \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/chrono \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/climits \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cmath \
@@ -731,6 +733,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/errno.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/exception \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/filesystem \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/float.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/fstream \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/functional \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/initializer_list \
@@ -774,6 +777,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/wctype.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/ctype.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/errno.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/float.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/libkern/_OSByteOrder.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/libkern/arm/OSByteOrder.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/limits.h \
@@ -899,6 +903,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/xlocale/_wchar.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/xlocale/_wctype.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/__stddef_max_align_t.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/float.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/limits.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stddef.h \
@@ -907,6 +912,255 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/stb_image.cpp \
   include/KHR/khrplatform.h \
   include/glad/glad.h \
+  include/glm/common.hpp \
+  include/glm/detail/qualifier.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_float.hpp \
+  include/glm/detail/type_mat2x2.hpp \
+  include/glm/detail/type_mat2x3.hpp \
+  include/glm/detail/type_mat2x4.hpp \
+  include/glm/detail/type_mat3x2.hpp \
+  include/glm/detail/type_mat3x3.hpp \
+  include/glm/detail/type_mat3x4.hpp \
+  include/glm/detail/type_mat4x2.hpp \
+  include/glm/detail/type_mat4x3.hpp \
+  include/glm/detail/type_mat4x4.hpp \
+  include/glm/detail/type_quat.hpp \
+  include/glm/detail/type_vec1.hpp \
+  include/glm/detail/type_vec2.hpp \
+  include/glm/detail/type_vec3.hpp \
+  include/glm/detail/type_vec4.hpp \
+  include/glm/exponential.hpp \
+  include/glm/ext/quaternion_geometric.hpp \
+  include/glm/ext/scalar_constants.hpp \
+  include/glm/ext/scalar_int_sized.hpp \
+  include/glm/ext/scalar_uint_sized.hpp \
+  include/glm/ext/vector_int1.hpp \
+  include/glm/ext/vector_int2.hpp \
+  include/glm/ext/vector_int3.hpp \
+  include/glm/ext/vector_int4.hpp \
+  include/glm/ext/vector_relational.hpp \
+  include/glm/ext/vector_uint1.hpp \
+  include/glm/ext/vector_uint2.hpp \
+  include/glm/ext/vector_uint3.hpp \
+  include/glm/ext/vector_uint4.hpp \
+  include/glm/geometric.hpp \
+  include/glm/gtc/constants.hpp \
+  include/glm/matrix.hpp \
+  include/glm/trigonometric.hpp \
+  include/glm/vector_relational.hpp \
+  include/glm/ext/matrix_clip_space.inl \
+  include/glm/ext/matrix_double2x2.hpp \
+  include/glm/ext/matrix_double2x2_precision.hpp \
+  include/glm/ext/matrix_double2x3.hpp \
+  include/glm/ext/matrix_double2x3_precision.hpp \
+  include/glm/ext/matrix_double2x4.hpp \
+  include/glm/ext/matrix_double2x4_precision.hpp \
+  include/glm/ext/matrix_double3x2.hpp \
+  include/glm/ext/matrix_double3x2_precision.hpp \
+  include/glm/ext/matrix_double3x3.hpp \
+  include/glm/ext/matrix_double3x3_precision.hpp \
+  include/glm/ext/matrix_double3x4.hpp \
+  include/glm/ext/matrix_double3x4_precision.hpp \
+  include/glm/ext/matrix_double4x2.hpp \
+  include/glm/ext/matrix_double4x2_precision.hpp \
+  include/glm/ext/matrix_double4x3.hpp \
+  include/glm/ext/matrix_double4x3_precision.hpp \
+  include/glm/ext/matrix_double4x4.hpp \
+  include/glm/ext/matrix_double4x4_precision.hpp \
+  include/glm/ext/matrix_float2x2.hpp \
+  include/glm/ext/matrix_float2x2_precision.hpp \
+  include/glm/ext/matrix_float2x3.hpp \
+  include/glm/ext/matrix_float2x3_precision.hpp \
+  include/glm/ext/matrix_float2x4.hpp \
+  include/glm/ext/matrix_float2x4_precision.hpp \
+  include/glm/ext/matrix_float3x2.hpp \
+  include/glm/ext/matrix_float3x2_precision.hpp \
+  include/glm/ext/matrix_float3x3.hpp \
+  include/glm/ext/matrix_float3x3_precision.hpp \
+  include/glm/ext/matrix_float3x4.hpp \
+  include/glm/ext/matrix_float3x4_precision.hpp \
+  include/glm/ext/matrix_float4x2.hpp \
+  include/glm/ext/matrix_float4x2_precision.hpp \
+  include/glm/ext/matrix_float4x3.hpp \
+  include/glm/ext/matrix_float4x3_precision.hpp \
+  include/glm/ext/matrix_float4x4.hpp \
+  include/glm/ext/matrix_float4x4_precision.hpp \
+  include/glm/ext/matrix_projection.inl \
+  include/glm/ext/matrix_transform.inl \
+  include/glm/ext/quaternion_common.inl \
+  include/glm/ext/quaternion_geometric.inl \
+  include/glm/ext/quaternion_relational.inl \
+  include/glm/ext/quaternion_transform.inl \
+  include/glm/ext/quaternion_trigonometric.inl \
+  include/glm/ext/scalar_constants.hpp \
+  include/glm/ext/scalar_constants.inl \
+  include/glm/ext/vector_bool2.hpp \
+  include/glm/ext/vector_bool2_precision.hpp \
+  include/glm/ext/vector_bool3.hpp \
+  include/glm/ext/vector_bool3_precision.hpp \
+  include/glm/ext/vector_bool4.hpp \
+  include/glm/ext/vector_bool4_precision.hpp \
+  include/glm/ext/vector_double2.hpp \
+  include/glm/ext/vector_double2_precision.hpp \
+  include/glm/ext/vector_double3.hpp \
+  include/glm/ext/vector_double3_precision.hpp \
+  include/glm/ext/vector_double4.hpp \
+  include/glm/ext/vector_double4_precision.hpp \
+  include/glm/ext/vector_float2.hpp \
+  include/glm/ext/vector_float2_precision.hpp \
+  include/glm/ext/vector_float3.hpp \
+  include/glm/ext/vector_float3_precision.hpp \
+  include/glm/ext/vector_float4.hpp \
+  include/glm/ext/vector_float4_precision.hpp \
+  include/glm/ext/vector_int2.hpp \
+  include/glm/ext/vector_int2_sized.hpp \
+  include/glm/ext/vector_int3.hpp \
+  include/glm/ext/vector_int3_sized.hpp \
+  include/glm/ext/vector_int4.hpp \
+  include/glm/ext/vector_int4_sized.hpp \
+  include/glm/ext/vector_relational.hpp \
+  include/glm/ext/vector_relational.inl \
+  include/glm/ext/vector_uint2.hpp \
+  include/glm/ext/vector_uint2_sized.hpp \
+  include/glm/ext/vector_uint3.hpp \
+  include/glm/ext/vector_uint3_sized.hpp \
+  include/glm/ext/vector_uint4.hpp \
+  include/glm/ext/vector_uint4_sized.hpp \
+  include/glm/common.hpp \
+  include/glm/common.hpp \
+  include/glm/detail/type_mat3x3.hpp \
+  include/glm/detail/type_mat4x4.hpp \
+  include/glm/detail/type_vec3.hpp \
+  include/glm/detail/type_vec4.hpp \
+  include/glm/exponential.hpp \
+  include/glm/ext/quaternion_common.hpp \
+  include/glm/ext/quaternion_geometric.hpp \
+  include/glm/ext/quaternion_relational.hpp \
+  include/glm/ext/vector_relational.hpp \
+  include/glm/geometric.hpp \
+  include/glm/gtc/constants.hpp \
+  include/glm/gtc/matrix_transform.hpp \
+  include/glm/matrix.hpp \
+  include/glm/simd/platform.h \
+  include/glm/trigonometric.hpp \
+  include/glm/vector_relational.hpp \
+  include/glm/detail/compute_vector_relational.hpp \
+  include/glm/detail/_fixes.hpp \
+  include/glm/detail/_vectorize.hpp \
+  include/glm/detail/compute_common.hpp \
+  include/glm/detail/compute_vector_relational.hpp \
+  include/glm/detail/func_common.inl \
+  include/glm/detail/func_exponential.inl \
+  include/glm/detail/func_geometric.inl \
+  include/glm/detail/func_integer.inl \
+  include/glm/detail/func_matrix.inl \
+  include/glm/detail/func_packing.inl \
+  include/glm/detail/func_trigonometric.inl \
+  include/glm/detail/func_vector_relational.inl \
+  include/glm/detail/qualifier.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_half.hpp \
+  include/glm/detail/type_half.inl \
+  include/glm/detail/type_mat2x2.inl \
+  include/glm/detail/type_mat2x3.inl \
+  include/glm/detail/type_mat2x4.inl \
+  include/glm/detail/type_mat3x2.inl \
+  include/glm/detail/type_mat3x3.inl \
+  include/glm/detail/type_mat3x4.inl \
+  include/glm/detail/type_mat4x2.inl \
+  include/glm/detail/type_mat4x3.inl \
+  include/glm/detail/type_mat4x4.inl \
+  include/glm/detail/type_quat.inl \
+  include/glm/detail/type_vec1.hpp \
+  include/glm/detail/type_vec1.inl \
+  include/glm/detail/type_vec2.hpp \
+  include/glm/detail/type_vec2.inl \
+  include/glm/detail/type_vec3.hpp \
+  include/glm/detail/type_vec3.inl \
+  include/glm/detail/type_vec4.hpp \
+  include/glm/detail/type_vec4.inl \
+  include/glm/exponential.hpp \
+  include/glm/fwd.hpp \
+  include/glm/geometric.hpp \
+  include/glm/glm.hpp \
+  include/glm/common.hpp \
+  include/glm/detail/qualifier.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_mat3x3.hpp \
+  include/glm/detail/type_mat4x4.hpp \
+  include/glm/detail/type_vec3.hpp \
+  include/glm/detail/type_vec4.hpp \
+  include/glm/exponential.hpp \
+  include/glm/ext/matrix_clip_space.hpp \
+  include/glm/ext/matrix_projection.hpp \
+  include/glm/ext/matrix_transform.hpp \
+  include/glm/ext/quaternion_common.hpp \
+  include/glm/ext/quaternion_double.hpp \
+  include/glm/ext/quaternion_double_precision.hpp \
+  include/glm/ext/quaternion_float.hpp \
+  include/glm/ext/quaternion_float_precision.hpp \
+  include/glm/ext/quaternion_geometric.hpp \
+  include/glm/ext/quaternion_relational.hpp \
+  include/glm/ext/quaternion_transform.hpp \
+  include/glm/ext/quaternion_trigonometric.hpp \
+  include/glm/ext/scalar_constants.hpp \
+  include/glm/ext/vector_bool1.hpp \
+  include/glm/ext/vector_bool1_precision.hpp \
+  include/glm/ext/vector_double1.hpp \
+  include/glm/ext/vector_double1_precision.hpp \
+  include/glm/ext/vector_float1.hpp \
+  include/glm/ext/vector_float1_precision.hpp \
+  include/glm/ext/vector_int1.hpp \
+  include/glm/ext/vector_int1_sized.hpp \
+  include/glm/ext/vector_relational.hpp \
+  include/glm/ext/vector_uint1.hpp \
+  include/glm/ext/vector_uint1_sized.hpp \
+  include/glm/geometric.hpp \
+  include/glm/gtc/constants.hpp \
+  include/glm/gtc/matrix_transform.hpp \
+  include/glm/gtc/quaternion.hpp \
+  include/glm/gtc/vec1.hpp \
+  include/glm/mat2x2.hpp \
+  include/glm/mat2x3.hpp \
+  include/glm/mat2x4.hpp \
+  include/glm/mat3x2.hpp \
+  include/glm/mat3x3.hpp \
+  include/glm/mat3x4.hpp \
+  include/glm/mat4x2.hpp \
+  include/glm/mat4x3.hpp \
+  include/glm/mat4x4.hpp \
+  include/glm/matrix.hpp \
+  include/glm/trigonometric.hpp \
+  include/glm/vec2.hpp \
+  include/glm/vec3.hpp \
+  include/glm/vec4.hpp \
+  include/glm/vector_relational.hpp \
+  include/glm/gtc/constants.inl \
+  include/glm/gtc/epsilon.hpp \
+  include/glm/gtc/epsilon.inl \
+  include/glm/gtc/matrix_transform.hpp \
+  include/glm/gtc/matrix_transform.inl \
+  include/glm/gtc/quaternion.inl \
+  include/glm/gtc/type_ptr.hpp \
+  include/glm/gtc/type_ptr.inl \
+  include/glm/integer.hpp \
+  include/glm/mat2x2.hpp \
+  include/glm/mat2x3.hpp \
+  include/glm/mat2x4.hpp \
+  include/glm/mat3x2.hpp \
+  include/glm/mat3x3.hpp \
+  include/glm/mat3x4.hpp \
+  include/glm/mat4x2.hpp \
+  include/glm/mat4x3.hpp \
+  include/glm/mat4x4.hpp \
+  include/glm/matrix.hpp \
+  include/glm/packing.hpp \
+  include/glm/trigonometric.hpp \
+  include/glm/vec2.hpp \
+  include/glm/vec3.hpp \
+  include/glm/vec4.hpp \
+  include/glm/vector_relational.hpp \
   src/stb_image.h \
   /opt/homebrew/include/GLFW/glfw3.h
 
@@ -915,11 +1169,221 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
 
 src/stb_image.h:
 
+include/glm/packing.hpp:
+
+include/glm/integer.hpp:
+
+include/glm/gtc/matrix_transform.inl:
+
+include/glm/gtc/epsilon.inl:
+
+include/glm/gtc/epsilon.hpp:
+
+include/glm/gtc/constants.inl:
+
+include/glm/vec4.hpp:
+
+include/glm/mat3x3.hpp:
+
+include/glm/mat3x2.hpp:
+
+include/glm/mat2x4.hpp:
+
+include/glm/mat2x3.hpp:
+
+include/glm/gtc/quaternion.hpp:
+
+include/glm/gtc/vec1.hpp:
+
+include/glm/ext/vector_uint1_sized.hpp:
+
+include/glm/ext/vector_int1_sized.hpp:
+
+include/glm/ext/vector_float1_precision.hpp:
+
+include/glm/ext/vector_float1.hpp:
+
+include/glm/ext/quaternion_trigonometric.hpp:
+
+include/glm/ext/quaternion_float.hpp:
+
+include/glm/ext/quaternion_double_precision.hpp:
+
+include/glm/ext/matrix_transform.hpp:
+
+include/glm/ext/matrix_clip_space.hpp:
+
+include/glm/detail/type_vec4.inl:
+
+include/glm/detail/type_vec1.inl:
+
+include/glm/detail/type_quat.inl:
+
+include/glm/detail/type_mat4x4.inl:
+
+include/glm/detail/type_mat4x2.inl:
+
+include/glm/detail/type_mat3x4.inl:
+
+include/glm/detail/type_mat3x2.inl:
+
+include/glm/detail/type_mat2x3.inl:
+
+include/glm/detail/type_half.hpp:
+
+include/glm/detail/func_vector_relational.inl:
+
+include/glm/detail/func_integer.inl:
+
+include/glm/detail/func_geometric.inl:
+
+include/glm/detail/func_exponential.inl:
+
+include/glm/detail/func_common.inl:
+
+include/glm/detail/compute_common.hpp:
+
+include/glm/detail/_vectorize.hpp:
+
+include/glm/detail/compute_vector_relational.hpp:
+
+include/glm/gtc/matrix_transform.hpp:
+
+include/glm/ext/quaternion_common.hpp:
+
+include/glm/ext/vector_uint4_sized.hpp:
+
+include/glm/ext/vector_uint3_sized.hpp:
+
+include/glm/ext/vector_relational.inl:
+
+include/glm/ext/vector_int4_sized.hpp:
+
+include/glm/ext/vector_int3_sized.hpp:
+
+include/glm/ext/vector_float4.hpp:
+
+include/glm/ext/vector_float3_precision.hpp:
+
+include/glm/ext/vector_float3.hpp:
+
+include/glm/ext/vector_float2.hpp:
+
+include/glm/ext/vector_double4_precision.hpp:
+
+include/glm/simd/platform.h:
+
+include/glm/ext/vector_double4.hpp:
+
+include/glm/ext/vector_double3_precision.hpp:
+
+include/glm/ext/vector_double2.hpp:
+
+include/glm/ext/vector_bool4_precision.hpp:
+
+include/glm/ext/vector_bool3.hpp:
+
+include/glm/ext/vector_bool2.hpp:
+
+include/glm/ext/matrix_projection.inl:
+
+include/glm/ext/matrix_float4x3_precision.hpp:
+
+include/glm/ext/matrix_float4x2_precision.hpp:
+
+include/glm/ext/matrix_float3x4.hpp:
+
+include/glm/ext/matrix_float3x3_precision.hpp:
+
+include/glm/ext/matrix_float2x4_precision.hpp:
+
+include/glm/ext/matrix_float2x4.hpp:
+
+include/glm/ext/matrix_float2x3.hpp:
+
+include/glm/ext/matrix_float2x2_precision.hpp:
+
+include/glm/ext/matrix_float2x2.hpp:
+
+include/glm/ext/matrix_double4x4_precision.hpp:
+
+include/glm/ext/matrix_double4x4.hpp:
+
+include/glm/ext/matrix_double4x3_precision.hpp:
+
+include/glm/ext/matrix_double4x2_precision.hpp:
+
+include/glm/ext/vector_double2_precision.hpp:
+
+include/glm/ext/matrix_double3x4_precision.hpp:
+
+include/glm/ext/matrix_double3x4.hpp:
+
+include/glm/ext/matrix_double3x3_precision.hpp:
+
+include/glm/ext/matrix_double3x3.hpp:
+
+include/glm/ext/matrix_float3x2_precision.hpp:
+
+include/glm/ext/matrix_double2x2_precision.hpp:
+
+include/glm/vector_relational.hpp:
+
+include/glm/trigonometric.hpp:
+
+include/glm/matrix.hpp:
+
+include/glm/geometric.hpp:
+
+include/glm/ext/vector_uint4.hpp:
+
+include/glm/fwd.hpp:
+
+include/glm/ext/vector_uint3.hpp:
+
+include/glm/ext/vector_uint2.hpp:
+
+include/glm/ext/vector_uint1.hpp:
+
+include/glm/ext/vector_int4.hpp:
+
+include/glm/ext/vector_int2.hpp:
+
+include/glm/ext/scalar_int_sized.hpp:
+
+include/glm/ext/scalar_constants.hpp:
+
+include/glm/ext/quaternion_geometric.hpp:
+
+include/glm/exponential.hpp:
+
+include/glm/detail/type_vec4.hpp:
+
+include/glm/detail/type_vec3.hpp:
+
+include/glm/detail/type_vec1.hpp:
+
+include/glm/detail/type_mat4x4.hpp:
+
+include/glm/detail/type_mat4x2.hpp:
+
+include/glm/vec3.hpp:
+
+include/glm/detail/type_mat3x2.hpp:
+
+include/glm/detail/type_mat2x2.hpp:
+
+include/glm/detail/type_float.hpp:
+
+include/glm/detail/setup.hpp:
+
 src/stb_image.cpp:
 
 src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stdarg.h:
+
+include/glm/ext/vector_bool2_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/xlocale/_wchar.h:
 
@@ -944,6 +1408,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_u_char.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_timespec.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_suseconds_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_nlink_t.h:
 
@@ -989,6 +1455,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/limits.h:
 
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/float.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/wchar.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/vector:
@@ -996,6 +1464,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/utility:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/typeinfo:
+
+include/glm/detail/type_quat.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/includes.h:
 
@@ -1015,6 +1485,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/stdexcept:
 
+include/glm/detail/type_vec2.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_blksize_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/sstream:
@@ -1031,6 +1503,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/mutex:
 
+include/glm/ext/vector_relational.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/binary_negate.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/math.h:
@@ -1041,9 +1515,13 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/limits.h:
 
+include/glm/ext/quaternion_relational.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/iterator:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/istream:
+
+include/glm/detail/type_mat3x3.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_member_function_pointer.h:
 
@@ -1057,6 +1535,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/iomanip:
 
+include/glm/mat4x2.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/initializer_list:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/functional:
@@ -1064,6 +1544,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/errno.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cwctype:
+
+include/glm/ext/quaternion_geometric.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/ctype.h:
 
@@ -1111,6 +1593,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__utility/forward_like.h:
 
+include/glm/ext/matrix_double2x3_precision.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_partial_sort.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__utility/forward.h:
@@ -1129,11 +1613,11 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/underlying_type.h:
 
+include/glm/detail/qualifier.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/type_list.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/strip_signature.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_suseconds_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/xlocale/_ctype.h:
 
@@ -1173,6 +1657,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_trivially_destructible.h:
 
+include/glm/ext/matrix_float3x4_precision.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_trivially_default_constructible.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__compare/compare_three_way_result.h:
@@ -1195,9 +1681,13 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_reference.h:
 
+include/glm/ext/matrix_double4x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cwchar:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_polymorphic.h:
+
+include/glm/glm.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cstdint:
 
@@ -1237,15 +1727,23 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_nothrow_destructible.h:
 
+include/glm/mat3x4.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/add_rvalue_reference.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_literal_type.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_integral.h:
 
+include/glm/ext/quaternion_common.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_fundamental.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_floating_point.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/machine/endian.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cassert:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_empty.h:
 
@@ -1259,6 +1757,12 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_constructible.h:
 
+include/glm/detail/type_mat4x3.hpp:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__threading_support:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cfloat:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_const.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_char_like_type.h:
@@ -1270,6 +1774,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__filesystem/operations.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_array.h:
+
+include/glm/ext/quaternion_double.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_arithmetic.h:
 
@@ -1301,6 +1807,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/extent.h:
 
+include/glm/ext/matrix_double3x2.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/enable_if.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/disjunction.h:
@@ -1319,6 +1827,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/conditional.h:
 
+include/glm/ext/quaternion_float_precision.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/variant:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/promote.h:
@@ -1335,7 +1845,11 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/apply_cv.h:
 
+include/glm/detail/type_mat2x2.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/aligned_storage.h:
+
+include/glm/ext/vector_double1_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/add_volatile.h:
 
@@ -1387,6 +1901,10 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__ranges/enable_view.h:
 
+include/glm/detail/type_mat4x3.inl:
+
+include/glm/ext/quaternion_trigonometric.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/system_error:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__filesystem/file_status.h:
@@ -1394,6 +1912,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__ranges/enable_borrowed_range.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__ranges/empty.h:
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/float.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_volatile.h:
 
@@ -1410,6 +1930,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/climits:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_abstract.h:
+
+include/glm/detail/type_mat2x4.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__mbstate_t.h:
 
@@ -1477,15 +1999,21 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/decay.h:
 
+include/glm/ext/vector_int3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/assume_aligned.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/allocator_destructor.h:
+
+include/glm/ext/scalar_constants.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__chrono/weekday.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/allocator_arg_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/align.h:
+
+include/glm/ext/vector_bool3_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/addressof.h:
 
@@ -1502,6 +2030,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/reverse_iterator.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_fsfilcnt_t.h:
+
+include/glm/ext/vector_float4_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/reverse_access.h:
 
@@ -1525,11 +2055,17 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/ranges_construct_at.h:
 
+include/glm/ext/vector_double3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/move_iterator.h:
+
+include/glm/ext/matrix_float2x3_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/iter_move.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/istreambuf_iterator.h:
+
+include/glm/ext/matrix_float4x4_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/istream_iterator.h:
 
@@ -1549,7 +2085,11 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/data.h:
 
+include/glm/ext/matrix_float3x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/advance.h:
+
+include/glm/ext/quaternion_transform.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__hash_table:
 
@@ -1570,10 +2110,6 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_function.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/unary_negate.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/lexicographical_compare.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_time_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_constant_evaluated.h:
 
@@ -1609,6 +2145,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/hash.h:
 
+include/glm/ext/vector_int1.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__fwd/pair.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/binder2nd.h:
@@ -1618,6 +2156,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/bind_front.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__format/formatter.h:
+
+include/glm/gtc/quaternion.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__format/format_fwd.h:
 
@@ -1657,8 +2197,6 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__filesystem/space_info.h:
 
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__threading_support:
-
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__filesystem/recursive_directory_iterator.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__filesystem/perm_options.h:
@@ -1673,6 +2211,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_nothrow_convertible.h:
 
+include/glm/ext/vector_bool4.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_u_int16_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/alignment_of.h:
@@ -1684,6 +2224,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_inplace_merge.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__debug_utils/randomize_range.h:
+
+include/glm/detail/type_vec2.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_caddr_t.h:
 
@@ -1708,6 +2250,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_equal.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__concepts/relation.h:
+
+include/glm/ext/matrix_float4x4.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/wchar.h:
 
@@ -1819,11 +2363,15 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__availability:
 
+include/glm/detail/type_mat3x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/secure/_common.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/unwrap_iter.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/unique_copy.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/float.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/fill_n.h:
 
@@ -1835,6 +2383,10 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_is_sorted.h:
 
+include/glm/ext/matrix_projection.hpp:
+
+include/glm/ext/matrix_double4x2.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/front_insert_iterator.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/arm/_mcontext.h:
@@ -1844,6 +2396,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_find.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_uintptr_t.h:
+
+include/glm/ext/matrix_double3x2_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/set_difference.h:
 
@@ -1855,7 +2409,13 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__concepts/invocable.h:
 
+include/glm/ext/matrix_double2x2.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/search.h:
+
+include/glm/gtc/type_ptr.hpp:
+
+include/glm/ext/vector_int2_sized.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/mergeable.h:
 
@@ -1872,6 +2432,8 @@ src/shader_s.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/generate.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/replace_copy.h:
+
+include/glm/ext/vector_bool1_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/unique.h:
 
@@ -1905,6 +2467,8 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__compare/strong_order.h:
 
+include/glm/mat4x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_referenceable.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__utility/as_const.h:
@@ -1925,7 +2489,11 @@ src/shader_s.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__fwd/get.h:
 
+include/glm/detail/type_vec3.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/_xlocale.h:
+
+include/glm/gtc/constants.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_remove_copy_if.h:
 
@@ -1977,6 +2545,8 @@ src/glad.c:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_move_backward.h:
 
+include/glm/detail/func_matrix.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_unique_copy.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_max_element.h:
@@ -1996,6 +2566,8 @@ src/glad.c:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_lexicographical_compare.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__bit/bit_floor.h:
+
+include/glm/ext/matrix_double2x4_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/comp_ref_type.h:
 
@@ -2026,6 +2598,8 @@ src/glad.c:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cctype:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_mismatch.h:
+
+include/glm/detail/type_mat3x4.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_sigaltstack.h:
 
@@ -2067,6 +2641,8 @@ src/glad.c:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/prev_permutation.h:
 
+include/glm/ext/matrix_double2x4.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_move.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/runetype.h:
@@ -2105,6 +2681,8 @@ src/glad.c:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_int64_t.h:
 
+include/glm/ext/vector_uint2_sized.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/minmax_element.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_trivially_constructible.h:
@@ -2127,7 +2705,17 @@ src/glad.c:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/copy_n.h:
 
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_time_t.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/lexicographical_compare.h:
+
+include/glm/mat4x4.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/Availability.h:
+
+include/glm/detail/type_half.inl:
+
+include/glm/common.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/fill.h:
 
@@ -2140,6 +2728,8 @@ src/glad.c:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/is_heap_until.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__fwd/array.h:
+
+include/glm/mat2x2.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_none_of.h:
 
@@ -2155,11 +2745,19 @@ src/glad.c:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/for_each_n.h:
 
+include/glm/detail/type_mat2x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/for_each.h:
 
 include/glad/glad.h:
 
+include/glm/ext/scalar_uint_sized.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_fsblkcnt_t.h:
+
+include/glm/detail/_fixes.hpp:
+
+include/glm/ext/matrix_float4x3.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__chrono/month.h:
 
@@ -2198,6 +2796,8 @@ include/glad/glad.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/all_of.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/upper_bound.h:
+
+include/glm/vec2.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_max.h:
 
@@ -2262,8 +2862,6 @@ include/glad/glad.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_is_heap.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/iterator_operations.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/machine/endian.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__ranges/concepts.h:
 
@@ -2355,6 +2953,8 @@ include/glad/glad.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__concepts/common_reference_with.h:
 
+include/glm/ext/quaternion_relational.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_timeval.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_int16_t.h:
@@ -2362,6 +2962,8 @@ include/glad/glad.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_id_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/move_backward.h:
+
+include/glm/detail/type_mat2x4.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/errno.h:
 
@@ -2373,11 +2975,15 @@ include/glad/glad.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/nat.h:
 
+include/glm/ext/matrix_double2x3.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/find_if.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_fill_n.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/type_traits:
+
+include/glm/ext/vector_float2_precision.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/optional:
 
@@ -2439,6 +3045,8 @@ include/glad/glad.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__bit/endian.h:
 
+include/glm/ext/matrix_transform.inl:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/in_fun_result.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_blkcnt_t.h:
@@ -2446,6 +3054,8 @@ include/glad/glad.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_off_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__format/format_parse_context.h:
+
+include/glm/ext/matrix_float3x2.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__memory/allocator.h:
 
@@ -2475,15 +3085,23 @@ include/glad/glad.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__concepts/convertible_to.h:
 
+include/glm/detail/func_packing.inl:
+
+include/glm/ext/matrix_clip_space.inl:
+
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/__stddef_max_align_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/is_default_constructible.h:
+
+include/glm/ext/vector_bool1.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__type_traits/add_lvalue_reference.h:
 
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stddef.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_ssize_t.h:
+
+include/glm/gtc/type_ptr.inl:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/in_in_result.h:
 
@@ -2499,13 +3117,19 @@ include/glad/glad.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__functional/binary_function.h:
 
+include/glm/ext/quaternion_transform.hpp:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__chrono/literals.h:
+
+include/glm/detail/func_trigonometric.inl:
 
 src/main.cpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__iterator/sortable.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/sys/_types/_pid_t.h:
+
+include/glm/ext/matrix_float4x2.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/iosfwd:
 
@@ -2542,6 +3166,8 @@ include/KHR/khrplatform.h:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/wctype.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/minmax.h:
+
+include/glm/ext/vector_double1.hpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__algorithm/ranges_rotate_copy.h:
 
