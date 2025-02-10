@@ -908,6 +908,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stdint.h \
+  src/camera.h \
   src/shader_s.h \
   src/stb_image.cpp \
   include/KHR/khrplatform.h \
@@ -1380,6 +1381,8 @@ include/glm/detail/setup.hpp:
 src/stb_image.cpp:
 
 src/shader_s.h:
+
+src/camera.h:
 
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include/stdarg.h:
 

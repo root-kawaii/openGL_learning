@@ -970,8 +970,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/vector_relational.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/integer.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/detail/func_integer.inl \
-  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/stb_image.cpp \
-  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/stb_image.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/camera.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/matrix_transform.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../mat4x4.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../vec2.hpp \
@@ -995,6 +994,8 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../geometric.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../trigonometric.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../matrix.hpp \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/stb_image.cpp \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/stb_image.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/type_ptr.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../gtc/quaternion.hpp \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/glm/gtc/../gtc/constants.hpp \
