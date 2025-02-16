@@ -9,14 +9,35 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-# Add GLFW as a subdirectory (if building from source)
-# add_subdirectory(external/glfw)
+# Add ImGui (if it's inside "external/imgui")
+set(IMGUI_DIR include/imgui)
+set(ASSIMP_DIR include/assimp)
+set(ASSIMP_DIR_BIN /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/assimp/bin)
 
 # Add executable
-add_executable(${PROJECT_NAME} src/main.cpp src/glad.c)
+add_executable(${PROJECT_NAME} 
+    src/main.cpp 
+    src/glad.c 
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+
+)
 
 # Include directories for headers
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    include 
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+    ${ASSIMP_DIR}
+    ${ASSIMP_DIR_BIN}
+)
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw OpenGL::GL)
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN}/libassimp.dylib)
