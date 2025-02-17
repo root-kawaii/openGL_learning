@@ -14,22 +14,35 @@ set(IMGUI_DIR include/imgui)
 set(ASSIMP_DIR include/assimp)
 set(ASSIMP_DIR_BIN /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/assimp/bin)
 
+# file(GLOB_RECURSE SRC_FILES ${SRC_DIR}/*.cpp ${SRC_DIR}/*.c)
+# file(GLOB_RECURSE HEADER_FILES ${SRC_DIR}/*.h ${SRC_DIR}/*.hpp)
+
 # Add executable
 add_executable(${PROJECT_NAME} 
     src/main.cpp 
     src/glad.c 
+    src/resource_manager.cpp
+    src/game.cpp
+    src/shader.cpp
+    src/texture.cpp
+    src/sprite_renderer.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-
 )
 
 # Include directories for headers
 target_include_directories(${PROJECT_NAME} PRIVATE 
     include 
+    src/resource_manager.h
+    src/model.h
+    src/game.h
+    src/shader.h
+    src/texture.h
+    src/sprite_renderer.h
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${ASSIMP_DIR}

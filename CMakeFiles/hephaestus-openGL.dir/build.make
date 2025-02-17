@@ -100,10 +100,80 @@ CMakeFiles/hephaestus-openGL.dir/src/glad.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/hephaestus-openGL.dir/src/glad.c.s"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/glad.c -o CMakeFiles/hephaestus-openGL.dir/src/glad.c.s
 
+CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o: src/resource_manager.cpp
+CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.cpp > CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.cpp -o CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.s
+
+CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp
+CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/game.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/game.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game.cpp > CMakeFiles/hephaestus-openGL.dir/src/game.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/game.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/game.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game.cpp -o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.s
+
+CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o: src/shader.cpp
+CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.cpp > CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.cpp -o CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.s
+
+CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o: src/texture.cpp
+CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.cpp > CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.cpp -o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.s
+
+CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o: src/sprite_renderer.cpp
+CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.cpp > CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.cpp -o CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.s
+
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: include/imgui/imgui.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.i: cmake_force
@@ -117,7 +187,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o: include/imgui/imgui_draw.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_draw.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.i: cmake_force
@@ -131,7 +201,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o: include/imgui/imgui_widgets.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_widgets.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.i: cmake_force
@@ -145,7 +215,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o: include/imgui/imgui_tables.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_tables.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.i: cmake_force
@@ -159,7 +229,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o: include/imgui/backends/imgui_impl_glfw.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/backends/imgui_impl_glfw.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.i: cmake_force
@@ -173,7 +243,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.s: c
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o: include/imgui/backends/imgui_impl_opengl3.cpp
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o -c /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/backends/imgui_impl_opengl3.cpp
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.i: cmake_force
@@ -188,6 +258,11 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.s
 hephaestus__openGL_OBJECTS = \
 "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o" \
@@ -200,6 +275,11 @@ hephaestus__openGL_EXTERNAL_OBJECTS =
 
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/glad.c.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o
@@ -211,7 +291,7 @@ hephaestus-openGL: /opt/homebrew/lib/libglfw.3.4.dylib
 hephaestus-openGL: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/System/Library/Frameworks/OpenGL.framework
 hephaestus-openGL: include/assimp/bin/libassimp.dylib
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable hephaestus-openGL"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable hephaestus-openGL"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hephaestus-openGL.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
