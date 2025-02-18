@@ -26,6 +26,8 @@ add_executable(${PROJECT_NAME}
     src/shader.cpp
     src/texture.cpp
     src/sprite_renderer.cpp
+    src/game_level.cpp
+    src/game_object.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
@@ -43,6 +45,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     src/shader.h
     src/texture.h
     src/sprite_renderer.h
+    src/game_level.h
+    src/game_object.h
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${ASSIMP_DIR}

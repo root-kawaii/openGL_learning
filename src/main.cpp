@@ -33,7 +33,7 @@ const unsigned int SCREEN_WIDTH = 830;
 // The height of the screen
 const unsigned int SCREEN_HEIGHT = 470;
 
-Game Breakout(SCREEN_WIDTH, SCREEN_HEIGHT);
+Game Townly(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 int main(int argc, char *argv[])
 {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 #endif
     glfwWindowHint(GLFW_RESIZABLE, true);
 
-    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Townly", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
     // glad: load all OpenGL function pointers
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
     // initialize game
     // ---------------
-    Breakout.Init();
+    Townly.Init();
 
     // deltaTime variables
     // -------------------
@@ -86,17 +86,17 @@ int main(int argc, char *argv[])
 
         // manage user input
         // -----------------
-        Breakout.ProcessInput(deltaTime);
+        Townly.ProcessInput(deltaTime);
 
         // update game state
         // -----------------
-        Breakout.Update(deltaTime);
+        Townly.Update(deltaTime);
 
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        Breakout.Render();
+        Townly.Render();
 
         glfwSwapBuffers(window);
     }
@@ -117,9 +117,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key >= 0 && key < 1024)
     {
         if (action == GLFW_PRESS)
-            Breakout.Keys[key] = true;
+            Townly.Keys[key] = true;
         else if (action == GLFW_RELEASE)
-            Breakout.Keys[key] = false;
+            Townly.Keys[key] = false;
     }
 }
 
@@ -130,5 +130,5 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
     std::cout << std::to_string(width) + "\n";
     std::cout << std::to_string(height) + "\n";
-    Breakout.updateResolution(width, height);
+    Townly.updateResolution(width, height);
 }

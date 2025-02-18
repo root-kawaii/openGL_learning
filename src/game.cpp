@@ -9,6 +9,11 @@
 #include "game.h"
 #include "resource_manager.h"
 #include "sprite_renderer.h"
+#include "game_level.h"
+
+// #include <glm/glm.hpp>
+// #include <glm/gtc/matrix_transform.hpp>
+// #include <glm/gtc/type_ptr.hpp>
 
 // Game-related State data
 SpriteRenderer *Renderer;
@@ -25,6 +30,8 @@ Game::~Game()
 
 void Game::Init()
 {
+    glm::vec2 mainCharPosition = glm::vec2(100.0f, 50.0f);
+    speed = 3.0f;
     // load shaders
     ResourceManager::LoadShader("shaders/sprite.vs", "shaders/sprite.frag", nullptr, "sprite");
     // configure shaders
@@ -35,11 +42,40 @@ void Game::Init()
     // set render-specific controls
     Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite"));
     // load textures
-    ResourceManager::LoadTexture("assets/awesomeface2.png", true, "face");
+    ResourceManager::LoadTexture("assets/psyduck.png", true, "face");
+    ResourceManager::LoadTexture("assets/grass2.png", true, "grass");
+    // ResourceManager::LoadTexture("assets/awesomeface.png", true, "face2");
+    ResourceManager::LoadTexture("assets/block.png", false, "block");
+    ResourceManager::LoadTexture("assets/block_solid.png", false, "block_solid");
+
+    // load levels
+    GameLevel one;
+    one.Load("levels/one.lvl", this->Width, this->Height / 2);
+    GameLevel two;
+    two.Load("levels/two.lvl", this->Width, this->Height / 2);
+    this->Levels.push_back(one);
+    this->Levels.push_back(two);
+    this->Level = 0;
 }
 
 void Game::Update(float dt)
 {
+    if (this->Keys[GLFW_KEY_W] == true)
+    {
+        mainCharPosition = mainCharPosition + speed * glm::vec2(0.0f, -1.0f);
+    }
+    if (this->Keys[GLFW_KEY_S] == true)
+    {
+        mainCharPosition = mainCharPosition + speed * glm::vec2(0.0f, 1.0f);
+    }
+    if (this->Keys[GLFW_KEY_A] == true)
+    {
+        mainCharPosition = mainCharPosition + speed * glm::vec2(-1.0f, 0.0f);
+    }
+    if (this->Keys[GLFW_KEY_D] == true)
+    {
+        mainCharPosition = mainCharPosition + speed * glm::vec2(1.0f, 0.0f);
+    }
 }
 
 void Game::ProcessInput(float dt)
@@ -48,7 +84,11 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-    Renderer->DrawSprite(ResourceManager::GetTexture("face"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(1000.0f, 1000.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    Renderer->DrawSprite(ResourceManager::GetTexture("face"), mainCharPosition, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    // Renderer->DrawSprite(ResourceManager::GetTexture("face2"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    // this->Levels[this->Level].Draw(*Renderer);
 }
 
 void Game::updateResolution(unsigned int width, unsigned int height)

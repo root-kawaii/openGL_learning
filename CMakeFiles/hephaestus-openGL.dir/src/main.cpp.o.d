@@ -1115,6 +1115,12 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/../include/imgui/backends/imgui_impl_opengl3.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/TargetConditionals.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/game.h \
-  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/resource_manager.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_level.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_object.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/texture.h \
-  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/shader.h
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/shader.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/resource_manager.h

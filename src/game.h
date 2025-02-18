@@ -12,6 +12,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "game_level.h"
+
 // Represents the current state of the game
 enum GameState
 {
@@ -28,6 +34,10 @@ class Game
 public:
     // game state
     GameState State;
+    glm::vec2 mainCharPosition;
+    std::vector<GameLevel> Levels;
+    unsigned int Level;
+    float speed;
     bool Keys[1024];
     unsigned int Width, Height;
     // constructor/destructor
