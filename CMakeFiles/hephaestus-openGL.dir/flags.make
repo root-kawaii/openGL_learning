@@ -15,7 +15,7 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/model.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_level.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_object.h -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/backends -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/assimp -I/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/assimp/bin -isystem /opt/homebrew/include -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/System/Library/Frameworks
 
-CXX_FLAGSarm64 = -O3 -DNDEBUG -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
+CXX_FLAGSarm64 =  -fsanitize=address -g -O3 -DNDEBUG -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
 
-CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
+CXX_FLAGS =  -fsanitize=address -g -O3 -DNDEBUG -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
 

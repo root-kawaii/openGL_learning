@@ -9,6 +9,7 @@
 #include "game_level.h"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int levelHeight)
@@ -20,7 +21,7 @@ void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int lev
     GameLevel level;
     std::string line;
     std::ifstream fstream(file);
-    std::vector<std::vector<unsigned int>> tileData;
+
     if (fstream)
     {
         while (std::getline(fstream, line)) // read each line from level file
@@ -49,6 +50,31 @@ bool GameLevel::IsCompleted()
         if (!tile.IsSolid && !tile.Destroyed)
             return false;
     return true;
+}
+
+void GameLevel::buildHouse(unsigned int levelWidth, unsigned int levelHeight, glm::vec2 charPos)
+{
+    unsigned int height = tileData.size();
+    unsigned int width = tileData[0].size(); // note we can index vector at [0] since this function is only called if height > 0
+    float unit_width = levelWidth / static_cast<float>(width);
+    float unit_height = levelHeight / height;
+    int xBlock = charPos.x / unit_width;
+    int yBlock = charPos.y / unit_height;
+    std::cout << height << std::endl;
+    std::cout << width << std::endl;
+    std::cout << xBlock << std::endl;
+    std::cout << yBlock << std::endl;
+
+    if (xBlock > 0 and yBlock > 0)
+    {
+        std::cout << tileData[yBlock][xBlock];
+        tileData[yBlock][xBlock] = 1;
+        glm::vec2 pos(unit_width * xBlock, unit_height * yBlock);
+        glm::vec2 size(unit_width, unit_height);
+        GameObject obj(pos, size, ResourceManager::GetTexture("block_solid"), glm::vec3(0.8f, 0.8f, 0.7f));
+        obj.IsSolid = true;
+        this->Bricks.push_back(obj);
+    }
 }
 
 void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned int levelWidth, unsigned int levelHeight)

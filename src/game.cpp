@@ -10,6 +10,7 @@
 #include "resource_manager.h"
 #include "sprite_renderer.h"
 #include "game_level.h"
+#include <iostream>
 
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
@@ -43,10 +44,10 @@ void Game::Init()
     Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite"));
     // load textures
     ResourceManager::LoadTexture("assets/psyduck.png", true, "face");
-    ResourceManager::LoadTexture("assets/grass2.png", true, "grass");
+    ResourceManager::LoadTexture("assets/grass2.png", false, "grass");
     // ResourceManager::LoadTexture("assets/awesomeface.png", true, "face2");
-    ResourceManager::LoadTexture("assets/block.png", false, "block");
-    ResourceManager::LoadTexture("assets/block_solid.png", false, "block_solid");
+    // ResourceManager::LoadTexture("assets/block.png", false, "block");
+    ResourceManager::LoadTexture("assets/house.png", true, "block_solid");
 
     // load levels
     GameLevel one;
@@ -76,6 +77,11 @@ void Game::Update(float dt)
     {
         mainCharPosition = mainCharPosition + speed * glm::vec2(1.0f, 0.0f);
     }
+    if (this->Keys[GLFW_KEY_E] == true)
+    {
+        std::cout << "pressed E";
+        this->Levels[this->Level].buildHouse(this->Width, this->Height, mainCharPosition);
+    }
 }
 
 void Game::ProcessInput(float dt)
@@ -84,11 +90,10 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-    Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(1000.0f, 1000.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(900.0f, 900.0f), .0f, glm::vec3(1.0f, 0.0f, 1.0f));
+    this->Levels[this->Level].Draw(*Renderer);
     Renderer->DrawSprite(ResourceManager::GetTexture("face"), mainCharPosition, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
     // Renderer->DrawSprite(ResourceManager::GetTexture("face2"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    // this->Levels[this->Level].Draw(*Renderer);
 }
 
 void Game::updateResolution(unsigned int width, unsigned int height)

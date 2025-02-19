@@ -17,11 +17,16 @@
 #include "sprite_renderer.h"
 #include "resource_manager.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 /// GameLevel holds all Tiles as part of a Breakout level and
 /// hosts functionality to Load/render levels from the harddisk.
 class GameLevel
 {
 public:
+    std::vector<std::vector<unsigned int>> tileData;
     // level state
     std::vector<GameObject> Bricks;
     // constructor
@@ -32,6 +37,7 @@ public:
     void Draw(SpriteRenderer &renderer);
     // check if the level is completed (all non-solid tiles are destroyed)
     bool IsCompleted();
+    void buildHouse(unsigned int levelWidth, unsigned int levelHeight, glm::vec2 pos);
 
 private:
     // initialize level from tile data
