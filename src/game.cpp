@@ -12,9 +12,12 @@
 #include "game_level.h"
 #include <iostream>
 
+#include <filesystem>
+// Required for std::filesystem
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 // #include <glm/gtc/type_ptr.hpp>
+namespace fs = std::filesystem; // Alias for convenience
 
 // Game-related State data
 SpriteRenderer *Renderer;
@@ -34,20 +37,30 @@ void Game::Init()
     glm::vec2 mainCharPosition = glm::vec2(100.0f, 50.0f);
     speed = 3.0f;
     // load shaders
-    ResourceManager::LoadShader("shaders/sprite.vs", "shaders/sprite.frag", nullptr, "sprite");
-    // configure shaders
+    // Define base paths
+    fs::path shaderBasePath = "shaders";
+    fs::path textureBasePath = "assets";
+
+    // Load shaders using filesystem paths
+    ResourceManager::LoadShader((shaderBasePath / "sprite.vs").string().c_str(),
+                                (shaderBasePath / "sprite.frag").string().c_str(),
+                                nullptr, "sprite");
+
+    // Configure shaders
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(this->Width),
                                       static_cast<float>(this->Height), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("sprite").Use().SetInteger("image", 0);
     ResourceManager::GetShader("sprite").SetMatrix4("projection", projection);
-    // set render-specific controls
+
+    // Set render-specific controls
     Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite"));
-    // load textures
-    ResourceManager::LoadTexture("assets/psyduck.png", true, "face");
-    ResourceManager::LoadTexture("assets/grass2.png", false, "grass");
-    // ResourceManager::LoadTexture("assets/awesomeface.png", true, "face2");
-    // ResourceManager::LoadTexture("assets/block.png", false, "block");
-    ResourceManager::LoadTexture("assets/house.png", true, "block_solid");
+
+    // Load textures using filesystem paths
+    ResourceManager::LoadTexture((textureBasePath / "psyduck.png").string().c_str(), true, "face");
+    ResourceManager::LoadTexture((textureBasePath / "grass2.png").string().c_str(), false, "grass");
+    // ResourceManager::LoadTexture((textureBasePath / "awesomeface.png").string(), true, "face2");
+    // ResourceManager::LoadTexture((textureBasePath / "block.png").string(), false, "block");
+    ResourceManager::LoadTexture((textureBasePath / "house.png").string().c_str(), true, "block_solid");
 
     // load levels
     GameLevel one;
