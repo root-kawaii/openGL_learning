@@ -1124,4 +1124,5 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/texture.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/shader.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/main_char.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/resource_manager.h

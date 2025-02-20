@@ -21,6 +21,7 @@ namespace fs = std::filesystem; // Alias for convenience
 
 // Game-related State data
 SpriteRenderer *Renderer;
+float timeSinceLastBuild;
 
 Game::Game(unsigned int width, unsigned int height)
     : State(GAME_ACTIVE), Keys(), Width(width), Height(height)
@@ -36,6 +37,7 @@ void Game::Init()
 {
     glm::vec2 mainCharPosition = glm::vec2(100.0f, 50.0f);
     speed = 3.0f;
+    float timeSinceLastBuild = 0;
     // load shaders
     // Define base paths
     fs::path shaderBasePath = "shaders";
@@ -70,42 +72,57 @@ void Game::Init()
     this->Levels.push_back(one);
     this->Levels.push_back(two);
     this->Level = 0;
+    mainChar = new Player(glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), ResourceManager::GetTexture("face"), Speeds{10.0f, 10.0f, 10.0f, 10.0f});
 }
 
 void Game::Update(float dt)
 {
-    if (this->Keys[GLFW_KEY_W] == true)
-    {
-        mainCharPosition = mainCharPosition + speed * glm::vec2(0.0f, -1.0f);
-    }
-    if (this->Keys[GLFW_KEY_S] == true)
-    {
-        mainCharPosition = mainCharPosition + speed * glm::vec2(0.0f, 1.0f);
-    }
-    if (this->Keys[GLFW_KEY_A] == true)
-    {
-        mainCharPosition = mainCharPosition + speed * glm::vec2(-1.0f, 0.0f);
-    }
-    if (this->Keys[GLFW_KEY_D] == true)
-    {
-        mainCharPosition = mainCharPosition + speed * glm::vec2(1.0f, 0.0f);
-    }
-    if (this->Keys[GLFW_KEY_E] == true)
-    {
-        std::cout << "pressed E";
-        this->Levels[this->Level].buildHouse(this->Width, this->Height, mainCharPosition);
-    }
+    DoCollisions();
 }
 
 void Game::ProcessInput(float dt)
 {
+    // std::cout << "\n"
+    //           << timeSinceLastBuild << "\n";
+    timeSinceLastBuild += dt;
+    if (this->Keys[GLFW_KEY_W] == true)
+    {
+        std::cout << "pressed W";
+        mainChar->Position = mainChar->Position + mainChar->Speeds.Up * glm::vec2(0.0f, -1.0f);
+    }
+    if (this->Keys[GLFW_KEY_S] == true)
+    {
+        std::cout << "pressed S";
+        mainChar->Position = mainChar->Position + mainChar->Speeds.Down * glm::vec2(0.0f, 1.0f);
+    }
+    if (this->Keys[GLFW_KEY_A] == true)
+    {
+        std::cout << "pressed A";
+        mainChar->Position = mainChar->Position + mainChar->Speeds.Left * glm::vec2(-1.0f, 0.0f);
+    }
+    if (this->Keys[GLFW_KEY_D] == true)
+    {
+        std::cout << "pressed D";
+        mainChar->Position = mainChar->Position + mainChar->Speeds.Right * glm::vec2(1.0f, 0.0f);
+    }
+    if (this->Keys[GLFW_KEY_E] == true && timeSinceLastBuild > 0.500f)
+    {
+        std::cout << "pressed E";
+        this->Levels[this->Level].buildHouse(this->Width, this->Height, mainChar->Position);
+        timeSinceLastBuild = 0;
+    }
+    if (this->Keys[GLFW_KEY_I] == true)
+    {
+        std::cout << "pressed I \n";
+        std::cout << this->Levels[0].Bricks.size();
+    }
 }
 
 void Game::Render()
 {
     Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(900.0f, 900.0f), .0f, glm::vec3(1.0f, 0.0f, 1.0f));
     this->Levels[this->Level].Draw(*Renderer);
-    Renderer->DrawSprite(ResourceManager::GetTexture("face"), mainCharPosition, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    Renderer->DrawSprite(mainChar->Sprite, mainChar->Position, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
     // Renderer->DrawSprite(ResourceManager::GetTexture("face2"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
 }
 
@@ -113,4 +130,29 @@ void Game::updateResolution(unsigned int width, unsigned int height)
 {
     Width = width;
     Height = height;
+}
+
+void Game::deletePlayer()
+{
+    delete mainChar;
+    mainChar = nullptr; // Prevents dangling pointer issues
+}
+
+void Game::DoCollisions()
+{
+    for (GameObject &box : this->Levels[this->Level].Bricks)
+    {
+        // std::cout << "first ciao";
+        if (mainChar->CheckCollision(box))
+        {
+            return;
+        }
+        else
+        {
+            mainChar->Speeds.Up = 10.0f;
+            mainChar->Speeds.Right = 10.0f;
+            mainChar->Speeds.Down = 10.0f;
+            mainChar->Speeds.Left = 10.0f;
+        }
+    }
 }

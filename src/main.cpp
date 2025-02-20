@@ -33,6 +33,8 @@ const unsigned int SCREEN_WIDTH = 830;
 // The height of the screen
 const unsigned int SCREEN_HEIGHT = 470;
 
+bool closing = false;
+
 Game Townly(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 int main(int argc, char *argv[])
@@ -96,7 +98,10 @@ int main(int argc, char *argv[])
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        Townly.Render();
+        if (!closing)
+        {
+            Townly.Render();
+        }
 
         glfwSwapBuffers(window);
     }
@@ -113,7 +118,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
     // when a user presses the escape key, we set the WindowShouldClose property to true, closing the application
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        closing = true;
         glfwSetWindowShouldClose(window, true);
+        Townly.deletePlayer();
+    }
     if (key >= 0 && key < 1024)
     {
         if (action == GLFW_PRESS)

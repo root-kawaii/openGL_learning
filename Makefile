@@ -393,6 +393,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/main_char.o: src/main_char.cpp.o
+.PHONY : src/main_char.o
+
+# target to build an object file
+src/main_char.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.o
+.PHONY : src/main_char.cpp.o
+
+src/main_char.i: src/main_char.cpp.i
+.PHONY : src/main_char.i
+
+# target to preprocess a source file
+src/main_char.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.i
+.PHONY : src/main_char.cpp.i
+
+src/main_char.s: src/main_char.cpp.s
+.PHONY : src/main_char.s
+
+# target to generate assembly for a file
+src/main_char.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.s
+.PHONY : src/main_char.cpp.s
+
 src/resource_manager.o: src/resource_manager.cpp.o
 .PHONY : src/resource_manager.o
 
@@ -531,6 +555,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/main_char.o"
+	@echo "... src/main_char.i"
+	@echo "... src/main_char.s"
 	@echo "... src/resource_manager.o"
 	@echo "... src/resource_manager.i"
 	@echo "... src/resource_manager.s"

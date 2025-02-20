@@ -1006,6 +1006,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__tree \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/texture.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/shader.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/main_char.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/iostream \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/ios \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/__locale \

@@ -21,6 +21,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o"

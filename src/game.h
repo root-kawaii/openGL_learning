@@ -17,6 +17,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "game_level.h"
+#include "main_char.h"
 
 // Represents the current state of the game
 enum GameState
@@ -33,6 +34,7 @@ class Game
 {
 public:
     // game state
+    Player *mainChar;
     GameState State;
     glm::vec2 mainCharPosition;
     std::vector<GameLevel> Levels;
@@ -50,6 +52,8 @@ public:
     void Update(float dt);
     void Render();
     void updateResolution(unsigned int width, unsigned int height);
+    void deletePlayer();
+    void DoCollisions();
 };
 
 #endif
