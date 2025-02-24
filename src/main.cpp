@@ -24,6 +24,9 @@
 
 #include <iostream>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 // GLFW function declarations
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);

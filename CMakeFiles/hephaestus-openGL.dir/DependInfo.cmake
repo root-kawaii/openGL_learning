@@ -23,6 +23,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.cpp" "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o.d"
   "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.cpp" "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o.d"
   "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.cpp" "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o.d"
+  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/text_renderer.cpp" "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o.d"
   "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
   )
 

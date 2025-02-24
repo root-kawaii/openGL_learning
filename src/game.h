@@ -18,6 +18,7 @@
 
 #include "game_level.h"
 #include "main_char.h"
+#include "text_renderer.h"
 
 // Represents the current state of the game
 enum GameState

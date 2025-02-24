@@ -29,6 +29,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
   "hephaestus-openGL"

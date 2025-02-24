@@ -11,6 +11,8 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
 
 find_package(OpenGL REQUIRED)
 
+# Find FreeType
+find_package(Freetype REQUIRED)
 # Find and link GLFW
 find_package(glfw3 REQUIRED)
 # find_package(OpenGL REQUIRED)
@@ -35,6 +37,7 @@ add_executable(${PROJECT_NAME}
     src/game_level.cpp
     src/game_object.cpp
     src/main_char.cpp
+    src/text_renderer.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
@@ -55,10 +58,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     src/game_level.h
     src/game_object.h
     src/main_char.h
+    src/text_renderer.h
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${ASSIMP_DIR}
     ${ASSIMP_DIR_BIN}
+    ${FREETYPE_INCLUDE_DIRS}
 )
 
 # Link libraries
@@ -66,3 +71,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE glfw OpenGL::GL "-framework OpenGL
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN}/libassimp.dylib)
+# Link FreeType library
+target_link_libraries(${PROJECT_NAME} PRIVATE ${FREETYPE_LIBRARIES})
+
+

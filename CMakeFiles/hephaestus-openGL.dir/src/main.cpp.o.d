@@ -1333,4 +1333,22 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/sprite_renderer.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/shader.h \
   /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/resource_manager.h \
-  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/main_char.h
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/main_char.h \
+  /Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/../src/text_renderer.h \
+  /opt/homebrew/include/freetype2/ft2build.h \
+  /opt/homebrew/include/freetype2/freetype/config/ftheader.h \
+  /opt/homebrew/include/freetype2/freetype/freetype.h \
+  /opt/homebrew/include/freetype2/freetype/config/ftconfig.h \
+  /opt/homebrew/include/freetype2/freetype/config/ftoption.h \
+  /opt/homebrew/include/freetype2/freetype/config/ftstdlib.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/include/setjmp.h \
+  /opt/homebrew/include/freetype2/freetype/config/integer-types.h \
+  /opt/homebrew/include/freetype2/freetype/config/public-macros.h \
+  /opt/homebrew/include/freetype2/freetype/config/mac-support.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/usr/include/AvailabilityMacros.h \
+  /opt/homebrew/include/freetype2/freetype/fttypes.h \
+  /opt/homebrew/include/freetype2/freetype/ftsystem.h \
+  /opt/homebrew/include/freetype2/freetype/ftimage.h \
+  /opt/homebrew/include/freetype2/freetype/fterrors.h \
+  /opt/homebrew/include/freetype2/freetype/ftmoderr.h \
+  /opt/homebrew/include/freetype2/freetype/fterrdef.h

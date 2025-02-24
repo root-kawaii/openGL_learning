@@ -11,6 +11,7 @@
 #include "sprite_renderer.h"
 #include "game_level.h"
 #include <iostream>
+#include <sstream>
 
 #include <filesystem>
 // Required for std::filesystem
@@ -18,6 +19,7 @@
 // #include <glm/gtc/matrix_transform.hpp>
 // #include <glm/gtc/type_ptr.hpp>
 namespace fs = std::filesystem; // Alias for convenience
+TextRenderer *Text;
 
 // Game-related State data
 SpriteRenderer *Renderer;
@@ -41,7 +43,7 @@ void Game::Init()
     // load shaders
     // Define base paths
     fs::path shaderBasePath = "shaders";
-    fs::path textureBasePath = "assets";
+    fs::path assetsBasePath = "assets";
 
     // Load shaders using filesystem paths
     ResourceManager::LoadShader((shaderBasePath / "sprite.vs").string().c_str(),
@@ -58,11 +60,11 @@ void Game::Init()
     Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite"));
 
     // Load textures using filesystem paths
-    ResourceManager::LoadTexture((textureBasePath / "psyduck.png").string().c_str(), true, "face");
-    ResourceManager::LoadTexture((textureBasePath / "grass2.png").string().c_str(), false, "grass");
-    // ResourceManager::LoadTexture((textureBasePath / "awesomeface.png").string(), true, "face2");
-    // ResourceManager::LoadTexture((textureBasePath / "block.png").string(), false, "block");
-    ResourceManager::LoadTexture((textureBasePath / "house.png").string().c_str(), true, "block_solid");
+    ResourceManager::LoadTexture((assetsBasePath / "psyduck.png").string().c_str(), true, "face");
+    ResourceManager::LoadTexture((assetsBasePath / "grass2.png").string().c_str(), false, "grass");
+    // ResourceManager::LoadTexture((assetsBasePath / "awesomeface.png").string(), true, "face2");
+    // ResourceManager::LoadTexture((assetsBasePath / "block.png").string(), false, "block");
+    ResourceManager::LoadTexture((assetsBasePath / "house.png").string().c_str(), true, "block_solid");
 
     // load levels
     GameLevel one;
@@ -73,6 +75,9 @@ void Game::Init()
     this->Levels.push_back(two);
     this->Level = 0;
     mainChar = new Player(glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), ResourceManager::GetTexture("face"), Speeds{10.0f, 10.0f, 10.0f, 10.0f});
+
+    Text = new TextRenderer(this->Width, this->Height);
+    Text->Load(assetsBasePath / "fonts/BodoniXT.ttf", 24);
 }
 
 void Game::Update(float dt)
@@ -124,6 +129,10 @@ void Game::Render()
     this->Levels[this->Level].Draw(*Renderer);
     Renderer->DrawSprite(mainChar->Sprite, mainChar->Position, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
     // Renderer->DrawSprite(ResourceManager::GetTexture("face2"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    std::stringstream ss;
+    ss << "(" << this->mainChar->Position.x << ", " << this->mainChar->Position.y << ")";
+    Text->RenderText("Pos:" + ss.str(), 5.0f, 5.0f, 1.0f);
 }
 
 void Game::updateResolution(unsigned int width, unsigned int height)
