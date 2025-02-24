@@ -336,7 +336,7 @@ hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/build.make
 hephaestus-openGL: /opt/homebrew/lib/libglfw.3.4.dylib
-hephaestus-openGL: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/System/Library/Frameworks/OpenGL.framework
+hephaestus-openGL: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/OpenGL.framework
 hephaestus-openGL: include/assimp/bin/libassimp.dylib
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Linking CXX executable hephaestus-openGL"

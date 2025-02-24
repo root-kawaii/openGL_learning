@@ -9,9 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
 
+find_package(OpenGL REQUIRED)
+
 # Find and link GLFW
 find_package(glfw3 REQUIRED)
-find_package(OpenGL REQUIRED)
+# find_package(OpenGL REQUIRED)
 
 # Add ImGui (if it's inside "external/imgui")
 set(IMGUI_DIR include/imgui)
@@ -60,7 +62,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw OpenGL::GL "-framework OpenGL")
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${ASSIMP_DIR_BIN}/libassimp.dylib)
