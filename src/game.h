@@ -38,6 +38,7 @@ public:
     Player *mainChar;
     GameState State;
     glm::vec2 mainCharPosition;
+    // glm::vec2 menuInitialPos;
     std::vector<GameLevel> Levels;
     unsigned int Level;
     float speed;

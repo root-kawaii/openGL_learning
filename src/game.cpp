@@ -20,10 +20,14 @@
 // #include <glm/gtc/type_ptr.hpp>
 namespace fs = std::filesystem; // Alias for convenience
 TextRenderer *Text;
+bool menu = false;
+glm::vec2 menuInitialPos = glm::vec2(0.0f, 0.0f);
 
 // Game-related State data
-SpriteRenderer *Renderer;
+SpriteRenderer *
+    Renderer;
 float timeSinceLastBuild;
+float timeSinceMenu = 1.0f;
 
 Game::Game(unsigned int width, unsigned int height)
     : State(GAME_ACTIVE), Keys(), Width(width), Height(height)
@@ -37,6 +41,7 @@ Game::~Game()
 
 void Game::Init()
 {
+
     glm::vec2 mainCharPosition = glm::vec2(100.0f, 50.0f);
     speed = 3.0f;
     float timeSinceLastBuild = 0;
@@ -65,6 +70,8 @@ void Game::Init()
     // ResourceManager::LoadTexture((assetsBasePath / "awesomeface.png").string(), true, "face2");
     // ResourceManager::LoadTexture((assetsBasePath / "block.png").string(), false, "block");
     ResourceManager::LoadTexture((assetsBasePath / "house.png").string().c_str(), true, "block_solid");
+    ResourceManager::LoadTexture((assetsBasePath / "black.png").string().c_str(), false, "black");
+    ResourceManager::LoadTexture((assetsBasePath / "green.png").string().c_str(), false, "green");
 
     // load levels
     GameLevel one;
@@ -78,6 +85,7 @@ void Game::Init()
 
     Text = new TextRenderer(this->Width, this->Height);
     Text->Load(assetsBasePath / "fonts/BodoniXT.ttf", 24);
+    glm::vec2 menuInitialPos = glm::vec2(this->Width / 2 - 40, this->Height / 2 - 55);
 }
 
 void Game::Update(float dt)
@@ -90,49 +98,91 @@ void Game::ProcessInput(float dt)
     // std::cout << "\n"
     //           << timeSinceLastBuild << "\n";
     timeSinceLastBuild += dt;
-    if (this->Keys[GLFW_KEY_W] == true)
+    timeSinceMenu += dt;
+    if (!menu)
     {
-        std::cout << "pressed W";
-        mainChar->Position = mainChar->Position + mainChar->Speeds.Up * glm::vec2(0.0f, -1.0f);
+        if (this->Keys[GLFW_KEY_W] == true)
+        {
+            std::cout << "pressed W";
+            mainChar->Position = mainChar->Position + mainChar->Speeds.Up * glm::vec2(0.0f, -1.0f);
+        }
+        if (this->Keys[GLFW_KEY_S] == true)
+        {
+            std::cout << "pressed S";
+            mainChar->Position = mainChar->Position + mainChar->Speeds.Down * glm::vec2(0.0f, 1.0f);
+        }
+        if (this->Keys[GLFW_KEY_A] == true)
+        {
+            std::cout << "pressed A";
+            mainChar->Position = mainChar->Position + mainChar->Speeds.Left * glm::vec2(-1.0f, 0.0f);
+        }
+        if (this->Keys[GLFW_KEY_D] == true)
+        {
+            std::cout << "pressed D";
+            mainChar->Position = mainChar->Position + mainChar->Speeds.Right * glm::vec2(1.0f, 0.0f);
+        }
+        if (this->Keys[GLFW_KEY_E] == true && timeSinceLastBuild > 0.500f)
+        {
+            std::cout << "pressed E";
+            this->Levels[this->Level].buildHouse(this->Width, this->Height, mainChar->Position);
+            timeSinceLastBuild = 0;
+        }
+        if (this->Keys[GLFW_KEY_I] == true)
+        {
+            std::cout << "pressed I \n";
+            std::cout << this->Levels[0].Bricks.size();
+        }
+        if (this->Keys[GLFW_KEY_H] == true && timeSinceMenu > 0.500f)
+        {
+            std::cout << "MENU \n";
+            menu = !menu;
+            timeSinceMenu = 0;
+        }
     }
-    if (this->Keys[GLFW_KEY_S] == true)
+    else
     {
-        std::cout << "pressed S";
-        mainChar->Position = mainChar->Position + mainChar->Speeds.Down * glm::vec2(0.0f, 1.0f);
-    }
-    if (this->Keys[GLFW_KEY_A] == true)
-    {
-        std::cout << "pressed A";
-        mainChar->Position = mainChar->Position + mainChar->Speeds.Left * glm::vec2(-1.0f, 0.0f);
-    }
-    if (this->Keys[GLFW_KEY_D] == true)
-    {
-        std::cout << "pressed D";
-        mainChar->Position = mainChar->Position + mainChar->Speeds.Right * glm::vec2(1.0f, 0.0f);
-    }
-    if (this->Keys[GLFW_KEY_E] == true && timeSinceLastBuild > 0.500f)
-    {
-        std::cout << "pressed E";
-        this->Levels[this->Level].buildHouse(this->Width, this->Height, mainChar->Position);
-        timeSinceLastBuild = 0;
-    }
-    if (this->Keys[GLFW_KEY_I] == true)
-    {
-        std::cout << "pressed I \n";
-        std::cout << this->Levels[0].Bricks.size();
+        if (this->Keys[GLFW_KEY_W] == true)
+        {
+            std::cout << "pressed W";
+            menuInitialPos = menuInitialPos - glm::vec2(0.0f, 10.0f);
+        }
+        if (this->Keys[GLFW_KEY_S] == true)
+        {
+            std::cout << "pressed S";
+            menuInitialPos = menuInitialPos + glm::vec2(0.0f, 10.0f);
+        }
+        if (this->Keys[GLFW_KEY_H] == true && timeSinceMenu > 0.500f)
+        {
+            std::cout << "MENU \n";
+            menu = !menu;
+            timeSinceMenu = 0;
+        }
     }
 }
 
 void Game::Render()
 {
-    Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(900.0f, 900.0f), .0f, glm::vec3(1.0f, 0.0f, 1.0f));
+    Renderer->DrawSprite(ResourceManager::GetTexture("grass"), glm::vec2(0.0f, 0.0f), glm::vec2(900.0f, 900.0f), .0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
     this->Levels[this->Level].Draw(*Renderer);
-    Renderer->DrawSprite(mainChar->Sprite, mainChar->Position, glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    Renderer->DrawSprite(mainChar->Sprite, mainChar->Position, glm::vec2(100.0f, 100.0f), .0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    if (menu)
+    {
+        Renderer->DrawSprite(ResourceManager::GetTexture("black"), glm::vec2(-10.0f, -10.0f), glm::vec2(10000.0f, 10000.0f), .0f, glm::vec4(1.0f, 1.0f, 1.0f, 0.65f));
+        Renderer->DrawSprite(ResourceManager::GetTexture("green"), menuInitialPos, glm::vec2(75.0f, 21.0f), .0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        Text->RenderText("Menu", this->Width / 2 - 30, this->Height / 2 - 150, 1.0f);
+        Text->RenderText("Settings", this->Width / 2 - 30, this->Height / 2 - 50, 0.7f);
+        Text->RenderText("Controls", this->Width / 2 - 30, this->Height / 2 - 0, 0.7f);
+        Text->RenderText("Sound", this->Width / 2 - 30, this->Height / 2 + 50, 0.7f);
+        Text->RenderText("Sound", this->Width / 2 - 30, this->Height / 2 + 150, 0.7f);
+    }
     // Renderer->DrawSprite(ResourceManager::GetTexture("face2"), glm::vec2(100.0f, 50.0f), glm::vec2(100.0f, 100.0f), .0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
-    std::stringstream ss;
-    ss << "(" << this->mainChar->Position.x << ", " << this->mainChar->Position.y << ")";
-    Text->RenderText("Pos:" + ss.str(), 5.0f, 5.0f, 1.0f);
+    if (!menu)
+    {
+        std::stringstream ss;
+        ss << "(" << this->mainChar->Position.x << ", " << this->mainChar->Position.y << ")";
+        Text->RenderText("Pos:" + ss.str(), 5.0f, 5.0f, 1.0f);
+    }
 }
 
 void Game::updateResolution(unsigned int width, unsigned int height)
