@@ -8,23 +8,17 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_draw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_tables.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/include/imgui/imgui_widgets.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_level.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game_level.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game_level.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/game_object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/main_char.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/resource_manager.cpp" "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/shader.cpp" "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/sprite_renderer.cpp" "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/text_renderer.cpp" "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.o.d"
-  "/Users/root-kawaii/ComputerGraphics/Vulkan/hephaestus/openGL/src/texture.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
+  "C:/Users/teore/Documents/open_gl-graphics/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_draw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_tables.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_widgets.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/src/input.cpp" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/src/object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.obj.d"
+  "C:/Users/teore/Documents/open_gl-graphics/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

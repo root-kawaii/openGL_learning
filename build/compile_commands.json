@@ -1,0 +1,104 @@
+[
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/main.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/main.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/gcc.exe  @CMakeFiles/hephaestus-openGL.dir/includes_C.rsp -g -o CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/glad.c",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/glad.c",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/resource_manager.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/resource_manager.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/resource_manager.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/game.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/game.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/shader.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/shader.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/shader.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/texture.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/texture.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/sprite_renderer.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/sprite_renderer.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/sprite_renderer.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_level.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/game_level.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/game_level.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/game_level.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/game_object.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/game_object.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/main_char.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/main_char.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/main_char.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/src/text_renderer.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/src/text_renderer.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/text_renderer.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_draw.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_draw.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_widgets.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_widgets.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_tables.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/imgui_tables.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/backends/imgui_impl_glfw.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/backends/imgui_impl_glfw.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj"
+},
+{
+  "directory": "C:/Users/teore/Documents/hephaestus-openGL/build",
+  "command": "C:/Users/teore/scoop/apps/gcc/current/bin/g++.exe  @CMakeFiles/hephaestus-openGL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj -c C:/Users/teore/Documents/hephaestus-openGL/include/imgui/backends/imgui_impl_opengl3.cpp",
+  "file": "C:/Users/teore/Documents/hephaestus-openGL/include/imgui/backends/imgui_impl_opengl3.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj"
+}
+]
