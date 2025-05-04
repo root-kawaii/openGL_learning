@@ -12,8 +12,10 @@
 #include <../src/stb_image.h>
 #include <../src/input.h>
 
-#include <iostream>
+#include <../src/object.h>
 
+#include <iostream>
+#include <../json/single_include/nlohmann/json.hpp>
 #include <filesystem>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -21,6 +23,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
+Object loadSceneObject(const std::string& path, int stride);
 
 // settings
 const unsigned int SCR_WIDTH = 1400;
@@ -382,10 +385,14 @@ int main()
     screenShader.use();
     screenShader.setInt("texture_diffuse1", 0);
 
+
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
+        Object cube = loadSceneObject("levels/one.json" ,5);
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -434,88 +441,17 @@ int main()
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
         shader.setVec3("cameraPos", camera.Position);
-        // cubes
-        glBindVertexArray(cubeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        model = glm::mat4(1.0f);
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        // windows (from furthest to nearest)
-        glBindVertexArray(quadVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        glBindVertexArray(0);
-        /////////////////////////////////
 
 
+
+        
+        // In render loop:
+        cube.draw();
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // draw objects
-        skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  
-        skyboxShader.setMat4("projection", projection);
-        skyboxShader.setMat4("view", view);
-        glBindVertexArray(cubemapVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthMask(GL_TRUE);
-        shader.use();
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        model = glm::mat4(1.0f);
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
-        // cubes
-        glBindVertexArray(cubeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        model = glm::mat4(1.0f);
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        // windows (from furthest to nearest)
-        glBindVertexArray(quadVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
 
         ///////////////////////////////////////////////
         glBindVertexArray(0);
@@ -667,3 +603,68 @@ unsigned int loadCubemap(vector<std::string> faces)
 
     return textureID;
 } 
+
+Object loadSceneObject(const std::string& path, int stride) {
+    std::ifstream file(path);
+    nlohmann::json data;
+    file >> data;
+
+    std::vector<float> vertexBuffer;
+
+    for (const auto& obj : data) {
+        for (const auto& vertex : obj["vertices"]) {
+            glm::vec3 pos(
+                vertex["position"][0],
+                vertex["position"][1],
+                vertex["position"][2]
+            );
+        
+            glm::vec2 texPos(
+                vertex["texcoord"][0],
+                vertex["texcoord"][1]
+            );
+
+        glm::vec3 rot(obj["rotation"][0], obj["rotation"][1], obj["rotation"][2]);
+        glm::vec3 scale(obj["scale"][0], obj["scale"][1], obj["scale"][2]);
+
+        // Build model matrix
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+        model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+        model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+        model = glm::scale(model, scale);
+
+
+        glm::vec4 localPos(pos,1.0f);
+        glm::vec4 worldPos = model * localPos;
+
+        // Push transformed position
+        vertexBuffer.push_back(worldPos.x);
+        vertexBuffer.push_back(worldPos.y);
+        vertexBuffer.push_back(worldPos.z);
+
+        // Push texcoords (unchanged)
+        vertexBuffer.push_back(texPos.x);
+        vertexBuffer.push_back(texPos.y);
+
+
+        // std::cout << std::endl;
+        // std::cout << vertexBuffer[vertexBuffer.size() - 5];
+        // std::cout << vertexBuffer[vertexBuffer.size() - 4];
+        // std::cout << vertexBuffer[vertexBuffer.size() - 3];
+        // std::cout << vertexBuffer[vertexBuffer.size() - 2];
+        // std::cout << vertexBuffer[vertexBuffer.size() - 1];
+        // std::cout << std::endl;
+        
+    }
+}
+
+
+    // Allocate heap memory to return a float* (for Object constructor)
+    size_t vertexSize = vertexBuffer.size() * sizeof(float);
+    float* buffer = new float[vertexBuffer.size()];
+    std::copy(vertexBuffer.begin(), vertexBuffer.end(), buffer);
+
+    return Object(buffer, vertexSize,5, stride);
+}
+

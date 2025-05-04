@@ -3,12 +3,14 @@
 #include <vector>
 
 class Object {
-public:
-    unsigned int VAO, VBO;
-    size_t vertexCount;
-
-    Object(const float* vertices, size_t vertexSize, int stride = 5);
-    ~Object();
-
-    void draw() const;
-};
+    public:
+        Object(const float* vertices, size_t vertexSize, int stride, unsigned int textureID = 0);
+        ~Object();
+        void draw() const;
+    
+    private:
+        unsigned int VAO, VBO;
+        unsigned int texture = 0;
+        int vertexCount;
+    };
+    

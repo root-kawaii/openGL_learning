@@ -430,6 +430,44 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj: \
  C:/Users/teore/Documents/open_gl-graphics/src/input.h \
  C:/Users/teore/Documents/open_gl-graphics/src/camera.h \
  C:/Users/teore/Documents/open_gl-graphics/src/object.h \
+ C:/Users/teore/Documents/open_gl-graphics/json/single_include/nlohmann/json.hpp \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/functional \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/std_function.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/unordered_map \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/unordered_map.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/array \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/compare \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/iterator \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/stream_iterator.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/memory \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/stl_raw_storage_iter.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/align.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/unique_ptr.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/shared_ptr.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/shared_ptr_base.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/allocated_ptr.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/ext/concurrence.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/shared_ptr_atomic.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/atomic_base.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/atomic_lockfree_defines.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/backward/auto_ptr.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/pstl/glue_memory_defs.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/utility \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/stl_relops.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/forward_list \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/forward_list.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/forward_list.tcc \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/valarray \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/valarray_array.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/valarray_array.tcc \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/valarray_before.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/slice_array.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/valarray_after.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/gslice.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/gslice_array.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/mask_array.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/indirect_array.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/version \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/filesystem \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/fs_fwd.h \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/chrono.h \
@@ -446,10 +484,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj: \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/iomanip \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/quoted_string.h \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/codecvt \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/ext/concurrence.h \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/shared_ptr.h \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/shared_ptr_base.h \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/allocated_ptr.h \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/unique_ptr.h \
  C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/fs_dir.h \
- C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/fs_ops.h
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/fs_ops.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/optional \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/numeric \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/stl_numeric.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/pstl/glue_numeric_defs.h \
+ C:/Users/teore/scoop/apps/mingw/14.2.0-rt_v12-rev1/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/any
