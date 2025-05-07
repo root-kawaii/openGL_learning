@@ -23,7 +23,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
-Object loadSceneObject(const std::string& path, int stride);
+Object loadSceneObject(const std::string& path, int stride, unsigned int textureID);
+void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
 
 // settings
 const unsigned int SCR_WIDTH = 1400;
@@ -362,7 +363,7 @@ int main()
     Shader screenShaderFlipped("shaders/screen_shader.vs", "shaders/model_3.fs");
     Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
 
-    std::string floorTextureS = fs::path("assets/mucca.png").u8string();
+    std::string floorTextureS = fs::path("assets/wooden_texture.png").u8string();
     unsigned int floorTexture = loadTexture(floorTextureS.c_str());
     std::string cubeTextureS = fs::path("assets/block.png").u8string();
     unsigned int cubeTexture = loadTexture(cubeTextureS.c_str());
@@ -385,14 +386,13 @@ int main()
     screenShader.use();
     screenShader.setInt("texture_diffuse1", 0);
 
-
+    Object cube = loadSceneObject("levels/one.json", 5, floorTexture);
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
 
-        Object cube = loadSceneObject("levels/one.json" ,5);
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -425,24 +425,16 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));  
         glm::mat4 model = glm::mat4(1.0f);
-        skyboxShader.use();
-        skyboxShader.setMat4("projection", projection);
-        skyboxShader.setMat4("view", view);
-        view = camera.GetViewMatrix();
+        shaderUser(skyboxShader, &projection, &model, &view, &camera.Position);
+        // skyboxShader.use();
+        // skyboxShader.setMat4("projection", projection);
+        // skyboxShader.setMat4("view", view);
         glBindVertexArray(cubemapVAO);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthMask(GL_TRUE);
-        shader.use();
-        model = glm::mat4(1.0f);
-        view = camera.GetViewMatrix();
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        shader.setMat4("model", model);
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-        shader.setVec3("cameraPos", camera.Position);
-
-
+        view = camera.GetViewMatrix();  
+        shaderUser(shader, &projection, &model, &view, &camera.Position);
 
         
         // In render loop:
@@ -492,6 +484,18 @@ int main()
     glfwTerminate();
     return 0;
 }
+
+
+
+void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos) {
+    shader.use();
+    if(model) shader.setMat4("model", *model);
+    if(view) shader.setMat4("view", *view);
+    if(projection) shader.setMat4("projection", *projection);
+    if(cameraPos) shader.setVec3("cameraPos", *cameraPos);
+}
+
+
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -604,7 +608,7 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 } 
 
-Object loadSceneObject(const std::string& path, int stride) {
+Object loadSceneObject(const std::string& path, int stride, unsigned int textureID) {
     std::ifstream file(path);
     nlohmann::json data;
     file >> data;
@@ -665,6 +669,6 @@ Object loadSceneObject(const std::string& path, int stride) {
     float* buffer = new float[vertexBuffer.size()];
     std::copy(vertexBuffer.begin(), vertexBuffer.end(), buffer);
 
-    return Object(buffer, vertexSize,5, stride);
+    return Object(buffer, vertexSize,stride, textureID);
 }
 

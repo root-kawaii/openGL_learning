@@ -4,7 +4,7 @@
 
 class Object {
     public:
-        Object(const float* vertices, size_t vertexSize, int stride, unsigned int textureID = 0);
+        Object(const float* vertices, size_t vertexSize, int stride, unsigned int textureID );
         ~Object();
         void draw() const;
     
