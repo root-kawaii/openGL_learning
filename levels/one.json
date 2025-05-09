@@ -2,31 +2,78 @@
   {
     "name": "Cube",
     "vertices": [
-      { "position": [1.23, -2.54, 0.85], "texcoord": [0.0, 0.0] },
-      { "position": [3.76, 1.40, -1.22], "texcoord": [1.0, 0.0] },
-      { "position": [-4.95, 0.61, 0.33], "texcoord": [0.5, 1.0] }
+      { "position": [-0.5, -0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5, -0.5,  0.5], "texcoord": [1.0, 0.0] },
+      { "position": [ 0.5,  0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5, -0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5,  0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5,  0.5,  0.5], "texcoord": [0.0, 1.0] },
+      { "position": [ 0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [-0.5, -0.5, -0.5], "texcoord": [1.0, 0.0] },
+      { "position": [-0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [ 0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [-0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [ 0.5,  0.5, -0.5], "texcoord": [0.0, 1.0] },
+      { "position": [-0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [-0.5, -0.5,  0.5], "texcoord": [1.0, 0.0] },
+      { "position": [-0.5,  0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [-0.5,  0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5,  0.5, -0.5], "texcoord": [0.0, 1.0] },
+      { "position": [ 0.5, -0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5, -0.5, -0.5], "texcoord": [1.0, 0.0] },
+      { "position": [ 0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [ 0.5, -0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [ 0.5,  0.5,  0.5], "texcoord": [0.0, 1.0] },
+      { "position": [-0.5,  0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5,  0.5,  0.5], "texcoord": [1.0, 0.0] },
+      { "position": [ 0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5,  0.5,  0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5,  0.5, -0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5,  0.5, -0.5], "texcoord": [0.0, 1.0] },
+      { "position": [-0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5, -0.5, -0.5], "texcoord": [1.0, 0.0] },
+      { "position": [ 0.5, -0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5, -0.5, -0.5], "texcoord": [0.0, 0.0] },
+      { "position": [ 0.5, -0.5,  0.5], "texcoord": [1.0, 1.0] },
+      { "position": [-0.5, -0.5,  0.5], "texcoord": [0.0, 1.0] }
     ],
     "rotation": [0.0, 0.0, 0.0],
-    "scale": [0.1, 0.1, 0.1]
-  },
-  {
-    "name": "Cube",
-    "vertices": [
-      { "position": [-0.36, 4.59, -2.01], "texcoord": [0.0, 0.0] },
-      { "position": [1.23, -4.75, 3.48], "texcoord": [1.0, 0.0] },
-      { "position": [-2.74, 1.32, 0.76], "texcoord": [0.5, 1.0] }
-    ],
-    "rotation": [0.0, 0.0, 0.0],
-    "scale": [0.1, 0.1, 0.1]
-  },
-  {
-    "name": "Cube",
-    "vertices": [
-      { "position": [4.47, -1.92, -0.68], "texcoord": [0.0, 0.0] },
-      { "position": [-1.84, 3.15, 2.44], "texcoord": [1.0, 0.0] },
-      { "position": [0.59, -0.72, 1.19], "texcoord": [0.5, 1.0] }
-    ],
-    "rotation": [0.0, 0.0, 0.0],
-    "scale": [0.1, 0.1, 0.1]
+    "scale": [1.0, 1.0, 1.0]
   }
 ]
+
+
+
+
+  // {
+  //   "name": "Cube",
+  //   "vertices": [
+  //     { "position": [1.23, -2.54, 0.85], "texcoord": [0.0, 0.0] },
+  //     { "position": [3.76, 1.40, -1.22], "texcoord": [1.0, 0.0] },
+  //     { "position": [-4.95, 0.61, 0.33], "texcoord": [0.5, 1.0] }
+  //   ],
+  //   "rotation": [0.0, 0.0, 0.0],
+  //   "scale": [0.1, 0.1, 0.1]
+  // },
+  // {
+  //   "name": "Cube",
+  //   "vertices": [
+  //     { "position": [-0.36, 4.59, -2.01], "texcoord": [0.0, 0.0] },
+  //     { "position": [1.23, -4.75, 3.48], "texcoord": [1.0, 0.0] },
+  //     { "position": [-2.74, 1.32, 0.76], "texcoord": [0.5, 1.0] }
+  //   ],
+  //   "rotation": [0.0, 0.0, 0.0],
+  //   "scale": [0.1, 0.1, 0.1]
+  // },
+  // {
+  //   "name": "Cube",
+  //   "vertices": [
+  //     { "position": [4.47, -1.92, -0.68], "texcoord": [0.0, 0.0] },
+  //     { "position": [-1.84, 3.15, 2.44], "texcoord": [1.0, 0.0] },
+  //     { "position": [0.59, -0.72, 1.19], "texcoord": [0.5, 1.0] }
+  //   ],
+  //   "rotation": [0.0, 0.0, 0.0],
+  //   "scale": [0.1, 0.1, 0.1]
+  // }
