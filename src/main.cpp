@@ -581,37 +581,37 @@ int main()
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
 
-        shaderUser(lightingShader, &projection, &model, &view,  &camera.Position);
-        lightingShader.setFloat("material.shininess", 32.0f);
-        // directional light
-        lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        lightingShader.setVec3("dirLight.ambient", 0.001f, 0.001f, 0.001f);
-        lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
-        lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-        // point light 1
-        lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-        lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-        lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-        lightingShader.setVec3("pointLights[0].specular", 0.2f, 0.2f, 0.2f);
-        lightingShader.setFloat("pointLights[0].constant", 1.0f);
-        lightingShader.setFloat("pointLights[0].linear", 0.09f);
-        lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
-        // point light 2
-        lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-        lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-        lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-        lightingShader.setVec3("pointLights[1].specular", 0.2f, 0.2f, 0.2f);
-        lightingShader.setFloat("pointLights[1].constant", 1.0f);
-        lightingShader.setFloat("pointLights[1].linear", 0.09f);
-        lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
-        // point light 3
-        lightingShader.setVec3("pointLights[2].position", pointLightPositions[2]);
-        lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-        lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-        // lightingShader.setVec3("pointLights[2].specular", 0.5f, 0.5f, 0.5f);
-        lightingShader.setFloat("pointLights[2].constant", 1.0f);
-        lightingShader.setFloat("pointLights[2].linear", 0.09f);
-        lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
+        shaderUser(shadowShader, &projection, &model, &view,  &camera.Position);
+        // lightingShader.setFloat("material.shininess", 32.0f);
+        // // directional light
+        // lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        // lightingShader.setVec3("dirLight.ambient", 0.001f, 0.001f, 0.001f);
+        // lightingShader.setVec3("dirLight.diffuse", 0.1f, 0.1f, 0.1f);
+        // lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        // // point light 1
+        // lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+        // lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+        // lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        // lightingShader.setVec3("pointLights[0].specular", 0.2f, 0.2f, 0.2f);
+        // lightingShader.setFloat("pointLights[0].constant", 1.0f);
+        // lightingShader.setFloat("pointLights[0].linear", 0.09f);
+        // lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
+        // // point light 2
+        // lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+        // lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+        // lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        // lightingShader.setVec3("pointLights[1].specular", 0.2f, 0.2f, 0.2f);
+        // lightingShader.setFloat("pointLights[1].constant", 1.0f);
+        // lightingShader.setFloat("pointLights[1].linear", 0.09f);
+        // lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
+        // // point light 3
+        // lightingShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+        // lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+        // lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        // // lightingShader.setVec3("pointLights[2].specular", 0.5f, 0.5f, 0.5f);
+        // lightingShader.setFloat("pointLights[2].constant", 1.0f);
+        // lightingShader.setFloat("pointLights[2].linear", 0.09f);
+        // lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
         // point light 4
         // lightingShader.setVec3("pointLights[3].position", pointLightPositions[3]);
         // lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
@@ -648,12 +648,14 @@ int main()
         // shadowShader.setInt("shadowMap", 1);
         // cube.draw();
 
+        // floor.draw();
+
         shaderUser(shadowShader, &projection, &model, &view, NULL);
         shadowShader.setVec3("lightPos", lightPos);
         shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
         shadowShader.setVec3("viewPos", camera.Position);
 
-        floor.draw();
+
 
         shaderUser(shadowShader, &projection, NULL, &view, NULL);
         for (unsigned int i = 0; i < sizeof(cubePositions); i++)

@@ -8,17 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "C:/Users/teore/Documents/open_gl-graphics/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_draw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_tables.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/include/imgui/imgui_widgets.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/src/input.cpp" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/src/object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.obj.d"
-  "C:/Users/teore/Documents/open_gl-graphics/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.obj" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.obj.d"
+  "/home/monolith/Desktop/openGL_learning/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/input.cpp" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
+  "" "hephaestus-openGL" "gcc" "CMakeFiles/hephaestus-openGL.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

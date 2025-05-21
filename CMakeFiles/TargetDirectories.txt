@@ -1,3 +1,3 @@
-C:/Users/teore/Documents/open_gl-graphics/CMakeFiles/hephaestus-openGL.dir
-C:/Users/teore/Documents/open_gl-graphics/CMakeFiles/edit_cache.dir
-C:/Users/teore/Documents/open_gl-graphics/CMakeFiles/rebuild_cache.dir
+/home/monolith/Desktop/openGL_learning/CMakeFiles/hephaestus-openGL.dir
+/home/monolith/Desktop/openGL_learning/CMakeFiles/edit_cache.dir
+/home/monolith/Desktop/openGL_learning/CMakeFiles/rebuild_cache.dir
