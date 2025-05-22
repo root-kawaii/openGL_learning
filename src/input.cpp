@@ -12,8 +12,9 @@
 
 
 bool gameMode = false;
+bool shadowsKeyPressed = false;
 
-void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera *camera, float deltaTime)
+void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera *camera, float deltaTime, bool &shadows)
 {
     if(!gameMode){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -37,6 +38,15 @@ void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
         }
         // std::cout << "HI";
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
+    {
+        shadows =! shadows;
+        shadowsKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+        shadowsKeyPressed = false;
     }
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
         for(int indexone = 0; indexone < 5; indexone++){
