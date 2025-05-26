@@ -14,7 +14,7 @@
 bool gameMode = false;
 bool shadowsKeyPressed = false;
 
-void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera *camera, float deltaTime, bool &shadows)
+void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows)
 {
     if(!gameMode){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -27,18 +27,18 @@ void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera
         camera->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera->ProcessKeyboard(RIGHT, deltaTime);
-    if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
-        for(int indexone = 0; indexone < 5; indexone++){
-            if(indexone == 3) {return;}
-            if(indexone == 4){ return;}
-            std::cout <<  positions[indexone] << std::endl ;
-            positions[indexone] += 0.001;
-            std::cout <<  positions[indexone] << std::endl;
-            glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
-        }
-        // std::cout << "HI";
-    }
+    // if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
+    //     for(int indexone = 0; indexone < 5; indexone++){
+    //         if(indexone == 3) {return;}
+    //         if(indexone == 4){ return;}
+    //         std::cout <<  positions[indexone] << std::endl ;
+    //         positions[indexone] += 0.001;
+    //         std::cout <<  positions[indexone] << std::endl;
+    //         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
+    //     }
+    //     // std::cout << "HI";
+    // }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
     {
         shadows =! shadows;
@@ -48,18 +48,18 @@ void processInput(GLFWwindow *window, float *positions, unsigned int VBO, Camera
     {
         shadowsKeyPressed = false;
     }
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
-        for(int indexone = 0; indexone < 5; indexone++){
-            if(indexone == 3) {return;}
-            if(indexone == 4){ return;}
-            std::cout <<  positions[indexone] << std::endl ;
-            positions[indexone] -= 0.001;
-            std::cout <<  positions[indexone] << std::endl;
-            glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
-        }
-        // std::cout << "HI";
-    }
+    // if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+    //     for(int indexone = 0; indexone < 5; indexone++){
+    //         if(indexone == 3) {return;}
+    //         if(indexone == 4){ return;}
+    //         std::cout <<  positions[indexone] << std::endl ;
+    //         positions[indexone] -= 0.001;
+    //         std::cout <<  positions[indexone] << std::endl;
+    //         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
+    //     }
+    //     // std::cout << "HI";
+    // }
     if(glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
         gameMode = true;
     }
