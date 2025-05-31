@@ -23,6 +23,7 @@
 using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+unsigned int loadWhiteTexture();
 
 class Model
 {
@@ -173,31 +174,38 @@ private:
     vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
     {
         vector<Texture> textures;
-        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-        {
-            aiString str;
-            mat->GetTexture(type, i, &str);
-            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-            bool skip = false;
-            for (unsigned int j = 0; j < textures_loaded.size(); j++)
-            {
-                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
-                {
-                    textures.push_back(textures_loaded[j]);
-                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
-                    break;
-                }
-            }
-            if (!skip)
-            { // if texture hasn't been loaded already, load it
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory);
-                texture.type = typeName;
-                texture.path = str.C_Str();
-                textures.push_back(texture);
-                textures_loaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
-            }
-        }
+        // for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+        // {
+        //     aiString str;
+        //     mat->GetTexture(type, i, &str);
+        //     // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+        //     bool skip = false;
+        //     for (unsigned int j = 0; j < textures_loaded.size(); j++)
+        //     {
+        //         if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+        //         {
+        //             textures.push_back(textures_loaded[j]);
+        //             skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+        //             break;
+        //         }
+        //     }
+        //     if (!skip)
+        //     { // if texture hasn't been loaded already, load it
+        //         Texture texture;
+        //         texture.id = TextureFromFile(str.C_Str(), this->directory);
+        //         texture.type = typeName;
+        //         texture.path = str.C_Str();
+        //         textures.push_back(texture);
+        //         textures_loaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+        //     }
+        // }
+        // if (textures.empty() && type == aiTextureType_DIFFUSE) {
+            Texture defaultTex;
+            defaultTex.id = loadWhiteTexture(); // Implement this to generate a 1x1 white texture
+            defaultTex.type = "texture_diffuse";
+            defaultTex.path = "default_white";
+            textures.push_back(defaultTex);
+        // }
         return textures;
     }
 };
@@ -241,4 +249,25 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 
     return textureID;
 }
+
+
+unsigned int loadWhiteTexture()
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    unsigned char whitePixel[] = { 255, 255, 255 }; // RGB white
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, whitePixel);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
+
+    return textureID;
+}
+
 #endif
