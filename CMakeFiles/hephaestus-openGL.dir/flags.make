@@ -7,11 +7,11 @@ C_DEFINES =
 
 C_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include
 
-C_FLAGS = 
+C_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG
 
 CXX_DEFINES = 
 
 CXX_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include
 
-CXX_FLAGS = -std=gnu++17
+CXX_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17
 

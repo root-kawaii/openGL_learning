@@ -500,4 +500,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/pstl/glue_numeric_defs.h \
  /usr/include/c++/15.1.1/any /usr/include/c++/15.1.1/chrono \
  /usr/include/c++/15.1.1/thread /usr/include/c++/15.1.1/bits/std_thread.h \
- /usr/include/c++/15.1.1/bits/this_thread_sleep.h
+ /usr/include/c++/15.1.1/bits/this_thread_sleep.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/texture_debugger.cpp \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h

@@ -10,6 +10,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
   "hephaestus-openGL"
   "hephaestus-openGL.pdb"
 )

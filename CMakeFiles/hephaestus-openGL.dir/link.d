@@ -2,6 +2,7 @@ hephaestus-openGL: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/Scrt1.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/crtbeginS.o \
+  CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o \
@@ -57,6 +58,8 @@ hephaestus-openGL: \
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/crti.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/crtbeginS.o:
+
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o:
 

@@ -72,10 +72,24 @@ include CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/codegen:
 .PHONY : CMakeFiles/hephaestus-openGL.dir/codegen
 
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o: src/texture_debugger.cpp
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o -c /home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp
+
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp > CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp -o CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s
+
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o -c /home/monolith/Desktop/openGL_learning/src/main.cpp
 
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.i: cmake_force
@@ -89,7 +103,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o -c /home/monolith/Desktop/openGL_learning/src/input.cpp
 
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.i: cmake_force
@@ -103,7 +117,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o: src/object.cpp
 CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/object.cpp
 
 CMakeFiles/hephaestus-openGL.dir/src/object.cpp.i: cmake_force
@@ -117,7 +131,7 @@ CMakeFiles/hephaestus-openGL.dir/src/object.cpp.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/src/glad.c.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/src/glad.c.o: src/glad.c
 CMakeFiles/hephaestus-openGL.dir/src/glad.c.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/hephaestus-openGL.dir/src/glad.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/hephaestus-openGL.dir/src/glad.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/glad.c.o -MF CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d -o CMakeFiles/hephaestus-openGL.dir/src/glad.c.o -c /home/monolith/Desktop/openGL_learning/src/glad.c
 
 CMakeFiles/hephaestus-openGL.dir/src/glad.c.i: cmake_force
@@ -131,7 +145,7 @@ CMakeFiles/hephaestus-openGL.dir/src/glad.c.s: cmake_force
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o: src/stb_image.cpp
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o -c /home/monolith/Desktop/openGL_learning/src/stb_image.cpp
 
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.i: cmake_force
@@ -144,6 +158,7 @@ CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.s: cmake_force
 
 # Object files for target hephaestus-openGL
 hephaestus__openGL_OBJECTS = \
+"CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o" \
@@ -153,6 +168,7 @@ hephaestus__openGL_OBJECTS = \
 # External object files for target hephaestus-openGL
 hephaestus__openGL_EXTERNAL_OBJECTS =
 
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o
@@ -165,7 +181,7 @@ hephaestus-openGL: include/freetype/lib/libfreetype.a
 hephaestus-openGL: /usr/lib/libGLX.so
 hephaestus-openGL: /usr/lib/libOpenGL.so
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable hephaestus-openGL"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable hephaestus-openGL"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hephaestus-openGL.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

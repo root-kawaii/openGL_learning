@@ -249,6 +249,30 @@ src/stb_image.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.s
 .PHONY : src/stb_image.cpp.s
 
+src/texture_debugger.o: src/texture_debugger.cpp.o
+.PHONY : src/texture_debugger.o
+
+# target to build an object file
+src/texture_debugger.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o
+.PHONY : src/texture_debugger.cpp.o
+
+src/texture_debugger.i: src/texture_debugger.cpp.i
+.PHONY : src/texture_debugger.i
+
+# target to preprocess a source file
+src/texture_debugger.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.i
+.PHONY : src/texture_debugger.cpp.i
+
+src/texture_debugger.s: src/texture_debugger.cpp.s
+.PHONY : src/texture_debugger.s
+
+# target to generate assembly for a file
+src/texture_debugger.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s
+.PHONY : src/texture_debugger.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -273,6 +297,9 @@ help:
 	@echo "... src/stb_image.o"
 	@echo "... src/stb_image.i"
 	@echo "... src/stb_image.s"
+	@echo "... src/texture_debugger.o"
+	@echo "... src/texture_debugger.i"
+	@echo "... src/texture_debugger.s"
 .PHONY : help
 
 

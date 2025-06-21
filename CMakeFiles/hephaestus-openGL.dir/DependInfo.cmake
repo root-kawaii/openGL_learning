@@ -13,6 +13,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
   "" "hephaestus-openGL" "gcc" "CMakeFiles/hephaestus-openGL.dir/link.d"
   )
 

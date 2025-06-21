@@ -21,6 +21,8 @@
 #include <chrono>
 #include <thread>
 
+#include "../src/texture_debugger.cpp"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -207,6 +209,7 @@ int main()
     Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
     Shader simpleDepthShader("shaders/simple_depth_shader.vs", "shaders/simple_depth_shader.fs", "shaders/simple_depth_shader.gs");
     Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
+    Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
 
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
@@ -249,7 +252,6 @@ int main()
 
 
 
-
     unsigned int sceneFramebuffer;
     unsigned int sceneColorTexture;
     unsigned int sceneDepthTexture;
@@ -289,7 +291,7 @@ int main()
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth;
+    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth;
     // position color buffer
     glGenTextures(1, &gPosition);
     glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -319,22 +321,45 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    ///////////////////////////////////////////////
+    glGenTextures(1, &gLinearDepth);
+    glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLinearDepth, 0);
+    ///////////////////////////
     // Attach to depth attachment (not color attachment!)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
     //
     // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    glDrawBuffers(3, attachments);
-    // create and attach depth buffer (renderbuffer)
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    // finally check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer not complete!" << std::endl;
+    unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(4, attachments);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "ERROR::FRAMEBUFFER:: G-buffer is not complete!" << std::endl;
+        
+        // More detailed error checking
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        switch(status) {
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                std::cout << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
+                break;
+            default:
+                std::cout << "Unknown framebuffer error: " << status << std::endl;
+                break;
+        }
+    }
+
+    // Unbind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // lighting info
     // -------------
     const unsigned int NR_LIGHTS = 32;
@@ -372,29 +397,6 @@ int main()
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-    // Create the texture to render to
-    unsigned int sceneTexture;
-    glGenTextures(1, &sceneTexture);
-    glBindTexture(GL_TEXTURE_2D, sceneTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Attach texture to framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneTexture, 0);
-
-    // Create a renderbuffer for depth and stencil (optional but often needed)
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    // Check framebuffer completeness
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // framebuffers
     // unsigned int fbo2;
@@ -427,26 +429,6 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    // texture for framebuffer
-    unsigned int textureColorbuffer2;
-    glGenTextures(1, &textureColorbuffer2);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer2);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1200, 300, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer2, 0);
-        
-
-    unsigned int rbo2;
-    glGenRenderbuffers(1, &rbo2);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo2);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo2); // now actually attach it
-    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
 
     shaderLightingPass.use();
@@ -455,6 +437,7 @@ int main()
     shaderLightingPass.setInt("gAlbedoSpec", 2);
     shaderLightingPass.setInt("gDepth", 3);
     shaderLightingPass.setInt("depthMap", 4);
+    shaderLightingPass.setInt("gLinearDepth", 6);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
@@ -533,6 +516,8 @@ int main()
             shaderGeometryPass.use();
             shaderGeometryPass.setMat4("projection", projection);
             shaderGeometryPass.setMat4("view", view);
+            shaderGeometryPass.setFloat("near_plane", 0.01f);  // Add this
+            shaderGeometryPass.setFloat("far_plane", 100.0f); // Add this
             for (unsigned int i = 0; i < objectPositions.size(); i++)
             {
                 model = glm::mat4(1.0f);
@@ -547,6 +532,7 @@ int main()
                 // shaderGeometryPass.setMat4("model", model);
                 // plane.Draw(shaderGeometryPass);
             }
+
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -594,12 +580,14 @@ int main()
         glBindTexture(GL_TEXTURE_2D, gDepth);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
 
         // finally render quad
         renderQuad();
 
-        // // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
-        // // ----------------------------------------------------------------------------------
+//         // // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
+//         // // ----------------------------------------------------------------------------------
         glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
         // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
@@ -631,7 +619,7 @@ int main()
 
 
 
-//////////////////////////////////////
+// //////////////////////////////////////
 
         // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
         // shaderLightingPass.use();
@@ -658,38 +646,65 @@ int main()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+            // int visualizationMode = 0;
+
+            // if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+            //     visualizationMode = (visualizationMode + 1) % 4;
+
+
+            // glDisable(GL_DEPTH_TEST);
+            // debugShader.use();  
+            // debugShader.setInt("debugTexture", 0);
+            // debugShader.setInt("visualizationMode", 0); // Choose mode: 0=RGB, 1=Depth, etc.
+            // debugShader.setFloat("depthNear", 0.1f);
+            // debugShader.setFloat("depthFar", 100.0f);
+
+            // // Bind G-buffer texture you want to debug
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec); // or gPosition, gAlbedoSpec, etc.
+
+            // // Render fullscreen quad
+            // glBindVertexArray(quadVAO);
+            // glDrawArrays(GL_TRIANGLES, 0, 6);
+            // glBindVertexArray(0);
+
+
+
         waterShader.use();
+        waterShader.setFloat("time", glfwGetTime());
+
+        // Set up model matrix ONCE
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your water position
+        waterShader.setMat4("model", model);
         waterShader.setMat4("projection", projection);
         waterShader.setMat4("view", view);
-        waterShader.setMat4("model", model);
-        // Set matrices for view space calculations
-        waterShader.setMat4("viewProjection", projection);
-        waterShader.setMat4("inverseViewProjection", glm::inverse(projection));
 
-        // Set view position (camera position in world space)
+        // Fix the viewProjection matrices
+        glm::mat4 viewProjectionMatrix = projection * view;
+        waterShader.setMat4("viewProjection", viewProjectionMatrix);
+        waterShader.setMat4("inverseViewProjection", glm::inverse(viewProjectionMatrix)); // This was wrong before
+
+        // Set camera position
         waterShader.setVec3("cameraWorldPos", camera.Position);
 
-        // Set screen size for UV calculations
+        // Set screen size
         waterShader.setVec2("screenSize", glm::vec2(SCR_WIDTH, SCR_HEIGHT));
 
         // Bind G-buffer textures
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal); // Your G-buffer normal texture
-        waterShader.setInt("gNormal", 1);
-
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition); // Your G-buffer depth texture
+        glBindTexture(GL_TEXTURE_2D, gPosition);
         waterShader.setInt("gPosition", 0);
 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        waterShader.setInt("gNormal", 1);
+
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec); // Your rendered scene color
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
         waterShader.setInt("gAlbedoSpec", 2);
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(15.5f,1.5f,0.5f));
-        waterShader.setMat4("model", model);  
-        // Render full-screen quad
-        // renderQuad();
+        // Now render the water
         plane.Draw(waterShader);
 
 
@@ -729,7 +744,6 @@ int main()
 
 
 
-         // glDepthFunc(GL_LEQUAL); 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
@@ -742,10 +756,16 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
-        // glDepthFunc(GL_LESS); // Reset to default
 
 
-
+        // TextureDebugger debugger = TextureDebugger();
+        // static bool debugMode = true;
+        // // debugMode = !debugMode;
+        
+        // if (debugMode) {
+        //     // Render debug textures instead of final scene
+        //     debugger.visualizeAlbedo(gAlbedoSpec);
+        // }
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);

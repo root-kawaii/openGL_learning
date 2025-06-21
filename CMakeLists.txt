@@ -7,6 +7,27 @@ project(hephaestus-openGL)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --------- Debug Configuration ---------
+# Set build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG")
+
+# Release flags (for reference)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+# Enable debug symbols for all configurations
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+
+# Generate compile_commands.json for better IDE support
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # --------- Paths to dependencies ---------
 # GLFW
 # set(GLFW_DIR "C:/Users/teore/scoop/apps/glfw/current")
@@ -37,6 +58,7 @@ include_directories(
 
 # --------- Add executable ---------
 add_executable(${PROJECT_NAME}
+    src/texture_debugger.cpp
     src/main.cpp
     src/input.cpp
     src/object.cpp
