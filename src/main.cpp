@@ -225,6 +225,7 @@ int main()
     objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
     objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
     objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
+    objectPositions.push_back(glm::vec3( 8.0,  0.5,  3.0));
 
 
     float quadVertices[] = {
@@ -435,9 +436,9 @@ int main()
     shaderLightingPass.setInt("gPosition", 0);
     shaderLightingPass.setInt("gNormal", 1);
     shaderLightingPass.setInt("gAlbedoSpec", 2);
-    shaderLightingPass.setInt("gDepth", 3);
+    shaderLightingPass.setInt("gLinearDepth", 3);
     shaderLightingPass.setInt("depthMap", 4);
-    shaderLightingPass.setInt("gLinearDepth", 6);
+    // shaderLightingPass.setInt("gDepth", 6);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
@@ -495,14 +496,20 @@ int main()
                 model = glm::scale(model, glm::vec3(0.5f));
                 simpleDepthShader.setMat4("model", model);
                 backpack.Draw(simpleDepthShader);
-                model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
-                simpleDepthShader.setMat4("model", model);
-                plane.Draw(simpleDepthShader);
-                model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
-                simpleDepthShader.setMat4("model", model);
-                plane.Draw(simpleDepthShader);
+
+
             }
+        model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+        simpleDepthShader.setMat4("model", model);
+        plane.Draw(simpleDepthShader);
+
+        model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
+        simpleDepthShader.setMat4("model", model);
+        plane.Draw(simpleDepthShader);
+        
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
 
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
@@ -527,11 +534,24 @@ int main()
                 backpack.Draw(shaderGeometryPass);
                 model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
                 shaderGeometryPass.setMat4("model", model);
-                plane.Draw(shaderGeometryPass);
+
                 // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
                 // shaderGeometryPass.setMat4("model", model);
                 // plane.Draw(shaderGeometryPass);
             }
+
+        // plane.Draw(shaderGeometryPass);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+        shaderGeometryPass.setMat4("model", model);
+        plane.Draw(shaderGeometryPass);
+
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3( 9.0,  -1.0, lightPos.z));
+        model = glm::scale(model, glm::vec3(0.3f));
+        shaderGeometryPass.setMat4("model", model);
+        backpack.Draw(shaderGeometryPass);
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -577,11 +597,11 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, gDepth);
+        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+        // glActiveTexture(GL_TEXTURE6);
+        // glBindTexture(GL_TEXTURE_2D, gDepth);
 
         // finally render quad
         renderQuad();
@@ -670,26 +690,47 @@ int main()
 
 
 
+        // Assuming 'waterShader' is an object that wraps shader program management
+        // and 'setFloat', 'setMat4', 'setVec3', 'setVec2', 'setInt' are its methods
+        // that correctly call glGetUniformLocation and glUniform functions.
+
         waterShader.use();
         waterShader.setFloat("time", glfwGetTime());
 
-        // Set up model matrix ONCE
+        // Set up model matrix (if your water is a simple plane transformed by 'model')
+        // This is typically done per object.
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your water position
         waterShader.setMat4("model", model);
-        waterShader.setMat4("projection", projection);
-        waterShader.setMat4("view", view);
+        waterShader.setMat4("view", view);  
 
-        // Fix the viewProjection matrices
+        // --- Pass all necessary view/projection matrices ---
+        // These are standard for any object rendering, and also needed by the fragment shader
+        waterShader.setMat4("projection", projection); // 'projection' uniform in FS
+        waterShader.setMat4("viewMatrix", view);      // 'viewMatrix' uniform in FS (was 'view' in VS, consistent name for FS)
+
+        // Calculate and pass the combined and inverse matrices
         glm::mat4 viewProjectionMatrix = projection * view;
-        waterShader.setMat4("viewProjection", viewProjectionMatrix);
-        waterShader.setMat4("inverseViewProjection", glm::inverse(viewProjectionMatrix)); // This was wrong before
+        waterShader.setMat4("viewProjection", viewProjectionMatrix);         // 'viewProjection' uniform in FS
+        waterShader.setMat4("inverseViewProjection", glm::inverse(viewProjectionMatrix)); // 'inverseViewProjection' uniform in FS
+
+        // --- CRITICAL ADDITIONS from our corrected fragment shader ---
+        // These two were missing from your latest C++ snippet, but are crucial for ReconstructWorldPosition:
+        waterShader.setMat4("inverseProjection", glm::inverse(projection)); // NEW: 'inverseProjection' uniform in FS
+        waterShader.setMat4("inverseView", glm::inverse(view));             // NEW: 'inverseView' uniform in FS
 
         // Set camera position
         waterShader.setVec3("cameraWorldPos", camera.Position);
 
         // Set screen size
         waterShader.setVec2("screenSize", glm::vec2(SCR_WIDTH, SCR_HEIGHT));
+
+        // --- ADDED: Near and Far Plane values ---
+        // These are now uniforms in the fragment shader for LinearizeDepth (even if not directly used by current ReconstructWorldPosition)
+        // Make sure 'yourCameraNearPlane' and 'yourCameraFarPlane' are actual float values from your camera setup
+        // For example: camera.NearPlane, camera.FarPlane, or hardcoded floats like 0.1f, 100.0f
+        waterShader.setFloat("nearPlane", far_plane); // e.g., camera.nearPlane
+        waterShader.setFloat("farPlane", near_plane);   // e.g., camera.farPlane
 
         // Bind G-buffer textures
         glActiveTexture(GL_TEXTURE0);
@@ -703,6 +744,10 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
         waterShader.setInt("gAlbedoSpec", 2);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+        waterShader.setInt("gLinearDepth", 3);
 
         // Now render the water
         plane.Draw(waterShader);
@@ -733,16 +778,14 @@ int main()
 
 
 
-
-
-
         ///////////
+        
 
-
-
-
-
-
+        //         debugShader.use();
+        // debugShader.setInt("debugTexture", 0); 
+        // // Pass the actual near and far planes used for your main projection
+        // debugShader.setFloat("debugNearPlane", 1.0f); // Matches glm::perspective near
+        // debugShader.setFloat("debugFarPlane", 100.0f); // Matches glm::perspective far
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();

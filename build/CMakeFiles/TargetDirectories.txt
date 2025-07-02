@@ -1,3 +1,0 @@
-C:/Users/teore/Documents/hephaestus-openGL/build/CMakeFiles/hephaestus-openGL.dir
-C:/Users/teore/Documents/hephaestus-openGL/build/CMakeFiles/edit_cache.dir
-C:/Users/teore/Documents/hephaestus-openGL/build/CMakeFiles/rebuild_cache.dir

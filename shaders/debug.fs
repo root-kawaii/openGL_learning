@@ -41,3 +41,28 @@ void main()
         FragColor = texColor;
     }
 }
+
+
+
+// #version 330 core
+// out vec4 FragColor;
+// in vec2 TexCoord;
+
+// uniform sampler2D debugTexture; 
+// uniform float debugNearPlane; // Pass the camera's near plane (e.g., 0.1)
+// uniform float debugFarPlane;  // Pass the camera's far plane (e.g., 100.0)
+
+// void main() {
+//     // Get the raw linear depth value from the red channel
+//     float linearDepth = texture(debugTexture, TexCoord).r;
+
+//     // Normalize the linear depth from [debugNearPlane, debugFarPlane] to [0, 1]
+//     // This maps nearPlane to 0.0 (black) and farPlane to 1.0 (white)
+//     float normalizedDepth = (linearDepth - debugNearPlane) / (debugFarPlane - debugNearPlane);
+
+//     // Clamp the value to ensure it stays within [0,1] range for display
+//     normalizedDepth = clamp(normalizedDepth, 0.0, 1.0);
+
+//     // Output the normalized depth to all RGB channels for a grayscale visualization
+//     FragColor = vec4(normalizedDepth, normalizedDepth, normalizedDepth, 1.0);
+// }
