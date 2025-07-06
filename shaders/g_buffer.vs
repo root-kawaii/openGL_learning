@@ -7,6 +7,8 @@ out vec3 FragPos;
 out vec2 TexCoords;
 out vec3 Normal;
 
+out float viewDepth;
+
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -19,6 +21,9 @@ void main()
     
     mat3 normalMatrix = transpose(inverse(mat3(model)));
     Normal = normalMatrix * aNormal;
+
+    vec3 viewPos = (view * model * vec4(aPos, 1.0)).xyz;
+    viewDepth = -viewPos.z; // View space depth (positive)
 
     gl_Position = projection * view * worldPos;
 }

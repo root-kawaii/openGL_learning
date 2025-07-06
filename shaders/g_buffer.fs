@@ -7,6 +7,7 @@ layout (location = 3) out float gLinearDepth;  // Output linear depth
 in vec2 TexCoords;
 in vec3 FragPos;
 in vec3 Normal;
+in float viewDepth;
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
@@ -38,7 +39,8 @@ void main()
     
     // Calculate and store linear depth
     // Method 1: From gl_FragCoord.z
-    gLinearDepth = LinearizeDepth(gl_FragCoord.z);
+    gLinearDepth = viewDepth;
+    gLinearDepth = (viewDepth - near_plane) / (far_plane - near_plane);
     
     // Method 2: Alternative - from distance to camera (try this if Method 1 doesn't work)
     // vec3 viewPos = vec3(0.0, 0.0, 0.0); // Camera position in view space

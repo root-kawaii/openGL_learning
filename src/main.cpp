@@ -213,7 +213,7 @@ int main()
 
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
-    Model plane(fs::path("assets/planes/plane.obj"));
+    Model plane(fs::path("assets/planes/plane_2.obj"));
 
     std::vector<glm::vec3> objectPositions;
     objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
@@ -438,7 +438,7 @@ int main()
     shaderLightingPass.setInt("gAlbedoSpec", 2);
     shaderLightingPass.setInt("gLinearDepth", 3);
     shaderLightingPass.setInt("depthMap", 4);
-    // shaderLightingPass.setInt("gDepth", 6);
+    shaderLightingPass.setInt("gDepth", 6);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
@@ -466,8 +466,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // shadows
-        float near_plane = 1.0f;
-        float far_plane = 25.0f;
+        float near_plane = 0.10f;
+        float far_plane = 100.0f;
         glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
         std::vector<glm::mat4> shadowTransforms;
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -516,29 +516,30 @@ int main()
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-            glm::mat4 view = camera.GetViewMatrix();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_plane, far_plane);
+        glm::mat4 view = camera.GetViewMatrix();
+        model = glm::mat4(1.0f);
+        shaderGeometryPass.use();
+        shaderGeometryPass.setMat4("projection", projection);
+        shaderGeometryPass.setMat4("view", view);
+        shaderGeometryPass.setFloat("near_plane", near_plane);  // Add this
+        shaderGeometryPass.setFloat("far_plane", far_plane); // Add this
+        for (unsigned int i = 0; i < objectPositions.size(); i++)
+        {
             model = glm::mat4(1.0f);
-            shaderGeometryPass.use();
-            shaderGeometryPass.setMat4("projection", projection);
-            shaderGeometryPass.setMat4("view", view);
-            shaderGeometryPass.setFloat("near_plane", 0.01f);  // Add this
-            shaderGeometryPass.setFloat("far_plane", 100.0f); // Add this
-            for (unsigned int i = 0; i < objectPositions.size(); i++)
-            {
-                model = glm::mat4(1.0f);
-                model = glm::translate(model, objectPositions[i]);
-                model = glm::scale(model, glm::vec3(0.5f));
-                shaderGeometryPass.setMat4("model", model);
-                backpack.Draw(shaderGeometryPass);
-                model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
-                shaderGeometryPass.setMat4("model", model);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(0.5f));
+            shaderGeometryPass.setMat4("model", model);
+            backpack.Draw(shaderGeometryPass);
+            model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+            shaderGeometryPass.setMat4("model", model);
 
-                // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
-                // shaderGeometryPass.setMat4("model", model);
-                // plane.Draw(shaderGeometryPass);
-            }
+            // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
+            // shaderGeometryPass.setMat4("model", model);
+            // plane.Draw(shaderGeometryPass);
+        }
 
         // plane.Draw(shaderGeometryPass);
         model = glm::mat4(1.0f);
@@ -572,6 +573,7 @@ int main()
         shaderLightingPass.setVec3("viewPos", camera.Position);
         shaderLightingPass.setInt("shadows", 1); // enable/disable shadows by pressing 'SPACE'
         shaderLightingPass.setFloat("far_plane", far_plane);
+        shaderLightingPass.setFloat("near_plane", near_plane);
         // NEW: Set the missing uniforms for improved shader
         shaderLightingPass.setInt("numLights", lightPositions.size());
         shaderLightingPass.setFloat("ambientStrength", 0.1f);
@@ -600,8 +602,8 @@ int main()
         glBindTexture(GL_TEXTURE_2D, gLinearDepth);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        // glActiveTexture(GL_TEXTURE6);
-        // glBindTexture(GL_TEXTURE_2D, gDepth);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, gDepth);
 
         // finally render quad
         renderQuad();
@@ -694,13 +696,17 @@ int main()
         // and 'setFloat', 'setMat4', 'setVec3', 'setVec2', 'setInt' are its methods
         // that correctly call glGetUniformLocation and glUniform functions.
 
+
         waterShader.use();
         waterShader.setFloat("time", glfwGetTime());
+        waterShader.setFloat("waveHeight", 0.75f);
+        waterShader.setFloat("waveSpeed", 0.3f);
+        waterShader.setFloat("waveFreq", 0.3f);
 
         // Set up model matrix (if your water is a simple plane transformed by 'model')
         // This is typically done per object.
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your water position
+        // model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your water position
         waterShader.setMat4("model", model);
         waterShader.setMat4("view", view);  
 
@@ -729,28 +735,57 @@ int main()
         // These are now uniforms in the fragment shader for LinearizeDepth (even if not directly used by current ReconstructWorldPosition)
         // Make sure 'yourCameraNearPlane' and 'yourCameraFarPlane' are actual float values from your camera setup
         // For example: camera.NearPlane, camera.FarPlane, or hardcoded floats like 0.1f, 100.0f
-        waterShader.setFloat("nearPlane", far_plane); // e.g., camera.nearPlane
-        waterShader.setFloat("farPlane", near_plane);   // e.g., camera.farPlane
+        waterShader.setFloat("nearPlane", near_plane); // e.g., camera.nearPlane
+        waterShader.setFloat("farPlane", far_plane);   // e.g., camera.farPlane
 
         // Bind G-buffer textures
+        while (glGetError() != GL_NO_ERROR);
+
+        // Bind textures with error checking
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
-        waterShader.setInt("gPosition", 0);
+        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gPosition" << std::endl;
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gNormal);
-        waterShader.setInt("gNormal", 1);
+        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gNormal" << std::endl;
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        waterShader.setInt("gAlbedoSpec", 2);
+        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gAlbedoSpec" << std::endl;
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gLinearDepth" << std::endl;
+
+        // Set uniforms AFTER binding textures
+        waterShader.setInt("gPosition", 0);
+        waterShader.setInt("gNormal", 1);
+        waterShader.setInt("gAlbedoSpec", 2);
         waterShader.setInt("gLinearDepth", 3);
 
         // Now render the water
+        model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your water position
+        waterShader.setMat4("model", model);
         plane.Draw(waterShader);
+
+
+        // GLint loc = glGetUniformLocation(waterShader.ID, "gPosition");
+        // if (loc == -1) {
+        //     std::cout << "ERROR: gPosition uniform not found in shader!" << std::endl;
+        // }
+
+        // // Do this for all your uniforms
+        // std::vector<std::string> uniforms = {
+        //     "gPosition", "gNormal", "gAlbedoSpec", "gLinearDepth",
+        //     "viewMatrix", "projection", "viewProjection", "inverseProjection", "inverseView"
+        // };
+
+        // for (const auto& uniform : uniforms) {
+        //     if (glGetUniformLocation(waterShader.ID, uniform.c_str()) == -1) {
+        //         std::cout << "ERROR: " << uniform << " uniform not found!" << std::endl;
+        //     }
+        // }
 
 
         shaderLightBox.use();
