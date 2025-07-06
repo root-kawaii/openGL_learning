@@ -39,6 +39,8 @@ const unsigned int SCR_WIDTH = 1400;
 const unsigned int SCR_HEIGHT = 900;
 bool shadows = true;
 
+float seed = rand();
+
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -203,6 +205,7 @@ int main()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, waterNormal, 0);
 
     Shader waterShader("shaders/water.vs", "shaders/water.fs");
+    Shader terrainShader("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
     Shader shaderGeometryPass("shaders/g_buffer.vs", "shaders/g_buffer.fs");
     Shader shaderLightingPass("shaders/deferred_shading.vs", "shaders/deferred_shading.fs");
     Shader shaderLightBox("shaders/deferred_light_box.vs", "shaders/deferred_light_box.fs");
@@ -452,13 +455,13 @@ int main()
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
-        std::cout << 1/deltaTime << std::endl;
+        // std::cout << 1/deltaTime << std::endl;
         lastFrame = currentFrame;
 
         lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
         // input
         // -----
-        processInput(window, &camera, deltaTime, shadows);
+        processInput(window, &camera, deltaTime, shadows, seed);
 
         // render
         // ------
@@ -553,6 +556,19 @@ int main()
         model = glm::scale(model, glm::vec3(0.3f));
         shaderGeometryPass.setMat4("model", model);
         backpack.Draw(shaderGeometryPass);
+
+
+        terrainShader.use();
+        terrainShader.setFloat("seed", seed);
+        terrainShader.setMat4("projection", projection);
+        terrainShader.setMat4("view", view);
+        terrainShader.setFloat("near_plane", near_plane);  // Add this
+        terrainShader.setFloat("far_plane", far_plane); // Add this
+
+        model = glm::mat4(1000.0f);
+        model = glm::translate(model, glm::vec3( 25.0,  -5.0,  25.0));
+        terrainShader.setMat4("model", model);
+        plane.Draw(terrainShader);
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

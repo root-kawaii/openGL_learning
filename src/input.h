@@ -4,4 +4,4 @@
 #include "camera.h"
 
 
-void processInput(GLFWwindow* window, Camera *camera, float deltaTime, bool &shadows);
+void processInput(GLFWwindow* window, Camera *camera, float deltaTime, bool &shadows, float &seed);

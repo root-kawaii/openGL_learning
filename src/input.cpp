@@ -10,18 +10,23 @@
 
 #include <filesystem>
 
+#include <random>
+#include <chrono>
+#include <cstdlib>
+#include <ctime>
+
 
 bool gameMode = false;
 bool shadowsKeyPressed = false;
 
-void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows)
+void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
 {
     if(!gameMode){
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera->ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)   
          camera->ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         camera->ProcessKeyboard(LEFT, deltaTime);
@@ -60,10 +65,16 @@ void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &sha
     //     }
     //     // std::cout << "HI";
     // }
+    if(glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+        seed = dis(gen) * 1;
+    }
     if(glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
         gameMode = true;
     }
-}else{
+    }else{
     if(glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
         gameMode = false;
 }

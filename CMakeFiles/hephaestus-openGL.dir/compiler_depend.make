@@ -406,6 +406,8 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/c++/15.1.1/bits/predefined_ops.h \
   /usr/include/c++/15.1.1/bits/ptr_traits.h \
   /usr/include/c++/15.1.1/bits/quoted_string.h \
+  /usr/include/c++/15.1.1/bits/random.h \
+  /usr/include/c++/15.1.1/bits/random.tcc \
   /usr/include/c++/15.1.1/bits/range_access.h \
   /usr/include/c++/15.1.1/bits/refwrap.h \
   /usr/include/c++/15.1.1/bits/requires_hosted.h \
@@ -415,25 +417,32 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/c++/15.1.1/bits/sstream.tcc \
   /usr/include/c++/15.1.1/bits/std_abs.h \
   /usr/include/c++/15.1.1/bits/stl_algobase.h \
+  /usr/include/c++/15.1.1/bits/stl_bvector.h \
   /usr/include/c++/15.1.1/bits/stl_construct.h \
   /usr/include/c++/15.1.1/bits/stl_function.h \
   /usr/include/c++/15.1.1/bits/stl_iterator.h \
   /usr/include/c++/15.1.1/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/15.1.1/bits/stl_iterator_base_types.h \
+  /usr/include/c++/15.1.1/bits/stl_numeric.h \
   /usr/include/c++/15.1.1/bits/stl_pair.h \
+  /usr/include/c++/15.1.1/bits/stl_uninitialized.h \
+  /usr/include/c++/15.1.1/bits/stl_vector.h \
   /usr/include/c++/15.1.1/bits/streambuf.tcc \
   /usr/include/c++/15.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/15.1.1/bits/string_view.tcc \
   /usr/include/c++/15.1.1/bits/stringfwd.h \
+  /usr/include/c++/15.1.1/bits/uniform_int_dist.h \
   /usr/include/c++/15.1.1/bits/unique_ptr.h \
   /usr/include/c++/15.1.1/bits/uses_allocator.h \
   /usr/include/c++/15.1.1/bits/uses_allocator_args.h \
   /usr/include/c++/15.1.1/bits/utility.h \
+  /usr/include/c++/15.1.1/bits/vector.tcc \
   /usr/include/c++/15.1.1/bits/version.h \
   /usr/include/c++/15.1.1/cassert \
   /usr/include/c++/15.1.1/cctype \
   /usr/include/c++/15.1.1/cerrno \
   /usr/include/c++/15.1.1/cfloat \
+  /usr/include/c++/15.1.1/chrono \
   /usr/include/c++/15.1.1/climits \
   /usr/include/c++/15.1.1/clocale \
   /usr/include/c++/15.1.1/cmath \
@@ -467,8 +476,12 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/c++/15.1.1/limits \
   /usr/include/c++/15.1.1/locale \
   /usr/include/c++/15.1.1/new \
+  /usr/include/c++/15.1.1/numeric \
   /usr/include/c++/15.1.1/ostream \
+  /usr/include/c++/15.1.1/pstl/execution_defs.h \
+  /usr/include/c++/15.1.1/pstl/glue_numeric_defs.h \
   /usr/include/c++/15.1.1/pstl/pstl_config.h \
+  /usr/include/c++/15.1.1/random \
   /usr/include/c++/15.1.1/ratio \
   /usr/include/c++/15.1.1/sstream \
   /usr/include/c++/15.1.1/stdexcept \
@@ -491,6 +504,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/c++/15.1.1/tuple \
   /usr/include/c++/15.1.1/type_traits \
   /usr/include/c++/15.1.1/typeinfo \
+  /usr/include/c++/15.1.1/vector \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -502,6 +516,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/os_defines.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
@@ -1977,8 +1992,6 @@ src/object.cpp:
 
 /usr/include/c++/15.1.1/pstl/glue_algorithm_defs.h:
 
-/usr/include/c++/15.1.1/pstl/execution_defs.h:
-
 /usr/include/c++/15.1.1/map:
 
 /usr/include/c++/15.1.1/iterator:
@@ -1991,29 +2004,31 @@ src/object.cpp:
 
 /usr/include/c++/15.1.1/compare:
 
-/usr/include/c++/15.1.1/chrono:
-
 /usr/include/c++/15.1.1/bits/valarray_before.h:
 
 /usr/include/c++/15.1.1/bits/valarray_array.tcc:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/mm_malloc.h:
-
-/usr/include/c++/15.1.1/bits/uniform_int_dist.h:
-
 /usr/include/c++/15.1.1/bits/stream_iterator.h:
+
+/usr/include/c++/15.1.1/bits/stl_tree.h:
+
+/usr/include/c++/15.1.1/bits/stl_relops.h:
+
+/usr/lib/libc_nonshared.a:
+
+/usr/include/c++/15.1.1/bits/stl_map.h:
+
+/usr/include/c++/15.1.1/bits/stl_heap.h:
+
+/usr/include/c++/15.1.1/bits/std_function.h:
 
 include/glm/ext/vector_int2.hpp:
 
-/usr/include/c++/15.1.1/cwctype:
-
 /usr/include/c++/15.1.1/bits/stl_vector.h:
 
+/usr/include/c++/15.1.1/cwctype:
+
 include/glm/vec3.hpp:
-
-/usr/include/c++/15.1.1/numeric:
-
-include/glm/packing.hpp:
 
 /usr/include/bits/select.h:
 
@@ -2075,8 +2090,6 @@ include/freetype/lib/libfreetype.a:
 
 include/glm/gtc/constants.hpp:
 
-include/assimp/include/assimp/vector3.inl:
-
 src/camera.h:
 
 include/glm/fwd.hpp:
@@ -2118,6 +2131,10 @@ include/glm/ext/vector_double4.hpp:
 /usr/include/locale.h:
 
 include/glm/ext/vector_bool3_precision.hpp:
+
+/usr/include/c++/15.1.1/bits/slice_array.h:
+
+/usr/include/c++/15.1.1/cmath:
 
 include/glm/ext/vector_bool2_precision.hpp:
 
@@ -2167,10 +2184,6 @@ include/glm/mat4x2.hpp:
 
 /usr/include/bits/uio_lim.h:
 
-/usr/include/c++/15.1.1/pstl/glue_numeric_defs.h:
-
-include/glm/mat3x4.hpp:
-
 include/glm/mat3x3.hpp:
 
 /usr/include/bits/posix1_lim.h:
@@ -2212,6 +2225,8 @@ include/glm/detail/type_vec1.inl:
 include/glm/ext/matrix_double3x2_precision.hpp:
 
 include/glm/ext/vector_int4.hpp:
+
+/usr/include/c++/15.1.1/bits/random.tcc:
 
 include/glm/detail/type_vec2.hpp:
 
@@ -2373,6 +2388,10 @@ include/glm/mat4x4.hpp:
 
 /usr/include/c++/15.1.1/cerrno:
 
+include/glm/packing.hpp:
+
+/usr/include/c++/15.1.1/numeric:
+
 src/glad.c:
 
 /usr/include/c++/15.1.1/tr1/ell_integral.tcc:
@@ -2437,17 +2456,23 @@ include/glm/detail/type_mat3x3.inl:
 
 include/glm/ext/vector_bool1.hpp:
 
+/usr/include/c++/15.1.1/bits/stl_raw_storage_iter.h:
+
+/usr/include/bits/types/struct_FILE.h:
+
+include/glm/detail/type_mat3x2.inl:
+
 /usr/include/bits/stdlib-float.h:
 
 /usr/include/bits/time64.h:
 
 include/glm/detail/type_mat4x4.hpp:
 
-/usr/include/c++/15.1.1/bits/vector.tcc:
-
-include/glad/glad.h:
-
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/stddef.h:
+
+include/glm/mat3x4.hpp:
+
+/usr/include/c++/15.1.1/pstl/glue_numeric_defs.h:
 
 /usr/include/GLFW/glfw3.h:
 
@@ -2477,6 +2502,10 @@ include/glm/ext/scalar_constants.inl:
 
 /usr/include/bits/pthread_stack_min-dynamic.h:
 
+/usr/include/c++/15.1.1/bits/stl_tempbuf.h:
+
+include/glm/ext/vector_relational.inl:
+
 /usr/include/c++/15.1.1/bits/basic_ios.tcc:
 
 include/glm/ext/quaternion_float_precision.hpp:
@@ -2494,12 +2523,6 @@ include/glm/ext/vector_double1_precision.hpp:
 include/glm/detail/type_mat2x4.hpp:
 
 include/glm/ext/matrix_double2x2.hpp:
-
-/usr/include/bits/types/struct_FILE.h:
-
-include/glm/detail/type_mat3x2.inl:
-
-/usr/include/c++/15.1.1/bits/stl_raw_storage_iter.h:
 
 /usr/include/c++/15.1.1/tr1/bessel_function.tcc:
 
@@ -2564,10 +2587,6 @@ include/glm/detail/type_mat4x4.inl:
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h:
 
 include/assimp/include/assimp/vector3.h:
-
-include/glm/integer.hpp:
-
-include/glm/ext/matrix_double2x3.hpp:
 
 include/glm/ext/matrix_double2x4_precision.hpp:
 
@@ -2805,11 +2824,15 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o:
 
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/time_members.h:
 
-/usr/include/c++/15.1.1/bits/stl_relops.h:
-
 /usr/include/c++/15.1.1/bits/locale_classes.h:
 
 /usr/include/c++/15.1.1/bits/parse_numbers.h:
+
+/usr/include/c++/15.1.1/bits/stl_multimap.h:
+
+/usr/include/c++/15.1.1/ratio:
+
+include/assimp/include/assimp/material.h:
 
 /usr/include/bits/types/timer_t.h:
 
@@ -2820,6 +2843,10 @@ include/glm/detail/type_mat2x2.hpp:
 /usr/include/c++/15.1.1/bits/predefined_ops.h:
 
 /usr/include/c++/15.1.1/bits/ptr_traits.h:
+
+include/assimp/include/assimp/vector3.inl:
+
+/usr/include/c++/15.1.1/bits/random.h:
 
 include/glm/ext/matrix_transform.inl:
 
@@ -2841,6 +2868,10 @@ include/glm/ext/matrix_transform.inl:
 
 /usr/include/c++/15.1.1/bits/stl_iterator_base_types.h:
 
+/usr/include/features-time64.h:
+
+/usr/include/c++/15.1.1/bits/stl_numeric.h:
+
 /usr/include/c++/15.1.1/thread:
 
 /usr/include/c++/15.1.1/bits/streambuf.tcc:
@@ -2857,6 +2888,10 @@ include/glm/ext/matrix_transform.inl:
 
 /usr/include/c++/15.1.1/bits/string_view.tcc:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/mm_malloc.h:
+
+/usr/include/c++/15.1.1/bits/uniform_int_dist.h:
+
 include/glm/ext/matrix_float3x4.hpp:
 
 /usr/include/c++/15.1.1/bits/uses_allocator_args.h:
@@ -2864,6 +2899,16 @@ include/glm/ext/matrix_float3x4.hpp:
 include/glm/ext/vector_double2_precision.hpp:
 
 /usr/include/c++/15.1.1/bits/utility.h:
+
+include/glad/glad.h:
+
+/usr/include/c++/15.1.1/bits/vector.tcc:
+
+include/glm/integer.hpp:
+
+include/glm/ext/matrix_double2x3.hpp:
+
+/usr/include/c++/15.1.1/random:
 
 /usr/include/c++/15.1.1/iostream:
 
@@ -2874,6 +2919,16 @@ include/glm/ext/vector_double2_precision.hpp:
 include/assimp/include/assimp/material.inl:
 
 /usr/include/c++/15.1.1/cfloat:
+
+/usr/include/c++/15.1.1/chrono:
+
+/usr/include/c++/15.1.1/pstl/pstl_config.h:
+
+/usr/include/c++/15.1.1/bits/stl_construct.h:
+
+/usr/include/c++/15.1.1/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++config.h:
 
 /usr/include/c++/15.1.1/bits/valarray_after.h:
 
@@ -2904,12 +2959,6 @@ include/glm/ext/vector_uint2.hpp:
 /usr/include/c++/15.1.1/cwchar:
 
 /usr/include/c++/15.1.1/debug/assertions.h:
-
-/usr/include/c++/15.1.1/ratio:
-
-include/assimp/include/assimp/material.h:
-
-/usr/include/c++/15.1.1/bits/stl_multimap.h:
 
 include/glm/ext/vector_double2.hpp:
 
@@ -2973,11 +3022,11 @@ include/glm/ext/vector_double3_precision.hpp:
 
 /usr/include/c++/15.1.1/limits:
 
-/usr/include/c++/15.1.1/locale:
-
 /usr/include/c++/15.1.1/new:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/syslimits.h:
+
+/usr/include/c++/15.1.1/pstl/execution_defs.h:
 
 /usr/include/c++/15.1.1/sstream:
 
@@ -2996,14 +3045,6 @@ include/glm/ext/matrix_double4x3_precision.hpp:
 /usr/include/c++/15.1.1/system_error:
 
 /usr/include/c++/15.1.1/tr1/exp_integral.tcc:
-
-/usr/include/c++/15.1.1/pstl/pstl_config.h:
-
-/usr/include/c++/15.1.1/bits/stl_construct.h:
-
-/usr/include/c++/15.1.1/tr1/poly_laguerre.tcc:
-
-/usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++config.h:
 
 /usr/include/c++/15.1.1/tr1/riemann_zeta.tcc:
 
@@ -3024,6 +3065,10 @@ CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o:
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/cpu_defines.h:
 
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/ctype_inline.h:
+
+/usr/include/c++/15.1.1/locale:
+
+/usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/opt_random.h:
 
 /usr/include/errno.h:
 
@@ -3072,10 +3117,6 @@ include/assimp/include/assimp/texture.h:
 /usr/include/c++/15.1.1/bits/std_thread.h:
 
 include/assimp/include/assimp/aabb.h:
-
-/usr/include/c++/15.1.1/cmath:
-
-/usr/include/c++/15.1.1/bits/slice_array.h:
 
 include/assimp/include/assimp/camera.h:
 
@@ -3138,21 +3179,3 @@ include/glm/ext/matrix_float2x2_precision.hpp:
 /usr/include/c++/15.1.1/fstream:
 
 /usr/include/c++/15.1.1/bits/shared_ptr_atomic.h:
-
-include/glm/ext/vector_relational.inl:
-
-/usr/include/c++/15.1.1/bits/stl_tempbuf.h:
-
-/usr/include/c++/15.1.1/bits/std_function.h:
-
-/usr/include/c++/15.1.1/bits/stl_heap.h:
-
-/usr/lib/libc_nonshared.a:
-
-/usr/include/c++/15.1.1/bits/stl_map.h:
-
-/usr/include/features-time64.h:
-
-/usr/include/c++/15.1.1/bits/stl_numeric.h:
-
-/usr/include/c++/15.1.1/bits/stl_tree.h:
