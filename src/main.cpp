@@ -65,6 +65,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 8); // Request 8x MSAA
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -72,7 +73,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dreaming...", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -290,60 +291,124 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    // configure g-buffer framebuffer
-    // ------------------------------
+    unsigned int msaaGPosition, msaaGNormal, msaaGAlbedoSpec, msaaGDepth, msaaGLinearDepth, msaaGBuffer;
+
+    glGenFramebuffers(1, &msaaGBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, msaaGBuffer);
+
+    // Position buffer (MSAA)
+    glGenTextures(1, &msaaGPosition);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition, 0);
+
+    // Normal buffer (MSAA)
+    glGenTextures(1, &msaaGNormal);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal, 0);
+
+    // Albedo + Specular buffer (MSAA)
+    glGenTextures(1, &msaaGAlbedoSpec);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec, 0);
+
+    // Depth buffer (MSAA)
+    glGenRenderbuffers(1, &msaaGDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, msaaGDepth);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, msaaGDepth);
+
+    // Linear Depth buffer (MSAA)
+    glGenTextures(1, &msaaGLinearDepth);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_R32F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
+
+    // Set draw buffers for MSAA G-buffer
+    unsigned int msaaAttachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(4, msaaAttachments);
+
+    // Check framebuffer completeness
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "ERROR::FRAMEBUFFER:: MSAA G-buffer is not complete!" << std::endl;
+        
+        // More detailed error checking
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        switch(status) {
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                std::cout << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
+                break;
+            default:
+                std::cout << "Unknown framebuffer error: " << status << std::endl;
+                break;
+        }
+    }
+
+    // Regular G-buffer setup
+    // ----------------------
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
     unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth;
-    // position color buffer
+
+    // Position color buffer
     glGenTextures(1, &gPosition);
     glBindTexture(GL_TEXTURE_2D, gPosition);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-    // normal color buffer
+
+    // Normal color buffer
     glGenTextures(1, &gNormal);
     glBindTexture(GL_TEXTURE_2D, gNormal);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-    // color + specular color buffer
+
+    // Color + specular color buffer
     glGenTextures(1, &gAlbedoSpec);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
-    //
+
+    // Depth buffer
     glGenTextures(1, &gDepth);
     glBindTexture(GL_TEXTURE_2D, gDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SCR_WIDTH, SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    ///////////////////////////////////////////////
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
+
+    // Linear Depth buffer
     glGenTextures(1, &gLinearDepth);
     glBindTexture(GL_TEXTURE_2D, gLinearDepth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLinearDepth, 0);
-    ///////////////////////////
-    // Attach to depth attachment (not color attachment!)
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
-    //
-    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+
+    // Tell OpenGL which color attachments we'll use for rendering 
     unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(4, attachments);
 
+    // Check framebuffer completeness
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR::FRAMEBUFFER:: G-buffer is not complete!" << std::endl;
+        std::cout << "ERROR::FRAMEBUFFER:: Regular G-buffer is not complete!" << std::endl;
         
-        // More detailed error checking
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         switch(status) {
             case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
@@ -448,8 +513,18 @@ int main()
 
     // render loop
     // -----------
+
     while (!glfwWindowShouldClose(window))
     {
+
+        if(shadows) {
+            std::cout << "msaa enabled" << std::endl;
+            glEnable(GL_MULTISAMPLE);
+        }
+        else{
+            std::cout << "msaa disabled" <<std::endl;
+            glDisable(GL_MULTISAMPLE);
+        }
 
         // per-frame time logic
         // --------------------
@@ -517,10 +592,10 @@ int main()
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_plane, far_plane);
         glm::mat4 view = camera.GetViewMatrix();
         model = glm::mat4(1.0f);
@@ -565,20 +640,56 @@ int main()
         terrainShader.setFloat("near_plane", near_plane);  // Add this
         terrainShader.setFloat("far_plane", far_plane); // Add this
 
-        model = glm::mat4(1000.0f);
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(1000.0f));
         model = glm::translate(model, glm::vec3( 25.0,  -5.0,  25.0));
         terrainShader.setMat4("model", model);
         plane.Draw(terrainShader);
 
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // glBindFramebuffer(GL_READ_FRAMEBUFFER, msaaGBuffer);
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer);
+
+        // // Resolve each attachment
+        // glReadBuffer(GL_COLOR_ATTACHMENT0);
+        // glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // glReadBuffer(GL_COLOR_ATTACHMENT1);
+        // glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // glReadBuffer(GL_COLOR_ATTACHMENT2);
+        // glDrawBuffer(GL_COLOR_ATTACHMENT2);
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // glReadBuffer(GL_COLOR_ATTACHMENT3);
+        // glDrawBuffer(GL_COLOR_ATTACHMENT3);
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // // Resolve depth
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
 
+    
+
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT );
+
+
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+        // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+        // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+        // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+        glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
 
         shaderLightingPass.use();
         // shadows
@@ -622,17 +733,25 @@ int main()
         glBindTexture(GL_TEXTURE_2D, gDepth);
 
         // finally render quad
+        glDisable(GL_DEPTH_TEST);
         renderQuad();
+        glEnable(GL_DEPTH_TEST);
 
 //         // // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
 //         // // ----------------------------------------------------------------------------------
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-        // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-        // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-        // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-        glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneFramebuffer); // write to default framebuffer
+        // // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+        // // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+        // // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer);
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+
 
         // 3. render lights on top of scene
         // --------------------------------      
@@ -659,7 +778,7 @@ int main()
 
 // //////////////////////////////////////
 
-        // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
         // shaderLightingPass.use();
         // renderQuad();
 

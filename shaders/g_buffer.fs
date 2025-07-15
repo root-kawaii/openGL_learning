@@ -1,8 +1,8 @@
 #version 330 core
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out float gLinearDepth;  // Output linear depth
+layout (location = 0) out vec3 msaaGPosition;
+layout (location = 1) out vec3 msaaGNormal;
+layout (location = 2) out vec4 msaaGAlbedoSpec;
+layout (location = 3) out float msaaGLinearDepth;  // Output linear depth
 
 in vec2 TexCoords;
 in vec3 FragPos;
@@ -26,21 +26,21 @@ float LinearizeDepth(float depth)
 void main()
 {    
     // Store the fragment position vector in the first gbuffer texture
-    gPosition = FragPos;
+    msaaGPosition = FragPos;
     
     // Store the per-fragment normals into the gbuffer
-    gNormal = normalize(Normal);
+    msaaGNormal = normalize(Normal);
     
     // Store the diffuse per-fragment color
-    gAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb;
+    msaaGAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb;
     
     // Store specular intensity in gAlbedoSpec's alpha component
-    gAlbedoSpec.a = texture(texture_specular1, TexCoords).r;
+    msaaGAlbedoSpec.a = texture(texture_specular1, TexCoords).r;
     
     // Calculate and store linear depth
     // Method 1: From gl_FragCoord.z
-    gLinearDepth = viewDepth;
-    gLinearDepth = (viewDepth - near_plane) / (far_plane - near_plane);
+    msaaGLinearDepth = viewDepth;
+    msaaGLinearDepth = (viewDepth - near_plane) / (far_plane - near_plane);
     
     // Method 2: Alternative - from distance to camera (try this if Method 1 doesn't work)
     // vec3 viewPos = vec3(0.0, 0.0, 0.0); // Camera position in view space
