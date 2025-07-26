@@ -199,13 +199,13 @@ private:
                 textures_loaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
             }
         }
-        // if (textures.empty() && type == aiTextureType_DIFFUSE) {
-        //     Texture defaultTex;
-        //     defaultTex.id = loadWhiteTexture(); // Implement this to generate a 1x1 white texture
-        //     defaultTex.type = "texture_diffuse";
-        //     defaultTex.path = "default_white";
-        //     textures.push_back(defaultTex);
-        // }
+        if (textures.empty() && type == aiTextureType_DIFFUSE) {
+            Texture defaultTex;
+            defaultTex.id = loadWhiteTexture(); // Implement this to generate a 1x1 white texture
+            defaultTex.type = "texture_diffuse";
+            defaultTex.path = "default_white";
+            textures.push_back(defaultTex);
+        }
         return textures;
     }
 };

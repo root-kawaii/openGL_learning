@@ -11,13 +11,15 @@ uniform sampler2D gLinearDepth;  // Added linear depth texture
 uniform samplerCube depthMap;
 uniform sampler2D gDepth;
 
-
-
 // Camera parameters for depth reconstruction
 uniform float near_plane;
 uniform float far_plane;
 uniform mat4 projection;
 uniform mat4 view;
+
+uniform float metallic;
+uniform float roughness;
+uniform float ao;
 
 // Lighting uniforms
 struct Light {
@@ -36,6 +38,9 @@ uniform bool shadows;
 uniform float ambientStrength; // Configurable ambient lighting
 uniform float shadowBias;      // Configurable shadow bias
 
+// PBR Constants
+const float PI = 3.14159265359;
+
 // Improved PCF sampling pattern - Poisson disk for better distribution
 vec3 sampleOffsetDirections[20] = vec3[](
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
@@ -44,6 +49,47 @@ vec3 sampleOffsetDirections[20] = vec3[](
    vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
+
+// PBR Functions
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+	
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+	
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return num / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+	
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
 
 // Convert non-linear depth to linear depth
 float LinearizeDepth(float depth)
@@ -101,41 +147,47 @@ float ShadowCalculation(vec3 fragPos, vec3 lightPos, float lightRadius, float li
     return shadow / float(samples);
 }
 
-// Enhanced lighting calculation with linear depth awareness
-vec3 calculateLighting(vec3 fragPos, vec3 normal, vec3 albedo, float specularStrength, vec3 viewDir, float linearDepth) {
-    vec3 lighting = albedo * ambientStrength; // Configurable ambient
+// Enhanced PBR lighting calculation with linear depth awareness
+vec3 calculatePBRLighting(vec3 fragPos, vec3 normal, vec3 albedo, float metallic, float roughness, float ao, vec3 viewDir, float linearDepth) {
+    vec3 N = normalize(normal);
+    vec3 V = normalize(viewDir);
+    
+    // Calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
+    // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+    
+    // Reflectance equation
+    vec3 Lo = vec3(0.0);
     
     for(int i = 0; i < min(numLights, NR_LIGHTS); ++i) {
         vec3 lightPos = lights[i].Position;
         vec3 lightColor = lights[i].Color;
         
         // Light direction and distance
-        vec3 lightDir = lightPos - fragPos;
-        float distance = length(lightDir);
+        vec3 L = normalize(lightPos - fragPos);
+        vec3 H = normalize(V + L);
+        float distance = length(lightPos - fragPos);
         
         // Early light culling based on radius
         if (distance > lights[i].Radius) continue;
         
-        lightDir = normalize(lightDir);
-        
-        // Diffuse lighting
-        float NdotL = max(dot(normal, lightDir), 0.0);
-        vec3 diffuse = NdotL * albedo * lightColor;
-        
-        // Specular lighting (Blinn-Phong) with depth-based falloff
-        vec3 halfwayDir = normalize(lightDir + viewDir);
-        float NdotH = max(dot(normal, halfwayDir), 0.0);
-        // Adjust specular power based on distance for more realistic falloff
-        float specPower = mix(64.0, 32.0, linearDepth / far_plane);
-        float spec = pow(NdotH, specPower);
-        vec3 specular = lightColor * spec * specularStrength;
-        
-        // Attenuation
+        // Calculate per-light radiance
         float attenuation = 1.0 / (1.0 + lights[i].Linear * distance + lights[i].Quadratic * distance * distance);
+        vec3 radiance = lightColor * attenuation;
         
-        // Apply attenuation
-        diffuse *= attenuation;
-        specular *= attenuation;
+        // Cook-Torrance BRDF
+        float NDF = DistributionGGX(N, H, roughness);   
+        float G   = GeometrySmith(N, V, L, roughness);      
+        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
+           
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;	  
+        
+        vec3 numerator    = NDF * G * F; 
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+        vec3 specular = numerator / denominator;
         
         // Shadow calculation with linear depth
         float shadow = 0.0;
@@ -143,11 +195,18 @@ vec3 calculateLighting(vec3 fragPos, vec3 normal, vec3 albedo, float specularStr
             shadow = ShadowCalculation(fragPos, lightPos, lights[i].Radius, linearDepth);
         }
         
-        // Add contribution
-        lighting += (1.0 - shadow) * (diffuse + specular);
-    }
+        // Add to outgoing radiance Lo
+        float NdotL = max(dot(N, L), 0.0);        
+        Lo += (1.0 - shadow) * (kD * albedo / PI + specular) * radiance * NdotL;
+    }   
     
-    return lighting;
+    // Ambient lighting (we now try to fake lighting coming from the 'environment')
+    // you can also use Image Based Lighting (IBL) for more realistic ambient lighting
+    vec3 ambient = vec3(ambientStrength) * albedo * ao;
+    
+    vec3 color = ambient + Lo;
+    
+    return color;
 }
 
 // Depth-based fog calculation
@@ -164,7 +223,7 @@ void main()
     vec3 normal = normalize(texture(gNormal, TexCoords).rgb);
     vec4 albedoSpec = texture(gAlbedoSpec, TexCoords);
     vec3 albedo = albedoSpec.rgb;
-    float specularStrength = albedoSpec.a;
+    float specularStrength = albedoSpec.a; // This could be repurposed for metallic or roughness
     
     // Early exit for background pixels (depth = 1.0 means sky/background)
     if (depth >= 0.999) {
@@ -179,20 +238,20 @@ void main()
     // vec3 fragPos = ReconstructWorldPos(TexCoords, linearDepth);
     
     // Calculate view direction
-    vec3 viewDir = normalize(viewPos - fragPos);
+    vec3 viewDir = viewPos - fragPos;
     
-    // Calculate lighting with linear depth awareness
-    vec3 lighting = calculateLighting(fragPos, normal, albedo, specularStrength, viewDir, linearDepth);
+    // Calculate PBR lighting with linear depth awareness
+    vec3 color = calculatePBRLighting(fragPos, normal, albedo, metallic, roughness, ao, viewDir, linearDepth);
     
     // Optional: Apply depth-based fog
     // vec3 fogColor = vec3(0.5, 0.6, 0.7); // Light blue fog
-    // lighting = applyDepthFog(lighting, linearDepth, fogColor, far_plane * 0.7, far_plane);
+    // color = applyDepthFog(color, linearDepth, fogColor, far_plane * 0.7, far_plane);
     
-    // Tone mapping (simple Reinhard)
-    lighting = lighting / (lighting + vec3(1.0));
+    // HDR tonemapping (Reinhard)
+    color = color / (color + vec3(1.0));
     
     // Gamma correction
-    lighting = pow(lighting, vec3(1.0/2.2));
+    color = pow(color, vec3(1.0/2.2));
     
-    FragColor = vec4(lighting, 1.0);
+    FragColor = vec4(color, 1.0);
 }

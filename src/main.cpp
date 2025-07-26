@@ -218,17 +218,12 @@ int main()
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     Model plane(fs::path("assets/planes/plane_2.obj"));
+    Model ball(fs::path("assets/ball_2.obj"));
 
     std::vector<glm::vec3> objectPositions;
     objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
+    objectPositions.push_back(glm::vec3( 3.0,  -0.5, 3.0));
+    objectPositions.push_back(glm::vec3( -0.5,  -0.5,  0.0));
     objectPositions.push_back(glm::vec3( 8.0,  0.5,  3.0));
 
 
@@ -566,24 +561,28 @@ int main()
             simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
         simpleDepthShader.setFloat("far_plane", far_plane);
         simpleDepthShader.setVec3("lightPos", lightPos);
-        renderScene(simpleDepthShader);
+        // renderScene(simpleDepthShader);
         for (unsigned int i = 0; i < objectPositions.size(); i++)
             {
                 model = glm::mat4(1.0f);
                 model = glm::translate(model, objectPositions[i]);
-                model = glm::scale(model, glm::vec3(0.5f));
+                model = glm::scale(model, glm::vec3(1.0f));
                 simpleDepthShader.setMat4("model", model);
-                backpack.Draw(simpleDepthShader);
+                ball.Draw(simpleDepthShader);
 
 
             }
-        model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
-        simpleDepthShader.setMat4("model", model);
-        plane.Draw(simpleDepthShader);
 
-        model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
-        simpleDepthShader.setMat4("model", model);
-        plane.Draw(simpleDepthShader);
+        // model = glm::mat4(1.0f); 
+        // model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+        // simpleDepthShader.setMat4("model", model);
+        // plane.Draw(simpleDepthShader);
+
+
+        // model = glm::mat4(1.0f); 
+        // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
+        // simpleDepthShader.setMat4("model", model);
+        // plane.Draw(simpleDepthShader);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -610,7 +609,7 @@ int main()
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
             shaderGeometryPass.setMat4("model", model);
-            backpack.Draw(shaderGeometryPass);
+            ball.Draw(shaderGeometryPass);
             model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
             shaderGeometryPass.setMat4("model", model);
 
@@ -624,6 +623,11 @@ int main()
         model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
         shaderGeometryPass.setMat4("model", model);
         plane.Draw(shaderGeometryPass);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3( 2.0,  3.0,  0.0));
+        shaderGeometryPass.setMat4("model", model);
+        ball.Draw(shaderGeometryPass);
 
 
         model = glm::mat4(1.0f);
@@ -694,6 +698,11 @@ int main()
         shaderLightingPass.use();
         // shadows
         // glCullFace(GL_FRONT);
+        // PBR
+        shaderLightingPass.setFloat("metallic", 0.1f);
+        shaderLightingPass.setFloat("roughness", 0.2f);
+        shaderLightingPass.setFloat("ao", 0.5f);
+        ///
         shaderLightingPass.setMat4("projection", projection);
         shaderLightingPass.setMat4("view", view);
         // set lighting uniformss
@@ -935,9 +944,9 @@ int main()
             shaderLightBox.setVec3("lightColor", lightColors[i]);
             renderCube();
         }
-        model = glm::mat4(5.0f);
+        model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(1.125f));
+        model = glm::scale(model, glm::vec3(0.325f));
         shaderLightBox.setMat4("model", model);
         renderCube();        
 
