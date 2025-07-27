@@ -1,12 +1,15 @@
 #pragma once
 #include <glad/glad.h>
 #include <vector>
+#include <glm/glm.hpp>
+#include "model.h"
 
 class Object {
     public:
-        Object(const float* vertices, size_t vertexSize, int stride, unsigned int textureID );
+        Object(Model& model, glm::vec3 position);
         ~Object();
-        void draw() const;
+        Model& model;
+        glm::vec3 position;
     
     private:
         unsigned int VAO, VBO;

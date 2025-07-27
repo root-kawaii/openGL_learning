@@ -19,6 +19,18 @@
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
+  "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o -c /home/monolith/Desktop/openGL_learning/src/model.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/model.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning",
+  "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o -c /home/monolith/Desktop/openGL_learning/src/raycast.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/raycast.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning",
   "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/object.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/object.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o"

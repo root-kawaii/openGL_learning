@@ -61,6 +61,8 @@ add_executable(${PROJECT_NAME}
     src/texture_debugger.cpp
     src/main.cpp
     src/input.cpp
+    src/model.cpp
+    src/raycast.cpp
     src/object.cpp
     src/glad.c
     src/stb_image.cpp

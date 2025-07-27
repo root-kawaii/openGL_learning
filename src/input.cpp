@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <../src/camera.h>
+#include <../src/raycast.h>
 
 #include <iostream>
 

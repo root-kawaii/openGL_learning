@@ -13,7 +13,8 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
-- start watering
+- Implement object system
+- Advance in PBR
 - improve shadows
 
 

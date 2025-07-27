@@ -201,6 +201,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/model.o: src/model.cpp.o
+.PHONY : src/model.o
+
+# target to build an object file
+src/model.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o
+.PHONY : src/model.cpp.o
+
+src/model.i: src/model.cpp.i
+.PHONY : src/model.i
+
+# target to preprocess a source file
+src/model.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/model.cpp.i
+.PHONY : src/model.cpp.i
+
+src/model.s: src/model.cpp.s
+.PHONY : src/model.s
+
+# target to generate assembly for a file
+src/model.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/model.cpp.s
+.PHONY : src/model.cpp.s
+
 src/object.o: src/object.cpp.o
 .PHONY : src/object.o
 
@@ -224,6 +248,30 @@ src/object.s: src/object.cpp.s
 src/object.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/object.cpp.s
 .PHONY : src/object.cpp.s
+
+src/raycast.o: src/raycast.cpp.o
+.PHONY : src/raycast.o
+
+# target to build an object file
+src/raycast.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o
+.PHONY : src/raycast.cpp.o
+
+src/raycast.i: src/raycast.cpp.i
+.PHONY : src/raycast.i
+
+# target to preprocess a source file
+src/raycast.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.i
+.PHONY : src/raycast.cpp.i
+
+src/raycast.s: src/raycast.cpp.s
+.PHONY : src/raycast.s
+
+# target to generate assembly for a file
+src/raycast.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.s
+.PHONY : src/raycast.cpp.s
 
 src/stb_image.o: src/stb_image.cpp.o
 .PHONY : src/stb_image.o
@@ -291,9 +339,15 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/model.o"
+	@echo "... src/model.i"
+	@echo "... src/model.s"
 	@echo "... src/object.o"
 	@echo "... src/object.i"
 	@echo "... src/object.s"
+	@echo "... src/raycast.o"
+	@echo "... src/raycast.i"
+	@echo "... src/raycast.s"
 	@echo "... src/stb_image.o"
 	@echo "... src/stb_image.i"
 	@echo "... src/stb_image.s"

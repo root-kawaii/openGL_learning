@@ -5,6 +5,8 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/glad.c.o \
   CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o \
@@ -64,6 +66,10 @@ CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o:
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o:
 

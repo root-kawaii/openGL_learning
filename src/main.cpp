@@ -21,6 +21,8 @@
 #include <chrono>
 #include <thread>
 
+#include <../src/raycast.h>
+
 #include "../src/texture_debugger.cpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -28,9 +30,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
+void rayCast();
 void renderQuad();
 void renderCube();
+void renderLine(glm::vec3 A, glm::vec3 B, glm::mat4 view, float thickness);
 void renderScene(const Shader &shader);
+void renderOutline(Shader& selectedShader, std::vector<Mesh> meshes, glm::mat4 model, glm::mat4 projection, Camera& camera);
 Object loadSceneObject(const std::string& path, int stride, unsigned int textureID);
 void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
 
@@ -39,7 +44,13 @@ const unsigned int SCR_WIDTH = 1400;
 const unsigned int SCR_HEIGHT = 900;
 bool shadows = true;
 
+bool selected = false;
+
 float seed = rand();
+
+float xpos=0;
+float ypos=0;
+
 
 
 // camera
@@ -214,11 +225,21 @@ int main()
     Shader simpleDepthShader("shaders/simple_depth_shader.vs", "shaders/simple_depth_shader.fs", "shaders/simple_depth_shader.gs");
     Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
     Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
+    Shader modelShader("shaders/model.vs", "shaders/model.fs");
+
+    Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     Model plane(fs::path("assets/planes/plane_2.obj"));
-    Model ball(fs::path("assets/ball_2.obj"));
+    Model ballModel(fs::path("assets/ball_2.obj"));
+    Object ball(ballModel, glm::vec3(0.0f,3.0f,0.0f));
+
+    Model gunModel(fs::path("assets/cerberus/cerberus.glb"));
+    Object gun(gunModel, glm::vec3(0.0f,3.0f,0.0f));
+    Model helmet(fs::path("assets/helmet.glb"));
+
+
 
     std::vector<glm::vec3> objectPositions;
     objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
@@ -286,7 +307,7 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    unsigned int msaaGPosition, msaaGNormal, msaaGAlbedoSpec, msaaGDepth, msaaGLinearDepth, msaaGBuffer;
+    unsigned int msaaGPosition, msaaGNormal, msaaGAlbedoSpec, msaaGDepth, msaaGLinearDepth, msaaGBuffer, msaaGMetallic, msaaGRoughness;
 
     glGenFramebuffers(1, &msaaGBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, msaaGBuffer);
@@ -321,9 +342,21 @@ int main()
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_R32F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
 
+    // Metallic
+    glGenTextures(1, &msaaGMetallic);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGMetallic);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
+
+    // Roughness
+    glGenTextures(1, &msaaGRoughness);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGRoughness);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
+
     // Set draw buffers for MSAA G-buffer
-    unsigned int msaaAttachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(4, msaaAttachments);
+    unsigned int msaaAttachments[6] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 ,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
+    glDrawBuffers(6, msaaAttachments);
 
     // Check framebuffer completeness
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -352,7 +385,7 @@ int main()
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth;
+    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth, gMetallic, gRoughness;
 
     // Position color buffer
     glGenTextures(1, &gPosition);
@@ -396,9 +429,25 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLinearDepth, 0);
 
+    // Metallic
+    glGenTextures(1, &gMetallic);
+    glBindTexture(GL_TEXTURE_2D, gMetallic);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gMetallic, 0);
+
+    // Roughness
+    glGenTextures(1, &gRoughness);
+    glBindTexture(GL_TEXTURE_2D, gRoughness);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gRoughness, 0);
+
     // Tell OpenGL which color attachments we'll use for rendering 
-    unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(4, attachments);
+    unsigned int attachments[6] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 ,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
+    glDrawBuffers(6, attachments);
 
     // Check framebuffer completeness
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -501,25 +550,37 @@ int main()
     shaderLightingPass.setInt("gAlbedoSpec", 2);
     shaderLightingPass.setInt("gLinearDepth", 3);
     shaderLightingPass.setInt("depthMap", 4);
-    shaderLightingPass.setInt("gDepth", 6);
+    shaderLightingPass.setInt("gDepth", 5);
+    shaderLightingPass.setInt("gMetallic", 6);
+    shaderLightingPass.setInt("gRoughness", 7);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
 
+    // unsigned int albedo = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
+    unsigned int texture_metallic = loadTexture(fs::path("assets/cerberus/Textures/metallic.png").c_str());
+    // unsigned int normal = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
+    unsigned int texture_roughness = loadTexture(fs::path("assets/cerberus/Textures/roughness.png").c_str());
+
     // render loop
     // -----------
+    Ray ray;
+    glm::mat4 viewCopy; 
+    bool viewFrozen = false;
+    bool intersect = false;
 
     while (!glfwWindowShouldClose(window))
     {
 
         if(shadows) {
-            std::cout << "msaa enabled" << std::endl;
+            // std::cout << "msaa enabled" << std::endl;
             glEnable(GL_MULTISAMPLE);
         }
         else{
-            std::cout << "msaa disabled" <<std::endl;
+            // std::cout << "msaa disabled" <<std::endl;
             glDisable(GL_MULTISAMPLE);
         }
+
 
         // per-frame time logic
         // --------------------
@@ -568,7 +629,7 @@ int main()
                 model = glm::translate(model, objectPositions[i]);
                 model = glm::scale(model, glm::vec3(1.0f));
                 simpleDepthShader.setMat4("model", model);
-                ball.Draw(simpleDepthShader);
+                ball.model.Draw(simpleDepthShader);
 
 
             }
@@ -598,7 +659,68 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_plane, far_plane);
         glm::mat4 view = camera.GetViewMatrix();
         model = glm::mat4(1.0f);
+
+        
+
+        glm::mat4 frozenView; // outside render loop
+        bool viewFrozen;
+
+
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+            ray = screenToWorldRay(glm::vec2(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f),
+                                    camera, SCR_WIDTH, SCR_HEIGHT, projection);
+            bool intersect = rayIntersectMesh(ray, ball.model.meshes);
+            selected = true;
+            frozenView = camera.GetViewMatrix(); // 
+            viewFrozen = true;
+
+
+            if (intersect) {
+                std::cout << "intersect" << std::endl;
+                // selected = true;
+                // frozenView = camera.GetViewMatrix();
+                // viewFrozen = true;
+            } else {
+                std::cout << "no intersection" << std::endl;
+                // selected = false;
+                // viewFrozen = false;
+            }
+        }
+
+
+        modelShader.use();
+        modelShader.setMat4("projection", projection);
+        modelShader.setMat4("view", view);
+ 
+        if (selected && viewFrozen) {
+            // std::cout << "lining" << std::endl;
+            renderLine(ray.origin, ray.direction, frozenView, 0.1f);
+        }
+
+        if (true) {
+            std::cout << "moving" << std::endl;
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+                ball.position.y += 1;
+            }
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+                ball.position.y -= 1;
+            }
+            
+        }
+
+
         shaderGeometryPass.use();
+
+        shaderGeometryPass.setInt("texture_metallic",6);
+        shaderGeometryPass.setInt("texture_roughness",7);
+
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, texture_metallic);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, texture_roughness);
+
+
         shaderGeometryPass.setMat4("projection", projection);
         shaderGeometryPass.setMat4("view", view);
         shaderGeometryPass.setFloat("near_plane", near_plane);  // Add this
@@ -609,7 +731,7 @@ int main()
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
             shaderGeometryPass.setMat4("model", model);
-            ball.Draw(shaderGeometryPass);
+            ball.model.Draw(shaderGeometryPass);
             model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
             shaderGeometryPass.setMat4("model", model);
 
@@ -625,9 +747,9 @@ int main()
         plane.Draw(shaderGeometryPass);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3( 2.0,  3.0,  0.0));
+        model = glm::translate(model, ball.position);
         shaderGeometryPass.setMat4("model", model);
-        ball.Draw(shaderGeometryPass);
+        ball.model.Draw(shaderGeometryPass);
 
 
         model = glm::mat4(1.0f);
@@ -635,6 +757,23 @@ int main()
         model = glm::scale(model, glm::vec3(0.3f));
         shaderGeometryPass.setMat4("model", model);
         backpack.Draw(shaderGeometryPass);
+
+
+        model = glm::mat4(1.0f);
+        glm::vec3 gunOffset = glm::vec3(0.05f, -0.05f, -0.3f); // Adjust these values for desired position
+        model = glm::translate(model, gunOffset);
+        glm::mat3 cameraRotationInverse = glm::transpose(glm::mat3(camera.GetViewMatrix()));
+        model = glm::mat4(cameraRotationInverse) * model; // Apply camera's rotation to the gun
+        model = glm::translate(glm::mat4(1.0f), camera.Position) * model;
+        model = glm::scale(model, glm::vec3(0.001f)); // Keep your original scale
+        shaderGeometryPass.setMat4("model", model);
+        gun.model.Draw(shaderGeometryPass);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3( 0.0,  3.0, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        shaderGeometryPass.setMat4("model", model);
+        helmet.Draw(shaderGeometryPass);
 
 
         terrainShader.use();
@@ -701,6 +840,8 @@ int main()
         // PBR
         shaderLightingPass.setFloat("metallic", 0.1f);
         shaderLightingPass.setFloat("roughness", 0.2f);
+        // shaderLightingPass.setFloat("metallic", static_cast<float>(sin(glfwGetTime() * 1.5) ));
+        // shaderLightingPass.setFloat("roughness", static_cast<float>(sin(glfwGetTime())));
         shaderLightingPass.setFloat("ao", 0.5f);
         ///
         shaderLightingPass.setMat4("projection", projection);
@@ -728,6 +869,9 @@ int main()
             float radius = (-linear + std::sqrt(linear * linear - 4 * quadratic * (1.0f - (256.0f / 5.0f) * maxBrightness))) / (2 * quadratic);
             shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Radius", radius);
         }
+
+
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -738,8 +882,12 @@ int main()
         glBindTexture(GL_TEXTURE_2D, gLinearDepth);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        glActiveTexture(GL_TEXTURE6);
+        glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, gDepth);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, gMetallic);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, gRoughness);
 
         // finally render quad
         glDisable(GL_DEPTH_TEST);
@@ -980,6 +1128,8 @@ int main()
         glDepthFunc(GL_LESS);
 
 
+
+
         // TextureDebugger debugger = TextureDebugger();
         // static bool debugMode = true;
         // // debugMode = !debugMode;
@@ -1038,8 +1188,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
+    xpos = static_cast<float>(xposIn);
+    ypos = static_cast<float>(yposIn);
     if (firstMouse)
     {
         lastX = xpos;
@@ -1132,69 +1282,69 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 } 
 
-Object loadSceneObject(const std::string& path, int stride, unsigned int textureID) {
-    std::ifstream file(path);
-    nlohmann::json data;
-    file >> data;
+// Object loadSceneObject(const std::string& path, int stride, unsigned int textureID) {
+//     std::ifstream file(path);
+//     nlohmann::json data;
+//     file >> data;
 
-    std::vector<float> vertexBuffer;
+//     std::vector<float> vertexBuffer;
 
-    for (const auto& obj : data) {
-        for (const auto& vertex : obj["vertices"]) {
-            glm::vec3 pos(
-                vertex["position"][0],
-                vertex["position"][1],
-                vertex["position"][2]
-            );
+//     for (const auto& obj : data) {
+//         for (const auto& vertex : obj["vertices"]) {
+//             glm::vec3 pos(
+//                 vertex["position"][0],
+//                 vertex["position"][1],
+//                 vertex["position"][2]
+//             );
         
-            glm::vec2 texPos(
-                vertex["texcoord"][0],
-                vertex["texcoord"][1]
-            );
+//             glm::vec2 texPos(
+//                 vertex["texcoord"][0],
+//                 vertex["texcoord"][1]
+//             );
 
-        glm::vec3 rot(obj["rotation"][0], obj["rotation"][1], obj["rotation"][2]);
-        glm::vec3 scale(obj["scale"][0], obj["scale"][1], obj["scale"][2]);
+//         glm::vec3 rot(obj["rotation"][0], obj["rotation"][1], obj["rotation"][2]);
+//         glm::vec3 scale(obj["scale"][0], obj["scale"][1], obj["scale"][2]);
 
-        // Build model matrix
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
-        model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
-        model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
-        model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
-        model = glm::scale(model, scale);
-
-
-        glm::vec4 localPos(pos,1.0f);
-        glm::vec4 worldPos = model * localPos;
-
-        // Push transformed position
-        vertexBuffer.push_back(worldPos.x);
-        vertexBuffer.push_back(worldPos.y);
-        vertexBuffer.push_back(worldPos.z);
-
-        // Push texcoords (unchanged)
-        vertexBuffer.push_back(texPos.x);
-        vertexBuffer.push_back(texPos.y);
+//         // Build model matrix
+//         glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+//         model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+//         model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+//         model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+//         model = glm::scale(model, scale);
 
 
-        // std::cout << std::endl;
-        // std::cout << vertexBuffer[vertexBuffer.size() - 5];
-        // std::cout << vertexBuffer[vertexBuffer.size() - 4];
-        // std::cout << vertexBuffer[vertexBuffer.size() - 3];
-        // std::cout << vertexBuffer[vertexBuffer.size() - 2];
-        // std::cout << vertexBuffer[vertexBuffer.size() - 1];
-        // std::cout << std::endl;
+//         glm::vec4 localPos(pos,1.0f);
+//         glm::vec4 worldPos = model * localPos;
+
+//         // Push transformed position
+//         vertexBuffer.push_back(worldPos.x);
+//         vertexBuffer.push_back(worldPos.y);
+//         vertexBuffer.push_back(worldPos.z);
+
+//         // Push texcoords (unchanged)
+//         vertexBuffer.push_back(texPos.x);
+//         vertexBuffer.push_back(texPos.y);
+
+
+//         // std::cout << std::endl;
+//         // std::cout << vertexBuffer[vertexBuffer.size() - 5];
+//         // std::cout << vertexBuffer[vertexBuffer.size() - 4];
+//         // std::cout << vertexBuffer[vertexBuffer.size() - 3];
+//         // std::cout << vertexBuffer[vertexBuffer.size() - 2];
+//         // std::cout << vertexBuffer[vertexBuffer.size() - 1];
+//         // std::cout << std::endl;
         
-    }
-}
+//     }
+// }
 
 
-    // Allocate heap memory to return a float* (for Object constructor)
-    size_t vertexSize = vertexBuffer.size() * sizeof(float);
-    float* buffer = new float[vertexBuffer.size()];
-    std::copy(vertexBuffer.begin(), vertexBuffer.end(), buffer);
+//     // Allocate heap memory to return a float* (for Object constructor)
+//     size_t vertexSize = vertexBuffer.size() * sizeof(float);
+//     float* buffer = new float[vertexBuffer.size()];
+//     std::copy(vertexBuffer.begin(), vertexBuffer.end(), buffer);
 
-    return Object(buffer, vertexSize,stride, textureID);
-}
+//     return Object(buffer, vertexSize,stride, textureID);
+// }
 
 unsigned int quadVAO = 0;
 unsigned int quadVBO;
@@ -1223,6 +1373,10 @@ void renderQuad()
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+void rayCast(){
+    ;
 }
 
 void renderScene(const Shader &shader)
@@ -1272,6 +1426,73 @@ void renderScene(const Shader &shader)
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
+
+unsigned int lineVAO = 0;
+unsigned int lineVBO = 0;
+
+
+void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness)
+{
+    if (lineVAO == 0) {
+        glGenVertexArrays(1, &lineVAO);
+        glGenBuffers(1, &lineVBO);
+    }
+
+    // Normalize the ray direction (important)
+    rayDir = glm::normalize(rayDir);
+
+    // Compute the end point far along the ray
+    glm::vec3 B = rayOrigin + rayDir * 1000.0f;
+
+    // Compute right-facing vector from camera's view matrix
+    glm::vec3 camRight = glm::vec3(view[0][0], view[1][0], view[2][0]);
+
+    // Direction of the line (already normalized)
+    glm::vec3 lineDir = glm::normalize(B - rayOrigin);
+
+    // Compute perpendicular vector for thickness
+    glm::vec3 offset = glm::normalize(glm::cross(lineDir, camRight)) * (thickness * 0.5f);
+
+    // If lineDir and camRight are nearly parallel, offset will be near zero
+    if (glm::length(offset) < 1e-6f) return; // avoid degenerate quad
+
+    // Quad vertices
+    glm::vec3 v0 = rayOrigin + offset;
+    glm::vec3 v1 = rayOrigin - offset;
+    glm::vec3 v2 = B - offset;
+    glm::vec3 v3 = B + offset;
+
+    float vertices[] = {
+        // Triangle 1
+        v0.x, v0.y, v0.z,
+        v1.x, v1.y, v1.z,
+        v2.x, v2.y, v2.z,
+        // Triangle 2
+        v2.x, v2.y, v2.z,
+        v3.x, v3.y, v3.z,
+        v0.x, v0.y, v0.z
+    };
+
+    // Upload vertex data
+    glBindVertexArray(lineVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+    // Setup vertex attribs (location 0 = vec3 position)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glDisable(GL_CULL_FACE);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glEnable(GL_CULL_FACE);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+
 unsigned int cubeVAO = 0;
 unsigned int cubeVBO = 0;
 void renderCube()
@@ -1344,3 +1565,19 @@ void renderCube()
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }
+
+    void renderOutline(Shader& selectedShader, std::vector<Mesh> meshes, glm::mat4 model, glm::mat4 projection, Camera& camera) {
+        // Use outline shader
+        
+        // Create scaled transform matrix for outline
+        glm::mat4 scaledMatrix = glm::scale(model, glm::vec3(10.0,10.0,10.0));
+        glm::mat4 mvpMatrix = projection * camera.GetViewMatrix() * scaledMatrix;
+
+        selectedShader.setMat4("u_MVP", mvpMatrix);
+        
+        // Render mesh with outline shader
+        for(auto mesh : meshes){
+            glBindVertexArray(mesh.VAO);
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        }
+    }

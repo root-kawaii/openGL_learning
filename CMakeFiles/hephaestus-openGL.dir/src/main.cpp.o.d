@@ -382,7 +382,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/iostream \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/model.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/../include/assimp/Importer.hpp \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/defs.h \
  /usr/include/assimp/config.h \
@@ -407,7 +407,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix4x4.inl \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/MathFunctions.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/quaternion.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/../include/assimp/scene.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/scene.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/texture.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/pushpack1.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/poppack1.h \
@@ -427,7 +427,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/material.inl \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/anim.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/../include/assimp/postprocess.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
  /usr/include/c++/15.1.1/vector \
@@ -438,11 +438,13 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/bits/stl_tree.h \
  /usr/include/c++/15.1.1/bits/stl_map.h \
  /usr/include/c++/15.1.1/bits/stl_multimap.h \
- /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
+ /home/monolith/Desktop/openGL_learning/include/stb_image.h \
  /usr/include/c++/15.1.1/stdlib.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/input.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/object.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/model.h \
  /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
  /usr/include/c++/15.1.1/functional \
  /usr/include/c++/15.1.1/bits/std_function.h \
@@ -501,5 +503,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/any /usr/include/c++/15.1.1/chrono \
  /usr/include/c++/15.1.1/thread /usr/include/c++/15.1.1/bits/std_thread.h \
  /usr/include/c++/15.1.1/bits/this_thread_sleep.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/texture_debugger.cpp \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h

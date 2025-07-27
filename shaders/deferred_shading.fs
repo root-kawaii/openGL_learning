@@ -10,6 +10,8 @@ uniform sampler2D gAlbedoSpec;
 uniform sampler2D gLinearDepth;  // Added linear depth texture
 uniform samplerCube depthMap;
 uniform sampler2D gDepth;
+uniform sampler2D gMetallic;
+uniform sampler2D gRoughness;
 
 // Camera parameters for depth reconstruction
 uniform float near_plane;
@@ -17,8 +19,8 @@ uniform float far_plane;
 uniform mat4 projection;
 uniform mat4 view;
 
-uniform float metallic;
-uniform float roughness;
+// uniform float metallic;
+// uniform float roughness;
 uniform float ao;
 
 // Lighting uniforms
@@ -223,6 +225,8 @@ void main()
     vec3 normal = normalize(texture(gNormal, TexCoords).rgb);
     vec4 albedoSpec = texture(gAlbedoSpec, TexCoords);
     vec3 albedo = albedoSpec.rgb;
+    float metallic = texture(gMetallic, TexCoords).r;
+    float roughness = texture(gRoughness, TexCoords).r;
     float specularStrength = albedoSpec.a; // This could be repurposed for metallic or roughness
     
     // Early exit for background pixels (depth = 1.0 means sky/background)
