@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Object::Object(Model& model, glm::vec3 position):model(model), position(position)
+Object::Object(Model& model, glm::vec3 position, float ID):model(model), position(position), ID(ID)
 {
 
 }

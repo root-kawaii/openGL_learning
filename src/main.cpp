@@ -45,11 +45,14 @@ const unsigned int SCR_HEIGHT = 900;
 bool shadows = true;
 
 bool selected = false;
+int selectedID = 0;
 
 float seed = rand();
 
 float xpos=0;
 float ypos=0;
+
+int entityCounter = 0;
 
 
 
@@ -219,6 +222,7 @@ int main()
     Shader waterShader("shaders/water.vs", "shaders/water.fs");
     Shader terrainShader("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
     Shader shaderGeometryPass("shaders/g_buffer.vs", "shaders/g_buffer.fs");
+    Shader selectedShader("shaders/g_buffer.vs", "shaders/g_buffer_selected.fs");
     Shader shaderLightingPass("shaders/deferred_shading.vs", "shaders/deferred_shading.fs");
     Shader shaderLightBox("shaders/deferred_light_box.vs", "shaders/deferred_light_box.fs");
     Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
@@ -227,16 +231,19 @@ int main()
     Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
     Shader modelShader("shaders/model.vs", "shaders/model.fs");
 
-    Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
+    // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     Model plane(fs::path("assets/planes/plane_2.obj"));
-    Model ballModel(fs::path("assets/ball_2.obj"));
-    Object ball(ballModel, glm::vec3(0.0f,3.0f,0.0f));
 
     Model gunModel(fs::path("assets/cerberus/cerberus.glb"));
-    Object gun(gunModel, glm::vec3(0.0f,3.0f,0.0f));
+    Object gun(gunModel, glm::vec3(0.0f,3.0f,0.0f), entityCounter++);
+
+    Model ballModel(fs::path("assets/ball_2.obj"));
+    Object ball(ballModel, glm::vec3(0.0f,3.0f,0.0f), entityCounter++);
+
+
     Model helmet(fs::path("assets/helmet.glb"));
 
 
@@ -673,6 +680,8 @@ int main()
             selected = true;
             frozenView = camera.GetViewMatrix(); // 
             viewFrozen = true;
+            selectedID = ball.ID;
+            
 
 
             if (intersect) {
@@ -699,10 +708,22 @@ int main()
 
         if (true) {
             std::cout << "moving" << std::endl;
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+                ball.position.x += 1;
+            }
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+                ball.position.x -= 1;
+            }
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+                ball.position.z += 1;
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+                ball.position.z -= 1;
+            }
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
                 ball.position.y += 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
                 ball.position.y -= 1;
             }
             
@@ -746,12 +767,28 @@ int main()
         shaderGeometryPass.setMat4("model", model);
         plane.Draw(shaderGeometryPass);
 
+
+        selectedShader.use();
+
+
+        std::cout << selectedID << std::endl;
+        std::cout << ball.ID << std::endl;
+
+        shaderGeometryPass.use();
         model = glm::mat4(1.0f);
         model = glm::translate(model, ball.position);
+        shaderGeometryPass.setMat4("projection", projection);
+        shaderGeometryPass.setMat4("view", view);
         shaderGeometryPass.setMat4("model", model);
+        shaderGeometryPass.setFloat("time", glfwGetTime());
+        shaderGeometryPass.setFloat("selected", selectedID);
+        shaderGeometryPass.setFloat("objectID", ball.ID);
         ball.model.Draw(shaderGeometryPass);
+        
 
 
+
+        shaderGeometryPass.setFloat("objectID", 0);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3( 9.0,  -1.0, lightPos.z));
         model = glm::scale(model, glm::vec3(0.3f));

@@ -17,8 +17,6 @@ uniform sampler2D texture_metallic;
 uniform sampler2D texture_roughness;
 
 uniform float time;
-uniform float selected;
-uniform float objectID;
 
 
 // Camera parameters for linear depth calculation
@@ -41,14 +39,11 @@ void main()
     msaaGNormal = normalize(Normal);
     
     // Store the diffuse per-fragment color
-    if(selected == objectID && selected!=0){
-        float blinkFactor = (sin(time * 10) + 1.0) * 0.5;
-        vec3 diffuse = texture(texture_specular, TexCoords).rgb;
-        msaaGAlbedoSpec.rgb = mix(diffuse, vec3(0.8, 0.0, 0.8), blinkFactor * 0.7); // 0.7 controls purple intensity
-    }
-    else{
-        msaaGAlbedoSpec.rgb = texture(texture_diffuse, TexCoords).rgb;
-    }
+    float blinkFactor = (sin(time * 10) + 1.0) * 0.5;
+        
+    // Mix the original diffuse color with purple blinking
+    vec3 diffuse = texture(texture_specular, TexCoords).rgb;
+    msaaGAlbedoSpec.rgb = mix(diffuse, vec3(0.8, 0.0, 0.8), blinkFactor * 0.7); // 0.7 controls purple intensity
     
     // Store specular intensity in gAlbedoSpec's alpha component
     msaaGAlbedoSpec.a = texture(texture_specular, TexCoords).r;

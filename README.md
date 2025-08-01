@@ -13,7 +13,7 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
-- Rendering objects differently when they are intersected/hit
+- Save objects position/Serialization
 - Game mode where i can only move horizontally and start on the plane at the right height
 - Implement a jump
 - improve shadows

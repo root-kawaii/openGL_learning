@@ -6,10 +6,11 @@
 
 class Object {
     public:
-        Object(Model& model, glm::vec3 position);
+        Object(Model& model, glm::vec3 position, float ID);
         ~Object();
         Model& model;
         glm::vec3 position;
+        float ID;
     
     private:
         unsigned int VAO, VBO;
