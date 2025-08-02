@@ -12,7 +12,8 @@
 #include <../src/stb_image.h>
 #include <../src/input.h>
 
-#include <../src/object.h>
+#include <../src/game_object.h>
+#include <../src/scene.h>
 
 #include <iostream>
 #include <../json/single_include/nlohmann/json.hpp>
@@ -33,10 +34,10 @@ unsigned int loadCubemap(vector<std::string> faces);
 void rayCast();
 void renderQuad();
 void renderCube();
-void renderLine(glm::vec3 A, glm::vec3 B, glm::mat4 view, float thickness);
+void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);
 void renderScene(const Shader &shader);
 void renderOutline(Shader& selectedShader, std::vector<Mesh> meshes, glm::mat4 model, glm::mat4 projection, Camera& camera);
-Object loadSceneObject(const std::string& path, int stride, unsigned int textureID);
+GameObject loadSceneObject(const std::string& path, int stride, unsigned int textureID);
 void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
 
 // settings
@@ -185,7 +186,7 @@ int main()
     };
     unsigned int cubemapTexture = loadCubemap(faces);  
 
-        namespace fs = std::filesystem;
+    namespace fs = std::filesystem;
     // Shader shader("shaders/model.vs", "shaders/model.fs");
     // Shader shader("shaders/point_shadows.vs", "shaders/point_shadows.fs");
     // Shader lightingShader("shaders/light_caster.vs", "shaders/light_caster.fs");
@@ -234,14 +235,21 @@ int main()
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
 
+    Scene mainScene = Scene();
+
+
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     Model plane(fs::path("assets/planes/plane_2.obj"));
 
-    Model gunModel(fs::path("assets/cerberus/cerberus.glb"));
-    Object gun(gunModel, glm::vec3(0.0f,3.0f,0.0f), entityCounter++);
+    auto gun = std::make_unique<GameObject>("gun_1", "assets/cerberus/cerberus.glb", glm::vec3(0.0f, 3.0f, 0.0f));
+    auto ball = std::make_unique<GameObject>("ball_1", "assets/ball_2.obj", glm::vec3(0.0f, 3.0f, 0.0f));
 
-    Model ballModel(fs::path("assets/ball_2.obj"));
-    Object ball(ballModel, glm::vec3(0.0f,3.0f,0.0f), entityCounter++);
+    GameObject* ballPtr = ball.get();  // Get raw pointer before moving
+    GameObject* gunPtr = gun.get();  // Get raw pointer before moving
+
+    // Add to scene
+    mainScene.addGameObject(std::move(gun));
+    mainScene.addGameObject(std::move(ball));
 
 
     Model helmet(fs::path("assets/helmet.glb"));
@@ -636,7 +644,7 @@ int main()
                 model = glm::translate(model, objectPositions[i]);
                 model = glm::scale(model, glm::vec3(1.0f));
                 simpleDepthShader.setMat4("model", model);
-                ball.model.Draw(simpleDepthShader);
+                ballPtr->model.Draw(simpleDepthShader);
 
 
             }
@@ -673,14 +681,14 @@ int main()
         bool viewFrozen;
 
 
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
             ray = screenToWorldRay(glm::vec2(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f),
                                     camera, SCR_WIDTH, SCR_HEIGHT, projection);
-            bool intersect = rayIntersectMesh(ray, ball.model.meshes);
+            bool intersect = rayIntersectMesh(ray, ballPtr->model.meshes);
             selected = true;
             frozenView = camera.GetViewMatrix(); // 
             viewFrozen = true;
-            selectedID = ball.ID;
+            selectedID = ballPtr->ID;
             
 
 
@@ -700,31 +708,32 @@ int main()
         modelShader.use();
         modelShader.setMat4("projection", projection);
         modelShader.setMat4("view", view);
+        modelShader.setMat4("model", model);
  
         if (selected && viewFrozen) {
-            // std::cout << "lining" << std::endl;
-            renderLine(ray.origin, ray.direction, frozenView, 0.1f);
+            std::cout << "lining" << std::endl;
+            renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
         }
 
         if (true) {
             std::cout << "moving" << std::endl;
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
-                ball.position.x += 1;
+                ballPtr->position.x += 1;
             }
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
-                ball.position.x -= 1;
+                ballPtr->position.x -= 1;
             }
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-                ball.position.z += 1;
+                ballPtr->position.z += 1;
             }
             if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-                ball.position.z -= 1;
+                ballPtr->position.z -= 1;
             }
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-                ball.position.y += 1;
+                ballPtr->position.y += 1;
             }
             if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-                ball.position.y -= 1;
+                ballPtr->position.y -= 1;
             }
             
         }
@@ -752,7 +761,7 @@ int main()
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
             shaderGeometryPass.setMat4("model", model);
-            ball.model.Draw(shaderGeometryPass);
+            ballPtr->model.Draw(shaderGeometryPass);
             model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
             shaderGeometryPass.setMat4("model", model);
 
@@ -772,18 +781,18 @@ int main()
 
 
         std::cout << selectedID << std::endl;
-        std::cout << ball.ID << std::endl;
+        std::cout << ballPtr->ID << std::endl;
 
         shaderGeometryPass.use();
         model = glm::mat4(1.0f);
-        model = glm::translate(model, ball.position);
+        model = glm::translate(model, ballPtr->position);
         shaderGeometryPass.setMat4("projection", projection);
         shaderGeometryPass.setMat4("view", view);
         shaderGeometryPass.setMat4("model", model);
         shaderGeometryPass.setFloat("time", glfwGetTime());
         shaderGeometryPass.setFloat("selected", selectedID);
-        shaderGeometryPass.setFloat("objectID", ball.ID);
-        ball.model.Draw(shaderGeometryPass);
+        shaderGeometryPass.setFloat("objectID", ballPtr->ID);
+        ballPtr->model.Draw(shaderGeometryPass);
         
 
 
@@ -804,7 +813,7 @@ int main()
         model = glm::translate(glm::mat4(1.0f), camera.Position) * model;
         model = glm::scale(model, glm::vec3(0.001f)); // Keep your original scale
         shaderGeometryPass.setMat4("model", model);
-        gun.model.Draw(shaderGeometryPass);
+        gunPtr->model.Draw(shaderGeometryPass);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3( 0.0,  3.0, 0.0));
@@ -1467,66 +1476,110 @@ void renderScene(const Shader &shader)
 unsigned int lineVAO = 0;
 unsigned int lineVBO = 0;
 
-
-void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness)
+void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness = 0.1f, float length = 0.1f)
 {
     if (lineVAO == 0) {
         glGenVertexArrays(1, &lineVAO);
         glGenBuffers(1, &lineVBO);
     }
-
-    // Normalize the ray direction (important)
+    
+    // Normalize the ray direction
     rayDir = glm::normalize(rayDir);
-
-    // Compute the end point far along the ray
-    glm::vec3 B = rayOrigin + rayDir * 1000.0f;
-
-    // Compute right-facing vector from camera's view matrix
-    glm::vec3 camRight = glm::vec3(view[0][0], view[1][0], view[2][0]);
-
-    // Direction of the line (already normalized)
-    glm::vec3 lineDir = glm::normalize(B - rayOrigin);
-
-    // Compute perpendicular vector for thickness
-    glm::vec3 offset = glm::normalize(glm::cross(lineDir, camRight)) * (thickness * 0.5f);
-
-    // If lineDir and camRight are nearly parallel, offset will be near zero
-    if (glm::length(offset) < 1e-6f) return; // avoid degenerate quad
-
-    // Quad vertices
-    glm::vec3 v0 = rayOrigin + offset;
-    glm::vec3 v1 = rayOrigin - offset;
-    glm::vec3 v2 = B - offset;
-    glm::vec3 v3 = B + offset;
-
-    float vertices[] = {
-        // Triangle 1
-        v0.x, v0.y, v0.z,
-        v1.x, v1.y, v1.z,
-        v2.x, v2.y, v2.z,
-        // Triangle 2
-        v2.x, v2.y, v2.z,
-        v3.x, v3.y, v3.z,
-        v0.x, v0.y, v0.z
+    
+    // Compute the end point along the ray
+    glm::vec3 rayEnd = rayOrigin + rayDir * length;
+    // glm::vec3 renderRayStart = rayOrigin + glm::vec3(rayDir);
+    
+    // Get camera vectors from view matrix
+    glm::vec3 camRight = glm::normalize(glm::vec3(view[0][0], view[1][0], view[2][0]));
+    glm::vec3 camUp = glm::normalize(glm::vec3(view[0][1], view[1][1], view[2][1]));
+    
+    // Direction of the line
+    glm::vec3 lineDir = rayDir;
+    
+    // Compute two perpendicular vectors for thickness in both directions
+    glm::vec3 offset1 = glm::normalize(glm::cross(lineDir, camRight)) * (thickness * 0.5f);
+    glm::vec3 offset2 = glm::normalize(glm::cross(lineDir, offset1)) * (thickness * 0.5f);
+    
+    // Check for degenerate cases
+    if (glm::length(offset1) < 1e-6f || glm::length(offset2) < 1e-6f) {
+        // Fallback: use camera up vector if cross product fails
+        offset1 = camRight * (thickness * 0.5f);
+        offset2 = camUp * (thickness * 0.5f);
+    }
+    
+    // Create 8 vertices for a rectangular tube (4 at start, 4 at end)
+    glm::vec3 startVerts[4] = {
+        rayOrigin + offset1 + offset2,  // top-right
+        rayOrigin - offset1 + offset2,  // top-left
+        rayOrigin - offset1 - offset2,  // bottom-left
+        rayOrigin + offset1 - offset2   // bottom-right
     };
-
+    
+    glm::vec3 endVerts[4] = {
+        rayEnd + offset1 + offset2,     // top-right
+        rayEnd - offset1 + offset2,     // top-left
+        rayEnd - offset1 - offset2,     // bottom-left
+        rayEnd + offset1 - offset2      // bottom-right
+    };
+    
+    // Create vertices for 4 faces (12 triangles total)
+    float vertices[] = {
+        // Face 1: top (0-1-5-4)
+        startVerts[0].x, startVerts[0].y, startVerts[0].z,
+        startVerts[1].x, startVerts[1].y, startVerts[1].z,
+        endVerts[1].x, endVerts[1].y, endVerts[1].z,
+        
+        endVerts[1].x, endVerts[1].y, endVerts[1].z,
+        endVerts[0].x, endVerts[0].y, endVerts[0].z,
+        startVerts[0].x, startVerts[0].y, startVerts[0].z,
+        
+        // Face 2: right (0-4-7-3)
+        startVerts[0].x, startVerts[0].y, startVerts[0].z,
+        endVerts[0].x, endVerts[0].y, endVerts[0].z,
+        endVerts[3].x, endVerts[3].y, endVerts[3].z,
+        
+        endVerts[3].x, endVerts[3].y, endVerts[3].z,
+        startVerts[3].x, startVerts[3].y, startVerts[3].z,
+        startVerts[0].x, startVerts[0].y, startVerts[0].z,
+        
+        // Face 3: bottom (3-7-6-2)
+        startVerts[3].x, startVerts[3].y, startVerts[3].z,
+        endVerts[3].x, endVerts[3].y, endVerts[3].z,
+        endVerts[2].x, endVerts[2].y, endVerts[2].z,
+        
+        endVerts[2].x, endVerts[2].y, endVerts[2].z,
+        startVerts[2].x, startVerts[2].y, startVerts[2].z,
+        startVerts[3].x, startVerts[3].y, startVerts[3].z,
+        
+        // Face 4: left (2-6-5-1)
+        startVerts[2].x, startVerts[2].y, startVerts[2].z,
+        endVerts[2].x, endVerts[2].y, endVerts[2].z,
+        endVerts[1].x, endVerts[1].y, endVerts[1].z,
+        
+        endVerts[1].x, endVerts[1].y, endVerts[1].z,
+        startVerts[1].x, startVerts[1].y, startVerts[1].z,
+        startVerts[2].x, startVerts[2].y, startVerts[2].z
+    };
+    
     // Upload vertex data
     glBindVertexArray(lineVAO);
     glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-
-    // Setup vertex attribs (location 0 = vec3 position)
+    
+    // Setup vertex attributes (location 0 = vec3 position)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     glDisable(GL_CULL_FACE);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glEnable(GL_CULL_FACE);
-
+    
+    // Render the rectangular tube (24 vertices = 8 triangles)
+    glDrawArrays(GL_TRIANGLES, 0, 24);
+    
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    glEnable(GL_CULL_FACE);
 }
 
 

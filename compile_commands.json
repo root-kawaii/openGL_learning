@@ -31,9 +31,9 @@
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/object.cpp",
-  "file": "/home/monolith/Desktop/openGL_learning/src/object.cpp",
-  "output": "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o"
+  "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game_object.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/game_object.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
@@ -46,5 +46,11 @@
   "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o -c /home/monolith/Desktop/openGL_learning/src/stb_image.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning",
+  "command": "/usr/bin/c++  -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o -c /home/monolith/Desktop/openGL_learning/src/scene.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/scene.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o"
 }
 ]

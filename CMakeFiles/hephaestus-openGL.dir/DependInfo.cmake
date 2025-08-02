@@ -9,11 +9,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/game_object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/input.cpp" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/main.cpp" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/model.cpp" "CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o.d"
-  "/home/monolith/Desktop/openGL_learning/src/object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/raycast.cpp" "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/scene.cpp" "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
   "" "hephaestus-openGL" "gcc" "CMakeFiles/hephaestus-openGL.dir/link.d"

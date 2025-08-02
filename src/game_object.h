@@ -3,14 +3,17 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "model.h"
+#include <filesystem>
 
-class Object {
+class GameObject {
     public:
-        Object(Model& model, glm::vec3 position, float ID);
-        ~Object();
-        Model& model;
+        GameObject(std::string name, std::string modelPath, glm::vec3 position);
+        ~GameObject();
+        Model model;
+        std::string modelPath;
         glm::vec3 position;
         float ID;
+        std::string name; 
     
     private:
         unsigned int VAO, VBO;

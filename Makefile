@@ -129,6 +129,30 @@ hephaestus-openGL/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/build
 .PHONY : hephaestus-openGL/fast
 
+src/game_object.o: src/game_object.cpp.o
+.PHONY : src/game_object.o
+
+# target to build an object file
+src/game_object.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o
+.PHONY : src/game_object.cpp.o
+
+src/game_object.i: src/game_object.cpp.i
+.PHONY : src/game_object.i
+
+# target to preprocess a source file
+src/game_object.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.i
+.PHONY : src/game_object.cpp.i
+
+src/game_object.s: src/game_object.cpp.s
+.PHONY : src/game_object.s
+
+# target to generate assembly for a file
+src/game_object.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.s
+.PHONY : src/game_object.cpp.s
+
 src/glad.o: src/glad.c.o
 .PHONY : src/glad.o
 
@@ -225,30 +249,6 @@ src/model.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/model.cpp.s
 .PHONY : src/model.cpp.s
 
-src/object.o: src/object.cpp.o
-.PHONY : src/object.o
-
-# target to build an object file
-src/object.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o
-.PHONY : src/object.cpp.o
-
-src/object.i: src/object.cpp.i
-.PHONY : src/object.i
-
-# target to preprocess a source file
-src/object.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/object.cpp.i
-.PHONY : src/object.cpp.i
-
-src/object.s: src/object.cpp.s
-.PHONY : src/object.s
-
-# target to generate assembly for a file
-src/object.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/object.cpp.s
-.PHONY : src/object.cpp.s
-
 src/raycast.o: src/raycast.cpp.o
 .PHONY : src/raycast.o
 
@@ -272,6 +272,30 @@ src/raycast.s: src/raycast.cpp.s
 src/raycast.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.s
 .PHONY : src/raycast.cpp.s
+
+src/scene.o: src/scene.cpp.o
+.PHONY : src/scene.o
+
+# target to build an object file
+src/scene.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o
+.PHONY : src/scene.cpp.o
+
+src/scene.i: src/scene.cpp.i
+.PHONY : src/scene.i
+
+# target to preprocess a source file
+src/scene.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.i
+.PHONY : src/scene.cpp.i
+
+src/scene.s: src/scene.cpp.s
+.PHONY : src/scene.s
+
+# target to generate assembly for a file
+src/scene.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.s
+.PHONY : src/scene.cpp.s
 
 src/stb_image.o: src/stb_image.cpp.o
 .PHONY : src/stb_image.o
@@ -330,6 +354,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... hephaestus-openGL"
+	@echo "... src/game_object.o"
+	@echo "... src/game_object.i"
+	@echo "... src/game_object.s"
 	@echo "... src/glad.o"
 	@echo "... src/glad.i"
 	@echo "... src/glad.s"
@@ -342,12 +369,12 @@ help:
 	@echo "... src/model.o"
 	@echo "... src/model.i"
 	@echo "... src/model.s"
-	@echo "... src/object.o"
-	@echo "... src/object.i"
-	@echo "... src/object.s"
 	@echo "... src/raycast.o"
 	@echo "... src/raycast.i"
 	@echo "... src/raycast.s"
+	@echo "... src/scene.o"
+	@echo "... src/scene.i"
+	@echo "... src/scene.s"
 	@echo "... src/stb_image.o"
 	@echo "... src/stb_image.i"
 	@echo "... src/stb_image.s"

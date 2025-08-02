@@ -7,9 +7,10 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o \
-  CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/glad.c.o \
   CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o \
   /usr/lib/libglfw.so.3.4 \
   include/freetype/lib/libfreetype.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/libassimp.so \
@@ -71,11 +72,13 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o:
 
-CMakeFiles/hephaestus-openGL.dir/src/object.cpp.o:
+CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/glad.c.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o:
 
 /usr/lib/libglfw.so.3.4:
 

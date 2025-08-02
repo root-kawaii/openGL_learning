@@ -63,9 +63,10 @@ add_executable(${PROJECT_NAME}
     src/input.cpp
     src/model.cpp
     src/raycast.cpp
-    src/object.cpp
+    src/game_object.cpp
     src/glad.c
     src/stb_image.cpp
+    src/scene.cpp
 )
 
 # --------- Link directories ---------
