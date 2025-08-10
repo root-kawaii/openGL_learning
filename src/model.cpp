@@ -57,7 +57,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // data to fill
     vector<Vertex> vertices;
     vector<unsigned int> indices;
-    vector<Texture> textures;
+    vector<Mesh_Texture> textures;
 
     // walk through each of the mesh's vertices
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -122,22 +122,22 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // roughness: texture_roughnessN
 
     // 1. diffuse maps
-    vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+    vector<Mesh_Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // 2. specular maps
-    vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
+    vector<Mesh_Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     // 3. normal maps
-    std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
+    std::vector<Mesh_Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", scene);
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
     // 4. height maps
-    std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
+    std::vector<Mesh_Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", scene);
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
     // 5. metallic maps
-    std::vector<Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic", scene);
+    std::vector<Mesh_Texture> metallicMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_metallic", scene);
     textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
     // 6. roughness maps
-    std::vector<Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness", scene);
+    std::vector<Mesh_Texture> roughnessMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness", scene);
     textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
 
     // return a mesh object created from the extracted mesh data
@@ -146,9 +146,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName, const aiScene* scene)
+vector<Mesh_Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName, const aiScene* scene)
 {
-    vector<Texture> textures;
+    vector<Mesh_Texture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;
@@ -166,7 +166,7 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
         }
         if (!skip)
         { // if texture hasn't been loaded already, load it
-            Texture texture;
+            Mesh_Texture texture;
             
             // Check if this is an embedded texture (GLB files)
             if (str.C_Str()[0] == '*') {
@@ -193,7 +193,7 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
     // Provide default textures if none are found
     if (textures.empty())
     {
-        Texture defaultTex;
+        Mesh_Texture defaultTex;
         if (type == aiTextureType_DIFFUSE) {
             defaultTex.id = loadWhiteTexture();
             defaultTex.type = "texture_diffuse";

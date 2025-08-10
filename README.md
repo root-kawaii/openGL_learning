@@ -17,6 +17,7 @@ NEXT TO DO:
 - Game mode where i can only move horizontally and start on the plane at the right height
 - Implement a jump
 - improve shadows
+- use same texture for mesh and model
 
 
  

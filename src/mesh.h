@@ -7,7 +7,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <../src/shader_s.h>
-#include <../src/texture.h>
 
 #include <string>
 #include <vector>
@@ -33,17 +32,24 @@ struct Vertex
     float m_Weights[MAX_BONE_INFLUENCE];
 };
 
+struct Mesh_Texture
+{
+    unsigned int id;
+    string type;
+    string path;
+};
+
 class Mesh
 {
 public:
     // mesh Data
     vector<Vertex> vertices;
     vector<unsigned int> indices;
-    vector<Texture> textures;
+    vector<Mesh_Texture> textures;
     unsigned int VAO;
 
     // constructor
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
+    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Mesh_Texture> textures)
     {
         this->vertices = vertices;
         this->indices = indices;

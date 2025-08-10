@@ -64,6 +64,7 @@ private:
     // Statistics
     int drawCalls;
     int verticesRendered;
+    int textureCounter;
 
 public:
     RenderManager();
@@ -138,6 +139,8 @@ public:
                        const glm::vec3& color = glm::vec3(1.0f));
     void renderSphere(const glm::vec3& center, float radius, 
                      const glm::vec3& color = glm::vec3(1.0f));
+
+    int getTextureCounter(){return textureCounter;}
 
     
 

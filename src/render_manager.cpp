@@ -12,6 +12,7 @@ RenderManager::RenderManager()
     , verticesRendered(0)
     , ambientLight(0.1f, 0.1f, 0.1f)
 {
+    textureCounter = 0;
 }
 
 RenderManager::~RenderManager()
@@ -110,6 +111,8 @@ unsigned int RenderManager::loadTexture(const std::string& name, const char* pat
 
     // Use emplace instead of operator[]
     textures.emplace(name, tex);
+
+    tex->id = ++textureCounter;
     return tex->id;
 }
 

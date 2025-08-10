@@ -30,7 +30,7 @@ unsigned int loadDefaultRoughnessTexture();
 
 class Model {
 public:
-    vector<Texture> textures_loaded;
+    vector<Mesh_Texture> textures_loaded;
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
@@ -42,7 +42,7 @@ private:
     void loadModel(const string &path);
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName, const aiScene* scene);
+    vector<Mesh_Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName, const aiScene* scene);
 
 };
 

@@ -387,9 +387,8 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/15.1.1/bits/fstream.tcc /usr/include/c++/15.1.1/sstream \
  /usr/include/c++/15.1.1/bits/sstream.tcc \
- /usr/include/c++/15.1.1/iostream \
- /home/monolith/Desktop/openGL_learning/include/../src/texture.h \
- /usr/include/c++/15.1.1/filesystem /usr/include/c++/15.1.1/bits/fs_fwd.h \
+ /usr/include/c++/15.1.1/iostream /usr/include/c++/15.1.1/filesystem \
+ /usr/include/c++/15.1.1/bits/fs_fwd.h \
  /usr/include/c++/15.1.1/bits/chrono.h /usr/include/c++/15.1.1/ratio \
  /usr/include/c++/15.1.1/ctime \
  /usr/include/c++/15.1.1/bits/parse_numbers.h \

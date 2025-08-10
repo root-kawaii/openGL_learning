@@ -417,9 +417,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /usr/include/c++/15.1.1/fstream \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
- /usr/include/c++/15.1.1/bits/fstream.tcc \
- /home/monolith/Desktop/openGL_learning/include/../src/texture.h \
- /usr/include/GLFW/glfw3.h /usr/include/c++/15.1.1/map \
+ /usr/include/c++/15.1.1/bits/fstream.tcc /usr/include/c++/15.1.1/map \
  /usr/include/c++/15.1.1/bits/stl_tree.h \
  /usr/include/c++/15.1.1/bits/stl_map.h \
  /usr/include/c++/15.1.1/bits/stl_multimap.h \

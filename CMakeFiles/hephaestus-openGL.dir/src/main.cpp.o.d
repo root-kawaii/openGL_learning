@@ -430,7 +430,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
- /home/monolith/Desktop/openGL_learning/include/../src/texture.h \
  /usr/include/c++/15.1.1/vector \
  /usr/include/c++/15.1.1/bits/stl_uninitialized.h \
  /usr/include/c++/15.1.1/bits/stl_vector.h \
@@ -512,4 +511,5 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/render_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h

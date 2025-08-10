@@ -389,9 +389,7 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/15.1.1/bits/fstream.tcc /usr/include/c++/15.1.1/sstream \
  /usr/include/c++/15.1.1/bits/sstream.tcc \
- /usr/include/c++/15.1.1/iostream \
- /home/monolith/Desktop/openGL_learning/include/../src/texture.h \
- /usr/include/GLFW/glfw3.h /usr/include/c++/15.1.1/vector \
+ /usr/include/c++/15.1.1/iostream /usr/include/c++/15.1.1/vector \
  /usr/include/c++/15.1.1/bits/stl_uninitialized.h \
  /usr/include/c++/15.1.1/bits/stl_vector.h \
  /usr/include/c++/15.1.1/bits/stl_bvector.h \

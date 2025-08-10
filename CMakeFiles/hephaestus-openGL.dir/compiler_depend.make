@@ -13,7 +13,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   src/shader_m.h \
   src/shader_s.h \
   src/stb_image.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -240,6 +239,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   src/camera.h \
   src/mesh.h \
   src/shader_m.h \
+  src/texture.h \
   src/render_manager.h \
   src/game.h \
   /usr/include/GLFW/glfw3.h \
@@ -594,7 +594,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
 CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o: src/game_object.cpp \
   src/mesh.h \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -782,7 +781,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o: src/game_object.cpp \
   include/stb_image.h \
   src/game_object.h \
   src/model.h \
-  /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -1164,7 +1162,6 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   src/mesh.h \
   src/raycast.h \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/glad/glad.h \
   include/glm/detail/type_mat2x3.hpp \
@@ -1667,7 +1664,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/shader_m.h \
   src/shader_s.h \
   src/stb_image.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -1894,6 +1890,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/camera.h \
   src/mesh.h \
   src/shader_m.h \
+  src/texture.h \
   src/render_manager.h \
   src/game.h \
   /usr/include/GLFW/glfw3.h \
@@ -2248,7 +2245,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
 CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
   src/mesh.h \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -2435,7 +2431,6 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
   include/glm/vec4.hpp \
   include/stb_image.h \
   src/model.h \
-  /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -2721,7 +2716,6 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
 
 CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/glad/glad.h \
   include/glm/detail/type_mat2x3.hpp \
@@ -2883,7 +2877,6 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
   src/camera.h \
   src/mesh.h \
   src/raycast.h \
-  /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -3144,7 +3137,6 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
 
 CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cpp \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/glad/glad.h \
   include/glm/detail/type_mat2x3.hpp \
@@ -3303,6 +3295,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   src/camera.h \
   src/mesh.h \
   src/shader_m.h \
+  src/texture.h \
   src/render_manager.h \
   /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
@@ -3589,7 +3582,6 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
 CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   src/mesh.h \
   src/shader_s.h \
-  src/texture.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -3778,7 +3770,6 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   src/game_object.h \
   src/model.h \
   src/scene.h \
-  /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -5254,6 +5245,10 @@ include/glm/detail/type_mat4x2.hpp:
 
 /usr/include/c++/15.1.1/bits/ios_base.h:
 
+/usr/include/bits/cpu-set.h:
+
+include/glm/detail/type_mat4x4.inl:
+
 include/glm/ext/vector_bool2.hpp:
 
 /usr/include/c++/15.1.1/bits/cpp_type_traits.h:
@@ -5272,7 +5267,11 @@ include/glm/detail/type_vec1.hpp:
 
 include/glm/ext/scalar_uint_sized.hpp:
 
-include/glm/ext/matrix_double2x2.hpp:
+include/glm/ext/vector_bool1.hpp:
+
+src/input.h:
+
+include/glm/common.hpp:
 
 include/glm/ext/vector_uint4.hpp:
 
@@ -5289,12 +5288,6 @@ include/glm/ext/matrix_float2x3.hpp:
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/error_constants.h:
 
 /usr/include/c++/15.1.1/bits/stl_uninitialized.h:
-
-src/input.h:
-
-include/glm/common.hpp:
-
-include/glm/ext/vector_bool1.hpp:
 
 include/assimp/include/assimp/vector2.inl:
 
@@ -5368,6 +5361,16 @@ include/glm/ext/matrix_double3x2_precision.hpp:
 
 src/model.h:
 
+include/glm/detail/type_vec1.inl:
+
+/usr/include/bits/endian.h:
+
+src/stb_image.h:
+
+include/glm/ext/matrix_float2x4_precision.hpp:
+
+/usr/include/c++/15.1.1/ext/concurrence.h:
+
 /usr/include/bits/wordsize.h:
 
 include/glm/ext/matrix_double4x2_precision.hpp:
@@ -5385,6 +5388,12 @@ include/glm/ext/scalar_int_sized.hpp:
 include/glm/ext/vector_double1_precision.hpp:
 
 include/glm/detail/type_vec4.hpp:
+
+include/glm/ext/quaternion_relational.inl:
+
+src/mesh.h:
+
+include/glm/ext/quaternion_float.hpp:
 
 include/glm/ext/vector_int4.hpp:
 
@@ -5422,22 +5431,6 @@ include/glm/detail/type_quat.hpp:
 
 include/glm/mat3x4.hpp:
 
-include/glm/ext/quaternion_relational.inl:
-
-src/mesh.h:
-
-include/glm/ext/quaternion_float.hpp:
-
-include/glm/detail/type_vec1.inl:
-
-/usr/include/bits/endian.h:
-
-src/stb_image.h:
-
-include/glm/ext/matrix_float2x4_precision.hpp:
-
-/usr/include/c++/15.1.1/ext/concurrence.h:
-
 include/glm/geometric.hpp:
 
 /usr/lib/libm.so:
@@ -5456,10 +5449,6 @@ include/glm/ext/vector_uint1_sized.hpp:
 
 /usr/include/bits/libm-simd-decl-stubs.h:
 
-include/assimp/include/assimp/Compiler/poppack1.h:
-
-json/single_include/nlohmann/json.hpp:
-
 include/KHR/khrplatform.h:
 
 /usr/include/asm-generic/int-ll64.h:
@@ -5469,6 +5458,10 @@ include/glm/detail/_fixes.hpp:
 /usr/include/bits/types/FILE.h:
 
 /usr/include/c++/15.1.1/bits/fs_ops.h:
+
+include/assimp/include/assimp/Compiler/poppack1.h:
+
+json/single_include/nlohmann/json.hpp:
 
 /usr/include/c++/15.1.1/cmath:
 
@@ -5483,12 +5476,6 @@ src/shader_m.h:
 /usr/include/bits/mathcalls-macros.h:
 
 include/glm/detail/type_vec4.inl:
-
-include/glm/ext/matrix_float2x2.hpp:
-
-/usr/include/bits/flt-eval-method.h:
-
-include/glm/ext/matrix_float2x3_precision.hpp:
 
 /usr/include/limits.h:
 
@@ -5511,10 +5498,6 @@ include/assimp/include/assimp/vector3.h:
 include/glm/ext/vector_float4.hpp:
 
 include/glm/ext/matrix_float4x4.hpp:
-
-/usr/include/bits/cpu-set.h:
-
-include/glm/detail/type_mat4x4.inl:
 
 /usr/include/c++/15.1.1/random:
 
@@ -5569,6 +5552,12 @@ include/glm/detail/type_half.hpp:
 include/glm/detail/type_mat3x4.hpp:
 
 /usr/include/c++/15.1.1/cassert:
+
+include/glm/ext/matrix_float2x2.hpp:
+
+/usr/include/bits/flt-eval-method.h:
+
+include/glm/ext/matrix_float2x3_precision.hpp:
 
 include/glm/ext/matrix_float2x4.hpp:
 
@@ -5674,6 +5663,8 @@ include/glm/detail/func_trigonometric.inl:
 
 include/glm/detail/func_geometric.inl:
 
+include/glm/ext/matrix_double2x2.hpp:
+
 /usr/include/bits/local_lim.h:
 
 /usr/include/c++/15.1.1/bits/functexcept.h:
@@ -5762,11 +5753,11 @@ include/glm/detail/type_mat3x3.inl:
 
 /usr/include/bits/types/sigset_t.h:
 
-/usr/include/c++/15.1.1/bits/stl_raw_storage_iter.h:
-
 include/glm/detail/type_mat3x2.inl:
 
 src/game_object.h:
+
+/usr/include/c++/15.1.1/bits/stl_raw_storage_iter.h:
 
 /usr/include/bits/types/struct_FILE.h:
 
