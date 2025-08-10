@@ -129,6 +129,30 @@ hephaestus-openGL/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/build
 .PHONY : hephaestus-openGL/fast
 
+src/game.o: src/game.cpp.o
+.PHONY : src/game.o
+
+# target to build an object file
+src/game.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
+.PHONY : src/game.cpp.o
+
+src/game.i: src/game.cpp.i
+.PHONY : src/game.i
+
+# target to preprocess a source file
+src/game.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game.cpp.i
+.PHONY : src/game.cpp.i
+
+src/game.s: src/game.cpp.s
+.PHONY : src/game.s
+
+# target to generate assembly for a file
+src/game.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game.cpp.s
+.PHONY : src/game.cpp.s
+
 src/game_object.o: src/game_object.cpp.o
 .PHONY : src/game_object.o
 
@@ -273,6 +297,30 @@ src/raycast.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.s
 .PHONY : src/raycast.cpp.s
 
+src/render_manager.o: src/render_manager.cpp.o
+.PHONY : src/render_manager.o
+
+# target to build an object file
+src/render_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o
+.PHONY : src/render_manager.cpp.o
+
+src/render_manager.i: src/render_manager.cpp.i
+.PHONY : src/render_manager.i
+
+# target to preprocess a source file
+src/render_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.i
+.PHONY : src/render_manager.cpp.i
+
+src/render_manager.s: src/render_manager.cpp.s
+.PHONY : src/render_manager.s
+
+# target to generate assembly for a file
+src/render_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.s
+.PHONY : src/render_manager.cpp.s
+
 src/scene.o: src/scene.cpp.o
 .PHONY : src/scene.o
 
@@ -321,6 +369,30 @@ src/stb_image.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.s
 .PHONY : src/stb_image.cpp.s
 
+src/texture.o: src/texture.cpp.o
+.PHONY : src/texture.o
+
+# target to build an object file
+src/texture.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o
+.PHONY : src/texture.cpp.o
+
+src/texture.i: src/texture.cpp.i
+.PHONY : src/texture.i
+
+# target to preprocess a source file
+src/texture.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.i
+.PHONY : src/texture.cpp.i
+
+src/texture.s: src/texture.cpp.s
+.PHONY : src/texture.s
+
+# target to generate assembly for a file
+src/texture.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.s
+.PHONY : src/texture.cpp.s
+
 src/texture_debugger.o: src/texture_debugger.cpp.o
 .PHONY : src/texture_debugger.o
 
@@ -354,6 +426,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... hephaestus-openGL"
+	@echo "... src/game.o"
+	@echo "... src/game.i"
+	@echo "... src/game.s"
 	@echo "... src/game_object.o"
 	@echo "... src/game_object.i"
 	@echo "... src/game_object.s"
@@ -372,12 +447,18 @@ help:
 	@echo "... src/raycast.o"
 	@echo "... src/raycast.i"
 	@echo "... src/raycast.s"
+	@echo "... src/render_manager.o"
+	@echo "... src/render_manager.i"
+	@echo "... src/render_manager.s"
 	@echo "... src/scene.o"
 	@echo "... src/scene.i"
 	@echo "... src/scene.s"
 	@echo "... src/stb_image.o"
 	@echo "... src/stb_image.i"
 	@echo "... src/stb_image.s"
+	@echo "... src/texture.o"
+	@echo "... src/texture.i"
+	@echo "... src/texture.s"
 	@echo "... src/texture_debugger.o"
 	@echo "... src/texture_debugger.i"
 	@echo "... src/texture_debugger.s"

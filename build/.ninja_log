@@ -1,0 +1,13 @@
+# ninja log v6
+1	113	1754845990075984466	CMakeFiles/hephaestus-openGL.dir/src/glad.c.o	44d42d53b26123bb
+1	524	1754845990076080105	CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o	3dd739604c3ae721
+1	657	1754845990075103390	CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o	402d7185e085896d
+1	807	1754845990075739328	CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o	b048756fb37bb3e4
+1	1116	1754845990075628160	CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o	4652ded93a8d1a94
+2	945	1754845990077138445	CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o	d7c5880285ea51f9
+1	1038	1754845990075867998	CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o	d711c72b1436af89
+1	1071	1754845990075526600	CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o	fa57a043c2c052a2
+2	1556	1754845990077047154	CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o	591b09fa7e154398
+2	1236	1754845990076103390	CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o	68d49a97114cb3c6
+1	1878	1754845990075436371	CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o	b53661a169ab492d
+1878	1945	1754845991952103545	hephaestus-openGL	d6e8755de8941ed1

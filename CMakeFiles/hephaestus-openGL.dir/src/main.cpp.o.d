@@ -430,6 +430,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/texture.h \
  /usr/include/c++/15.1.1/vector \
  /usr/include/c++/15.1.1/bits/stl_uninitialized.h \
  /usr/include/c++/15.1.1/bits/stl_vector.h \
@@ -440,7 +441,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/bits/stl_multimap.h \
  /home/monolith/Desktop/openGL_learning/include/stb_image.h \
  /usr/include/c++/15.1.1/stdlib.h \
- /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/input.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/game_object.h \
@@ -466,12 +466,11 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/bits/unique_ptr.h \
  /usr/include/c++/15.1.1/bits/fs_dir.h \
  /usr/include/c++/15.1.1/bits/fs_ops.h \
- /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
- /usr/include/c++/15.1.1/unordered_map \
- /usr/include/c++/15.1.1/bits/unordered_map.h \
  /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
  /usr/include/c++/15.1.1/functional \
  /usr/include/c++/15.1.1/bits/std_function.h \
+ /usr/include/c++/15.1.1/unordered_map \
+ /usr/include/c++/15.1.1/bits/unordered_map.h \
  /usr/include/c++/15.1.1/array /usr/include/c++/15.1.1/compare \
  /usr/include/c++/15.1.1/iterator \
  /usr/include/c++/15.1.1/bits/stream_iterator.h \
@@ -507,5 +506,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/src/../src/texture_debugger.cpp \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h
+ /home/monolith/Desktop/openGL_learning/src/../src/game.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/render_manager.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/mesh.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h

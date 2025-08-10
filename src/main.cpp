@@ -9,11 +9,10 @@
 #include <../src/camera.h>
 #include <../src/model.h>
 
-#include <../src/stb_image.h>
 #include <../src/input.h>
 
 #include <../src/game_object.h>
-#include <../src/scene.h>
+// #include <../src/scene.h>
 
 #include <iostream>
 #include <../json/single_include/nlohmann/json.hpp>
@@ -24,11 +23,10 @@
 
 #include <../src/raycast.h>
 
-#include "../src/texture_debugger.cpp"
+// #include "../src/texture_debugger.cpp"
+#include "../src/game.h"
+#include "../src/texture.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
 void rayCast();
@@ -41,27 +39,12 @@ GameObject loadSceneObject(const std::string& path, int stride, unsigned int tex
 void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
 
 // settings
-const unsigned int SCR_WIDTH = 1400;
-const unsigned int SCR_HEIGHT = 900;
 bool shadows = true;
 
 bool selected = false;
 int selectedID = 0;
 
-float seed = rand();
-
-float xpos=0;
-float ypos=0;
-
 int entityCounter = 0;
-
-
-
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 
 // timing
 float deltaTime = 0.0f;
@@ -74,42 +57,17 @@ glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 8); // Request 8x MSAA
+    Game game;
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
 
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dreaming...", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    Scene mainScene = Scene();
+    RenderManager renderManager = game.getRenderManager();
 
-    // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    namespace fs = std::filesystem;
+    // unsigned int albedo = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
+    unsigned int texture_metallic = renderManager.loadTexture("texture_metallic", fs::path("assets/cerberus/Textures/metallic.png").c_str());
+    // unsigned int normal = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
+    unsigned int texture_roughness = renderManager.loadTexture("texture_roughness", fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
     // configure global opengl state
     // -----------------------------
@@ -186,7 +144,7 @@ int main()
     };
     unsigned int cubemapTexture = loadCubemap(faces);  
 
-    namespace fs = std::filesystem;
+
     // Shader shader("shaders/model.vs", "shaders/model.fs");
     // Shader shader("shaders/point_shadows.vs", "shaders/point_shadows.fs");
     // Shader lightingShader("shaders/light_caster.vs", "shaders/light_caster.fs");
@@ -215,7 +173,7 @@ int main()
 
     glGenTextures(1, &waterNormal);
     glBindTexture(GL_TEXTURE_2D, waterNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, waterNormal, 0);
@@ -235,7 +193,7 @@ int main()
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
 
-    Scene mainScene = Scene();
+
 
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
@@ -297,7 +255,7 @@ int main()
     // Create color texture
     glGenTextures(1, &sceneColorTexture);
     glBindTexture(GL_TEXTURE_2D, sceneColorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -307,7 +265,7 @@ int main()
     // Create depth texture (for depth testing during scene rendering)
     glGenTextures(1, &sceneDepthTexture);
     glBindTexture(GL_TEXTURE_2D, sceneDepthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SCR_WIDTH, SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -330,43 +288,43 @@ int main()
     // Position buffer (MSAA)
     glGenTextures(1, &msaaGPosition);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition, 0);
 
     // Normal buffer (MSAA)
     glGenTextures(1, &msaaGNormal);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal, 0);
 
     // Albedo + Specular buffer (MSAA)
     glGenTextures(1, &msaaGAlbedoSpec);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec, 0);
 
     // Depth buffer (MSAA)
     glGenRenderbuffers(1, &msaaGDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, msaaGDepth);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, SCR_WIDTH, SCR_HEIGHT);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, game.SCR_WIDTH, game.SCR_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, msaaGDepth);
 
     // Linear Depth buffer (MSAA)
     glGenTextures(1, &msaaGLinearDepth);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_R32F, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_R32F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
 
     // Metallic
     glGenTextures(1, &msaaGMetallic);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGMetallic);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
 
     // Roughness
     glGenTextures(1, &msaaGRoughness);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGRoughness);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
 
     // Set draw buffers for MSAA G-buffer
@@ -405,7 +363,7 @@ int main()
     // Position color buffer
     glGenTextures(1, &gPosition);
     glBindTexture(GL_TEXTURE_2D, gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
@@ -413,7 +371,7 @@ int main()
     // Normal color buffer
     glGenTextures(1, &gNormal);
     glBindTexture(GL_TEXTURE_2D, gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
@@ -421,7 +379,7 @@ int main()
     // Color + specular color buffer
     glGenTextures(1, &gAlbedoSpec);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
@@ -429,7 +387,7 @@ int main()
     // Depth buffer
     glGenTextures(1, &gDepth);
     glBindTexture(GL_TEXTURE_2D, gDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SCR_WIDTH, SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -439,7 +397,7 @@ int main()
     // Linear Depth buffer
     glGenTextures(1, &gLinearDepth);
     glBindTexture(GL_TEXTURE_2D, gLinearDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLinearDepth, 0);
@@ -447,7 +405,7 @@ int main()
     // Metallic
     glGenTextures(1, &gMetallic);
     glBindTexture(GL_TEXTURE_2D, gMetallic);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gMetallic, 0);
@@ -455,7 +413,7 @@ int main()
     // Roughness
     glGenTextures(1, &gRoughness);
     glBindTexture(GL_TEXTURE_2D, gRoughness);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gRoughness, 0);
@@ -572,10 +530,7 @@ int main()
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
 
-    // unsigned int albedo = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
-    unsigned int texture_metallic = loadTexture(fs::path("assets/cerberus/Textures/metallic.png").c_str());
-    // unsigned int normal = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
-    unsigned int texture_roughness = loadTexture(fs::path("assets/cerberus/Textures/roughness.png").c_str());
+
 
     // render loop
     // -----------
@@ -584,7 +539,7 @@ int main()
     bool viewFrozen = false;
     bool intersect = false;
 
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(game.getWindow()))
     {
 
         if(shadows) {
@@ -607,7 +562,7 @@ int main()
         lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
         // input
         // -----
-        processInput(window, &camera, deltaTime, shadows, seed);
+        processInput(game.getWindow(), &game.camera, deltaTime, shadows, game.seed);
 
         // render
         // ------
@@ -666,13 +621,13 @@ int main()
 
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, near_plane, far_plane);
-        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(game.camera.Zoom), (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
+        glm::mat4 view = game.camera.GetViewMatrix();
         model = glm::mat4(1.0f);
 
         
@@ -681,12 +636,12 @@ int main()
         bool viewFrozen;
 
 
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            ray = screenToWorldRay(glm::vec2(SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f),
-                                    camera, SCR_WIDTH, SCR_HEIGHT, projection);
+        if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS) {
+            ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f, game.SCR_HEIGHT / 2.0f),
+                                    game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
             bool intersect = rayIntersectMesh(ray, ballPtr->model.meshes);
             selected = true;
-            frozenView = camera.GetViewMatrix(); // 
+            frozenView = game.camera.GetViewMatrix(); // 
             viewFrozen = true;
             selectedID = ballPtr->ID;
             
@@ -717,22 +672,22 @@ int main()
 
         if (true) {
             std::cout << "moving" << std::endl;
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
                 ballPtr->position.x += 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
                 ballPtr->position.x -= 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS){
                 ballPtr->position.z += 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS){
                 ballPtr->position.z -= 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
                 ballPtr->position.y += 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
                 ballPtr->position.y -= 1;
             }
             
@@ -808,9 +763,9 @@ int main()
         model = glm::mat4(1.0f);
         glm::vec3 gunOffset = glm::vec3(0.05f, -0.05f, -0.3f); // Adjust these values for desired position
         model = glm::translate(model, gunOffset);
-        glm::mat3 cameraRotationInverse = glm::transpose(glm::mat3(camera.GetViewMatrix()));
+        glm::mat3 cameraRotationInverse = glm::transpose(glm::mat3(game.camera.GetViewMatrix()));
         model = glm::mat4(cameraRotationInverse) * model; // Apply camera's rotation to the gun
-        model = glm::translate(glm::mat4(1.0f), camera.Position) * model;
+        model = glm::translate(glm::mat4(1.0f), game.camera.Position) * model;
         model = glm::scale(model, glm::vec3(0.001f)); // Keep your original scale
         shaderGeometryPass.setMat4("model", model);
         gunPtr->model.Draw(shaderGeometryPass);
@@ -823,7 +778,7 @@ int main()
 
 
         terrainShader.use();
-        terrainShader.setFloat("seed", seed);
+        terrainShader.setFloat("seed", game.seed);
         terrainShader.setMat4("projection", projection);
         terrainShader.setMat4("view", view);
         terrainShader.setFloat("near_plane", near_plane);  // Add this
@@ -844,22 +799,22 @@ int main()
         // // Resolve each attachment
         // glReadBuffer(GL_COLOR_ATTACHMENT0);
         // glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // glReadBuffer(GL_COLOR_ATTACHMENT1);
         // glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // glReadBuffer(GL_COLOR_ATTACHMENT2);
         // glDrawBuffer(GL_COLOR_ATTACHMENT2);
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // glReadBuffer(GL_COLOR_ATTACHMENT3);
         // glDrawBuffer(GL_COLOR_ATTACHMENT3);
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // // Resolve depth
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
@@ -867,7 +822,7 @@ int main()
     
 
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT );
 
 
@@ -877,7 +832,7 @@ int main()
         // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
         // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
         // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-        glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
 
         shaderLightingPass.use();
@@ -893,7 +848,7 @@ int main()
         shaderLightingPass.setMat4("projection", projection);
         shaderLightingPass.setMat4("view", view);
         // set lighting uniformss
-        shaderLightingPass.setVec3("viewPos", camera.Position);
+        shaderLightingPass.setVec3("viewPos", game.camera.Position);
         shaderLightingPass.setInt("shadows", 1); // enable/disable shadows by pressing 'SPACE'
         shaderLightingPass.setFloat("far_plane", far_plane);
         shaderLightingPass.setFloat("near_plane", near_plane);
@@ -947,12 +902,12 @@ int main()
         // // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
         // // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
         // // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer);
         // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        // glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
 
 
@@ -992,8 +947,8 @@ int main()
 
         // Copy color buffer to the screen
         glBlitFramebuffer(
-            0, 0, SCR_WIDTH, SCR_HEIGHT,    // src rect
-            0, 0, SCR_WIDTH, SCR_HEIGHT,    // dst rect
+            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT,    // src rect
+            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT,    // dst rect
             GL_COLOR_BUFFER_BIT,            // what to copy
             GL_NEAREST                      // filtering
         );
@@ -1064,10 +1019,10 @@ int main()
         waterShader.setMat4("inverseView", glm::inverse(view));             // NEW: 'inverseView' uniform in FS
 
         // Set camera position
-        waterShader.setVec3("cameraWorldPos", camera.Position);
+        waterShader.setVec3("cameraWorldPos", game.camera.Position);
 
         // Set screen size
-        waterShader.setVec2("screenSize", glm::vec2(SCR_WIDTH, SCR_HEIGHT));
+        waterShader.setVec2("screenSize", glm::vec2(game.SCR_WIDTH, game.SCR_HEIGHT));
 
         // --- ADDED: Near and Far Plane values ---
         // These are now uniforms in the fragment shader for LinearizeDepth (even if not directly used by current ReconstructWorldPosition)
@@ -1162,7 +1117,7 @@ int main()
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
@@ -1186,7 +1141,7 @@ int main()
         // }
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(game.getWindow());
         glfwPollEvents();
         // float val = 1/120-deltaTime;
         // std::cout << val << std::endl;
@@ -1216,48 +1171,6 @@ void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::m
 }
 
 
-
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
-    xpos = static_cast<float>(xposIn);
-    ypos = static_cast<float>(yposIn);
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
-}
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------

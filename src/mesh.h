@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <../src/shader_s.h>
+#include <../src/texture.h>
 
 #include <string>
 #include <vector>
@@ -30,13 +31,6 @@ struct Vertex
     int m_BoneIDs[MAX_BONE_INFLUENCE];
     // weights from each bone
     float m_Weights[MAX_BONE_INFLUENCE];
-};
-
-struct Texture
-{
-    unsigned int id;
-    string type;
-    string path;
 };
 
 class Mesh

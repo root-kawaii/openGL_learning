@@ -85,6 +85,8 @@
         "shared_mutex": "cpp",
         "cfenv": "cpp",
         "typeindex": "cpp",
-        "stdfloat": "cpp"
+        "stdfloat": "cpp",
+        "*.def": "cpp",
+        "*.inc": "cpp"
     }
 }

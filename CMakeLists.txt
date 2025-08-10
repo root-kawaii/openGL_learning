@@ -67,6 +67,9 @@ add_executable(${PROJECT_NAME}
     src/glad.c
     src/stb_image.cpp
     src/scene.cpp
+    src/game.cpp
+    src/render_manager.cpp
+    src/texture.cpp
 )
 
 # --------- Link directories ---------
