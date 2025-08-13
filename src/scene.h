@@ -7,7 +7,7 @@
 class Scene {
 private:
     std::string name;
-    std::vector<std::unique_ptr<GameObject>> gameObjects;
+    std::vector<std::shared_ptr<GameObject>> gameObjects;
     std::unordered_map<uint32_t, GameObject*> objectsById;
     GameObject* rootObject;
 
@@ -22,7 +22,7 @@ public:
     ~Scene();
     uint64_t entityCounter;
     // Pure data operations
-    uint32_t addGameObject(std::unique_ptr<GameObject> gameObject);
+    uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
     void destroyGameObject(GameObject* obj);
     GameObject* findObjectByName(const std::string& name);
     GameObject* findObjectById(uint32_t id);

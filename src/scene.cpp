@@ -13,7 +13,7 @@
     }
 
 
-    uint32_t Scene::addGameObject(std::unique_ptr<GameObject> gameObject) {
+    uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject) {
         // Better ID generation
         uint32_t id = generateUniqueId();
         gameObject->ID = id;

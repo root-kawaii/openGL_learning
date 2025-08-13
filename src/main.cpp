@@ -27,14 +27,7 @@
 #include "../src/game.h"
 #include "../src/texture.h"
 
-unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<std::string> faces);
-void rayCast();
-void renderQuad();
-void renderCube();
-void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);
-void renderScene(const Shader &shader);
-void renderOutline(Shader& selectedShader, std::vector<Mesh> meshes, glm::mat4 model, glm::mat4 projection, Camera& camera);
 GameObject loadSceneObject(const std::string& path, int stride, unsigned int textureID);
 void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
 
@@ -57,11 +50,14 @@ glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
 
 int main()
 {
-    Game game;
+    Game game = Game();
 
 
     Scene mainScene = Scene();
     RenderManager renderManager = game.getRenderManager();
+    renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
+    renderManager.setupGBuffer();
+    renderManager.setupMSAAGBuffer();
 
     namespace fs = std::filesystem;
     // unsigned int albedo = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
@@ -71,10 +67,6 @@ int main()
 
     // configure global opengl state
     // -----------------------------
-
-    // glEnable(GL_BLEND);
-    // // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -144,40 +136,6 @@ int main()
     };
     unsigned int cubemapTexture = loadCubemap(faces);  
 
-
-    // Shader shader("shaders/model.vs", "shaders/model.fs");
-    // Shader shader("shaders/point_shadows.vs", "shaders/point_shadows.fs");
-    // Shader lightingShader("shaders/light_caster.vs", "shaders/light_caster.fs");
-
-    // Shader screenShader("shaders/screen_shader.vs", "shaders/model_3.fs");
-
-    // Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
-
-    // Shader simpleDepthShader("shaders/simple_depth_shader.vs", "shaders/simple_depth_shader.fs", "shaders/simple_depth_shader.gs");
-    // Shader shadowShader("shaders/shadow_mapping.vs", "shaders/shadow_mapping.fs");
-    // Shader quadShader("shaders/quad.vs", "shaders/quad.fs");
-
-    // std::string floorTextureS = fs::path("assets/wooden_texture.png").u8string();
-    // unsigned int floorTexture = loadTexture(floorTextureS.c_str());
-    // std::string cubeTextureS = fs::path("assets/block.png").u8string();
-    // unsigned int cubeTexture = loadTexture(cubeTextureS.c_str());
-    // std::string transparentTextureS = fs::path("assets/window.png").u8string();
-    // unsigned int transparentTexture = loadTexture(transparentTextureS.c_str());
-
-    // load models
-    // -----------
-
-    std::string waterNormalTexture = fs::path("assets/water_normal.png").u8string();
-    unsigned int waterNormal = loadTexture(waterNormalTexture.c_str());
-
-
-    glGenTextures(1, &waterNormal);
-    glBindTexture(GL_TEXTURE_2D, waterNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, waterNormal, 0);
-
     Shader waterShader("shaders/water.vs", "shaders/water.fs");
     Shader terrainShader("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
     Shader shaderGeometryPass("shaders/g_buffer.vs", "shaders/g_buffer.fs");
@@ -193,25 +151,21 @@ int main()
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
 
-
-
-
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     Model plane(fs::path("assets/planes/plane_2.obj"));
 
-    auto gun = std::make_unique<GameObject>("gun_1", "assets/cerberus/cerberus.glb", glm::vec3(0.0f, 3.0f, 0.0f));
-    auto ball = std::make_unique<GameObject>("ball_1", "assets/ball_2.obj", glm::vec3(0.0f, 3.0f, 0.0f));
+    auto gun = std::make_shared<GameObject>("gun_1", "assets/cerberus/cerberus.glb", glm::vec3(0.0f, 3.0f, 0.0f));
+    auto ball = std::make_shared<GameObject>("ball_1", "assets/ball_2.obj", glm::vec3(0.0f, 3.0f, 0.0f));
 
     GameObject* ballPtr = ball.get();  // Get raw pointer before moving
     GameObject* gunPtr = gun.get();  // Get raw pointer before moving
 
     // Add to scene
-    mainScene.addGameObject(std::move(gun));
-    mainScene.addGameObject(std::move(ball));
+    mainScene.addGameObject(gun);
+    mainScene.addGameObject(ball);
 
 
     Model helmet(fs::path("assets/helmet.glb"));
-
 
 
     std::vector<glm::vec3> objectPositions;
@@ -219,30 +173,6 @@ int main()
     objectPositions.push_back(glm::vec3( 3.0,  -0.5, 3.0));
     objectPositions.push_back(glm::vec3( -0.5,  -0.5,  0.0));
     objectPositions.push_back(glm::vec3( 8.0,  0.5,  3.0));
-
-
-    float quadVertices[] = {
-    // positions   // texCoords
-    -1.0f,  1.0f,  0.0f, 1.0f, // top-left
-    -1.0f, -1.0f,  0.0f, 0.0f, // bottom-left
-     1.0f, -1.0f,  1.0f, 0.0f, // bottom-right
-
-    -1.0f,  1.0f,  0.0f, 1.0f, // top-left
-     1.0f, -1.0f,  1.0f, 0.0f, // bottom-right
-     1.0f,  1.0f,  1.0f, 1.0f  // top-right
-    };
-
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    glBindVertexArray(0);
 
 
 
@@ -279,169 +209,6 @@ int main()
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-    unsigned int msaaGPosition, msaaGNormal, msaaGAlbedoSpec, msaaGDepth, msaaGLinearDepth, msaaGBuffer, msaaGMetallic, msaaGRoughness;
-
-    glGenFramebuffers(1, &msaaGBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, msaaGBuffer);
-
-    // Position buffer (MSAA)
-    glGenTextures(1, &msaaGPosition);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition, 0);
-
-    // Normal buffer (MSAA)
-    glGenTextures(1, &msaaGNormal);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, msaaGNormal, 0);
-
-    // Albedo + Specular buffer (MSAA)
-    glGenTextures(1, &msaaGAlbedoSpec);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D_MULTISAMPLE, msaaGAlbedoSpec, 0);
-
-    // Depth buffer (MSAA)
-    glGenRenderbuffers(1, &msaaGDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, msaaGDepth);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, game.SCR_WIDTH, game.SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, msaaGDepth);
-
-    // Linear Depth buffer (MSAA)
-    glGenTextures(1, &msaaGLinearDepth);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_R32F, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
-
-    // Metallic
-    glGenTextures(1, &msaaGMetallic);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGMetallic);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
-
-    // Roughness
-    glGenTextures(1, &msaaGRoughness);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGRoughness);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, game.SCR_WIDTH, game.SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D_MULTISAMPLE, msaaGLinearDepth, 0);
-
-    // Set draw buffers for MSAA G-buffer
-    unsigned int msaaAttachments[6] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 ,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
-    glDrawBuffers(6, msaaAttachments);
-
-    // Check framebuffer completeness
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR::FRAMEBUFFER:: MSAA G-buffer is not complete!" << std::endl;
-        
-        // More detailed error checking
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        switch(status) {
-            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
-                break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
-                break;
-            case GL_FRAMEBUFFER_UNSUPPORTED:
-                std::cout << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
-                break;
-            default:
-                std::cout << "Unknown framebuffer error: " << status << std::endl;
-                break;
-        }
-    }
-
-    // Regular G-buffer setup
-    // ----------------------
-    unsigned int gBuffer;
-    glGenFramebuffers(1, &gBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth, gMetallic, gRoughness;
-
-    // Position color buffer
-    glGenTextures(1, &gPosition);
-    glBindTexture(GL_TEXTURE_2D, gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-
-    // Normal color buffer
-    glGenTextures(1, &gNormal);
-    glBindTexture(GL_TEXTURE_2D, gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-
-    // Color + specular color buffer
-    glGenTextures(1, &gAlbedoSpec);
-    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
-
-    // Depth buffer
-    glGenTextures(1, &gDepth);
-    glBindTexture(GL_TEXTURE_2D, gDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth, 0);
-
-    // Linear Depth buffer
-    glGenTextures(1, &gLinearDepth);
-    glBindTexture(GL_TEXTURE_2D, gLinearDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLinearDepth, 0);
-
-    // Metallic
-    glGenTextures(1, &gMetallic);
-    glBindTexture(GL_TEXTURE_2D, gMetallic);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gMetallic, 0);
-
-    // Roughness
-    glGenTextures(1, &gRoughness);
-    glBindTexture(GL_TEXTURE_2D, gRoughness);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.SCR_WIDTH, game.SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gRoughness, 0);
-
-    // Tell OpenGL which color attachments we'll use for rendering 
-    unsigned int attachments[6] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 ,GL_COLOR_ATTACHMENT4,GL_COLOR_ATTACHMENT5 };
-    glDrawBuffers(6, attachments);
-
-    // Check framebuffer completeness
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR::FRAMEBUFFER:: Regular G-buffer is not complete!" << std::endl;
-        
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        switch(status) {
-            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
-                break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
-                break;
-            case GL_FRAMEBUFFER_UNSUPPORTED:
-                std::cout << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
-                break;
-            default:
-                std::cout << "Unknown framebuffer error: " << status << std::endl;
-                break;
-        }
-    }
 
     // Unbind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -484,12 +251,6 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 
-    // framebuffers
-    // unsigned int fbo2;
-    // glGenFramebuffers(1, &fbo2);
-    // glBindFramebuffer(GL_FRAMEBUFFER, fbo2);  
-
-
     // shadowmaps
 
     const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
@@ -516,20 +277,18 @@ int main()
 
 
 
-
     shaderLightingPass.use();
     shaderLightingPass.setInt("gPosition", 0);
     shaderLightingPass.setInt("gNormal", 1);
     shaderLightingPass.setInt("gAlbedoSpec", 2);
-    shaderLightingPass.setInt("gLinearDepth", 3);
-    shaderLightingPass.setInt("depthMap", 4);
-    shaderLightingPass.setInt("gDepth", 5);
-    shaderLightingPass.setInt("gMetallic", 6);
-    shaderLightingPass.setInt("gRoughness", 7);
+    shaderLightingPass.setInt("gDepth", 3);
+    shaderLightingPass.setInt("gLinearDepth", 4);
+    shaderLightingPass.setInt("gMetallic", 5);
+    shaderLightingPass.setInt("gRoughness", 6);
+    shaderLightingPass.setInt("depthMap", 7);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
-
 
 
     // render loop
@@ -622,7 +381,7 @@ int main()
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
         glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, renderManager.getGBuffer());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -667,7 +426,7 @@ int main()
  
         if (selected && viewFrozen) {
             std::cout << "lining" << std::endl;
-            renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
+            renderManager.renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
         }
 
         if (true) {
@@ -775,13 +534,13 @@ int main()
         model = glm::scale(model, glm::vec3(0.5f));
         shaderGeometryPass.setMat4("model", model);
         helmet.Draw(shaderGeometryPass);
-
+        
 
         terrainShader.use();
         terrainShader.setFloat("seed", game.seed);
         terrainShader.setMat4("projection", projection);
         terrainShader.setMat4("view", view);
-        terrainShader.setFloat("near_plane", near_plane);  // Add this
+        terrainShader.setFloat("near_plane", near_plane);  // Add thiss
         terrainShader.setFloat("far_plane", far_plane); // Add this
 
         model = glm::mat4(1.0f);
@@ -790,31 +549,6 @@ int main()
         terrainShader.setMat4("model", model);
         plane.Draw(terrainShader);
 
-
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // glBindFramebuffer(GL_READ_FRAMEBUFFER, msaaGBuffer);
-        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer);
-
-        // // Resolve each attachment
-        // glReadBuffer(GL_COLOR_ATTACHMENT0);
-        // glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        // glReadBuffer(GL_COLOR_ATTACHMENT1);
-        // glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        // glReadBuffer(GL_COLOR_ATTACHMENT2);
-        // glDrawBuffer(GL_COLOR_ATTACHMENT2);
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        // glReadBuffer(GL_COLOR_ATTACHMENT3);
-        // glDrawBuffer(GL_COLOR_ATTACHMENT3);
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        // // Resolve depth
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
@@ -827,7 +561,7 @@ int main()
 
 
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager.getGBuffer());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
         // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
         // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
@@ -874,71 +608,31 @@ int main()
 
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getDepthTexture());
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, gDepth);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getMetallicTexture());
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, gMetallic);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getRoughnessTexture());
         glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, gRoughness);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
         // finally render quad
         glDisable(GL_DEPTH_TEST);
-        renderQuad();
+        renderManager.renderQuad();
         glEnable(GL_DEPTH_TEST);
 
-//         // // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
-//         // // ----------------------------------------------------------------------------------
-        // glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneFramebuffer); // write to default framebuffer
-        // // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-        // // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-        // // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer);
-        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-
-
-        // 3. render lights on top of scene
-        // --------------------------------      
-        // shaderLightBox.use();
-        // shaderLightBox.setMat4("projection", projection);
-        // shaderLightBox.setMat4("view", view);
-        // for (unsigned int i = 0; i < lightPositions.size(); i++)
-        // {
-        //     model = glm::mat4(1.0f);
-        //     model = glm::translate(model, lightPositions[i]);
-        //     model = glm::scale(model, glm::vec3(0.125f));
-        //     shaderLightBox.setMat4("model", model);
-        //     shaderLightBox.setVec3("lightColor", lightColors[i]);
-        //     renderCube();
-        // }
-        // model = glm::mat4(5.0f);
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(1.125f));
-        // shaderLightBox.setMat4("model", model);
-        // renderCube();
-
-
-
-
-// //////////////////////////////////////
+        // //////////////////////////////////////
 
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-        // shaderLightingPass.use();
-        // renderQuad();
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneFramebuffer);
 
@@ -961,33 +655,7 @@ int main()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            // int visualizationMode = 0;
-
-            // if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-            //     visualizationMode = (visualizationMode + 1) % 4;
-
-
-            // glDisable(GL_DEPTH_TEST);
-            // debugShader.use();  
-            // debugShader.setInt("debugTexture", 0);
-            // debugShader.setInt("visualizationMode", 0); // Choose mode: 0=RGB, 1=Depth, etc.
-            // debugShader.setFloat("depthNear", 0.1f);
-            // debugShader.setFloat("depthFar", 100.0f);
-
-            // // Bind G-buffer texture you want to debug
-            // glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec); // or gPosition, gAlbedoSpec, etc.
-
-            // // Render fullscreen quad
-            // glBindVertexArray(quadVAO);
-            // glDrawArrays(GL_TRIANGLES, 0, 6);
-            // glBindVertexArray(0);
-
-
-
-        // Assuming 'waterShader' is an object that wraps shader program management
-        // and 'setFloat', 'setMat4', 'setVec3', 'setVec2', 'setInt' are its methods
-        // that correctly call glGetUniformLocation and glUniform functions.
+        // Reflections
 
 
         waterShader.use();
@@ -1036,19 +704,19 @@ int main()
 
         // Bind textures with error checking
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
         if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gPosition" << std::endl;
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
         if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gNormal" << std::endl;
 
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
         if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gAlbedoSpec" << std::endl;
 
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, gLinearDepth);
+        glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
         if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gLinearDepth" << std::endl;
 
         // Set uniforms AFTER binding textures
@@ -1063,22 +731,7 @@ int main()
         plane.Draw(waterShader);
 
 
-        // GLint loc = glGetUniformLocation(waterShader.ID, "gPosition");
-        // if (loc == -1) {
-        //     std::cout << "ERROR: gPosition uniform not found in shader!" << std::endl;
-        // }
-
-        // // Do this for all your uniforms
-        // std::vector<std::string> uniforms = {
-        //     "gPosition", "gNormal", "gAlbedoSpec", "gLinearDepth",
-        //     "viewMatrix", "projection", "viewProjection", "inverseProjection", "inverseView"
-        // };
-
-        // for (const auto& uniform : uniforms) {
-        //     if (glGetUniformLocation(waterShader.ID, uniform.c_str()) == -1) {
-        //         std::cout << "ERROR: " << uniform << " uniform not found!" << std::endl;
-        //     }
-        // }
+        // Light boxes
 
 
         shaderLightBox.use();
@@ -1091,15 +744,13 @@ int main()
             model = glm::scale(model, glm::vec3(0.125f));
             shaderLightBox.setMat4("model", model);
             shaderLightBox.setVec3("lightColor", lightColors[i]);
-            renderCube();
+            renderManager.renderCube();
         }
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.325f));
         shaderLightBox.setMat4("model", model);
-        renderCube();        
-
-
+        renderManager.renderCube();        
 
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST); // Re-enable depth testing
@@ -1107,13 +758,6 @@ int main()
 
 
         ///////////
-        
-
-        //         debugShader.use();
-        // debugShader.setInt("debugTexture", 0); 
-        // // Pass the actual near and far planes used for your main projection
-        // debugShader.setFloat("debugNearPlane", 1.0f); // Matches glm::perspective near
-        // debugShader.setFloat("debugFarPlane", 100.0f); // Matches glm::perspective far
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
@@ -1129,24 +773,9 @@ int main()
         glDepthFunc(GL_LESS);
 
 
-
-
-        // TextureDebugger debugger = TextureDebugger();
-        // static bool debugMode = true;
-        // // debugMode = !debugMode;
-        
-        // if (debugMode) {
-        //     // Render debug textures instead of final scene
-        //     debugger.visualizeAlbedo(gAlbedoSpec);
-        // }
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(game.getWindow());
         glfwPollEvents();
-        // float val = 1/120-deltaTime;
-        // std::cout << val << std::endl;
-        // int val2 = val * 1000;
-        // std::this_thread::sleep_for(std::chrono::milliseconds(val2));
+
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
@@ -1171,43 +800,6 @@ void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::m
 }
 
 
-
-// utility function for loading a 2D texture from file
-// ---------------------------------------------------
-unsigned int loadTexture(char const * path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
 
 unsigned int loadCubemap(vector<std::string> faces)
 {
@@ -1305,282 +897,7 @@ unsigned int loadCubemap(vector<std::string> faces)
 //     return Object(buffer, vertexSize,stride, textureID);
 // }
 
-unsigned int quadVAO = 0;
-unsigned int quadVBO;
-void renderQuad()
-{
-    if (quadVAO == 0)
-    {
-        float quadVertices[] = {
-            // positions        // texture Coords
-            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        };
-        // setup plane VAO
-        glGenVertexArrays(1, &quadVAO);
-        glGenBuffers(1, &quadVBO);
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    }
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
-}
-
-void rayCast(){
-    ;
-}
-
-void renderScene(const Shader &shader)
-{
-    // room cube
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(5.0f));
-    shader.setMat4("model", model);
-    glDisable(GL_CULL_FACE); // note that we disable culling here since we render 'inside' the cube instead of the usual 'outside' which throws off the normal culling methods.
-    shader.setInt("reverse_normals", 1); // A small little hack to invert normals when drawing cube from the inside so lighting still works.
-    renderCube();
-    shader.setInt("reverse_normals", 0); // and of course disable it
-    glEnable(GL_CULL_FACE);
-    // cubes
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
-    model = glm::scale(model, glm::vec3(0.5f));
-    shader.setMat4("model", model);
-    renderCube();
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
-    model = glm::scale(model, glm::vec3(0.75f));
-    shader.setMat4("model", model);
-    renderCube();
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
-    model = glm::scale(model, glm::vec3(0.5f));
-    shader.setMat4("model", model);
-    renderCube();
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
-    model = glm::scale(model, glm::vec3(0.5f));
-    shader.setMat4("model", model);
-    renderCube();
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
-    model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    model = glm::scale(model, glm::vec3(0.75f));
-    shader.setMat4("model", model);
-    renderCube();
-    model = glm::mat4(7.0f);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(2.0f));
-    shader.setMat4("model", model);
-    renderCube();
-}
-
-// renderCube() renders a 1x1 3D cube in NDC.
-// -------------------------------------------------
-
-unsigned int lineVAO = 0;
-unsigned int lineVBO = 0;
-
-void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness = 0.1f, float length = 0.1f)
-{
-    if (lineVAO == 0) {
-        glGenVertexArrays(1, &lineVAO);
-        glGenBuffers(1, &lineVBO);
-    }
-    
-    // Normalize the ray direction
-    rayDir = glm::normalize(rayDir);
-    
-    // Compute the end point along the ray
-    glm::vec3 rayEnd = rayOrigin + rayDir * length;
-    // glm::vec3 renderRayStart = rayOrigin + glm::vec3(rayDir);
-    
-    // Get camera vectors from view matrix
-    glm::vec3 camRight = glm::normalize(glm::vec3(view[0][0], view[1][0], view[2][0]));
-    glm::vec3 camUp = glm::normalize(glm::vec3(view[0][1], view[1][1], view[2][1]));
-    
-    // Direction of the line
-    glm::vec3 lineDir = rayDir;
-    
-    // Compute two perpendicular vectors for thickness in both directions
-    glm::vec3 offset1 = glm::normalize(glm::cross(lineDir, camRight)) * (thickness * 0.5f);
-    glm::vec3 offset2 = glm::normalize(glm::cross(lineDir, offset1)) * (thickness * 0.5f);
-    
-    // Check for degenerate cases
-    if (glm::length(offset1) < 1e-6f || glm::length(offset2) < 1e-6f) {
-        // Fallback: use camera up vector if cross product fails
-        offset1 = camRight * (thickness * 0.5f);
-        offset2 = camUp * (thickness * 0.5f);
-    }
-    
-    // Create 8 vertices for a rectangular tube (4 at start, 4 at end)
-    glm::vec3 startVerts[4] = {
-        rayOrigin + offset1 + offset2,  // top-right
-        rayOrigin - offset1 + offset2,  // top-left
-        rayOrigin - offset1 - offset2,  // bottom-left
-        rayOrigin + offset1 - offset2   // bottom-right
-    };
-    
-    glm::vec3 endVerts[4] = {
-        rayEnd + offset1 + offset2,     // top-right
-        rayEnd - offset1 + offset2,     // top-left
-        rayEnd - offset1 - offset2,     // bottom-left
-        rayEnd + offset1 - offset2      // bottom-right
-    };
-    
-    // Create vertices for 4 faces (12 triangles total)
-    float vertices[] = {
-        // Face 1: top (0-1-5-4)
-        startVerts[0].x, startVerts[0].y, startVerts[0].z,
-        startVerts[1].x, startVerts[1].y, startVerts[1].z,
-        endVerts[1].x, endVerts[1].y, endVerts[1].z,
-        
-        endVerts[1].x, endVerts[1].y, endVerts[1].z,
-        endVerts[0].x, endVerts[0].y, endVerts[0].z,
-        startVerts[0].x, startVerts[0].y, startVerts[0].z,
-        
-        // Face 2: right (0-4-7-3)
-        startVerts[0].x, startVerts[0].y, startVerts[0].z,
-        endVerts[0].x, endVerts[0].y, endVerts[0].z,
-        endVerts[3].x, endVerts[3].y, endVerts[3].z,
-        
-        endVerts[3].x, endVerts[3].y, endVerts[3].z,
-        startVerts[3].x, startVerts[3].y, startVerts[3].z,
-        startVerts[0].x, startVerts[0].y, startVerts[0].z,
-        
-        // Face 3: bottom (3-7-6-2)
-        startVerts[3].x, startVerts[3].y, startVerts[3].z,
-        endVerts[3].x, endVerts[3].y, endVerts[3].z,
-        endVerts[2].x, endVerts[2].y, endVerts[2].z,
-        
-        endVerts[2].x, endVerts[2].y, endVerts[2].z,
-        startVerts[2].x, startVerts[2].y, startVerts[2].z,
-        startVerts[3].x, startVerts[3].y, startVerts[3].z,
-        
-        // Face 4: left (2-6-5-1)
-        startVerts[2].x, startVerts[2].y, startVerts[2].z,
-        endVerts[2].x, endVerts[2].y, endVerts[2].z,
-        endVerts[1].x, endVerts[1].y, endVerts[1].z,
-        
-        endVerts[1].x, endVerts[1].y, endVerts[1].z,
-        startVerts[1].x, startVerts[1].y, startVerts[1].z,
-        startVerts[2].x, startVerts[2].y, startVerts[2].z
-    };
-    
-    // Upload vertex data
-    glBindVertexArray(lineVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-    
-    // Setup vertex attributes (location 0 = vec3 position)
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    glDisable(GL_CULL_FACE);
-    
-    // Render the rectangular tube (24 vertices = 8 triangles)
-    glDrawArrays(GL_TRIANGLES, 0, 24);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    glEnable(GL_CULL_FACE);
-}
 
 
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
-void renderCube()
-{
-    // initialize (if necessary)
-    if (cubeVAO == 0)
-    {
-        float vertices[] = {
-            // back face
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-            // front face
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-            // left face
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-            // right face
-             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-            // bottom face
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-            // top face
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-             1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-             1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
-        };
-        glGenVertexArrays(1, &cubeVAO);
-        glGenBuffers(1, &cubeVBO);
-        // fill buffer
-        glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        // link vertex attributes
-        glBindVertexArray(cubeVAO);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-    // render Cube
-    glBindVertexArray(cubeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-}
 
-    void renderOutline(Shader& selectedShader, std::vector<Mesh> meshes, glm::mat4 model, glm::mat4 projection, Camera& camera) {
-        // Use outline shader
-        
-        // Create scaled transform matrix for outline
-        glm::mat4 scaledMatrix = glm::scale(model, glm::vec3(10.0,10.0,10.0));
-        glm::mat4 mvpMatrix = projection * camera.GetViewMatrix() * scaledMatrix;
 
-        selectedShader.setMat4("u_MVP", mvpMatrix);
-        
-        // Render mesh with outline shader
-        for(auto mesh : meshes){
-            glBindVertexArray(mesh.VAO);
-            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
-        }
-    }

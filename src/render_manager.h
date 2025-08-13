@@ -48,7 +48,6 @@ private:
     glm::vec3 ambientLight;
     
     // Camera and matrices
-
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     
@@ -66,6 +65,23 @@ private:
     int verticesRendered;
     int textureCounter;
 
+    // G-Buffer members
+    unsigned int gBuffer;
+    unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth, gMetallic, gRoughness;
+    bool gBufferInitialized;
+    
+    // MSAA G-Buffer members
+    unsigned int msaaGBuffer;
+    unsigned int msaaGPosition, msaaGNormal, msaaGAlbedoSpec, msaaGDepth, msaaGLinearDepth, msaaGMetallic, msaaGRoughness;
+    bool msaaGBufferInitialized;
+    int msaaSamples;
+
+    // Skybox members
+    unsigned int skyboxVAO, skyboxVBO;
+    unsigned int skyboxTexture;
+    bool skyboxInitialized;
+    Shader* skyboxShader;
+
 public:
     RenderManager();
     ~RenderManager();
@@ -81,6 +97,49 @@ public:
     void endFrame();
     void clear();
     void present();
+    
+    // G-Buffer management
+    void setupGBuffer();
+    void cleanupGBuffer();
+    void bindGBuffer();
+    void unbindGBuffer();
+    void resizeGBuffer(int width, int height);
+    
+    // MSAA G-Buffer management
+    void setupMSAAGBuffer(int samples = 8);
+    void cleanupMSAAGBuffer();
+    void bindMSAAGBuffer();
+    void unbindMSAAGBuffer();
+    void resolveMSAAGBuffer(); // Resolve MSAA to regular G-Buffer
+    void resizeMSAAGBuffer(int width, int height);
+    
+    // Skybox management
+    void setupSkybox();
+    void cleanupSkybox();
+    void setSkyboxTexture(unsigned int texture);
+    void setSkyboxShader(Shader* shader);
+    void renderSkybox();
+    unsigned int loadCubemap(const std::vector<std::string>& faces);
+    
+    // G-Buffer texture getters
+    unsigned int getGBuffer() const { return gBuffer; }
+    unsigned int getPositionTexture() const { return gPosition; }
+    unsigned int getNormalTexture() const { return gNormal; }
+    unsigned int getAlbedoSpecTexture() const { return gAlbedoSpec; }
+    unsigned int getDepthTexture() const { return gDepth; }
+    unsigned int getLinearDepthTexture() const { return gLinearDepth; }
+    unsigned int getMetallicTexture() const { return gMetallic; }
+    unsigned int getRoughnessTexture() const { return gRoughness; }
+    
+    // MSAA G-Buffer texture getters
+    unsigned int getMSAAGBuffer() const { return msaaGBuffer; }
+    unsigned int getMSAAPositionTexture() const { return msaaGPosition; }
+    unsigned int getMSAANormalTexture() const { return msaaGNormal; }
+    unsigned int getMSAAAlbedoSpecTexture() const { return msaaGAlbedoSpec; }
+    unsigned int getMSAADepthTexture() const { return msaaGDepth; }
+    unsigned int getMSAALinearDepthTexture() const { return msaaGLinearDepth; }
+    unsigned int getMSAAMetallicTexture() const { return msaaGMetallic; }
+    unsigned int getMSAARoughnessTexture() const { return msaaGRoughness; }
     
     // Render queue management
     void submit(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix, 
@@ -142,7 +201,9 @@ public:
 
     int getTextureCounter(){return textureCounter;}
 
-    
+    void renderQuad();
+    void renderCube();
+    void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);
 
 private:
     // Internal helper functions
@@ -150,4 +211,12 @@ private:
     void unbindTextures();
     void setupShaderUniforms(Shader* shader, const glm::mat4& modelMatrix);
     float calculateDistance(const glm::vec3& position);
+    
+    // G-Buffer helper functions
+    bool checkGBufferStatus();
+    void createGBufferTextures();
+    
+    // MSAA G-Buffer helper functions
+    bool checkMSAAGBufferStatus();
+    void createMSAAGBufferTextures();
 };

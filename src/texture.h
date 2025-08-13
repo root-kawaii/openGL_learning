@@ -87,6 +87,7 @@ public:
 
     // Load cubemap from files
     unsigned int loadTexture(char const * path);    
+    unsigned int loadCubemap(const std::vector<std::string>& faces);
 
     // // Bind texture
     // void bind(unsigned int slot = 0) const;
