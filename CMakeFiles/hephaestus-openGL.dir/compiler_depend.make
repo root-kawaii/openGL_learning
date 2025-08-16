@@ -1893,6 +1893,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/texture.h \
   src/render_manager.h \
   src/game.h \
+  src/serialization_utilities.h \
   /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -3136,8 +3137,38 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/syslimits.h
 
 CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cpp \
+  src/mesh.h \
   src/shader_s.h \
   include/KHR/khrplatform.h \
+  include/assimp/include/assimp/Compiler/poppack1.h \
+  include/assimp/include/assimp/Compiler/pushpack1.h \
+  include/assimp/include/assimp/Importer.hpp \
+  include/assimp/include/assimp/MathFunctions.h \
+  include/assimp/include/assimp/aabb.h \
+  include/assimp/include/assimp/anim.h \
+  include/assimp/include/assimp/camera.h \
+  include/assimp/include/assimp/color4.h \
+  include/assimp/include/assimp/color4.inl \
+  include/assimp/include/assimp/defs.h \
+  include/assimp/include/assimp/light.h \
+  include/assimp/include/assimp/material.h \
+  include/assimp/include/assimp/material.inl \
+  include/assimp/include/assimp/matrix3x3.h \
+  include/assimp/include/assimp/matrix3x3.inl \
+  include/assimp/include/assimp/matrix4x4.h \
+  include/assimp/include/assimp/matrix4x4.inl \
+  include/assimp/include/assimp/mesh.h \
+  include/assimp/include/assimp/metadata.h \
+  include/assimp/include/assimp/postprocess.h \
+  include/assimp/include/assimp/quaternion.h \
+  include/assimp/include/assimp/quaternion.inl \
+  include/assimp/include/assimp/scene.h \
+  include/assimp/include/assimp/texture.h \
+  include/assimp/include/assimp/types.h \
+  include/assimp/include/assimp/vector2.h \
+  include/assimp/include/assimp/vector2.inl \
+  include/assimp/include/assimp/vector3.h \
+  include/assimp/include/assimp/vector3.inl \
   include/glad/glad.h \
   include/glm/detail/type_mat2x3.hpp \
   include/glm/detail/type_mat2x3.inl \
@@ -3283,8 +3314,46 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   include/glm/ext/matrix_projection.inl \
   include/glm/ext/matrix_transform.hpp \
   include/glm/ext/matrix_transform.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/ext/quaternion_relational.hpp \
+  include/glm/ext/quaternion_relational.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_float.hpp \
+  include/glm/detail/type_quat.hpp \
+  include/glm/detail/type_quat.inl \
+  include/glm/ext/quaternion_geometric.hpp \
+  include/glm/ext/quaternion_geometric.inl \
+  include/glm/ext/quaternion_common.hpp \
+  include/glm/ext/quaternion_common.inl \
+  include/glm/ext/quaternion_double.hpp \
+  include/glm/ext/quaternion_double_precision.hpp \
+  include/glm/ext/quaternion_float.hpp \
+  include/glm/ext/quaternion_float_precision.hpp \
+  include/glm/ext/quaternion_transform.hpp \
+  include/glm/ext/quaternion_transform.inl \
+  include/glm/ext/quaternion_trigonometric.hpp \
+  include/glm/ext/quaternion_trigonometric.inl \
+  include/glm/ext/vector_bool1.hpp \
+  include/glm/ext/vector_bool1_precision.hpp \
+  include/glm/ext/vector_double1.hpp \
+  include/glm/ext/vector_double1_precision.hpp \
+  include/glm/ext/vector_float1.hpp \
+  include/glm/ext/vector_float1_precision.hpp \
+  include/glm/ext/vector_int1.hpp \
+  include/glm/ext/vector_int1_sized.hpp \
+  include/glm/ext/vector_relational.hpp \
+  include/glm/ext/vector_relational.inl \
+  include/glm/ext/vector_uint1.hpp \
+  include/glm/ext/vector_uint1_sized.hpp \
+  include/glm/gtc/epsilon.hpp \
+  include/glm/gtc/epsilon.inl \
+  include/glm/gtc/quaternion.hpp \
+  include/glm/gtc/quaternion.inl \
+  include/glm/gtc/vec1.hpp \
   include/glm/gtc/matrix_transform.hpp \
   include/glm/gtc/matrix_transform.inl \
+  include/glm/gtc/type_ptr.hpp \
+  include/glm/gtc/type_ptr.inl \
   include/glm/integer.hpp \
   include/glm/mat2x2.hpp \
   include/glm/packing.hpp \
@@ -3292,8 +3361,11 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   include/glm/vec2.hpp \
   include/glm/vec3.hpp \
   include/glm/vec4.hpp \
+  include/stb_image.h \
   src/camera.h \
+  src/game_object.h \
   src/mesh.h \
+  src/model.h \
   src/shader_m.h \
   src/texture.h \
   src/render_manager.h \
@@ -3311,6 +3383,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
   /usr/include/assert.h \
+  /usr/include/assimp/config.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \
@@ -3387,9 +3460,11 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/bits/wctype-wchar.h \
   /usr/include/bits/wordsize.h \
   /usr/include/bits/xopen_lim.h \
+  /usr/include/c++/15.1.1/algorithm \
   /usr/include/c++/15.1.1/backward/auto_ptr.h \
   /usr/include/c++/15.1.1/backward/binders.h \
   /usr/include/c++/15.1.1/bit \
+  /usr/include/c++/15.1.1/bits/algorithmfwd.h \
   /usr/include/c++/15.1.1/bits/align.h \
   /usr/include/c++/15.1.1/bits/alloc_traits.h \
   /usr/include/c++/15.1.1/bits/allocated_ptr.h \
@@ -3402,6 +3477,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/bits/basic_string.tcc \
   /usr/include/c++/15.1.1/bits/char_traits.h \
   /usr/include/c++/15.1.1/bits/charconv.h \
+  /usr/include/c++/15.1.1/bits/chrono.h \
   /usr/include/c++/15.1.1/bits/codecvt.h \
   /usr/include/c++/15.1.1/bits/concept_check.h \
   /usr/include/c++/15.1.1/bits/cpp_type_traits.h \
@@ -3412,6 +3488,10 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/bits/exception.h \
   /usr/include/c++/15.1.1/bits/exception_defines.h \
   /usr/include/c++/15.1.1/bits/exception_ptr.h \
+  /usr/include/c++/15.1.1/bits/fs_dir.h \
+  /usr/include/c++/15.1.1/bits/fs_fwd.h \
+  /usr/include/c++/15.1.1/bits/fs_ops.h \
+  /usr/include/c++/15.1.1/bits/fs_path.h \
   /usr/include/c++/15.1.1/bits/fstream.tcc \
   /usr/include/c++/15.1.1/bits/functexcept.h \
   /usr/include/c++/15.1.1/bits/functional_hash.h \
@@ -3423,8 +3503,11 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/bits/istream.tcc \
   /usr/include/c++/15.1.1/bits/locale_classes.h \
   /usr/include/c++/15.1.1/bits/locale_classes.tcc \
+  /usr/include/c++/15.1.1/bits/locale_conv.h \
   /usr/include/c++/15.1.1/bits/locale_facets.h \
   /usr/include/c++/15.1.1/bits/locale_facets.tcc \
+  /usr/include/c++/15.1.1/bits/locale_facets_nonio.h \
+  /usr/include/c++/15.1.1/bits/locale_facets_nonio.tcc \
   /usr/include/c++/15.1.1/bits/localefwd.h \
   /usr/include/c++/15.1.1/bits/memory_resource.h \
   /usr/include/c++/15.1.1/bits/memoryfwd.h \
@@ -3435,9 +3518,11 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/bits/ostream.h \
   /usr/include/c++/15.1.1/bits/ostream.tcc \
   /usr/include/c++/15.1.1/bits/ostream_insert.h \
+  /usr/include/c++/15.1.1/bits/parse_numbers.h \
   /usr/include/c++/15.1.1/bits/postypes.h \
   /usr/include/c++/15.1.1/bits/predefined_ops.h \
   /usr/include/c++/15.1.1/bits/ptr_traits.h \
+  /usr/include/c++/15.1.1/bits/quoted_string.h \
   /usr/include/c++/15.1.1/bits/range_access.h \
   /usr/include/c++/15.1.1/bits/refwrap.h \
   /usr/include/c++/15.1.1/bits/requires_hosted.h \
@@ -3447,24 +3532,31 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/bits/specfun.h \
   /usr/include/c++/15.1.1/bits/sstream.tcc \
   /usr/include/c++/15.1.1/bits/std_abs.h \
+  /usr/include/c++/15.1.1/bits/stl_algo.h \
   /usr/include/c++/15.1.1/bits/stl_algobase.h \
   /usr/include/c++/15.1.1/bits/stl_bvector.h \
   /usr/include/c++/15.1.1/bits/stl_construct.h \
   /usr/include/c++/15.1.1/bits/stl_function.h \
+  /usr/include/c++/15.1.1/bits/stl_heap.h \
   /usr/include/c++/15.1.1/bits/stl_iterator.h \
   /usr/include/c++/15.1.1/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/15.1.1/bits/stl_iterator_base_types.h \
+  /usr/include/c++/15.1.1/bits/stl_map.h \
+  /usr/include/c++/15.1.1/bits/stl_multimap.h \
   /usr/include/c++/15.1.1/bits/stl_pair.h \
   /usr/include/c++/15.1.1/bits/stl_raw_storage_iter.h \
   /usr/include/c++/15.1.1/bits/stl_tempbuf.h \
+  /usr/include/c++/15.1.1/bits/stl_tree.h \
   /usr/include/c++/15.1.1/bits/stl_uninitialized.h \
   /usr/include/c++/15.1.1/bits/stl_vector.h \
   /usr/include/c++/15.1.1/bits/streambuf.tcc \
   /usr/include/c++/15.1.1/bits/streambuf_iterator.h \
   /usr/include/c++/15.1.1/bits/string_view.tcc \
   /usr/include/c++/15.1.1/bits/stringfwd.h \
+  /usr/include/c++/15.1.1/bits/uniform_int_dist.h \
   /usr/include/c++/15.1.1/bits/unique_ptr.h \
   /usr/include/c++/15.1.1/bits/unordered_map.h \
+  /usr/include/c++/15.1.1/bits/unordered_set.h \
   /usr/include/c++/15.1.1/bits/uses_allocator.h \
   /usr/include/c++/15.1.1/bits/uses_allocator_args.h \
   /usr/include/c++/15.1.1/bits/utility.h \
@@ -3477,11 +3569,14 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/climits \
   /usr/include/c++/15.1.1/clocale \
   /usr/include/c++/15.1.1/cmath \
+  /usr/include/c++/15.1.1/codecvt \
   /usr/include/c++/15.1.1/concepts \
   /usr/include/c++/15.1.1/cstddef \
   /usr/include/c++/15.1.1/cstdint \
   /usr/include/c++/15.1.1/cstdio \
   /usr/include/c++/15.1.1/cstdlib \
+  /usr/include/c++/15.1.1/cstring \
+  /usr/include/c++/15.1.1/ctime \
   /usr/include/c++/15.1.1/cwchar \
   /usr/include/c++/15.1.1/cwctype \
   /usr/include/c++/15.1.1/debug/assertions.h \
@@ -3494,21 +3589,28 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/ext/numeric_traits.h \
   /usr/include/c++/15.1.1/ext/string_conversions.h \
   /usr/include/c++/15.1.1/ext/type_traits.h \
+  /usr/include/c++/15.1.1/filesystem \
   /usr/include/c++/15.1.1/fstream \
   /usr/include/c++/15.1.1/initializer_list \
+  /usr/include/c++/15.1.1/iomanip \
   /usr/include/c++/15.1.1/ios \
   /usr/include/c++/15.1.1/iosfwd \
   /usr/include/c++/15.1.1/iostream \
   /usr/include/c++/15.1.1/istream \
   /usr/include/c++/15.1.1/limits \
+  /usr/include/c++/15.1.1/locale \
+  /usr/include/c++/15.1.1/map \
   /usr/include/c++/15.1.1/memory \
   /usr/include/c++/15.1.1/new \
   /usr/include/c++/15.1.1/ostream \
   /usr/include/c++/15.1.1/pstl/execution_defs.h \
+  /usr/include/c++/15.1.1/pstl/glue_algorithm_defs.h \
   /usr/include/c++/15.1.1/pstl/glue_memory_defs.h \
   /usr/include/c++/15.1.1/pstl/pstl_config.h \
+  /usr/include/c++/15.1.1/ratio \
   /usr/include/c++/15.1.1/sstream \
   /usr/include/c++/15.1.1/stdexcept \
+  /usr/include/c++/15.1.1/stdlib.h \
   /usr/include/c++/15.1.1/streambuf \
   /usr/include/c++/15.1.1/string \
   /usr/include/c++/15.1.1/string_view \
@@ -3529,6 +3631,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/type_traits \
   /usr/include/c++/15.1.1/typeinfo \
   /usr/include/c++/15.1.1/unordered_map \
+  /usr/include/c++/15.1.1/unordered_set \
   /usr/include/c++/15.1.1/vector \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
@@ -3542,7 +3645,9 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/error_constants.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/gthr.h \
+  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/messages_members.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/os_defines.h \
+  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
@@ -3550,6 +3655,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/libintl.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -3565,6 +3671,8 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
@@ -5144,6 +5252,8 @@ include/glm/detail/func_packing.inl:
 /usr/include/c++/15.1.1/bits/alloc_traits.h:
 
 include/assimp/include/assimp/matrix3x3.h:
+
+src/serialization_utilities.h:
 
 /usr/include/bits/types.h:
 

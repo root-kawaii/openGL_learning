@@ -5,10 +5,12 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "../src/camera.h"
 #include "../src/mesh.h"
 #include "../src/shader_m.h"
 #include "../src/texture.h"
+#include "../src/game_object.h"
 
 // Forward declarations
 // class Shader;
@@ -166,6 +168,8 @@ public:
     
     // Camera management
     void setCamera(Camera* camera);
+    void setProjectionMatrix(glm::mat4 projectionMatrixArg){projectionMatrix = projectionMatrixArg;};
+    void setViewMatrix(glm::mat4 viewMatrixArg){viewMatrix = viewMatrixArg;};
     void updateCameraMatrices();
     
     // Lighting
@@ -200,6 +204,10 @@ public:
                      const glm::vec3& color = glm::vec3(1.0f));
 
     int getTextureCounter(){return textureCounter;}
+
+    void renderGameObject(GameObject& gameObject, Shader shader);
+
+    void renderCameraAttachedObject(GameObject& gameObject, Shader shader);
 
     void renderQuad();
     void renderCube();

@@ -512,4 +512,5 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/serialization_utilities.h

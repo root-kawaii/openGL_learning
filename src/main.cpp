@@ -26,7 +26,31 @@
 // #include "../src/texture_debugger.cpp"
 #include "../src/game.h"
 #include "../src/texture.h"
+#include "../src/serialization_utilities.h"
 
+
+struct Sphere {
+    glm::vec3 center;
+    float radius;
+    
+    Sphere(glm::vec3 c, float r) : center(c), radius(r) {}
+};
+
+struct CollisionInfo {
+    int objectA, objectB;
+    glm::vec3 contactPoint;
+    glm::vec3 normal;
+    float penetration;
+    bool isValid=false;
+
+    CollisionInfo(){}
+    
+    CollisionInfo(int a, int b, glm::vec3 point, glm::vec3 n, float pen)
+        : objectA(a), objectB(b), contactPoint(point), normal(n), penetration(pen) {}
+};
+
+glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo& collision);
+bool sphereVsSphere(const Sphere& a, const Sphere& b, CollisionInfo& info);
 unsigned int loadCubemap(vector<std::string> faces);
 GameObject loadSceneObject(const std::string& path, int stride, unsigned int textureID);
 void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
@@ -55,6 +79,7 @@ int main()
 
     Scene mainScene = Scene();
     RenderManager renderManager = game.getRenderManager();
+    renderManager.setCamera(&game.camera);
     renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
     renderManager.setupGBuffer();
     renderManager.setupMSAAGBuffer();
@@ -150,12 +175,21 @@ int main()
 
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
+    SerializationUtilities serializer;
+    serializer.loadScene("levels/one.json");
+
+    // for(auto i : serializer.getObjects()){
+
+    // }
+
 
     Model backpack(fs::path("assets/backpack/backpack.obj"));
-    Model plane(fs::path("assets/planes/plane_2.obj"));
+    // Model plane(fs::path("assets/planes/plane_2.obj"));
 
-    auto gun = std::make_shared<GameObject>("gun_1", "assets/cerberus/cerberus.glb", glm::vec3(0.0f, 3.0f, 0.0f));
-    auto ball = std::make_shared<GameObject>("ball_1", "assets/ball_2.obj", glm::vec3(0.0f, 3.0f, 0.0f));
+    auto waterPlane = std::make_shared<GameObject>("water_plane_01", "assets/planes/plane_2.obj", serializer.getObjectWithId("water_plane_01")->position, serializer.getObjectWithId("water_plane_01")->rotation, serializer.getObjectWithId("water_plane_01")->scale);
+    auto plane = std::make_shared<GameObject>("plane_01", "assets/planes/plane_2.obj", serializer.getObjectWithId("plane_01")->position, serializer.getObjectWithId("plane_01")->rotation, serializer.getObjectWithId("plane_01")->scale);
+    auto gun = std::make_shared<GameObject>("gun_01", "assets/cerberus/cerberus.glb", serializer.getObjectWithId("gun_01")->position, serializer.getObjectWithId("gun_01")->rotation, serializer.getObjectWithId("gun_01")->scale);
+    auto ball = std::make_shared<GameObject>("ball_01", "assets/ball_2.obj", serializer.getObjectWithId("ball_01")->position, serializer.getObjectWithId("ball_01")->rotation, serializer.getObjectWithId("ball_01")->scale);
 
     GameObject* ballPtr = ball.get();  // Get raw pointer before moving
     GameObject* gunPtr = gun.get();  // Get raw pointer before moving
@@ -163,6 +197,14 @@ int main()
     // Add to scene
     mainScene.addGameObject(gun);
     mainScene.addGameObject(ball);
+    mainScene.addGameObject(plane);
+    mainScene.addGameObject(waterPlane);
+
+    plane->setRadius(3.0f);
+    ball->setRadius(3.0f);
+
+    Sphere ballSphere(ball->position, ball->collisionRadius);
+    Sphere planeSphere(plane->position, plane->collisionRadius);
 
 
     Model helmet(fs::path("assets/helmet.glb"));
@@ -297,9 +339,24 @@ int main()
     glm::mat4 viewCopy; 
     bool viewFrozen = false;
     bool intersect = false;
+    Sphere cameraSphere(game.camera.Position, 2.0f);
+    CollisionInfo* planez = new CollisionInfo();
+    CollisionInfo* ballz = new CollisionInfo();
 
     while (!glfwWindowShouldClose(game.getWindow()))
     {
+        std::cout << ballz->normal.x << std::endl;   
+        std::cout << ballz->normal.y << std::endl;   
+        std::cout << ballz->normal.z << std::endl;   
+        cameraSphere.center = game.camera.Position;
+        // if(sphereVsSphere(cameraSphere, planeSphere, *planez)){
+        //     std::cout << "collision with plane" << std::endl;
+        //    game.camera.Position = simplePositionCorrection(game.camera.Position, *planez);
+        // }
+        if(sphereVsSphere(ballSphere, cameraSphere, *ballz)){
+            std::cout << "collision with ballz" << std::endl;   
+            game.camera.Position += simplePositionCorrection(game.camera.Position, *ballz);
+        }
 
         if(shadows) {
             // std::cout << "msaa enabled" << std::endl;
@@ -368,7 +425,6 @@ int main()
         // simpleDepthShader.setMat4("model", model);
         // plane.Draw(simpleDepthShader);
 
-
         // model = glm::mat4(1.0f); 
         // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
         // simpleDepthShader.setMat4("model", model);
@@ -387,6 +443,8 @@ int main()
         glDisable(GL_BLEND);
         glm::mat4 projection = glm::perspective(glm::radians(game.camera.Zoom), (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
         glm::mat4 view = game.camera.GetViewMatrix();
+        renderManager.setViewMatrix(view);
+        renderManager.setProjectionMatrix(projection);
         model = glm::mat4(1.0f);
 
         
@@ -485,10 +543,11 @@ int main()
         }
 
         // plane.Draw(shaderGeometryPass);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
-        shaderGeometryPass.setMat4("model", model);
-        plane.Draw(shaderGeometryPass);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+        // shaderGeometryPass.setMat4("model", model);
+        // plane.Draw(shaderGeometryPass);
+        renderManager.renderGameObject(*plane, shaderGeometryPass);
 
 
         selectedShader.use();
@@ -497,17 +556,8 @@ int main()
         std::cout << selectedID << std::endl;
         std::cout << ballPtr->ID << std::endl;
 
-        shaderGeometryPass.use();
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, ballPtr->position);
-        shaderGeometryPass.setMat4("projection", projection);
-        shaderGeometryPass.setMat4("view", view);
-        shaderGeometryPass.setMat4("model", model);
-        shaderGeometryPass.setFloat("time", glfwGetTime());
-        shaderGeometryPass.setFloat("selected", selectedID);
-        shaderGeometryPass.setFloat("objectID", ballPtr->ID);
-        ballPtr->model.Draw(shaderGeometryPass);
-        
+
+        renderManager.renderGameObject(*ball, shaderGeometryPass);
 
 
 
@@ -519,15 +569,7 @@ int main()
         backpack.Draw(shaderGeometryPass);
 
 
-        model = glm::mat4(1.0f);
-        glm::vec3 gunOffset = glm::vec3(0.05f, -0.05f, -0.3f); // Adjust these values for desired position
-        model = glm::translate(model, gunOffset);
-        glm::mat3 cameraRotationInverse = glm::transpose(glm::mat3(game.camera.GetViewMatrix()));
-        model = glm::mat4(cameraRotationInverse) * model; // Apply camera's rotation to the gun
-        model = glm::translate(glm::mat4(1.0f), game.camera.Position) * model;
-        model = glm::scale(model, glm::vec3(0.001f)); // Keep your original scale
-        shaderGeometryPass.setMat4("model", model);
-        gunPtr->model.Draw(shaderGeometryPass);
+        renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3( 0.0,  3.0, 0.0));
@@ -547,7 +589,7 @@ int main()
         model = glm::scale(model, glm::vec3(1000.0f));
         model = glm::translate(model, glm::vec3( 25.0,  -5.0,  25.0));
         terrainShader.setMat4("model", model);
-        plane.Draw(terrainShader);
+        // plane.Draw(terrainShader);
 
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
@@ -728,7 +770,7 @@ int main()
         // Now render the water
         model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your water position
         waterShader.setMat4("model", model);
-        plane.Draw(waterShader);
+        renderManager.renderGameObject(*waterPlane, waterShader);
 
 
         // Light boxes
@@ -833,71 +875,32 @@ unsigned int loadCubemap(vector<std::string> faces)
     return textureID;
 } 
 
-// Object loadSceneObject(const std::string& path, int stride, unsigned int textureID) {
-//     std::ifstream file(path);
-//     nlohmann::json data;
-//     file >> data;
 
-//     std::vector<float> vertexBuffer;
 
-//     for (const auto& obj : data) {
-//         for (const auto& vertex : obj["vertices"]) {
-//             glm::vec3 pos(
-//                 vertex["position"][0],
-//                 vertex["position"][1],
-//                 vertex["position"][2]
-//             );
+
+
+
+    bool sphereVsSphere(const Sphere& a, const Sphere& b, CollisionInfo& info) {
+        glm::vec3 diff = b.center - a.center;
+        float distance = glm::length(diff);
+        float radiusSum = a.radius + b.radius;
         
-//             glm::vec2 texPos(
-//                 vertex["texcoord"][0],
-//                 vertex["texcoord"][1]
-//             );
+        if(distance < radiusSum) {
+            // Collision detected
+            info.normal = glm::normalize(diff);
+            info.penetration = radiusSum - distance;
+            info.contactPoint = a.center + info.normal * a.radius;
+            info.isValid = true;
+            return true;
+        }
+        return false;
+    }
 
-//         glm::vec3 rot(obj["rotation"][0], obj["rotation"][1], obj["rotation"][2]);
-//         glm::vec3 scale(obj["scale"][0], obj["scale"][1], obj["scale"][2]);
+    glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo& collision) {
+        if (!collision.isValid) return position;
 
-//         // Build model matrix
-//         glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
-//         model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
-//         model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
-//         model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
-//         model = glm::scale(model, scale);
-
-
-//         glm::vec4 localPos(pos,1.0f);
-//         glm::vec4 worldPos = model * localPos;
-
-//         // Push transformed position
-//         vertexBuffer.push_back(worldPos.x);
-//         vertexBuffer.push_back(worldPos.y);
-//         vertexBuffer.push_back(worldPos.z);
-
-//         // Push texcoords (unchanged)
-//         vertexBuffer.push_back(texPos.x);
-//         vertexBuffer.push_back(texPos.y);
-
-
-//         // std::cout << std::endl;
-//         // std::cout << vertexBuffer[vertexBuffer.size() - 5];
-//         // std::cout << vertexBuffer[vertexBuffer.size() - 4];
-//         // std::cout << vertexBuffer[vertexBuffer.size() - 3];
-//         // std::cout << vertexBuffer[vertexBuffer.size() - 2];
-//         // std::cout << vertexBuffer[vertexBuffer.size() - 1];
-//         // std::cout << std::endl;
+        std::cout << "pushingggggggggggggggg" << std::endl;
         
-//     }
-// }
-
-
-//     // Allocate heap memory to return a float* (for Object constructor)
-//     size_t vertexSize = vertexBuffer.size() * sizeof(float);
-//     float* buffer = new float[vertexBuffer.size()];
-//     std::copy(vertexBuffer.begin(), vertexBuffer.end(), buffer);
-
-//     return Object(buffer, vertexSize,stride, textureID);
-// }
-
-
-
-
-
+        // Move character out by the penetration amount
+        return collision.normal * collision.penetration;
+    }

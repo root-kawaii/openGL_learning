@@ -953,3 +953,43 @@ void RenderManager::renderQuad()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
+
+
+void RenderManager::renderGameObject(GameObject& gameObject, Shader shader){
+    shader.use();
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, gameObject.position) * scaling;
+    shader.setMat4("projection", projectionMatrix);
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("model", model);
+    shader.setFloat("time", glfwGetTime());
+    gameObject.model.Draw(shader);
+
+}
+
+void RenderManager::renderCameraAttachedObject(GameObject& gameObject, Shader shader) {
+    shader.use();
+    
+    glm::mat4 model = glm::mat4(1.0f);
+    
+    // Apply object's local offset (from JSON position data)
+    model = glm::translate(model, gameObject.position);
+    
+    // Apply camera's inverse rotation to keep object oriented with camera
+    glm::mat3 cameraRotationInverse = glm::transpose(glm::mat3(currentCamera->GetViewMatrix()));
+    model = glm::mat4(cameraRotationInverse) * model;
+    
+    // Translate to camera position
+    model = glm::translate(glm::mat4(1.0f), currentCamera->Position) * model;
+    
+    // Apply scaling
+    model = glm::scale(model, gameObject.scale);
+    
+    shader.setMat4("projection", projectionMatrix);
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("model", model);
+    shader.setFloat("time", glfwGetTime());
+    
+    gameObject.model.Draw(shader);
+}
