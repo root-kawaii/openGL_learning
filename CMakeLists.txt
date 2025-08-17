@@ -42,7 +42,45 @@ set(ASSIMP_INCLUDE_DIR "${ASSIMP_DIR}/include")
 # FreeType
 set(FREETYPE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/freetype")
 set(FREETYPE_INCLUDE_DIRS "${FREETYPE_DIR}/include/freetype2")
-set(FREETYPE_LIBRARIES "${FREETYPE_DIR}/lib/libfreetype.a")  # adjust if it's .lib or .dll.a
+set(FREETYPE_LIBRARIES "${FREETYPE_DIR}/lib/libfreetype.a") # adjust if it's .lib or .dll.a
+
+# ImGui - Set up paths
+set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/imgui")
+set(IMGUI_INCLUDE_DIR "${IMGUI_DIR}")
+
+# --------- ImGui Files ---------
+# Collect ImGui source files
+file(GLOB IMGUI_SOURCES
+    "${IMGUI_DIR}/*.cpp"
+)
+
+# Collect ImGui header files
+file(GLOB IMGUI_HEADERS
+    "${IMGUI_DIR}/*.h"
+)
+
+# Selectively include only the ImGui backends you need
+set(IMGUI_BACKENDS
+    # Only include backends for libraries you actually use
+    "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
+    "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_glfw.h"
+    # Add other backends only if you need them:
+    # "${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp"
+    # "${IMGUI_DIR}/backends/imgui_impl_vulkan.h"
+)
+
+# Check if backend files exist before adding them
+set(IMGUI_EXISTING_BACKENDS)
+foreach(backend_file ${IMGUI_BACKENDS})
+    if(EXISTS ${backend_file})
+        list(APPEND IMGUI_EXISTING_BACKENDS ${backend_file})
+    endif()
+endforeach()
+
+# Combine all ImGui files
+set(IMGUI_ALL_FILES ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_EXISTING_BACKENDS})
 
 # --------- Find packages ---------
 find_package(OpenGL REQUIRED)
@@ -50,14 +88,15 @@ find_package(glfw3 REQUIRED)
 
 # --------- Include directories ---------
 include_directories(
+    ${IMGUI_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIR}
     ${ASSIMP_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# --------- Add executable ---------
-add_executable(${PROJECT_NAME}
+# --------- Main project source files ---------
+set(PROJECT_SOURCES
     src/texture_debugger.cpp
     src/main.cpp
     src/input.cpp
@@ -72,6 +111,21 @@ add_executable(${PROJECT_NAME}
     src/texture.cpp
 )
 
+# --------- ImGui backend files (only the ones you need) ---------
+set(IMGUI_BACKEND_SOURCES
+    # Add these only if you're using ImGui with OpenGL + GLFW
+    include/imgui/backends/imgui_impl_opengl3.cpp
+    include/imgui/backends/imgui_impl_glfw.cpp
+)
+
+# --------- Add executable ---------
+add_executable(${PROJECT_NAME}
+    ${PROJECT_SOURCES}
+    ${IMGUI_SOURCES}
+    ${IMGUI_HEADERS}
+    ${IMGUI_BACKEND_SOURCES}
+)
+
 # --------- Link directories ---------
 link_directories(
     ${GLFW_LIB_DIR}
@@ -81,7 +135,7 @@ link_directories(
 # --------- Link libraries ---------
 target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenGL::GL
-    glfw                   # Provided by your local libglfw3.a
+    glfw # Provided by your local libglfw3.a
     ${FREETYPE_LIBRARIES}
-    assimp                  # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
+    assimp # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
 )

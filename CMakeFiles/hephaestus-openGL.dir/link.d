@@ -14,6 +14,13 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o \
   /usr/lib/libglfw.so.3.4 \
   include/freetype/lib/libfreetype.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/libassimp.so \
@@ -88,6 +95,20 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o:
 CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o:
 
 /usr/lib/libglfw.so.3.4:
 

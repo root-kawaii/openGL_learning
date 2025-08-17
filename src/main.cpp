@@ -28,6 +28,10 @@
 #include "../src/texture.h"
 #include "../src/serialization_utilities.h"
 
+#include <imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+
 
 struct Sphere {
     glm::vec3 center;
@@ -74,7 +78,15 @@ glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
 
 int main()
 {
+
     Game game = Game();
+
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(game.getWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
 
 
     Scene mainScene = Scene();
@@ -345,6 +357,18 @@ int main()
 
     while (!glfwWindowShouldClose(game.getWindow()))
     {
+
+        // Start ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        
+        // NOW this is safe:
+        ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x, game.camera.Position.y, game.camera.Position.z);
+        
+
+
+
         std::cout << ballz->normal.x << std::endl;   
         std::cout << ballz->normal.y << std::endl;   
         std::cout << ballz->normal.z << std::endl;   
@@ -814,6 +838,10 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
 
+        // Render ImGui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
 
         glfwSwapBuffers(game.getWindow());
         glfwPollEvents();

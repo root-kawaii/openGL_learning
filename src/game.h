@@ -27,6 +27,9 @@
 #include "../src/render_manager.h"
 
 
+#include "imgui.h"
+
+
 class Game {
 private:
     // Core systems
@@ -63,8 +66,8 @@ public:
     RenderManager& getRenderManager() { return renderManager; }
     GLFWwindow* getWindow() { return window;}
 
-    unsigned int SCR_WIDTH = 1400;
-    unsigned int SCR_HEIGHT = 900;
+    unsigned int SCR_WIDTH = 1440;
+    unsigned int SCR_HEIGHT = 1440;
 
     bool firstMouse = true;
 
@@ -110,7 +113,7 @@ public:
         glfwSetScrollCallback(window, scroll_callback);
 
         // tell GLFW to capture our mouse
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
 
         // glad: load all OpenGL function pointers
         // ---------------------------------------
