@@ -31,7 +31,12 @@
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-
+#include <algorithm> // For std::sort
+#include <vector>
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp> // For glm::length2
+#include <glm/gtx/rotate_vector.hpp>
 
 struct Sphere {
     glm::vec3 center;
@@ -76,6 +81,48 @@ unsigned int planeVAO;
 
 glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
 
+
+struct SmokeQuad {
+    glm::vec3 position;
+    float distanceToCamera;
+};
+
+
+unsigned int loadTexture(char const * path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
 int main()
 {
 
@@ -101,6 +148,8 @@ int main()
     unsigned int texture_metallic = renderManager.loadTexture("texture_metallic", fs::path("assets/cerberus/Textures/metallic.png").c_str());
     // unsigned int normal = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
     unsigned int texture_roughness = renderManager.loadTexture("texture_roughness", fs::path("assets/cerberus/Textures/roughness.png").c_str());
+
+    unsigned int smoke_texture = loadTexture(fs::path("assets/smoke.jpg").c_str());
 
     // configure global opengl state
     // -----------------------------
@@ -184,6 +233,7 @@ int main()
     Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
     Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
     Shader modelShader("shaders/model.vs", "shaders/model.fs");
+    Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
 
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
@@ -593,7 +643,12 @@ int main()
         backpack.Draw(shaderGeometryPass);
 
 
+        shaderGeometryPass.use();
+
         renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
+
+
+        shaderGeometryPass.use();
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3( 0.0,  3.0, 0.0));
@@ -614,7 +669,6 @@ int main()
         model = glm::translate(model, glm::vec3( 25.0,  -5.0,  25.0));
         terrainShader.setMat4("model", model);
         // plane.Draw(terrainShader);
-
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
@@ -837,6 +891,54 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
+
+
+
+        ////////////////////////////////////
+
+
+        std::vector<glm::vec3> smokePositions;
+        const int numParticles = 5;
+
+        // You can randomize this for a more natural effect
+        for (int i = 0; i < numParticles; ++i) {
+            // Offset each particle from the gun's position
+            glm::vec3 particleOffset = glm::vec3(0.0f, 0.0f, -0.125f - (float)i * 0.05f);
+            smokePositions.push_back(gun->position + particleOffset);
+        }
+
+        // 2. Sort the particle positions from farthest to nearest
+        glm::vec3 cameraPosition = glm::vec3(glm::inverse(view)[3]); // Extract camera position from the view matrix
+        std::sort(smokePositions.begin(), smokePositions.end(), [&cameraPosition](const glm::vec3& a, const glm::vec3& b) {
+            return glm::length2(a - cameraPosition) > glm::length2(b - cameraPosition);
+        });
+
+        // 3. Set up the OpenGL state for transparent rendering
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, smoke_texture);
+        smokeShader.use();
+        smokeShader.setMat4("view", view);
+        smokeShader.setMat4("projection", projection);
+        smokeShader.setInt("smokeTexture", 0);
+        smokeShader.setFloat("time", glfwGetTime());
+
+        // 4. Loop and render each sorted particle
+        const float particleSize = 0.05f;
+        for (const auto& position : smokePositions) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, position);
+            model = glm::scale(model, glm::vec3(particleSize));
+            
+            smokeShader.setMat4("model", model);
+            smokeShader.setFloat("alpha", 0.50f); // You can adjust alpha here based on distance if you want
+            renderManager.renderQuadForSmoke();
+        }
+
+        // 5. Restore OpenGL state
+        glDisable(GL_BLEND);
+
 
         // Render ImGui
         ImGui::Render();

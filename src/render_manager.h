@@ -171,6 +171,9 @@ public:
     void setProjectionMatrix(glm::mat4 projectionMatrixArg){projectionMatrix = projectionMatrixArg;};
     void setViewMatrix(glm::mat4 viewMatrixArg){viewMatrix = viewMatrixArg;};
     void updateCameraMatrices();
+
+    glm::mat4 getViewMatrix(){return viewMatrix;};
+    glm::mat4 getProjectionMatrix(){return projectionMatrix;};
     
     // Lighting
     void addLight(const Light& light);
@@ -209,6 +212,7 @@ public:
 
     void renderCameraAttachedObject(GameObject& gameObject, Shader shader);
 
+    void renderQuadForSmoke();
     void renderQuad();
     void renderCube();
     void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);

@@ -3185,6 +3185,21 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   include/glm/gtc/matrix_transform.inl \
   include/glm/gtc/type_ptr.hpp \
   include/glm/gtc/type_ptr.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/ext/quaternion_exponential.hpp \
+  include/glm/ext/quaternion_exponential.inl \
+  include/glm/ext/scalar_common.hpp \
+  include/glm/ext/scalar_common.inl \
+  include/glm/gtx/component_wise.hpp \
+  include/glm/gtx/component_wise.inl \
+  include/glm/gtx/quaternion.hpp \
+  include/glm/gtx/quaternion.inl \
+  include/glm/gtx/transform.hpp \
+  include/glm/gtx/transform.inl \
+  include/glm/gtx/norm.hpp \
+  include/glm/gtx/norm.inl \
+  include/glm/gtx/rotate_vector.hpp \
+  include/glm/gtx/rotate_vector.inl \
   include/glm/integer.hpp \
   include/glm/mat2x2.hpp \
   include/glm/packing.hpp \
@@ -6358,6 +6373,24 @@ src/render_manager.cpp:
 
 include/glm/gtc/matrix_inverse.hpp:
 
+include/glm/gtx/rotate_vector.inl:
+
+include/glm/gtx/rotate_vector.hpp:
+
+include/glm/gtx/norm.inl:
+
+include/glm/gtx/quaternion.hpp:
+
+include/glm/gtx/component_wise.inl:
+
+include/glm/gtx/component_wise.hpp:
+
+include/glm/ext/scalar_common.inl:
+
+include/glm/ext/quaternion_exponential.inl:
+
+include/glm/ext/quaternion_exponential.hpp:
+
 src/main.cpp:
 
 /usr/include/c++/15.1.1/bits/random.tcc:
@@ -6678,6 +6711,8 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/enqcmdintrin.h:
 
+include/glm/gtx/transform.inl:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/avx512vbmivlintrin.h:
 
 /usr/include/bits/types/sigval_t.h:
@@ -6902,6 +6937,8 @@ include/assimp/include/assimp/anim.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/serializeintrin.h:
 
+include/glm/ext/scalar_common.hpp:
+
 /usr/include/stdint.h:
 
 /usr/include/endian.h:
@@ -6987,6 +7024,8 @@ include/glm/detail/type_mat3x3.hpp:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/avx512ifmaintrin.h:
 
 /usr/include/bits/libc-header-start.h:
+
+include/glm/gtx/transform.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/avx512vbmi2vlintrin.h:
 
@@ -7084,11 +7123,15 @@ include/glm/ext/matrix_float2x3.hpp:
 
 /usr/include/bits/waitstatus.h:
 
+include/glm/gtx/norm.hpp:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/include/avx512dqintrin.h:
 
 /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/time_members.h:
 
 /usr/include/bits/getopt_posix.h:
+
+include/glm/gtx/quaternion.inl:
 
 src/camera.h:
 

@@ -3197,6 +3197,21 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_transform.inl
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.hpp
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/detail/setup.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/ext/quaternion_exponential.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/ext/quaternion_exponential.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/ext/scalar_common.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/ext/scalar_common.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/component_wise.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/component_wise.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/quaternion.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/quaternion.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/transform.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/transform.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/norm.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/norm.inl
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.hpp
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.inl
  /home/monolith/Desktop/openGL_learning/include/glm/integer.hpp
  /home/monolith/Desktop/openGL_learning/include/glm/mat2x2.hpp
  /home/monolith/Desktop/openGL_learning/include/glm/packing.hpp
