@@ -38,6 +38,74 @@
 #include <glm/gtx/norm.hpp> // For glm::length2
 #include <glm/gtx/rotate_vector.hpp>
 
+#include <AL/al.h>
+#include <AL/alc.h>
+
+#include <sndfile.h>
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <AL/al.h>
+#include <AL/alc.h>
+
+// Very basic WAV loader (uncompressed PCM only)
+bool loadWavFile(const char* filename, ALuint& buffer, ALenum& format, ALsizei& freq) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) return false;
+
+    char riff[4];
+    file.read(riff, 4); // "RIFF"
+    file.ignore(4);     // file size
+    file.read(riff, 4); // "WAVE"
+
+    char chunkId[4];
+    file.read(chunkId, 4); // "fmt "
+    uint32_t chunkSize;
+    file.read(reinterpret_cast<char*>(&chunkSize), 4);
+
+    uint16_t audioFormat, channels, blockAlign, bitsPerSample;
+    uint32_t sampleRate, byteRate;
+
+    file.read(reinterpret_cast<char*>(&audioFormat), 2);
+    file.read(reinterpret_cast<char*>(&channels), 2);
+    file.read(reinterpret_cast<char*>(&sampleRate), 4);
+    file.read(reinterpret_cast<char*>(&byteRate), 4);
+    file.read(reinterpret_cast<char*>(&blockAlign), 2);
+    file.read(reinterpret_cast<char*>(&bitsPerSample), 2);
+
+    // Skip any extra fmt bytes
+    if (chunkSize > 16)
+        file.ignore(chunkSize - 16);
+
+    // Find "data" chunk
+    char dataId[4];
+    uint32_t dataSize = 0;
+    while (true) {
+        file.read(dataId, 4);
+        file.read(reinterpret_cast<char*>(&dataSize), 4);
+        if (std::strncmp(dataId, "data", 4) == 0) break;
+        file.ignore(dataSize);
+    }
+
+    std::vector<char> data(dataSize);
+    file.read(data.data(), dataSize);
+
+    // Determine format
+    if (channels == 1 && bitsPerSample == 8) format = AL_FORMAT_MONO8;
+    else if (channels == 1 && bitsPerSample == 16) format = AL_FORMAT_MONO16;
+    else if (channels == 2 && bitsPerSample == 8) format = AL_FORMAT_STEREO8;
+    else if (channels == 2 && bitsPerSample == 16) format = AL_FORMAT_STEREO16;
+    else return false;
+
+    freq = sampleRate;
+
+    alBufferData(buffer, format, data.data(), dataSize, freq);
+
+    return true;
+}
+
+
 struct Sphere {
     glm::vec3 center;
     float radius;
@@ -150,6 +218,46 @@ int main()
     unsigned int texture_roughness = renderManager.loadTexture("texture_roughness", fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
     unsigned int smoke_texture = loadTexture(fs::path("assets/smoke.jpg").c_str());
+
+
+
+
+    ALCdevice *device = alcOpenDevice(nullptr); // nullptr for default device
+    if (!device) {
+        // Handle error
+    }
+
+    ALCcontext *context = alcCreateContext(device, nullptr);
+    if (!context) {
+        // Handle error
+    }
+    alcMakeContextCurrent(context);
+    ALfloat listenerPos[] = {0.0f, 0.0f, 0.0f};
+    ALfloat listenerVel[] = {0.0f, 0.0f, 0.0f};
+    ALfloat listenerOri[] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f}; // Forward and Up vectors
+
+    alListenerfv(AL_POSITION, listenerPos);
+    alListenerfv(AL_VELOCITY, listenerVel);
+    alListenerfv(AL_ORIENTATION, listenerOri);
+
+    ALuint buffer;
+    alGenBuffers(1, &buffer);
+
+    ALenum format;
+    ALsizei freq;
+
+    loadWavFile(fs::path("assets/audio_1.wav").c_str(), buffer, format, freq);
+
+    ALuint source;
+    alGenSources(1, &source);
+
+    alSourcei(source, AL_BUFFER, buffer);
+
+    alSourcef(source, AL_PITCH, 1.0f);
+    alSourcef(source, AL_GAIN, 1.0f);
+    alSource3f(source, AL_POSITION, 5.0f, 0.0f, 0.0f); // Position in 3D space
+    alSourcei(source, AL_LOOPING, AL_FALSE);
+
 
     // configure global opengl state
     // -----------------------------
@@ -405,8 +513,23 @@ int main()
     CollisionInfo* planez = new CollisionInfo();
     CollisionInfo* ballz = new CollisionInfo();
 
+
+    alSourcePlay(source);
+    ALint state;
+
+
     while (!glfwWindowShouldClose(game.getWindow()))
     {
+
+        alGetSourcei(source, AL_SOURCE_STATE, &state);
+        if (state == AL_PLAYING) {
+            // Still playing
+        } else if (state == AL_STOPPED) {
+            alSourcePlay(source);
+            // Finished
+        }
+
+
 
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -955,6 +1078,12 @@ int main()
     // glDeleteVertexArrays(1, &planeVAO);
     // glDeleteBuffers(1, &planeVBO);
     // glDeleteFramebuffers(1, &fbo);  
+
+    alDeleteSources(1, &source);
+    alDeleteBuffers(1, &buffer);
+
+    alcDestroyContext(context);
+    alcCloseDevice(device);
 
 
     glfwTerminate();

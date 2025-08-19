@@ -85,6 +85,7 @@ set(IMGUI_ALL_FILES ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_EXISTING_BACKENDS}
 # --------- Find packages ---------
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(OpenAL REQUIRED)
 
 # --------- Include directories ---------
 include_directories(
@@ -137,5 +138,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenGL::GL
     glfw # Provided by your local libglfw3.a
     ${FREETYPE_LIBRARIES}
+    OpenAL::OpenAL
     assimp # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
 )
