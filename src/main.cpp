@@ -246,7 +246,7 @@ int main()
     ALenum format;
     ALsizei freq;
 
-    loadWavFile(fs::path("assets/audio_1.wav").c_str(), buffer, format, freq);
+    loadWavFile(fs::path("assets/audio_2.wav").c_str(), buffer, format, freq);
 
     ALuint source;
     alGenSources(1, &source);
