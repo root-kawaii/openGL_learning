@@ -14,6 +14,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o"

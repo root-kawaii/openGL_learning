@@ -297,6 +297,30 @@ include/imgui/imgui_widgets.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.s
 .PHONY : include/imgui/imgui_widgets.cpp.s
 
+src/audio_manager.o: src/audio_manager.cpp.o
+.PHONY : src/audio_manager.o
+
+# target to build an object file
+src/audio_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o
+.PHONY : src/audio_manager.cpp.o
+
+src/audio_manager.i: src/audio_manager.cpp.i
+.PHONY : src/audio_manager.i
+
+# target to preprocess a source file
+src/audio_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.i
+.PHONY : src/audio_manager.cpp.i
+
+src/audio_manager.s: src/audio_manager.cpp.s
+.PHONY : src/audio_manager.s
+
+# target to generate assembly for a file
+src/audio_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.s
+.PHONY : src/audio_manager.cpp.s
+
 src/game.o: src/game.cpp.o
 .PHONY : src/game.o
 
@@ -615,6 +639,9 @@ help:
 	@echo "... include/imgui/imgui_widgets.o"
 	@echo "... include/imgui/imgui_widgets.i"
 	@echo "... include/imgui/imgui_widgets.s"
+	@echo "... src/audio_manager.o"
+	@echo "... src/audio_manager.i"
+	@echo "... src/audio_manager.s"
 	@echo "... src/game.o"
 	@echo "... src/game.i"
 	@echo "... src/game.s"

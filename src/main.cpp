@@ -48,89 +48,35 @@
 #include <vector>
 #include <AL/al.h>
 #include <AL/alc.h>
+#include "../src/audio_manager.h"
 
-// Very basic WAV loader (uncompressed PCM only)
-bool loadWavFile(const char* filename, ALuint& buffer, ALenum& format, ALsizei& freq) {
-    std::ifstream file(filename, std::ios::binary);
-    if (!file) return false;
-
-    char riff[4];
-    file.read(riff, 4); // "RIFF"
-    file.ignore(4);     // file size
-    file.read(riff, 4); // "WAVE"
-
-    char chunkId[4];
-    file.read(chunkId, 4); // "fmt "
-    uint32_t chunkSize;
-    file.read(reinterpret_cast<char*>(&chunkSize), 4);
-
-    uint16_t audioFormat, channels, blockAlign, bitsPerSample;
-    uint32_t sampleRate, byteRate;
-
-    file.read(reinterpret_cast<char*>(&audioFormat), 2);
-    file.read(reinterpret_cast<char*>(&channels), 2);
-    file.read(reinterpret_cast<char*>(&sampleRate), 4);
-    file.read(reinterpret_cast<char*>(&byteRate), 4);
-    file.read(reinterpret_cast<char*>(&blockAlign), 2);
-    file.read(reinterpret_cast<char*>(&bitsPerSample), 2);
-
-    // Skip any extra fmt bytes
-    if (chunkSize > 16)
-        file.ignore(chunkSize - 16);
-
-    // Find "data" chunk
-    char dataId[4];
-    uint32_t dataSize = 0;
-    while (true) {
-        file.read(dataId, 4);
-        file.read(reinterpret_cast<char*>(&dataSize), 4);
-        if (std::strncmp(dataId, "data", 4) == 0) break;
-        file.ignore(dataSize);
-    }
-
-    std::vector<char> data(dataSize);
-    file.read(data.data(), dataSize);
-
-    // Determine format
-    if (channels == 1 && bitsPerSample == 8) format = AL_FORMAT_MONO8;
-    else if (channels == 1 && bitsPerSample == 16) format = AL_FORMAT_MONO16;
-    else if (channels == 2 && bitsPerSample == 8) format = AL_FORMAT_STEREO8;
-    else if (channels == 2 && bitsPerSample == 16) format = AL_FORMAT_STEREO16;
-    else return false;
-
-    freq = sampleRate;
-
-    alBufferData(buffer, format, data.data(), dataSize, freq);
-
-    return true;
-}
-
-
-struct Sphere {
+struct Sphere
+{
     glm::vec3 center;
     float radius;
-    
+
     Sphere(glm::vec3 c, float r) : center(c), radius(r) {}
 };
 
-struct CollisionInfo {
+struct CollisionInfo
+{
     int objectA, objectB;
     glm::vec3 contactPoint;
     glm::vec3 normal;
     float penetration;
-    bool isValid=false;
+    bool isValid = false;
 
-    CollisionInfo(){}
-    
+    CollisionInfo() {}
+
     CollisionInfo(int a, int b, glm::vec3 point, glm::vec3 n, float pen)
         : objectA(a), objectB(b), contactPoint(point), normal(n), penetration(pen) {}
 };
 
-glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo& collision);
-bool sphereVsSphere(const Sphere& a, const Sphere& b, CollisionInfo& info);
+glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo &collision);
+bool sphereVsSphere(const Sphere &a, const Sphere &b, CollisionInfo &info);
 unsigned int loadCubemap(vector<std::string> faces);
-GameObject loadSceneObject(const std::string& path, int stride, unsigned int textureID);
-void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos);
+GameObject loadSceneObject(const std::string &path, int stride, unsigned int textureID);
+void shaderUser(Shader &shader, glm::mat4 *projection, glm::mat4 *model, glm::mat4 *view, glm::vec3 *cameraPos);
 
 // settings
 bool shadows = true;
@@ -147,65 +93,31 @@ float lastFrame = 0.0f;
 // meshes
 unsigned int planeVAO;
 
+// fired
+bool fired = false;
+
 glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
 
-
-struct SmokeQuad {
+struct SmokeQuad
+{
     glm::vec3 position;
     float distanceToCamera;
 };
-
-
-unsigned int loadTexture(char const * path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
 
 int main()
 {
 
     Game game = Game();
 
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(game.getWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-
-
     Scene mainScene = Scene();
+    game.setScene(&mainScene);
     RenderManager renderManager = game.getRenderManager();
+    AudioManager audioManager = game.getAudioManager();
     renderManager.setCamera(&game.camera);
     renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
     renderManager.setupGBuffer();
@@ -217,99 +129,56 @@ int main()
     // unsigned int normal = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
     unsigned int texture_roughness = renderManager.loadTexture("texture_roughness", fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
-    unsigned int smoke_texture = loadTexture(fs::path("assets/smoke.jpg").c_str());
-
-
-
-
-    ALCdevice *device = alcOpenDevice(nullptr); // nullptr for default device
-    if (!device) {
-        // Handle error
-    }
-
-    ALCcontext *context = alcCreateContext(device, nullptr);
-    if (!context) {
-        // Handle error
-    }
-    alcMakeContextCurrent(context);
-    ALfloat listenerPos[] = {0.0f, 0.0f, 0.0f};
-    ALfloat listenerVel[] = {0.0f, 0.0f, 0.0f};
-    ALfloat listenerOri[] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f}; // Forward and Up vectors
-
-    alListenerfv(AL_POSITION, listenerPos);
-    alListenerfv(AL_VELOCITY, listenerVel);
-    alListenerfv(AL_ORIENTATION, listenerOri);
-
-    ALuint buffer;
-    alGenBuffers(1, &buffer);
-
-    ALenum format;
-    ALsizei freq;
-
-    loadWavFile(fs::path("assets/audio_2.wav").c_str(), buffer, format, freq);
-
-    ALuint source;
-    alGenSources(1, &source);
-
-    alSourcei(source, AL_BUFFER, buffer);
-
-    alSourcef(source, AL_PITCH, 1.0f);
-    alSourcef(source, AL_GAIN, 1.0f);
-    alSource3f(source, AL_POSITION, 5.0f, 0.0f, 0.0f); // Position in 3D space
-    alSourcei(source, AL_LOOPING, AL_FALSE);
-
+    unsigned int smoke_texture = renderManager.loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
 
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
 
-        float skyboxVertices[] = {
-        // positions          
-        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
         -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-    
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-    
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-    
-        -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
-    
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
-    
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f
-    };
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
 
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f};
 
     // build and compile shaders
     // -------------------------
@@ -319,16 +188,15 @@ int main()
     // ------------------------------------------------------------------
 
     // cubemap
-    vector<std::string> faces = 
-    {
-        "assets/skybox/right.jpg",
-        "assets/skybox/left.jpg",
-        "assets/skybox/top.jpg",
-        "assets/skybox/bottom.jpg",
-        "assets/skybox/front.jpg",
-        "assets/skybox/back.jpg"
-    };
-    unsigned int cubemapTexture = loadCubemap(faces);  
+    vector<std::string> faces =
+        {
+            "assets/skybox/right.jpg",
+            "assets/skybox/left.jpg",
+            "assets/skybox/top.jpg",
+            "assets/skybox/bottom.jpg",
+            "assets/skybox/front.jpg",
+            "assets/skybox/back.jpg"};
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     Shader waterShader("shaders/water.vs", "shaders/water.fs");
     Shader terrainShader("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
@@ -342,6 +210,7 @@ int main()
     Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
     Shader modelShader("shaders/model.vs", "shaders/model.fs");
     Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
+    Shader gridShader("shaders/grid.vs", "shaders/grid.fs");
 
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
@@ -352,7 +221,6 @@ int main()
 
     // }
 
-
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     // Model plane(fs::path("assets/planes/plane_2.obj"));
 
@@ -360,9 +228,10 @@ int main()
     auto plane = std::make_shared<GameObject>("plane_01", "assets/planes/plane_2.obj", serializer.getObjectWithId("plane_01")->position, serializer.getObjectWithId("plane_01")->rotation, serializer.getObjectWithId("plane_01")->scale);
     auto gun = std::make_shared<GameObject>("gun_01", "assets/cerberus/cerberus.glb", serializer.getObjectWithId("gun_01")->position, serializer.getObjectWithId("gun_01")->rotation, serializer.getObjectWithId("gun_01")->scale);
     auto ball = std::make_shared<GameObject>("ball_01", "assets/ball_2.obj", serializer.getObjectWithId("ball_01")->position, serializer.getObjectWithId("ball_01")->rotation, serializer.getObjectWithId("ball_01")->scale);
+    auto bullet = std::make_shared<GameObject>("ball_01", "assets/ball_2.obj", serializer.getObjectWithId("ball_01")->position, serializer.getObjectWithId("ball_01")->rotation, serializer.getObjectWithId("ball_01")->scale);
 
-    GameObject* ballPtr = ball.get();  // Get raw pointer before moving
-    GameObject* gunPtr = gun.get();  // Get raw pointer before moving
+    GameObject *ballPtr = ball.get(); // Get raw pointer before moving
+    GameObject *gunPtr = gun.get();   // Get raw pointer before moving
 
     // Add to scene
     mainScene.addGameObject(gun);
@@ -376,24 +245,20 @@ int main()
     Sphere ballSphere(ball->position, ball->collisionRadius);
     Sphere planeSphere(plane->position, plane->collisionRadius);
 
-
     Model helmet(fs::path("assets/helmet.glb"));
 
-
     std::vector<glm::vec3> objectPositions;
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5, 3.0));
-    objectPositions.push_back(glm::vec3( -0.5,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3( 8.0,  0.5,  3.0));
-
-
+    objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
+    objectPositions.push_back(glm::vec3(3.0, -0.5, 3.0));
+    objectPositions.push_back(glm::vec3(-0.5, -0.5, 0.0));
+    objectPositions.push_back(glm::vec3(8.0, 0.5, 3.0));
 
     unsigned int sceneFramebuffer;
     unsigned int sceneColorTexture;
     unsigned int sceneDepthTexture;
     glGenFramebuffers(1, &sceneFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-    
+
     // Create color texture
     glGenTextures(1, &sceneColorTexture);
     glBindTexture(GL_TEXTURE_2D, sceneColorTexture);
@@ -403,7 +268,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneColorTexture, 0);
-    
+
     // Create depth texture (for depth testing during scene rendering)
     glGenTextures(1, &sceneDepthTexture);
     glBindTexture(GL_TEXTURE_2D, sceneDepthTexture);
@@ -413,14 +278,14 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, sceneDepthTexture, 0);
-    
+
     // Check framebuffer completeness
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
         std::cout << "ERROR: Scene framebuffer not complete!" << std::endl;
     }
-    
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Unbind framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -445,7 +310,6 @@ int main()
         lightColors.push_back(glm::vec3(rColor, gColor, bColor));
     }
 
-
     // cubemaps VAO
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -454,14 +318,11 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-      
-
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
     unsigned int framebuffer;
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
 
     // shadowmaps
 
@@ -487,8 +348,6 @@ int main()
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-
     shaderLightingPass.use();
     shaderLightingPass.setInt("gPosition", 0);
     shaderLightingPass.setInt("gNormal", 1);
@@ -502,74 +361,60 @@ int main()
     skyboxShader.use();
     skyboxShader.setInt("skybox", 5);
 
-
     // render loop
     // -----------
     Ray ray;
-    glm::mat4 viewCopy; 
+    glm::mat4 viewCopy;
     bool viewFrozen = false;
     bool intersect = false;
     Sphere cameraSphere(game.camera.Position, 2.0f);
-    CollisionInfo* planez = new CollisionInfo();
-    CollisionInfo* ballz = new CollisionInfo();
+    CollisionInfo *planez = new CollisionInfo();
+    CollisionInfo *ballz = new CollisionInfo();
 
-
-    alSourcePlay(source);
-    ALint state;
-
+    audioManager.playSource();
 
     while (!glfwWindowShouldClose(game.getWindow()))
     {
 
-        alGetSourcei(source, AL_SOURCE_STATE, &state);
-        if (state == AL_PLAYING) {
-            // Still playing
-        } else if (state == AL_STOPPED) {
-            alSourcePlay(source);
-            // Finished
-        }
-
-
-
+        audioManager.loopAudio();
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        
+
         // NOW this is safe:
         ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x, game.camera.Position.y, game.camera.Position.z);
-        
 
-
-
-        std::cout << ballz->normal.x << std::endl;   
-        std::cout << ballz->normal.y << std::endl;   
-        std::cout << ballz->normal.z << std::endl;   
+        // std::cout << ballz->normal.x << std::endl;
+        // std::cout << ballz->normal.y << std::endl;
+        // std::cout << ballz->normal.z << std::endl;
         cameraSphere.center = game.camera.Position;
         // if(sphereVsSphere(cameraSphere, planeSphere, *planez)){
         //     std::cout << "collision with plane" << std::endl;
         //    game.camera.Position = simplePositionCorrection(game.camera.Position, *planez);
         // }
-        if(sphereVsSphere(ballSphere, cameraSphere, *ballz)){
-            std::cout << "collision with ballz" << std::endl;   
+        if (sphereVsSphere(ballSphere, cameraSphere, *ballz))
+        {
+            std::cout << "collision with ballz" << std::endl;
             game.camera.Position += simplePositionCorrection(game.camera.Position, *ballz);
         }
 
-        if(shadows) {
+        if (shadows)
+        {
             // std::cout << "msaa enabled" << std::endl;
             glEnable(GL_MULTISAMPLE);
         }
-        else{
+        else
+        {
             // std::cout << "msaa disabled" <<std::endl;
             glDisable(GL_MULTISAMPLE);
         }
-
 
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
-        // std::cout << 1/deltaTime << std::endl;
+        std::cout << deltaTime << std::endl;
         lastFrame = currentFrame;
 
         lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
@@ -593,8 +438,6 @@ int main()
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        
-        
 
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -607,29 +450,25 @@ int main()
         simpleDepthShader.setVec3("lightPos", lightPos);
         // renderScene(simpleDepthShader);
         for (unsigned int i = 0; i < objectPositions.size(); i++)
-            {
-                model = glm::mat4(1.0f);
-                model = glm::translate(model, objectPositions[i]);
-                model = glm::scale(model, glm::vec3(1.0f));
-                simpleDepthShader.setMat4("model", model);
-                ballPtr->model.Draw(simpleDepthShader);
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(1.0f));
+            simpleDepthShader.setMat4("model", model);
+            ballPtr->model.Draw(simpleDepthShader);
+        }
 
-
-            }
-
-        // model = glm::mat4(1.0f); 
+        // model = glm::mat4(1.0f);
         // model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
         // simpleDepthShader.setMat4("model", model);
         // plane.Draw(simpleDepthShader);
 
-        // model = glm::mat4(1.0f); 
+        // model = glm::mat4(1.0f);
         // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
         // simpleDepthShader.setMat4("model", model);
         // plane.Draw(simpleDepthShader);
-        
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
 
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
@@ -644,86 +483,88 @@ int main()
         renderManager.setProjectionMatrix(projection);
         model = glm::mat4(1.0f);
 
-        
-
         glm::mat4 frozenView; // outside render loop
         bool viewFrozen;
 
-
-        if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS) {
+        if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
+        {
             ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f, game.SCR_HEIGHT / 2.0f),
-                                    game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
+                                   game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
             bool intersect = rayIntersectMesh(ray, ballPtr->model.meshes);
             selected = true;
-            frozenView = game.camera.GetViewMatrix(); // 
+            frozenView = game.camera.GetViewMatrix(); //
             viewFrozen = true;
             selectedID = ballPtr->ID;
-            
 
-
-            if (intersect) {
+            if (intersect)
+            {
                 std::cout << "intersect" << std::endl;
                 // selected = true;
                 // frozenView = camera.GetViewMatrix();
                 // viewFrozen = true;
-            } else {
+            }
+            else
+            {
                 std::cout << "no intersection" << std::endl;
                 // selected = false;
                 // viewFrozen = false;
             }
         }
 
-
         modelShader.use();
         modelShader.setMat4("projection", projection);
         modelShader.setMat4("view", view);
         modelShader.setMat4("model", model);
- 
-        if (selected && viewFrozen) {
+
+        if (selected && viewFrozen)
+        {
             std::cout << "lining" << std::endl;
             renderManager.renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
         }
 
-        if (true) {
-            std::cout << "moving" << std::endl;
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+        if (true)
+        {
+            // std::cout << "moving" << std::endl;
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+            {
                 ballPtr->position.x += 1;
             }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+            {
                 ballPtr->position.x -= 1;
             }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
+            {
                 ballPtr->position.z += 1;
             }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
+            {
                 ballPtr->position.z -= 1;
             }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            {
                 ballPtr->position.y += 1;
             }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            {
                 ballPtr->position.y -= 1;
             }
-            
         }
-
 
         shaderGeometryPass.use();
 
-        shaderGeometryPass.setInt("texture_metallic",6);
-        shaderGeometryPass.setInt("texture_roughness",7);
-
+        shaderGeometryPass.setInt("texture_metallic", 6);
+        shaderGeometryPass.setInt("texture_roughness", 7);
 
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_2D, texture_metallic);
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, texture_roughness);
 
-
         shaderGeometryPass.setMat4("projection", projection);
         shaderGeometryPass.setMat4("view", view);
-        shaderGeometryPass.setFloat("near_plane", near_plane);  // Add this
-        shaderGeometryPass.setFloat("far_plane", far_plane); // Add this
+        shaderGeometryPass.setFloat("near_plane", near_plane); // Add this
+        shaderGeometryPass.setFloat("far_plane", far_plane);   // Add this
         for (unsigned int i = 0; i < objectPositions.size(); i++)
         {
             model = glm::mat4(1.0f);
@@ -731,7 +572,7 @@ int main()
             model = glm::scale(model, glm::vec3(0.5f));
             shaderGeometryPass.setMat4("model", model);
             ballPtr->model.Draw(shaderGeometryPass);
-            model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+            model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
             shaderGeometryPass.setMat4("model", model);
 
             // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
@@ -746,68 +587,95 @@ int main()
         // plane.Draw(shaderGeometryPass);
         renderManager.renderGameObject(*plane, shaderGeometryPass);
 
-
         selectedShader.use();
 
-
-        std::cout << selectedID << std::endl;
-        std::cout << ballPtr->ID << std::endl;
-
+        // std::cout << selectedID << std::endl;
+        // std::cout << ballPtr->ID << std::endl;
 
         renderManager.renderGameObject(*ball, shaderGeometryPass);
 
-
-
         shaderGeometryPass.setFloat("objectID", 0);
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3( 9.0,  -1.0, lightPos.z));
+        model = glm::translate(model, glm::vec3(9.0, -1.0, lightPos.z));
         model = glm::scale(model, glm::vec3(0.3f));
         shaderGeometryPass.setMat4("model", model);
         backpack.Draw(shaderGeometryPass);
 
-
         shaderGeometryPass.use();
 
-        renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
-
+        if (fired)
+        {
+            selectedShader.use();
+            renderManager.renderCameraAttachedObject(*gun, selectedShader);
+        }
+        else
+        {
+            renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
+        }
 
         shaderGeometryPass.use();
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3( 0.0,  3.0, 0.0));
+        model = glm::translate(model, glm::vec3(0.0, 3.0, 0.0));
         model = glm::scale(model, glm::vec3(0.5f));
         shaderGeometryPass.setMat4("model", model);
         helmet.Draw(shaderGeometryPass);
-        
 
         terrainShader.use();
         terrainShader.setFloat("seed", game.seed);
         terrainShader.setMat4("projection", projection);
         terrainShader.setMat4("view", view);
-        terrainShader.setFloat("near_plane", near_plane);  // Add thiss
-        terrainShader.setFloat("far_plane", far_plane); // Add this
+        terrainShader.setFloat("near_plane", near_plane); // Add thiss
+        terrainShader.setFloat("far_plane", far_plane);   // Add this
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(1000.0f));
-        model = glm::translate(model, glm::vec3( 25.0,  -5.0,  25.0));
+        model = glm::translate(model, glm::vec3(25.0, -5.0, 25.0));
         terrainShader.setMat4("model", model);
         // plane.Draw(terrainShader);
+
+        if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired == false)
+        {
+
+            auto newBullet = std::make_shared<GameObject>(bullet); // Copy constructor
+            newBullet->scale = glm::vec3(0.10, 0.10, 0.10);
+            float forwardOffset = 2.0f;
+            float rightOffset = 0.2f; // Slight offset to the right
+            float upOffset = -0.22f;  // Slight offset downward
+
+            newBullet->position = game.camera.Position +
+                                  (game.camera.Front * forwardOffset) +
+                                  (game.camera.Right * rightOffset) +
+                                  (game.camera.Up * upOffset);
+            newBullet->speed = game.camera.Front * glm::vec3(10, 10, 10);
+            mainScene.addGameObject(newBullet);
+            fired = true;
+            std::cout << "fired" << std::endl;
+        }
+        if (glfwGetKey(game.getWindow(), GLFW_KEY_R) == GLFW_PRESS)
+        {
+            fired = false;
+        }
+
+        // renderManager.renderGameObject(*bullet, shaderGeometryPass);
+        // game.getScene().
+        auto gameObjects = game.getScene()->getGameObjects();
+        for (auto &i : gameObjects)
+        {
+            renderManager.renderGameObject(*i, shaderGeometryPass);
+        }
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
 
-    
-
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
         glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT );
-
-
+        glClear(GL_COLOR_BUFFER_BIT);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager.getGBuffer());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
         // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-        // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+        // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the
         // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
         glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
@@ -848,8 +716,6 @@ int main()
             shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Radius", radius);
         }
 
-
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
         glActiveTexture(GL_TEXTURE1);
@@ -872,7 +738,6 @@ int main()
         renderManager.renderQuad();
         glEnable(GL_DEPTH_TEST);
 
-
         // //////////////////////////////////////
 
         glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
@@ -884,10 +749,10 @@ int main()
 
         // Copy color buffer to the screen
         glBlitFramebuffer(
-            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT,    // src rect
-            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT,    // dst rect
-            GL_COLOR_BUFFER_BIT,            // what to copy
-            GL_NEAREST                      // filtering
+            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // src rect
+            0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // dst rect
+            GL_COLOR_BUFFER_BIT,                   // what to copy
+            GL_NEAREST                             // filtering
         );
 
         // ///////////
@@ -900,7 +765,6 @@ int main()
 
         // Reflections
 
-
         waterShader.use();
         waterShader.setFloat("time", glfwGetTime());
         waterShader.setFloat("waveHeight", 0.75f);
@@ -912,16 +776,16 @@ int main()
         model = glm::mat4(1.0f);
         // model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your water position
         waterShader.setMat4("model", model);
-        waterShader.setMat4("view", view);  
+        waterShader.setMat4("view", view);
 
         // --- Pass all necessary view/projection matrices ---
         // These are standard for any object rendering, and also needed by the fragment shader
         waterShader.setMat4("projection", projection); // 'projection' uniform in FS
-        waterShader.setMat4("viewMatrix", view);      // 'viewMatrix' uniform in FS (was 'view' in VS, consistent name for FS)
+        waterShader.setMat4("viewMatrix", view);       // 'viewMatrix' uniform in FS (was 'view' in VS, consistent name for FS)
 
         // Calculate and pass the combined and inverse matrices
         glm::mat4 viewProjectionMatrix = projection * view;
-        waterShader.setMat4("viewProjection", viewProjectionMatrix);         // 'viewProjection' uniform in FS
+        waterShader.setMat4("viewProjection", viewProjectionMatrix);                      // 'viewProjection' uniform in FS
         waterShader.setMat4("inverseViewProjection", glm::inverse(viewProjectionMatrix)); // 'inverseViewProjection' uniform in FS
 
         // --- CRITICAL ADDITIONS from our corrected fragment shader ---
@@ -943,24 +807,29 @@ int main()
         waterShader.setFloat("farPlane", far_plane);   // e.g., camera.farPlane
 
         // Bind G-buffer textures
-        while (glGetError() != GL_NO_ERROR);
+        while (glGetError() != GL_NO_ERROR)
+            ;
 
         // Bind textures with error checking
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
-        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gPosition" << std::endl;
+        if (glGetError() != GL_NO_ERROR)
+            std::cout << "Error binding gPosition" << std::endl;
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
-        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gNormal" << std::endl;
+        if (glGetError() != GL_NO_ERROR)
+            std::cout << "Error binding gNormal" << std::endl;
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
-        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gAlbedoSpec" << std::endl;
+        if (glGetError() != GL_NO_ERROR)
+            std::cout << "Error binding gAlbedoSpec" << std::endl;
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
-        if (glGetError() != GL_NO_ERROR) std::cout << "Error binding gLinearDepth" << std::endl;
+        if (glGetError() != GL_NO_ERROR)
+            std::cout << "Error binding gLinearDepth" << std::endl;
 
         // Set uniforms AFTER binding textures
         waterShader.setInt("gPosition", 0);
@@ -973,9 +842,7 @@ int main()
         waterShader.setMat4("model", model);
         renderManager.renderGameObject(*waterPlane, waterShader);
 
-
         // Light boxes
-
 
         shaderLightBox.use();
         shaderLightBox.setMat4("projection", projection);
@@ -993,16 +860,24 @@ int main()
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.325f));
         shaderLightBox.setMat4("model", model);
-        renderManager.renderCube();        
+        renderManager.renderCube();
 
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
+        // Engine Grid
 
+        // gridShader.use();
+        // // model = glm::mat4(1.0f);
+        // renderManager.renderGrid(view, projection);
+
+        modelShader.use();
+        model = glm::mat4(1.0f);
+        renderManager.renderInfiniteGrid(view, game.camera.Position, 1.0f, 500, 0.02f, 1000);
 
         ///////////
 
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
@@ -1015,16 +890,14 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
 
-
-
         ////////////////////////////////////
-
 
         std::vector<glm::vec3> smokePositions;
         const int numParticles = 5;
 
         // You can randomize this for a more natural effect
-        for (int i = 0; i < numParticles; ++i) {
+        for (int i = 0; i < numParticles; ++i)
+        {
             // Offset each particle from the gun's position
             glm::vec3 particleOffset = glm::vec3(0.0f, 0.0f, -0.125f - (float)i * 0.05f);
             smokePositions.push_back(gun->position + particleOffset);
@@ -1032,9 +905,8 @@ int main()
 
         // 2. Sort the particle positions from farthest to nearest
         glm::vec3 cameraPosition = glm::vec3(glm::inverse(view)[3]); // Extract camera position from the view matrix
-        std::sort(smokePositions.begin(), smokePositions.end(), [&cameraPosition](const glm::vec3& a, const glm::vec3& b) {
-            return glm::length2(a - cameraPosition) > glm::length2(b - cameraPosition);
-        });
+        std::sort(smokePositions.begin(), smokePositions.end(), [&cameraPosition](const glm::vec3 &a, const glm::vec3 &b)
+                  { return glm::length2(a - cameraPosition) > glm::length2(b - cameraPosition); });
 
         // 3. Set up the OpenGL state for transparent rendering
         glEnable(GL_BLEND);
@@ -1049,11 +921,12 @@ int main()
 
         // 4. Loop and render each sorted particle
         const float particleSize = 0.05f;
-        for (const auto& position : smokePositions) {
+        for (const auto &position : smokePositions)
+        {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, position);
             model = glm::scale(model, glm::vec3(particleSize));
-            
+
             smokeShader.setMat4("model", model);
             smokeShader.setFloat("alpha", 0.50f); // You can adjust alpha here based on distance if you want
             renderManager.renderQuadForSmoke();
@@ -1062,45 +935,41 @@ int main()
         // 5. Restore OpenGL state
         glDisable(GL_BLEND);
 
-
         // Render ImGui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
 
         glfwSwapBuffers(game.getWindow());
         glfwPollEvents();
 
+        game.update(deltaTime);
     }
+
+    //
+    audioManager.cleanUp();
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
     // glDeleteVertexArrays(1, &planeVAO);
     // glDeleteBuffers(1, &planeVBO);
-    // glDeleteFramebuffers(1, &fbo);  
-
-    alDeleteSources(1, &source);
-    alDeleteBuffers(1, &buffer);
-
-    alcDestroyContext(context);
-    alcCloseDevice(device);
-
+    // glDeleteFramebuffers(1, &fbo);
 
     glfwTerminate();
     return 0;
 }
 
-
-
-void shaderUser(Shader& shader, glm::mat4 *projection, glm::mat4 *model,  glm::mat4 *view,  glm::vec3 *cameraPos) {
+void shaderUser(Shader &shader, glm::mat4 *projection, glm::mat4 *model, glm::mat4 *view, glm::vec3 *cameraPos)
+{
     shader.use();
-    if(model) shader.setMat4("model", *model);
-    if(view) shader.setMat4("view", *view);
-    if(projection) shader.setMat4("projection", *projection);
-    if(cameraPos) shader.setVec3("cameraPos", *cameraPos);
+    if (model)
+        shader.setMat4("model", *model);
+    if (view)
+        shader.setMat4("view", *view);
+    if (projection)
+        shader.setMat4("projection", *projection);
+    if (cameraPos)
+        shader.setVec3("cameraPos", *cameraPos);
 }
-
-
 
 unsigned int loadCubemap(vector<std::string> faces)
 {
@@ -1114,9 +983,8 @@ unsigned int loadCubemap(vector<std::string> faces)
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
-                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-            );
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
         else
@@ -1132,34 +1000,33 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
-} 
+}
 
+bool sphereVsSphere(const Sphere &a, const Sphere &b, CollisionInfo &info)
+{
+    glm::vec3 diff = b.center - a.center;
+    float distance = glm::length(diff);
+    float radiusSum = a.radius + b.radius;
 
-
-
-
-
-    bool sphereVsSphere(const Sphere& a, const Sphere& b, CollisionInfo& info) {
-        glm::vec3 diff = b.center - a.center;
-        float distance = glm::length(diff);
-        float radiusSum = a.radius + b.radius;
-        
-        if(distance < radiusSum) {
-            // Collision detected
-            info.normal = glm::normalize(diff);
-            info.penetration = radiusSum - distance;
-            info.contactPoint = a.center + info.normal * a.radius;
-            info.isValid = true;
-            return true;
-        }
-        return false;
+    if (distance < radiusSum)
+    {
+        // Collision detected
+        info.normal = glm::normalize(diff);
+        info.penetration = radiusSum - distance;
+        info.contactPoint = a.center + info.normal * a.radius;
+        info.isValid = true;
+        return true;
     }
+    return false;
+}
 
-    glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo& collision) {
-        if (!collision.isValid) return position;
+glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo &collision)
+{
+    if (!collision.isValid)
+        return position;
 
-        std::cout << "pushingggggggggggggggg" << std::endl;
-        
-        // Move character out by the penetration amount
-        return collision.normal * collision.penetration;
-    }
+    std::cout << "pushingggggggggggggggg" << std::endl;
+
+    // Move character out by the penetration amount
+    return collision.normal * collision.penetration;
+}

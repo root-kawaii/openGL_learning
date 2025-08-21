@@ -73,6 +73,12 @@
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning/build",
+  "command": "/usr/bin/clang++ -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/audio_manager.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning/build",
   "command": "/usr/bin/clang++ -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o"

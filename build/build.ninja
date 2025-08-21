@@ -145,6 +145,14 @@ build CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o: CXX_COMPILER__hephaest
   OBJECT_DIR = CMakeFiles/hephaestus-openGL.dir
   OBJECT_FILE_DIR = CMakeFiles/hephaestus-openGL.dir/src
 
+build CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o: CXX_COMPILER__hephaestus-openGL_unscanned_Debug /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp || cmake_object_order_depends_target_hephaestus-openGL
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o.d
+  FLAGS = -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17
+  INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -isystem /usr/include/AL
+  OBJECT_DIR = CMakeFiles/hephaestus-openGL.dir
+  OBJECT_FILE_DIR = CMakeFiles/hephaestus-openGL.dir/src
+
 build CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: CXX_COMPILER__hephaestus-openGL_unscanned_Debug /home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp || cmake_object_order_depends_target_hephaestus-openGL
   CONFIG = Debug
   DEP_FILE = CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o.d
@@ -209,7 +217,7 @@ build CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cp
 #############################################
 # Link the executable hephaestus-openGL
 
-build hephaestus-openGL: CXX_EXECUTABLE_LINKER__hephaestus-openGL_Debug CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o CMakeFiles/hephaestus-openGL.dir/src/glad.c.o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o | /usr/lib/libglfw.so.3.4 /home/monolith/Desktop/openGL_learning/include/freetype/lib/libfreetype.a /usr/lib/libopenal.so /usr/lib/libGLX.so /usr/lib/libOpenGL.so
+build hephaestus-openGL: CXX_EXECUTABLE_LINKER__hephaestus-openGL_Debug CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o CMakeFiles/hephaestus-openGL.dir/src/glad.c.o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o | /usr/lib/libglfw.so.3.4 /home/monolith/Desktop/openGL_learning/include/freetype/lib/libfreetype.a /usr/lib/libopenal.so /usr/lib/libGLX.so /usr/lib/libOpenGL.so
   CONFIG = Debug
   DEP_FILE = CMakeFiles/hephaestus-openGL.dir/link.d
   FLAGS = -g -g -O0 -Wall -Wextra -DDEBUG

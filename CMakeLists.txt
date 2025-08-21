@@ -110,6 +110,7 @@ set(PROJECT_SOURCES
     src/game.cpp
     src/render_manager.cpp
     src/texture.cpp
+    src/audio_manager.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------

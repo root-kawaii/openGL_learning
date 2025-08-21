@@ -1,6 +1,8 @@
-CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
- /home/monolith/Desktop/openGL_learning/src/main.cpp \
+CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o: \
+ /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp \
  /usr/include/stdc-predef.h \
+ /home/monolith/Desktop/openGL_learning/src/audio_manager.h \
+ /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/include/glad/glad.h \
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
@@ -12,20 +14,61 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h /usr/include/GLFW/glfw3.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h \
- /home/monolith/Desktop/openGL_learning/include/glm/glm.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/detail/_fixes.hpp \
- /usr/include/c++/15.2.1/cmath \
+ /usr/include/bits/stdint-least.h /usr/include/c++/15.2.1/vector \
  /usr/include/c++/15.2.1/bits/requires_hosted.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
  /usr/include/c++/15.2.1/pstl/pstl_config.h \
+ /usr/include/c++/15.2.1/bits/stl_algobase.h \
+ /usr/include/c++/15.2.1/bits/functexcept.h \
+ /usr/include/c++/15.2.1/bits/exception_defines.h \
  /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
  /usr/include/c++/15.2.1/bits/version.h \
  /usr/include/c++/15.2.1/type_traits \
- /usr/include/c++/15.2.1/ext/type_traits.h /usr/include/math.h \
+ /usr/include/c++/15.2.1/ext/type_traits.h \
+ /usr/include/c++/15.2.1/ext/numeric_traits.h \
+ /usr/include/c++/15.2.1/bits/stl_pair.h \
+ /usr/include/c++/15.2.1/bits/move.h \
+ /usr/include/c++/15.2.1/bits/utility.h \
+ /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
+ /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
+ /usr/include/c++/15.2.1/bits/concept_check.h \
+ /usr/include/c++/15.2.1/debug/assertions.h \
+ /usr/include/c++/15.2.1/bits/stl_iterator.h \
+ /usr/include/c++/15.2.1/bits/ptr_traits.h \
+ /usr/include/c++/15.2.1/debug/debug.h \
+ /usr/include/c++/15.2.1/bits/predefined_ops.h \
+ /usr/include/c++/15.2.1/bit /usr/include/c++/15.2.1/concepts \
+ /usr/include/c++/15.2.1/bits/allocator.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
+ /usr/include/c++/15.2.1/bits/new_allocator.h /usr/include/c++/15.2.1/new \
+ /usr/include/c++/15.2.1/bits/exception.h \
+ /usr/include/c++/15.2.1/bits/memoryfwd.h \
+ /usr/include/c++/15.2.1/bits/stl_construct.h \
+ /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
+ /usr/include/c++/15.2.1/ext/alloc_traits.h \
+ /usr/include/c++/15.2.1/bits/alloc_traits.h \
+ /usr/include/c++/15.2.1/bits/stl_vector.h \
+ /usr/include/c++/15.2.1/initializer_list \
+ /usr/include/c++/15.2.1/bits/stl_bvector.h \
+ /usr/include/c++/15.2.1/bits/functional_hash.h \
+ /usr/include/c++/15.2.1/bits/hash_bytes.h \
+ /usr/include/c++/15.2.1/bits/refwrap.h \
+ /usr/include/c++/15.2.1/bits/invoke.h \
+ /usr/include/c++/15.2.1/bits/stl_function.h \
+ /usr/include/c++/15.2.1/backward/binders.h \
+ /usr/include/c++/15.2.1/bits/range_access.h \
+ /usr/include/c++/15.2.1/bits/vector.tcc \
+ /usr/include/c++/15.2.1/bits/memory_resource.h \
+ /usr/include/c++/15.2.1/cstddef \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h \
+ /usr/include/c++/15.2.1/bits/uses_allocator.h \
+ /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
+ /usr/include/c++/15.2.1/tuple \
+ /home/monolith/Desktop/openGL_learning/include/glm/glm.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/detail/_fixes.hpp \
+ /usr/include/c++/15.2.1/cmath /usr/include/math.h \
  /usr/include/bits/math-vector.h /usr/include/bits/libm-simd-decl-stubs.h \
  /usr/include/bits/floatn.h /usr/include/bits/floatn-common.h \
  /usr/include/bits/flt-eval-method.h /usr/include/bits/fp-logb.h \
@@ -50,22 +93,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/bits/atomic_wide_counter.h /usr/include/bits/struct_mutex.h \
  /usr/include/bits/struct_rwlock.h /usr/include/alloca.h \
  /usr/include/bits/stdlib-float.h /usr/include/c++/15.2.1/bits/specfun.h \
- /usr/include/c++/15.2.1/bits/stl_algobase.h \
- /usr/include/c++/15.2.1/bits/functexcept.h \
- /usr/include/c++/15.2.1/bits/exception_defines.h \
- /usr/include/c++/15.2.1/ext/numeric_traits.h \
- /usr/include/c++/15.2.1/bits/stl_pair.h \
- /usr/include/c++/15.2.1/bits/move.h \
- /usr/include/c++/15.2.1/bits/utility.h \
- /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
- /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
- /usr/include/c++/15.2.1/bits/concept_check.h \
- /usr/include/c++/15.2.1/debug/assertions.h \
- /usr/include/c++/15.2.1/bits/stl_iterator.h \
- /usr/include/c++/15.2.1/bits/ptr_traits.h \
- /usr/include/c++/15.2.1/debug/debug.h \
- /usr/include/c++/15.2.1/bits/predefined_ops.h \
- /usr/include/c++/15.2.1/bit /usr/include/c++/15.2.1/concepts \
  /usr/include/c++/15.2.1/limits /usr/include/c++/15.2.1/tr1/gamma.tcc \
  /usr/include/c++/15.2.1/tr1/special_function_util.h \
  /usr/include/c++/15.2.1/tr1/bessel_function.tcc \
@@ -80,7 +107,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/tr1/riemann_zeta.tcc \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/setup.hpp \
  /usr/include/c++/15.2.1/cassert /usr/include/assert.h \
- /usr/include/c++/15.2.1/cstddef \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/../simd/platform.h \
  /usr/include/c++/15.2.1/cstdint /usr/include/c++/15.2.1/climits \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/limits.h \
@@ -228,6 +254,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/type_half.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/integer.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/func_integer.inl \
+ /home/monolith/Desktop/openGL_learning/src/model.h \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/matrix_projection.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/../gtc/constants.hpp \
@@ -241,79 +268,34 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/matrix_transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/matrix_transform.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_transform.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/quaternion.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_relational.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_relational.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/type_float.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/setup.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_common.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_common.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_float.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/type_quat.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/../detail/type_quat.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_float_precision.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_double.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_double_precision.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_trigonometric.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_trigonometric.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_transform.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/quaternion_transform.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/quaternion.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/epsilon.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../detail/setup.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/epsilon.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/vec1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_bool1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_float1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_double1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_int1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_uint1.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp \
- /usr/include/c++/15.2.1/cstring /usr/include/string.h \
- /usr/include/strings.h \
- /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.inl \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
- /usr/include/c++/15.2.1/string /usr/include/c++/15.2.1/bits/stringfwd.h \
- /usr/include/c++/15.2.1/bits/memoryfwd.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
+ /usr/include/string.h /usr/include/strings.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/defs.h \
+ /usr/include/assimp/config.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector2.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector3.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/color4.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix3x3.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix4x4.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/quaternion.h \
+ /usr/include/c++/15.2.1/cstring /usr/include/c++/15.2.1/string \
+ /usr/include/c++/15.2.1/bits/stringfwd.h \
  /usr/include/c++/15.2.1/bits/char_traits.h \
  /usr/include/c++/15.2.1/bits/postypes.h /usr/include/c++/15.2.1/cwchar \
  /usr/include/wchar.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdarg.h \
  /usr/include/bits/types/wint_t.h /usr/include/bits/types/mbstate_t.h \
  /usr/include/bits/types/__mbstate_t.h /usr/include/bits/types/__FILE.h \
- /usr/include/bits/types/FILE.h /usr/include/c++/15.2.1/bits/allocator.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
- /usr/include/c++/15.2.1/bits/new_allocator.h /usr/include/c++/15.2.1/new \
- /usr/include/c++/15.2.1/bits/exception.h \
- /usr/include/c++/15.2.1/bits/localefwd.h \
+ /usr/include/bits/types/FILE.h /usr/include/c++/15.2.1/bits/localefwd.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h \
  /usr/include/c++/15.2.1/clocale /usr/include/locale.h \
  /usr/include/bits/locale.h /usr/include/c++/15.2.1/iosfwd \
  /usr/include/c++/15.2.1/cctype /usr/include/ctype.h \
  /usr/include/c++/15.2.1/bits/ostream_insert.h \
  /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
- /usr/include/c++/15.2.1/bits/stl_function.h \
- /usr/include/c++/15.2.1/backward/binders.h \
- /usr/include/c++/15.2.1/bits/refwrap.h \
- /usr/include/c++/15.2.1/bits/invoke.h \
- /usr/include/c++/15.2.1/bits/range_access.h \
- /usr/include/c++/15.2.1/initializer_list \
  /usr/include/c++/15.2.1/bits/basic_string.h \
- /usr/include/c++/15.2.1/ext/alloc_traits.h \
- /usr/include/c++/15.2.1/bits/alloc_traits.h \
- /usr/include/c++/15.2.1/bits/stl_construct.h \
  /usr/include/c++/15.2.1/string_view \
- /usr/include/c++/15.2.1/bits/functional_hash.h \
- /usr/include/c++/15.2.1/bits/hash_bytes.h \
  /usr/include/c++/15.2.1/bits/string_view.tcc \
  /usr/include/c++/15.2.1/ext/string_conversions.h \
  /usr/include/c++/15.2.1/cstdlib /usr/include/c++/15.2.1/cstdio \
@@ -328,17 +310,51 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/bits/types/error_t.h \
  /usr/include/c++/15.2.1/bits/charconv.h \
  /usr/include/c++/15.2.1/bits/basic_string.tcc \
- /usr/include/c++/15.2.1/bits/memory_resource.h \
- /usr/include/c++/15.2.1/bits/uses_allocator.h \
- /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
- /usr/include/c++/15.2.1/tuple /usr/include/c++/15.2.1/fstream \
- /usr/include/c++/15.2.1/istream /usr/include/c++/15.2.1/ios \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector2.inl \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector3.inl \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/color4.inl \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix3x3.inl \
+ /usr/include/c++/15.2.1/algorithm \
+ /usr/include/c++/15.2.1/bits/stl_algo.h \
+ /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+ /usr/include/c++/15.2.1/bits/stl_heap.h \
+ /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+ /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+ /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/15.2.1/pstl/execution_defs.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix4x4.inl \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/MathFunctions.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/quaternion.inl \
  /usr/include/c++/15.2.1/exception \
  /usr/include/c++/15.2.1/bits/exception_ptr.h \
  /usr/include/c++/15.2.1/bits/cxxabi_init_exception.h \
  /usr/include/c++/15.2.1/typeinfo \
  /usr/include/c++/15.2.1/bits/nested_exception.h \
- /usr/include/c++/15.2.1/bits/ios_base.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/scene.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/texture.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/pushpack1.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/poppack1.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/mesh.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/aabb.h \
+ /usr/include/c++/15.2.1/unordered_set \
+ /usr/include/c++/15.2.1/bits/unordered_set.h \
+ /usr/include/c++/15.2.1/bits/hashtable.h \
+ /usr/include/c++/15.2.1/bits/hashtable_policy.h \
+ /usr/include/c++/15.2.1/ext/aligned_buffer.h \
+ /usr/include/c++/15.2.1/bits/enable_special_members.h \
+ /usr/include/c++/15.2.1/bits/node_handle.h \
+ /usr/include/c++/15.2.1/bits/erase_if.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/light.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/camera.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/material.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/material.inl \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/anim.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
+ /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /usr/include/c++/15.2.1/fstream /usr/include/c++/15.2.1/istream \
+ /usr/include/c++/15.2.1/ios /usr/include/c++/15.2.1/bits/ios_base.h \
  /usr/include/c++/15.2.1/ext/atomicity.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
@@ -379,72 +395,13 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/sstream \
  /usr/include/c++/15.2.1/bits/sstream.tcc \
- /usr/include/c++/15.2.1/iostream \
- /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/include/../src/model.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/defs.h \
- /usr/include/assimp/config.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector2.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector3.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/color4.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix3x3.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix4x4.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/quaternion.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector2.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/vector3.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/color4.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix3x3.inl \
- /usr/include/c++/15.2.1/algorithm \
- /usr/include/c++/15.2.1/bits/stl_algo.h \
- /usr/include/c++/15.2.1/bits/algorithmfwd.h \
- /usr/include/c++/15.2.1/bits/stl_heap.h \
- /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
- /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
- /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
- /usr/include/c++/15.2.1/pstl/execution_defs.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/matrix4x4.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/MathFunctions.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/quaternion.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/scene.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/texture.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/pushpack1.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Compiler/poppack1.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/aabb.h \
- /usr/include/c++/15.2.1/unordered_set \
- /usr/include/c++/15.2.1/bits/unordered_set.h \
- /usr/include/c++/15.2.1/bits/hashtable.h \
- /usr/include/c++/15.2.1/bits/hashtable_policy.h \
- /usr/include/c++/15.2.1/ext/aligned_buffer.h \
- /usr/include/c++/15.2.1/bits/enable_special_members.h \
- /usr/include/c++/15.2.1/bits/node_handle.h \
- /usr/include/c++/15.2.1/bits/erase_if.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/light.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/camera.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/material.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/material.inl \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/anim.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
- /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
- /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
- /usr/include/c++/15.2.1/vector \
- /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
- /usr/include/c++/15.2.1/bits/stl_vector.h \
- /usr/include/c++/15.2.1/bits/stl_bvector.h \
- /usr/include/c++/15.2.1/bits/vector.tcc /usr/include/c++/15.2.1/map \
+ /usr/include/c++/15.2.1/iostream /usr/include/c++/15.2.1/map \
  /usr/include/c++/15.2.1/bits/stl_tree.h \
  /usr/include/c++/15.2.1/bits/stl_map.h \
  /usr/include/c++/15.2.1/bits/stl_multimap.h \
  /home/monolith/Desktop/openGL_learning/include/stb_image.h \
- /usr/include/c++/15.2.1/stdlib.h \
- /home/monolith/Desktop/openGL_learning/include/../src/input.h \
- /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/include/../src/game_object.h \
- /home/monolith/Desktop/openGL_learning/include/../src/model.h \
- /usr/include/c++/15.2.1/filesystem /usr/include/c++/15.2.1/bits/fs_fwd.h \
+ /usr/include/c++/15.2.1/stdlib.h /usr/include/c++/15.2.1/filesystem \
+ /usr/include/c++/15.2.1/bits/fs_fwd.h \
  /usr/include/c++/15.2.1/bits/chrono.h /usr/include/c++/15.2.1/ratio \
  /usr/include/c++/15.2.1/ctime \
  /usr/include/c++/15.2.1/bits/parse_numbers.h \
@@ -464,76 +421,4 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/allocated_ptr.h \
  /usr/include/c++/15.2.1/bits/unique_ptr.h \
  /usr/include/c++/15.2.1/bits/fs_dir.h \
- /usr/include/c++/15.2.1/bits/fs_ops.h \
- /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
- /usr/include/c++/15.2.1/functional \
- /usr/include/c++/15.2.1/bits/std_function.h \
- /usr/include/c++/15.2.1/unordered_map \
- /usr/include/c++/15.2.1/bits/unordered_map.h \
- /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
- /usr/include/c++/15.2.1/iterator \
- /usr/include/c++/15.2.1/bits/stream_iterator.h \
- /usr/include/c++/15.2.1/memory \
- /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
- /usr/include/c++/15.2.1/bits/align.h \
- /usr/include/c++/15.2.1/bits/shared_ptr_atomic.h \
- /usr/include/c++/15.2.1/bits/atomic_base.h \
- /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
- /usr/include/c++/15.2.1/backward/auto_ptr.h \
- /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
- /usr/include/c++/15.2.1/utility \
- /usr/include/c++/15.2.1/bits/stl_relops.h \
- /usr/include/c++/15.2.1/forward_list \
- /usr/include/c++/15.2.1/bits/forward_list.h \
- /usr/include/c++/15.2.1/bits/forward_list.tcc \
- /usr/include/c++/15.2.1/valarray \
- /usr/include/c++/15.2.1/bits/valarray_array.h \
- /usr/include/c++/15.2.1/bits/valarray_array.tcc \
- /usr/include/c++/15.2.1/bits/valarray_before.h \
- /usr/include/c++/15.2.1/bits/slice_array.h \
- /usr/include/c++/15.2.1/bits/valarray_after.h \
- /usr/include/c++/15.2.1/bits/gslice.h \
- /usr/include/c++/15.2.1/bits/gslice_array.h \
- /usr/include/c++/15.2.1/bits/mask_array.h \
- /usr/include/c++/15.2.1/bits/indirect_array.h \
- /usr/include/c++/15.2.1/version /usr/include/c++/15.2.1/optional \
- /usr/include/c++/15.2.1/numeric \
- /usr/include/c++/15.2.1/bits/stl_numeric.h \
- /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
- /usr/include/c++/15.2.1/any /usr/include/c++/15.2.1/chrono \
- /usr/include/c++/15.2.1/thread /usr/include/c++/15.2.1/bits/std_thread.h \
- /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
- /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
- /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/src/../src/game.h \
- /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
- /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/render_manager.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/audio_manager.h \
- /usr/include/AL/al.h /usr/include/AL/alc.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/model.h \
- /home/monolith/Desktop/openGL_learning/src/../src/serialization_utilities.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.h \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/norm.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/quaternion.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../ext/quaternion_exponential.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../ext/quaternion_exponential.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/quaternion.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/component_wise.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../detail/setup.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/component_wise.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../ext/scalar_common.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../ext/scalar_common.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/norm.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.inl \
- /usr/include/sndfile.h
+ /usr/include/c++/15.2.1/bits/fs_ops.h

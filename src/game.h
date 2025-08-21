@@ -26,33 +26,35 @@
 
 #include "../src/render_manager.h"
 
-
 #include "imgui.h"
+#include "../src/audio_manager.h"
 
-
-class Game {
+class Game
+{
 private:
     // Core systems
     // EntityManager entityManager;
     RenderManager renderManager;
     // InputManager inputManager;
-    // AudioManager audioManager;
+    AudioManager audioManager;
     // SceneManager sceneManager;
     // PhysicsManager physicsManager;
     // ResourceManager resourceManager;
-    
+
     // Game state
     // GameState currentState;
     float deltaTime;
     bool isRunning;
     bool isDebug;
     bool isGameMode;
-    
+
     // Window/context
-    GLFWwindow* window;
-    
+    GLFWwindow *window;
+    Scene *scene;
+
 public:
-    bool initialize();
+    bool
+    initialize();
     void run();
     void update(float deltaTime);
     void render();
@@ -60,11 +62,15 @@ public:
 
     Game();
     ~Game();
-    
+
     // System accessors
     // EntityManager& getEntityManager() { return entityManager; }
-    RenderManager& getRenderManager() { return renderManager; }
-    GLFWwindow* getWindow() { return window;}
+    RenderManager &getRenderManager() { return renderManager; }
+    AudioManager &getAudioManager() { return audioManager; }
+    GLFWwindow *getWindow() { return window; }
+
+    void setScene(Scene *newScene) { scene = newScene; };
+    Scene *getScene() { return scene; };
 
     unsigned int SCR_WIDTH = 1440;
     unsigned int SCR_HEIGHT = 1440;
@@ -76,16 +82,16 @@ public:
 
     float seed = rand();
 
-    float xpos=0;
-    float ypos=0;
+    float xpos = 0;
+    float ypos = 0;
 
     Camera camera;
     // InputManager& getInputManager() { return inputManager; }
     // SceneManager& getSceneManager() { return sceneManager; }
     // ... other getters
 
-    
-    bool initWindow() {
+    bool initWindow()
+    {
         camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -93,9 +99,9 @@ public:
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_SAMPLES, 8); // Request 8x MSAA
 
-    #ifdef __APPLE__
+#ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
+#endif
 
         // glfw window creation
         // --------------------
@@ -128,45 +134,55 @@ public:
         // TODO: Setup initial game state
         return true;
     }
-    
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-        Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
-        if (game) game->framebuffer_size_callback_impl(width, height);
+
+    static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+    {
+        Game *game = static_cast<Game *>(glfwGetWindowUserPointer(window));
+        if (game)
+            game->framebuffer_size_callback_impl(width, height);
     }
-    
-    static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-        Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
-        if (game) game->mouse_callback_impl(xposIn, yposIn);
+
+    static void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
+    {
+        Game *game = static_cast<Game *>(glfwGetWindowUserPointer(window));
+        if (game)
+            game->mouse_callback_impl(xposIn, yposIn);
     }
-    
-    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-        Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
-        if (game) game->scroll_callback_impl(xoffset, yoffset);
+
+    static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+    {
+        Game *game = static_cast<Game *>(glfwGetWindowUserPointer(window));
+        if (game)
+            game->scroll_callback_impl(xoffset, yoffset);
     }
-    
-    void framebuffer_size_callback_impl(int width, int height) {
+
+    void framebuffer_size_callback_impl(int width, int height)
+    {
         glViewport(0, 0, width, height);
     }
-    
-    void mouse_callback_impl(double xposIn, double yposIn) {
+
+    void mouse_callback_impl(double xposIn, double yposIn)
+    {
         float xpos = static_cast<float>(xposIn);
         float ypos = static_cast<float>(yposIn);
-        
-        if (firstMouse) {
+
+        if (firstMouse)
+        {
             lastX = xpos;
             lastY = ypos;
             firstMouse = false;
         }
-        
+
         float xoffset = xpos - lastX;
         float yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-        
+
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
-    
-    void scroll_callback_impl(double xoffset, double yoffset) {
+
+    void scroll_callback_impl(double xoffset, double yoffset)
+    {
         camera.ProcessMouseScroll(static_cast<float>(yoffset));
     }
 };

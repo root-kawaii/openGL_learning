@@ -514,4 +514,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h
+ /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
+ /usr/include/AL/al.h /usr/include/AL/alc.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/model.h

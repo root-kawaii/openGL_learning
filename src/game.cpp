@@ -1,14 +1,11 @@
 #include "game.h"
 
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 Game::Game()
-    : deltaTime(0.0f)
-    , isRunning(true)
-    , window(nullptr)
+    : deltaTime(0.0f), isRunning(true), window(nullptr)
 {
     this->initWindow();
 }
@@ -43,6 +40,11 @@ void Game::update(float deltaTime)
     // audioManager.update(deltaTime);
     // sceneManager.update(deltaTime);
     // TODO: Handle game state transitions
+    auto gameObjects = scene->getGameObjects();
+    for (auto &i : gameObjects)
+    {
+        i->position = i->position + i->speed * (deltaTime);
+    }
 }
 
 void Game::render()
