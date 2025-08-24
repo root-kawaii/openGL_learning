@@ -13,12 +13,14 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
-- UI and Text
-- Partciles (gun smoke ?)
-- Audio with OpenAL ?
-- Save objects position/Serialization
-- Game mode where i can only move horizontally and start on the plane at the right height
-- Implement a jump
+- try to build a beautiful scene - need ImGuizmo (?)
+- Save objects position/Serialization - kinda done
+- Game mode where i can only move horizontally and start on the plane at the right height - wip
+- instancing
+- Partciles (gun smoke ?) - later
+- get back at profiling
+- UI and Text - later
+- Implement a jump - wip
 - improve shadows
 - use same texture for mesh and model
 
