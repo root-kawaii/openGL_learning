@@ -15,6 +15,7 @@
 			"set_property",
 			"find_package",
 			"set_target_properties",
+			"target_compile_definitions",
 			"include_directories"
 		],
 		"files" : 
@@ -30,19 +31,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 124,
+				"line" : 129,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 138,
+				"line" : 144,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 86,
+				"line" : 89,
 				"parent" : 0
 			},
 			{
@@ -64,7 +65,13 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 91,
+				"line" : 153,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 94,
 				"parent" : 0
 			}
 		]
@@ -78,23 +85,34 @@
 					"fragment" : " -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17"
 				}
 			],
-			"includes" : 
+			"defines" : 
 			[
 				{
 					"backtrace" : 7,
+					"define" : "TRACY_ENABLE"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/imgui"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/assimp/include"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include"
+				},
+				{
+					"backtrace" : 8,
+					"path" : "/home/monolith/Desktop/openGL_learning/tracy/public"
 				},
 				{
 					"backtrace" : 2,
@@ -130,8 +148,10 @@
 				15,
 				16,
 				17,
-				24,
-				25
+				18,
+				25,
+				26,
+				27
 			]
 		},
 		{
@@ -141,23 +161,34 @@
 					"fragment" : " -g -g -O0 -Wall -Wextra -DDEBUG"
 				}
 			],
-			"includes" : 
+			"defines" : 
 			[
 				{
 					"backtrace" : 7,
+					"define" : "TRACY_ENABLE"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/imgui"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/assimp/include"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2"
 				},
 				{
-					"backtrace" : 7,
+					"backtrace" : 8,
 					"path" : "/home/monolith/Desktop/openGL_learning/include"
+				},
+				{
+					"backtrace" : 8,
+					"path" : "/home/monolith/Desktop/openGL_learning/tracy/public"
 				},
 				{
 					"backtrace" : 2,
@@ -245,20 +276,22 @@
 				15,
 				16,
 				17,
-				24,
-				25
+				18,
+				25,
+				26,
+				27
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				18,
 				19,
 				20,
 				21,
 				22,
-				23
+				23,
+				24
 			]
 		}
 	],
@@ -345,6 +378,12 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
+			"path" : "src/sphere_collision.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
 			"path" : "include/imgui/imgui.cpp",
 			"sourceGroupIndex" : 0
 		},
@@ -412,6 +451,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "include/imgui/backends/imgui_impl_glfw.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "tracy/public/TracyClient.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

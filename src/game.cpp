@@ -1,4 +1,5 @@
 #include "game.h"
+#include "../tracy/public/tracy/Tracy.hpp"
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
@@ -34,17 +35,60 @@ void Game::run()
 
 void Game::update(float deltaTime)
 {
-    // TODO: Update all systems
-    // entityManager.update(deltaTime);
-    // physicsManager.update(deltaTime);
-    // audioManager.update(deltaTime);
-    // sceneManager.update(deltaTime);
-    // TODO: Handle game state transitions
+    ZoneScoped;
+    // A temporary place to store all corrections for the frame.
+    // This is the key change to prevent cumulative errors.
+    glm::vec3 cameraCorrection = glm::vec3(0.0f);
+
+    // --- Phase 1: Object Movement (pre-collision) ---
+    // Let's assume the camera's desired movement is also calculated here.
+    // For example, based on keyboard input.
+    // For now, let's just stick to the objects.
     auto gameObjects = scene->getGameObjects();
-    for (auto &i : gameObjects)
+    for (auto &obj : gameObjects)
     {
-        i->position = i->position + i->speed * (deltaTime);
+        obj->speed += obj->acceleration * deltaTime;
+        // This is the desired position *before* we check for collisions.
+        obj->position += obj->speed * deltaTime;
     }
+
+    // --- Phase 2: Collision Detection and Correction Calculation ---
+    // Check all collisions and sum up the required corrections.
+    for (size_t m = 0; m < gameObjects.size(); ++m)
+    {
+        auto &a = gameObjects[m];
+        if (a->collisionRadius == 0)
+            continue;
+
+        // 1. Calculate camera vs object collision correction.
+        // We use the camera's current position and the object's new position
+        // to determine if a collision occurred.
+        cameraCorrection -= sphereCollision.cameraPositionCorrection(camera, *a);
+
+        // 2. Object-object collision detection and correction.
+        // A better approach would be to calculate a correction for both objects (a and b)
+        // and store it to be applied later, but we'll stick to a simpler
+        // in-loop application for now.
+        for (size_t n = m + 1; n < gameObjects.size(); ++n)
+        {
+            auto &b = gameObjects[n];
+            if (b->collisionRadius == 0)
+                continue;
+
+            glm::vec3 correction = sphereCollision.simplePositionCorrection(*a, *b);
+            if (glm::length(correction) > 0.0f)
+            {
+                // Apply half the correction to each object to resolve the collision.
+                // This is much more stable than applying it to only one.
+                a->position += correction * 0.5f;
+                b->position -= correction * 0.5f;
+            }
+        }
+    }
+
+    // --- Phase 3: Apply All Final Corrections ---
+    // This is the single, final application of the camera correction for the frame.
+    camera.Position += cameraCorrection;
 }
 
 void Game::render()

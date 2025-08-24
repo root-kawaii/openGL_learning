@@ -1,4 +1,5 @@
 #include "render_manager.h"
+#include "../tracy/public/tracy/Tracy.hpp"
 
 RenderManager::RenderManager()
     : currentCamera(nullptr), clearColor(0.2f, 0.3f, 0.3f, 1.0f), wireframeMode(false), depthTestEnabled(true), blendingEnabled(false), screenWidth(800), screenHeight(600), drawCalls(0), verticesRendered(0), ambientLight(0.1f, 0.1f, 0.1f)
@@ -94,6 +95,7 @@ Shader *RenderManager::loadShader(const std::string &name, const std::string &ve
 
 unsigned int RenderManager::loadTexture(const std::string &name, const char *path)
 {
+    ZoneScoped;
     auto it = textures.find(name);
     if (it != textures.end())
     {
@@ -254,6 +256,7 @@ float RenderManager::calculateDistance(const glm::vec3 &position)
 
 void RenderManager::setupGBuffer()
 {
+    ZoneScoped;
     if (gBufferInitialized)
     {
         cleanupGBuffer(); // Clean up existing G-Buffer first
@@ -287,6 +290,7 @@ void RenderManager::setupGBuffer()
 
 void RenderManager::createGBufferTextures()
 {
+    ZoneScoped;
     // Position color buffer
     glGenTextures(1, &gPosition);
     glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -416,6 +420,7 @@ void RenderManager::resizeGBuffer(int width, int height)
 
 void RenderManager::setupMSAAGBuffer(int samples)
 {
+    ZoneScoped;
     if (msaaGBufferInitialized)
     {
         cleanupMSAAGBuffer(); // Clean up existing MSAA G-Buffer first
@@ -451,6 +456,7 @@ void RenderManager::setupMSAAGBuffer(int samples)
 
 void RenderManager::createMSAAGBufferTextures()
 {
+    ZoneScoped;
     // Position buffer (MSAA)
     glGenTextures(1, &msaaGPosition);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaGPosition);
@@ -551,6 +557,7 @@ void RenderManager::unbindMSAAGBuffer()
 
 void RenderManager::resolveMSAAGBuffer()
 {
+    ZoneScoped;
     if (!msaaGBufferInitialized || !gBufferInitialized)
     {
         std::cerr << "ERROR: Both MSAA and regular G-Buffers must be initialized for resolving!" << std::endl;
@@ -767,6 +774,7 @@ unsigned int RenderManager::loadCubemap(const std::vector<std::string> &faces)
 
 void RenderManager::renderCube()
 {
+    ZoneScoped;
     unsigned int cubeVAO = 0;
     unsigned int cubeVBO = 0;
     // initialize (if necessary)
@@ -840,6 +848,7 @@ void RenderManager::renderCube()
 
 void RenderManager::renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness = 0.1f, float length = 0.1f)
 {
+    ZoneScoped;
     unsigned int lineVAO = 0;
     unsigned int lineVBO = 0;
     if (lineVAO == 0)
@@ -949,7 +958,7 @@ void RenderManager::renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 
 
 void RenderManager::renderQuad()
 {
-
+    ZoneScoped;
     unsigned int quadVAO = 0;
     unsigned int quadVBO;
     if (quadVAO == 0)
@@ -995,7 +1004,7 @@ void RenderManager::renderQuad()
 
 void RenderManager::renderQuadForSmoke()
 {
-
+    ZoneScoped;
     unsigned int quadVAO = 0;
     unsigned int quadVBO;
     if (quadVAO == 0)
@@ -1041,6 +1050,7 @@ void RenderManager::renderQuadForSmoke()
 
 void RenderManager::renderGameObject(GameObject &gameObject, Shader shader)
 {
+    ZoneScoped;
     shader.use();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
@@ -1054,6 +1064,7 @@ void RenderManager::renderGameObject(GameObject &gameObject, Shader shader)
 
 void RenderManager::renderCameraAttachedObject(GameObject &gameObject, Shader shader)
 {
+    ZoneScoped;
     shader.use();
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -1084,6 +1095,7 @@ void RenderManager::renderGridAdvanced(glm::mat4 view, int gridSize = 20, float 
                                        float lineThickness = 0.02f, bool drawCenterLines = true,
                                        bool drawYAxis = false, float yAxisHeight = 10.0f)
 {
+    ZoneScoped;
     float halfGrid = (gridSize * spacing) * 0.5f;
 
     // Render main grid lines
@@ -1120,6 +1132,7 @@ void RenderManager::renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition,
                                        float spacing = 1.0f, float fadeDistance = 50.0f,
                                        float lineThickness = 0.02f, int visibleRange = 100)
 {
+    ZoneScoped;
     GLint currentProgram;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
     // Snap camera position to grid for seamless infinite effect

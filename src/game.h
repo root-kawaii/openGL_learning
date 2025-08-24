@@ -28,6 +28,7 @@
 
 #include "imgui.h"
 #include "../src/audio_manager.h"
+#include "../src/sphere_collision.h"
 
 class Game
 {
@@ -40,6 +41,7 @@ private:
     // SceneManager sceneManager;
     // PhysicsManager physicsManager;
     // ResourceManager resourceManager;
+    SphereCollision sphereCollision;
 
     // Game state
     // GameState currentState;
@@ -92,7 +94,7 @@ public:
 
     bool initWindow()
     {
-        camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+        camera = Camera(glm::vec3(50.0f, 30.0f, 3.0f));
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -128,6 +130,7 @@ public:
             std::cout << "Failed to initialize GLAD" << std::endl;
             return -1;
         }
+        glfwSwapInterval(0); // 0 = disable V-Sync, 1 = enable
         // TODO: Initialize GLFW, create window, setup OpenGL context
         // TODO: Initialize all managers (render, input, audio, etc.)
         // TODO: Load initial resources

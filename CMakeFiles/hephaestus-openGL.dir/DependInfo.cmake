@@ -25,9 +25,11 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/src/raycast.cpp" "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/render_manager.cpp" "CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/scene.cpp" "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/sphere_collision.cpp" "CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/texture.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp" "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o.d"
   "" "hephaestus-openGL" "gcc" "CMakeFiles/hephaestus-openGL.dir/link.d"
   )
 

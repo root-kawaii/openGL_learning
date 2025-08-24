@@ -8,7 +8,7 @@
       "scale": {"x": 1.0, "y": 1.0, "z": 1.0}
     },
     {
-      "id": "cube_02", 
+      "id": "cube_02",
       "name": "Cube",
       "position": {"x": 1.23, "y": -2.54, "z": 0.85},
       "rotation": {"x": 0.0, "y": 0.0, "z": 0.0},
@@ -16,7 +16,7 @@
     },
     {
       "id": "cube_03",
-      "name": "Cube", 
+      "name": "Cube",
       "position": {"x": -0.36, "y": 4.59, "z": -2.01},
       "rotation": {"x": 0.0, "y": 0.0, "z": 0.0},
       "scale": {"x": 0.1, "y": 0.1, "z": 0.1}
@@ -31,6 +31,7 @@
     {
       "id": "gun_01",
       "name": "gun",
+      "path": "assets/cerberus/cerberus.glb",
       "position": {"x": 0.05, "y": -0.05, "z": -0.3},
       "rotation": {"x": 0.0, "y": 0.0, "z": 0.0},
       "scale": {"x": 0.001, "y": 0.001, "z": 0.001}
@@ -38,13 +39,34 @@
     {
       "id": "ball_01",
       "name": "ball",
+      "path": "assets/ball_2.obj",
       "position": {"x": 0.0, "y": 10.0, "z": 0.0},
       "rotation": {"x": 1.0, "y": 1.0, "z": 1.0},
-      "scale": {"x": 1.1, "y": 2.1, "z": 1.1}
+      "scale": {"x": 1.1, "y": 2.1, "z": 1.1},
+      "collision_radius": {"v": 3.1}
+    },
+    {
+      "id": "ball_02",
+      "name": "ball",
+      "path": "assets/ball_2.obj",
+      "position": {"x": 5.0, "y": 5.0, "z": 5.0},
+      "rotation": {"x": 1.0, "y": 1.0, "z": 1.0},
+      "scale": {"x": 1.1, "y": 1.1, "z": 1.1},
+      "collision_radius": {"v": 3.1}
+    },
+        {
+      "id": "ball_03",
+      "name": "ball",
+      "path": "assets/ball_2.obj",
+      "position": {"x": 50.0, "y": 0.0, "z": 0.0},
+      "rotation": {"x": 1.0, "y": 1.0, "z": 1.0},
+      "scale": {"x": 25.1, "y": 25.1, "z": 25.1},
+      "collision_radius": {"v": 25.1}
     },
     {
       "id": "plane_01",
       "name": "plane",
+      "path": "assets/planes/plane_2.obj",
       "position": {"x": 0.0, "y": -2.0, "z": 0.0},
       "rotation": {"x": 1.0, "y": 1.0, "z": 1.0},
       "scale": {"x": 1.1, "y": 1.1, "z": 1.1}
@@ -52,9 +74,18 @@
     {
       "id": "water_plane_01",
       "name": "plane",
-      "position": {"x": 5.5, "y": -1.5, "z": 0.5},
+      "path": "assets/planes/plane_2.obj",
+      "position": {"x": 5.5, "y": -2.5, "z": 0.5},
       "rotation": {"x": 1.0, "y": 1.0, "z": 1.0},
       "scale": {"x": 1.1, "y": 1.1, "z": 1.1}
+    },
+    {
+      "id": "bullet_01",
+      "name": "bullet",
+      "path": "assets/ball_2.obj",
+      "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+      "rotation": {"x": 0.0, "y": 0.0, "z": 0.0},
+      "scale": {"x": 1.0, "y": 1.0, "z": 1.0}
     }
   ]
 }

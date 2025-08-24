@@ -110,6 +110,45 @@ public:
             Zoom = 45.0f;
     }
 
+    void updateCameraVectors(glm::vec3 earthCenter)
+    {
+        // Step 1: Calculate the new 'Up' vector.
+        // This vector points directly away from the center of the earth.
+        // It is the normal to the ground plane at the camera's position.
+        glm::vec3 newUp = glm::normalize(Position - earthCenter);
+
+        // Step 2: Calculate the new 'Front' vector.
+        // We project the camera's old Front vector onto the new ground plane.
+        // This ensures the camera's view is always parallel to the ground.
+        // We subtract the 'Up' component of the old Front vector.
+        glm::vec3 projectedFront = Front - glm::dot(Front, newUp) * newUp;
+
+        // Check for a critical edge case where the old Front vector is parallel to the new Up.
+        // This happens when you are looking straight up or down towards the center of the earth.
+        // The projection would result in a zero vector.
+        if (glm::length(projectedFront) < 0.0001f)
+        {
+            // Use a standard "forward" direction relative to the world's up vector.
+            // A cross product with WorldUp gives a horizontal vector.
+            projectedFront = glm::normalize(glm::cross(WorldUp, newUp));
+        }
+        else
+        {
+            projectedFront = glm::normalize(projectedFront);
+        }
+
+        // Step 3: Calculate the new 'Right' vector.
+        // The Right vector is perpendicular to both the new Up and new Front vectors.
+        glm::vec3 newRight = glm::normalize(glm::cross(projectedFront, newUp));
+
+        // Step 4: Update the camera's vectors with the new values.
+        Front = projectedFront;
+        Up = newUp;
+        Right = newRight;
+
+        // WorldUp remains unchanged as it defines the global 'up' direction.
+    }
+
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()

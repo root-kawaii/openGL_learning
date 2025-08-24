@@ -1813,6 +1813,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   src/model.h \
   src/raycast.h \
   src/scene.h \
+  src/serialization_utilities.h \
   src/shader_m.h \
   src/shader_s.h \
   src/stb_image.h \
@@ -2046,8 +2047,35 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   src/shader_m.h \
   src/texture.h \
   src/audio_manager.h \
+  src/camera.h \
   src/model.h \
   src/render_manager.h \
+  src/sphere_collision.h \
+  tracy/public/common/TracyApi.h \
+  tracy/public/client/tracy_rpmalloc.hpp \
+  tracy/public/common/TracyAlign.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyForceInline.hpp \
+  tracy/public/common/TracyMutex.hpp \
+  tracy/public/common/TracyProtocol.hpp \
+  tracy/public/common/TracyQueue.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/client/TracyCallstack.h \
+  tracy/public/client/TracyCallstack.hpp \
+  tracy/public/client/TracyFastVector.hpp \
+  tracy/public/client/TracyKCore.hpp \
+  tracy/public/client/TracyLock.hpp \
+  tracy/public/client/TracyProfiler.hpp \
+  tracy/public/client/TracyScoped.hpp \
+  tracy/public/client/TracySysPower.hpp \
+  tracy/public/client/TracySysTime.hpp \
+  tracy/public/client/tracy_SPSCQueue.h \
+  tracy/public/client/tracy_concurrentqueue.h \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyColor.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/tracy/Tracy.hpp \
   src/game.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
@@ -2057,10 +2085,12 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
   /usr/include/asm-generic/int-ll64.h \
+  /usr/include/asm-generic/param.h \
   /usr/include/asm-generic/posix_types.h \
   /usr/include/asm-generic/types.h \
   /usr/include/asm/bitsperlong.h \
   /usr/include/asm/errno.h \
+  /usr/include/asm/param.h \
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
@@ -2068,15 +2098,19 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/assimp/config.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
   /usr/include/bits/fp-fast.h \
   /usr/include/bits/fp-logb.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/iscanonical.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/libm-simd-decl-stubs.h \
@@ -2088,14 +2122,29 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/bits/mathcalls-macros.h \
   /usr/include/bits/mathcalls-narrow.h \
   /usr/include/bits/mathcalls.h \
+  /usr/include/bits/param.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/sched.h \
   /usr/include/bits/select.h \
   /usr/include/bits/setjmp.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/bits/sigevent-consts.h \
+  /usr/include/bits/siginfo-arch.h \
+  /usr/include/bits/siginfo-consts-arch.h \
+  /usr/include/bits/siginfo-consts.h \
+  /usr/include/bits/signal_ext.h \
+  /usr/include/bits/signum-arch.h \
+  /usr/include/bits/signum-generic.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/bits/sigstksz.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/bits/ss_flags.h \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
@@ -2116,17 +2165,24 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/bits/types/__locale_t.h \
   /usr/include/bits/types/__mbstate_t.h \
   /usr/include/bits/types/__sigset_t.h \
+  /usr/include/bits/types/__sigval_t.h \
   /usr/include/bits/types/clock_t.h \
   /usr/include/bits/types/clockid_t.h \
   /usr/include/bits/types/cookie_io_functions_t.h \
   /usr/include/bits/types/error_t.h \
   /usr/include/bits/types/locale_t.h \
   /usr/include/bits/types/mbstate_t.h \
+  /usr/include/bits/types/sig_atomic_t.h \
+  /usr/include/bits/types/sigevent_t.h \
+  /usr/include/bits/types/siginfo_t.h \
   /usr/include/bits/types/sigset_t.h \
+  /usr/include/bits/types/sigval_t.h \
+  /usr/include/bits/types/stack_t.h \
   /usr/include/bits/types/struct_FILE.h \
   /usr/include/bits/types/struct___jmp_buf_tag.h \
   /usr/include/bits/types/struct_itimerspec.h \
   /usr/include/bits/types/struct_sched_param.h \
+  /usr/include/bits/types/struct_sigstack.h \
   /usr/include/bits/types/struct_timespec.h \
   /usr/include/bits/types/struct_timeval.h \
   /usr/include/bits/types/struct_tm.h \
@@ -2136,6 +2192,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -2145,6 +2202,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/c++/15.2.1/algorithm \
   /usr/include/c++/15.2.1/any \
   /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/atomic \
   /usr/include/c++/15.2.1/backward/auto_ptr.h \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
@@ -2224,6 +2282,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/std_function.h \
+  /usr/include/c++/15.2.1/bits/std_mutex.h \
   /usr/include/c++/15.2.1/bits/std_thread.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
@@ -2251,6 +2310,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
   /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
   /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_lock.h \
   /usr/include/c++/15.2.1/bits/unique_ptr.h \
   /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/unordered_set.h \
@@ -2307,6 +2367,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/c++/15.2.1/locale \
   /usr/include/c++/15.2.1/map \
   /usr/include/c++/15.2.1/memory \
+  /usr/include/c++/15.2.1/mutex \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/numeric \
   /usr/include/c++/15.2.1/optional \
@@ -2364,14 +2425,17 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
+  /usr/include/execinfo.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/linux/param.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/sched/types.h \
   /usr/include/linux/stddef.h \
@@ -2380,6 +2444,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/signal.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -2387,10 +2452,13 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/string.h \
   /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
+  /usr/include/sys/param.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
   /usr/include/sys/types.h \
+  /usr/include/sys/ucontext.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
@@ -3470,6 +3538,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/model.h \
   src/raycast.h \
   src/scene.h \
+  src/serialization_utilities.h \
   src/shader_m.h \
   src/shader_s.h \
   src/stb_image.h \
@@ -3720,10 +3789,39 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/shader_m.h \
   src/texture.h \
   src/audio_manager.h \
+  src/camera.h \
   src/model.h \
   src/render_manager.h \
+  src/sphere_collision.h \
   src/game.h \
-  src/serialization_utilities.h \
+  tracy/public/common/TracyApi.h \
+  tracy/public/client/tracy_rpmalloc.hpp \
+  tracy/public/common/TracyAlign.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyForceInline.hpp \
+  tracy/public/common/TracyMutex.hpp \
+  tracy/public/common/TracyProtocol.hpp \
+  tracy/public/common/TracyQueue.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/client/TracyCallstack.h \
+  tracy/public/client/TracyCallstack.hpp \
+  tracy/public/client/TracyFastVector.hpp \
+  tracy/public/client/TracyKCore.hpp \
+  tracy/public/client/TracyLock.hpp \
+  tracy/public/client/TracyProfiler.hpp \
+  tracy/public/client/TracyScoped.hpp \
+  tracy/public/client/TracySysPower.hpp \
+  tracy/public/client/TracySysTime.hpp \
+  tracy/public/client/tracy_SPSCQueue.h \
+  tracy/public/client/tracy_concurrentqueue.h \
+  tracy/public/common/TracyAlign.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyColor.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/tracy/Tracy.hpp \
+  tracy/public/tracy/TracyOpenGL.hpp \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/GLFW/glfw3.h \
@@ -3732,10 +3830,12 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
   /usr/include/asm-generic/int-ll64.h \
+  /usr/include/asm-generic/param.h \
   /usr/include/asm-generic/posix_types.h \
   /usr/include/asm-generic/types.h \
   /usr/include/asm/bitsperlong.h \
   /usr/include/asm/errno.h \
+  /usr/include/asm/param.h \
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
@@ -3743,15 +3843,19 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/assimp/config.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
   /usr/include/bits/fp-fast.h \
   /usr/include/bits/fp-logb.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/iscanonical.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/libm-simd-decl-stubs.h \
@@ -3763,14 +3867,29 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/bits/mathcalls-macros.h \
   /usr/include/bits/mathcalls-narrow.h \
   /usr/include/bits/mathcalls.h \
+  /usr/include/bits/param.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/sched.h \
   /usr/include/bits/select.h \
   /usr/include/bits/setjmp.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/bits/sigevent-consts.h \
+  /usr/include/bits/siginfo-arch.h \
+  /usr/include/bits/siginfo-consts-arch.h \
+  /usr/include/bits/siginfo-consts.h \
+  /usr/include/bits/signal_ext.h \
+  /usr/include/bits/signum-arch.h \
+  /usr/include/bits/signum-generic.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/bits/sigstksz.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/bits/ss_flags.h \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
@@ -3791,17 +3910,24 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/bits/types/__locale_t.h \
   /usr/include/bits/types/__mbstate_t.h \
   /usr/include/bits/types/__sigset_t.h \
+  /usr/include/bits/types/__sigval_t.h \
   /usr/include/bits/types/clock_t.h \
   /usr/include/bits/types/clockid_t.h \
   /usr/include/bits/types/cookie_io_functions_t.h \
   /usr/include/bits/types/error_t.h \
   /usr/include/bits/types/locale_t.h \
   /usr/include/bits/types/mbstate_t.h \
+  /usr/include/bits/types/sig_atomic_t.h \
+  /usr/include/bits/types/sigevent_t.h \
+  /usr/include/bits/types/siginfo_t.h \
   /usr/include/bits/types/sigset_t.h \
+  /usr/include/bits/types/sigval_t.h \
+  /usr/include/bits/types/stack_t.h \
   /usr/include/bits/types/struct_FILE.h \
   /usr/include/bits/types/struct___jmp_buf_tag.h \
   /usr/include/bits/types/struct_itimerspec.h \
   /usr/include/bits/types/struct_sched_param.h \
+  /usr/include/bits/types/struct_sigstack.h \
   /usr/include/bits/types/struct_timespec.h \
   /usr/include/bits/types/struct_timeval.h \
   /usr/include/bits/types/struct_tm.h \
@@ -3811,6 +3937,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -3820,6 +3947,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/algorithm \
   /usr/include/c++/15.2.1/any \
   /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/atomic \
   /usr/include/c++/15.2.1/backward/auto_ptr.h \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
@@ -3899,6 +4027,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/std_function.h \
+  /usr/include/c++/15.2.1/bits/std_mutex.h \
   /usr/include/c++/15.2.1/bits/std_thread.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
@@ -3926,6 +4055,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
   /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
   /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_lock.h \
   /usr/include/c++/15.2.1/bits/unique_ptr.h \
   /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/unordered_set.h \
@@ -3982,6 +4112,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/locale \
   /usr/include/c++/15.2.1/map \
   /usr/include/c++/15.2.1/memory \
+  /usr/include/c++/15.2.1/mutex \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/numeric \
   /usr/include/c++/15.2.1/optional \
@@ -4039,14 +4170,17 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
+  /usr/include/execinfo.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/linux/param.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/sched/types.h \
   /usr/include/linux/stddef.h \
@@ -4055,6 +4189,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/signal.h \
   /usr/include/sndfile.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
@@ -4063,10 +4198,13 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/string.h \
   /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
+  /usr/include/sys/param.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
   /usr/include/sys/types.h \
+  /usr/include/sys/ucontext.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
@@ -5201,6 +5339,31 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   src/model.h \
   src/shader_m.h \
   src/texture.h \
+  tracy/public/common/TracyApi.h \
+  tracy/public/client/tracy_rpmalloc.hpp \
+  tracy/public/common/TracyAlign.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyForceInline.hpp \
+  tracy/public/common/TracyMutex.hpp \
+  tracy/public/common/TracyProtocol.hpp \
+  tracy/public/common/TracyQueue.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/client/TracyCallstack.h \
+  tracy/public/client/TracyCallstack.hpp \
+  tracy/public/client/TracyFastVector.hpp \
+  tracy/public/client/TracyKCore.hpp \
+  tracy/public/client/TracyLock.hpp \
+  tracy/public/client/TracyProfiler.hpp \
+  tracy/public/client/TracyScoped.hpp \
+  tracy/public/client/TracySysPower.hpp \
+  tracy/public/client/TracySysTime.hpp \
+  tracy/public/client/tracy_SPSCQueue.h \
+  tracy/public/client/tracy_concurrentqueue.h \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyColor.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/tracy/Tracy.hpp \
   src/render_manager.h \
   /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
@@ -5208,10 +5371,12 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
   /usr/include/asm-generic/int-ll64.h \
+  /usr/include/asm-generic/param.h \
   /usr/include/asm-generic/posix_types.h \
   /usr/include/asm-generic/types.h \
   /usr/include/asm/bitsperlong.h \
   /usr/include/asm/errno.h \
+  /usr/include/asm/param.h \
   /usr/include/asm/posix_types.h \
   /usr/include/asm/posix_types_64.h \
   /usr/include/asm/types.h \
@@ -5219,15 +5384,19 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/assimp/config.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
   /usr/include/bits/fp-fast.h \
   /usr/include/bits/fp-logb.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/iscanonical.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/libm-simd-decl-stubs.h \
@@ -5239,14 +5408,29 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/bits/mathcalls-macros.h \
   /usr/include/bits/mathcalls-narrow.h \
   /usr/include/bits/mathcalls.h \
+  /usr/include/bits/param.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/sched.h \
   /usr/include/bits/select.h \
   /usr/include/bits/setjmp.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/bits/sigevent-consts.h \
+  /usr/include/bits/siginfo-arch.h \
+  /usr/include/bits/siginfo-consts-arch.h \
+  /usr/include/bits/siginfo-consts.h \
+  /usr/include/bits/signal_ext.h \
+  /usr/include/bits/signum-arch.h \
+  /usr/include/bits/signum-generic.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/bits/sigstksz.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/bits/ss_flags.h \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-least.h \
   /usr/include/bits/stdint-uintn.h \
@@ -5267,17 +5451,24 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/bits/types/__locale_t.h \
   /usr/include/bits/types/__mbstate_t.h \
   /usr/include/bits/types/__sigset_t.h \
+  /usr/include/bits/types/__sigval_t.h \
   /usr/include/bits/types/clock_t.h \
   /usr/include/bits/types/clockid_t.h \
   /usr/include/bits/types/cookie_io_functions_t.h \
   /usr/include/bits/types/error_t.h \
   /usr/include/bits/types/locale_t.h \
   /usr/include/bits/types/mbstate_t.h \
+  /usr/include/bits/types/sig_atomic_t.h \
+  /usr/include/bits/types/sigevent_t.h \
+  /usr/include/bits/types/siginfo_t.h \
   /usr/include/bits/types/sigset_t.h \
+  /usr/include/bits/types/sigval_t.h \
+  /usr/include/bits/types/stack_t.h \
   /usr/include/bits/types/struct_FILE.h \
   /usr/include/bits/types/struct___jmp_buf_tag.h \
   /usr/include/bits/types/struct_itimerspec.h \
   /usr/include/bits/types/struct_sched_param.h \
+  /usr/include/bits/types/struct_sigstack.h \
   /usr/include/bits/types/struct_timespec.h \
   /usr/include/bits/types/struct_timeval.h \
   /usr/include/bits/types/struct_tm.h \
@@ -5287,6 +5478,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -5294,6 +5486,8 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/bits/wordsize.h \
   /usr/include/bits/xopen_lim.h \
   /usr/include/c++/15.2.1/algorithm \
+  /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/atomic \
   /usr/include/c++/15.2.1/backward/auto_ptr.h \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
@@ -5365,6 +5559,8 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_mutex.h \
+  /usr/include/c++/15.2.1/bits/std_thread.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
@@ -5378,6 +5574,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/bits/stl_multimap.h \
   /usr/include/c++/15.2.1/bits/stl_pair.h \
   /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
+  /usr/include/c++/15.2.1/bits/stl_relops.h \
   /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
   /usr/include/c++/15.2.1/bits/stl_tree.h \
   /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
@@ -5386,7 +5583,9 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/bits/streambuf_iterator.h \
   /usr/include/c++/15.2.1/bits/string_view.tcc \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
+  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
   /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_lock.h \
   /usr/include/c++/15.2.1/bits/unique_ptr.h \
   /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/unordered_set.h \
@@ -5403,6 +5602,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/clocale \
   /usr/include/c++/15.2.1/cmath \
   /usr/include/c++/15.2.1/codecvt \
+  /usr/include/c++/15.2.1/compare \
   /usr/include/c++/15.2.1/concepts \
   /usr/include/c++/15.2.1/cstddef \
   /usr/include/c++/15.2.1/cstdint \
@@ -5434,6 +5634,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/locale \
   /usr/include/c++/15.2.1/map \
   /usr/include/c++/15.2.1/memory \
+  /usr/include/c++/15.2.1/mutex \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/ostream \
   /usr/include/c++/15.2.1/pstl/execution_defs.h \
@@ -5448,6 +5649,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/string \
   /usr/include/c++/15.2.1/string_view \
   /usr/include/c++/15.2.1/system_error \
+  /usr/include/c++/15.2.1/thread \
   /usr/include/c++/15.2.1/tr1/bessel_function.tcc \
   /usr/include/c++/15.2.1/tr1/beta_function.tcc \
   /usr/include/c++/15.2.1/tr1/ell_integral.tcc \
@@ -5465,6 +5667,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/c++/15.2.1/typeinfo \
   /usr/include/c++/15.2.1/unordered_map \
   /usr/include/c++/15.2.1/unordered_set \
+  /usr/include/c++/15.2.1/utility \
   /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
@@ -5484,14 +5687,17 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
+  /usr/include/execinfo.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/linux/param.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/sched/types.h \
   /usr/include/linux/stddef.h \
@@ -5500,6 +5706,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/signal.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -5507,10 +5714,13 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/include/string.h \
   /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
+  /usr/include/sys/param.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
   /usr/include/sys/types.h \
+  /usr/include/sys/ucontext.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
@@ -5521,6 +5731,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
 
 CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
+  json/single_include/nlohmann/json.hpp \
   src/mesh.h \
   src/shader_s.h \
   include/KHR/khrplatform.h \
@@ -5711,6 +5922,543 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   src/game_object.h \
   src/model.h \
   src/scene.h \
+  src/serialization_utilities.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/int-ll64.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/asm-generic/types.h \
+  /usr/include/asm/bitsperlong.h \
+  /usr/include/asm/errno.h \
+  /usr/include/asm/posix_types.h \
+  /usr/include/asm/posix_types_64.h \
+  /usr/include/asm/types.h \
+  /usr/include/assert.h \
+  /usr/include/assimp/config.h \
+  /usr/include/bits/atomic_wide_counter.h \
+  /usr/include/bits/byteswap.h \
+  /usr/include/bits/cpu-set.h \
+  /usr/include/bits/endian.h \
+  /usr/include/bits/endianness.h \
+  /usr/include/bits/errno.h \
+  /usr/include/bits/floatn-common.h \
+  /usr/include/bits/floatn.h \
+  /usr/include/bits/flt-eval-method.h \
+  /usr/include/bits/fp-fast.h \
+  /usr/include/bits/fp-logb.h \
+  /usr/include/bits/iscanonical.h \
+  /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/libm-simd-decl-stubs.h \
+  /usr/include/bits/local_lim.h \
+  /usr/include/bits/locale.h \
+  /usr/include/bits/long-double.h \
+  /usr/include/bits/math-vector.h \
+  /usr/include/bits/mathcalls-helper-functions.h \
+  /usr/include/bits/mathcalls-macros.h \
+  /usr/include/bits/mathcalls-narrow.h \
+  /usr/include/bits/mathcalls.h \
+  /usr/include/bits/posix1_lim.h \
+  /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/pthread_stack_min-dynamic.h \
+  /usr/include/bits/pthreadtypes-arch.h \
+  /usr/include/bits/pthreadtypes.h \
+  /usr/include/bits/sched.h \
+  /usr/include/bits/select.h \
+  /usr/include/bits/setjmp.h \
+  /usr/include/bits/stdint-intn.h \
+  /usr/include/bits/stdint-least.h \
+  /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-float.h \
+  /usr/include/bits/struct_mutex.h \
+  /usr/include/bits/struct_rwlock.h \
+  /usr/include/bits/thread-shared-types.h \
+  /usr/include/bits/time.h \
+  /usr/include/bits/time64.h \
+  /usr/include/bits/timesize.h \
+  /usr/include/bits/timex.h \
+  /usr/include/bits/types.h \
+  /usr/include/bits/types/FILE.h \
+  /usr/include/bits/types/__FILE.h \
+  /usr/include/bits/types/__fpos64_t.h \
+  /usr/include/bits/types/__fpos_t.h \
+  /usr/include/bits/types/__locale_t.h \
+  /usr/include/bits/types/__mbstate_t.h \
+  /usr/include/bits/types/__sigset_t.h \
+  /usr/include/bits/types/clock_t.h \
+  /usr/include/bits/types/clockid_t.h \
+  /usr/include/bits/types/cookie_io_functions_t.h \
+  /usr/include/bits/types/error_t.h \
+  /usr/include/bits/types/locale_t.h \
+  /usr/include/bits/types/mbstate_t.h \
+  /usr/include/bits/types/sigset_t.h \
+  /usr/include/bits/types/struct_FILE.h \
+  /usr/include/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/bits/types/struct_itimerspec.h \
+  /usr/include/bits/types/struct_sched_param.h \
+  /usr/include/bits/types/struct_timespec.h \
+  /usr/include/bits/types/struct_timeval.h \
+  /usr/include/bits/types/struct_tm.h \
+  /usr/include/bits/types/time_t.h \
+  /usr/include/bits/types/timer_t.h \
+  /usr/include/bits/types/wint_t.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/bits/uintn-identity.h \
+  /usr/include/bits/uio_lim.h \
+  /usr/include/bits/waitflags.h \
+  /usr/include/bits/waitstatus.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/bits/wctype-wchar.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/bits/xopen_lim.h \
+  /usr/include/c++/15.2.1/algorithm \
+  /usr/include/c++/15.2.1/any \
+  /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/backward/auto_ptr.h \
+  /usr/include/c++/15.2.1/backward/binders.h \
+  /usr/include/c++/15.2.1/bit \
+  /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+  /usr/include/c++/15.2.1/bits/align.h \
+  /usr/include/c++/15.2.1/bits/alloc_traits.h \
+  /usr/include/c++/15.2.1/bits/allocated_ptr.h \
+  /usr/include/c++/15.2.1/bits/allocator.h \
+  /usr/include/c++/15.2.1/bits/atomic_base.h \
+  /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
+  /usr/include/c++/15.2.1/bits/basic_ios.h \
+  /usr/include/c++/15.2.1/bits/basic_ios.tcc \
+  /usr/include/c++/15.2.1/bits/basic_string.h \
+  /usr/include/c++/15.2.1/bits/basic_string.tcc \
+  /usr/include/c++/15.2.1/bits/char_traits.h \
+  /usr/include/c++/15.2.1/bits/charconv.h \
+  /usr/include/c++/15.2.1/bits/chrono.h \
+  /usr/include/c++/15.2.1/bits/codecvt.h \
+  /usr/include/c++/15.2.1/bits/concept_check.h \
+  /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
+  /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
+  /usr/include/c++/15.2.1/bits/cxxabi_init_exception.h \
+  /usr/include/c++/15.2.1/bits/enable_special_members.h \
+  /usr/include/c++/15.2.1/bits/erase_if.h \
+  /usr/include/c++/15.2.1/bits/exception.h \
+  /usr/include/c++/15.2.1/bits/exception_defines.h \
+  /usr/include/c++/15.2.1/bits/exception_ptr.h \
+  /usr/include/c++/15.2.1/bits/forward_list.h \
+  /usr/include/c++/15.2.1/bits/forward_list.tcc \
+  /usr/include/c++/15.2.1/bits/fs_dir.h \
+  /usr/include/c++/15.2.1/bits/fs_fwd.h \
+  /usr/include/c++/15.2.1/bits/fs_ops.h \
+  /usr/include/c++/15.2.1/bits/fs_path.h \
+  /usr/include/c++/15.2.1/bits/fstream.tcc \
+  /usr/include/c++/15.2.1/bits/functexcept.h \
+  /usr/include/c++/15.2.1/bits/functional_hash.h \
+  /usr/include/c++/15.2.1/bits/gslice.h \
+  /usr/include/c++/15.2.1/bits/gslice_array.h \
+  /usr/include/c++/15.2.1/bits/hash_bytes.h \
+  /usr/include/c++/15.2.1/bits/hashtable.h \
+  /usr/include/c++/15.2.1/bits/hashtable_policy.h \
+  /usr/include/c++/15.2.1/bits/indirect_array.h \
+  /usr/include/c++/15.2.1/bits/invoke.h \
+  /usr/include/c++/15.2.1/bits/ios_base.h \
+  /usr/include/c++/15.2.1/bits/istream.tcc \
+  /usr/include/c++/15.2.1/bits/locale_classes.h \
+  /usr/include/c++/15.2.1/bits/locale_classes.tcc \
+  /usr/include/c++/15.2.1/bits/locale_conv.h \
+  /usr/include/c++/15.2.1/bits/locale_facets.h \
+  /usr/include/c++/15.2.1/bits/locale_facets.tcc \
+  /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
+  /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
+  /usr/include/c++/15.2.1/bits/localefwd.h \
+  /usr/include/c++/15.2.1/bits/mask_array.h \
+  /usr/include/c++/15.2.1/bits/memory_resource.h \
+  /usr/include/c++/15.2.1/bits/memoryfwd.h \
+  /usr/include/c++/15.2.1/bits/move.h \
+  /usr/include/c++/15.2.1/bits/nested_exception.h \
+  /usr/include/c++/15.2.1/bits/new_allocator.h \
+  /usr/include/c++/15.2.1/bits/node_handle.h \
+  /usr/include/c++/15.2.1/bits/ostream.h \
+  /usr/include/c++/15.2.1/bits/ostream.tcc \
+  /usr/include/c++/15.2.1/bits/ostream_insert.h \
+  /usr/include/c++/15.2.1/bits/parse_numbers.h \
+  /usr/include/c++/15.2.1/bits/postypes.h \
+  /usr/include/c++/15.2.1/bits/predefined_ops.h \
+  /usr/include/c++/15.2.1/bits/ptr_traits.h \
+  /usr/include/c++/15.2.1/bits/quoted_string.h \
+  /usr/include/c++/15.2.1/bits/range_access.h \
+  /usr/include/c++/15.2.1/bits/refwrap.h \
+  /usr/include/c++/15.2.1/bits/requires_hosted.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr_atomic.h \
+  /usr/include/c++/15.2.1/bits/shared_ptr_base.h \
+  /usr/include/c++/15.2.1/bits/slice_array.h \
+  /usr/include/c++/15.2.1/bits/specfun.h \
+  /usr/include/c++/15.2.1/bits/sstream.tcc \
+  /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
+  /usr/include/c++/15.2.1/bits/stl_algo.h \
+  /usr/include/c++/15.2.1/bits/stl_algobase.h \
+  /usr/include/c++/15.2.1/bits/stl_bvector.h \
+  /usr/include/c++/15.2.1/bits/stl_construct.h \
+  /usr/include/c++/15.2.1/bits/stl_function.h \
+  /usr/include/c++/15.2.1/bits/stl_heap.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
+  /usr/include/c++/15.2.1/bits/stl_map.h \
+  /usr/include/c++/15.2.1/bits/stl_multimap.h \
+  /usr/include/c++/15.2.1/bits/stl_numeric.h \
+  /usr/include/c++/15.2.1/bits/stl_pair.h \
+  /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
+  /usr/include/c++/15.2.1/bits/stl_relops.h \
+  /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+  /usr/include/c++/15.2.1/bits/stl_tree.h \
+  /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
+  /usr/include/c++/15.2.1/bits/stl_vector.h \
+  /usr/include/c++/15.2.1/bits/stream_iterator.h \
+  /usr/include/c++/15.2.1/bits/streambuf.tcc \
+  /usr/include/c++/15.2.1/bits/streambuf_iterator.h \
+  /usr/include/c++/15.2.1/bits/string_view.tcc \
+  /usr/include/c++/15.2.1/bits/stringfwd.h \
+  /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_ptr.h \
+  /usr/include/c++/15.2.1/bits/unordered_map.h \
+  /usr/include/c++/15.2.1/bits/unordered_set.h \
+  /usr/include/c++/15.2.1/bits/uses_allocator.h \
+  /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
+  /usr/include/c++/15.2.1/bits/utility.h \
+  /usr/include/c++/15.2.1/bits/valarray_after.h \
+  /usr/include/c++/15.2.1/bits/valarray_array.h \
+  /usr/include/c++/15.2.1/bits/valarray_array.tcc \
+  /usr/include/c++/15.2.1/bits/valarray_before.h \
+  /usr/include/c++/15.2.1/bits/vector.tcc \
+  /usr/include/c++/15.2.1/bits/version.h \
+  /usr/include/c++/15.2.1/cassert \
+  /usr/include/c++/15.2.1/cctype \
+  /usr/include/c++/15.2.1/cerrno \
+  /usr/include/c++/15.2.1/cfloat \
+  /usr/include/c++/15.2.1/climits \
+  /usr/include/c++/15.2.1/clocale \
+  /usr/include/c++/15.2.1/cmath \
+  /usr/include/c++/15.2.1/codecvt \
+  /usr/include/c++/15.2.1/compare \
+  /usr/include/c++/15.2.1/concepts \
+  /usr/include/c++/15.2.1/cstddef \
+  /usr/include/c++/15.2.1/cstdint \
+  /usr/include/c++/15.2.1/cstdio \
+  /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/cstring \
+  /usr/include/c++/15.2.1/ctime \
+  /usr/include/c++/15.2.1/cwchar \
+  /usr/include/c++/15.2.1/cwctype \
+  /usr/include/c++/15.2.1/debug/assertions.h \
+  /usr/include/c++/15.2.1/debug/debug.h \
+  /usr/include/c++/15.2.1/exception \
+  /usr/include/c++/15.2.1/ext/aligned_buffer.h \
+  /usr/include/c++/15.2.1/ext/alloc_traits.h \
+  /usr/include/c++/15.2.1/ext/atomicity.h \
+  /usr/include/c++/15.2.1/ext/concurrence.h \
+  /usr/include/c++/15.2.1/ext/numeric_traits.h \
+  /usr/include/c++/15.2.1/ext/string_conversions.h \
+  /usr/include/c++/15.2.1/ext/type_traits.h \
+  /usr/include/c++/15.2.1/filesystem \
+  /usr/include/c++/15.2.1/forward_list \
+  /usr/include/c++/15.2.1/fstream \
+  /usr/include/c++/15.2.1/functional \
+  /usr/include/c++/15.2.1/initializer_list \
+  /usr/include/c++/15.2.1/iomanip \
+  /usr/include/c++/15.2.1/ios \
+  /usr/include/c++/15.2.1/iosfwd \
+  /usr/include/c++/15.2.1/iostream \
+  /usr/include/c++/15.2.1/istream \
+  /usr/include/c++/15.2.1/iterator \
+  /usr/include/c++/15.2.1/limits \
+  /usr/include/c++/15.2.1/locale \
+  /usr/include/c++/15.2.1/map \
+  /usr/include/c++/15.2.1/memory \
+  /usr/include/c++/15.2.1/new \
+  /usr/include/c++/15.2.1/numeric \
+  /usr/include/c++/15.2.1/optional \
+  /usr/include/c++/15.2.1/ostream \
+  /usr/include/c++/15.2.1/pstl/execution_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
+  /usr/include/c++/15.2.1/pstl/pstl_config.h \
+  /usr/include/c++/15.2.1/ratio \
+  /usr/include/c++/15.2.1/sstream \
+  /usr/include/c++/15.2.1/stdexcept \
+  /usr/include/c++/15.2.1/stdlib.h \
+  /usr/include/c++/15.2.1/streambuf \
+  /usr/include/c++/15.2.1/string \
+  /usr/include/c++/15.2.1/string_view \
+  /usr/include/c++/15.2.1/system_error \
+  /usr/include/c++/15.2.1/tr1/bessel_function.tcc \
+  /usr/include/c++/15.2.1/tr1/beta_function.tcc \
+  /usr/include/c++/15.2.1/tr1/ell_integral.tcc \
+  /usr/include/c++/15.2.1/tr1/exp_integral.tcc \
+  /usr/include/c++/15.2.1/tr1/gamma.tcc \
+  /usr/include/c++/15.2.1/tr1/hypergeometric.tcc \
+  /usr/include/c++/15.2.1/tr1/legendre_function.tcc \
+  /usr/include/c++/15.2.1/tr1/modified_bessel_func.tcc \
+  /usr/include/c++/15.2.1/tr1/poly_hermite.tcc \
+  /usr/include/c++/15.2.1/tr1/poly_laguerre.tcc \
+  /usr/include/c++/15.2.1/tr1/riemann_zeta.tcc \
+  /usr/include/c++/15.2.1/tr1/special_function_util.h \
+  /usr/include/c++/15.2.1/tuple \
+  /usr/include/c++/15.2.1/type_traits \
+  /usr/include/c++/15.2.1/typeinfo \
+  /usr/include/c++/15.2.1/unordered_map \
+  /usr/include/c++/15.2.1/unordered_set \
+  /usr/include/c++/15.2.1/utility \
+  /usr/include/c++/15.2.1/valarray \
+  /usr/include/c++/15.2.1/vector \
+  /usr/include/c++/15.2.1/version \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/error_constants.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gnu/stubs.h \
+  /usr/include/libintl.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/sched/types.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/linux/types.h \
+  /usr/include/locale.h \
+  /usr/include/math.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/sys/cdefs.h \
+  /usr/include/sys/select.h \
+  /usr/include/sys/single_threaded.h \
+  /usr/include/sys/types.h \
+  /usr/include/time.h \
+  /usr/include/wchar.h \
+  /usr/include/wctype.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/limits.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdarg.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
+
+CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: src/sphere_collision.cpp \
+  src/mesh.h \
+  src/shader_s.h \
+  include/KHR/khrplatform.h \
+  include/assimp/include/assimp/Compiler/poppack1.h \
+  include/assimp/include/assimp/Compiler/pushpack1.h \
+  include/assimp/include/assimp/Importer.hpp \
+  include/assimp/include/assimp/MathFunctions.h \
+  include/assimp/include/assimp/aabb.h \
+  include/assimp/include/assimp/anim.h \
+  include/assimp/include/assimp/camera.h \
+  include/assimp/include/assimp/color4.h \
+  include/assimp/include/assimp/color4.inl \
+  include/assimp/include/assimp/defs.h \
+  include/assimp/include/assimp/light.h \
+  include/assimp/include/assimp/material.h \
+  include/assimp/include/assimp/material.inl \
+  include/assimp/include/assimp/matrix3x3.h \
+  include/assimp/include/assimp/matrix3x3.inl \
+  include/assimp/include/assimp/matrix4x4.h \
+  include/assimp/include/assimp/matrix4x4.inl \
+  include/assimp/include/assimp/mesh.h \
+  include/assimp/include/assimp/metadata.h \
+  include/assimp/include/assimp/postprocess.h \
+  include/assimp/include/assimp/quaternion.h \
+  include/assimp/include/assimp/quaternion.inl \
+  include/assimp/include/assimp/scene.h \
+  include/assimp/include/assimp/texture.h \
+  include/assimp/include/assimp/types.h \
+  include/assimp/include/assimp/vector2.h \
+  include/assimp/include/assimp/vector2.inl \
+  include/assimp/include/assimp/vector3.h \
+  include/assimp/include/assimp/vector3.inl \
+  include/glad/glad.h \
+  include/glm/detail/type_mat2x3.hpp \
+  include/glm/detail/type_mat2x3.inl \
+  include/glm/detail/type_mat2x4.hpp \
+  include/glm/detail/type_mat2x4.inl \
+  include/glm/detail/type_mat3x2.hpp \
+  include/glm/detail/type_mat3x2.inl \
+  include/glm/detail/type_mat3x3.hpp \
+  include/glm/detail/type_mat3x3.inl \
+  include/glm/detail/type_mat3x4.hpp \
+  include/glm/detail/type_mat3x4.inl \
+  include/glm/detail/type_mat4x2.hpp \
+  include/glm/detail/type_mat4x2.inl \
+  include/glm/detail/type_mat4x3.hpp \
+  include/glm/detail/type_mat4x3.inl \
+  include/glm/detail/type_mat4x4.hpp \
+  include/glm/detail/type_mat4x4.inl \
+  include/glm/ext/matrix_double2x3.hpp \
+  include/glm/ext/matrix_double2x3_precision.hpp \
+  include/glm/ext/matrix_double2x4.hpp \
+  include/glm/ext/matrix_double2x4_precision.hpp \
+  include/glm/ext/matrix_double3x2.hpp \
+  include/glm/ext/matrix_double3x2_precision.hpp \
+  include/glm/ext/matrix_double3x3.hpp \
+  include/glm/ext/matrix_double3x3_precision.hpp \
+  include/glm/ext/matrix_double3x4.hpp \
+  include/glm/ext/matrix_double3x4_precision.hpp \
+  include/glm/ext/matrix_double4x2.hpp \
+  include/glm/ext/matrix_double4x2_precision.hpp \
+  include/glm/ext/matrix_double4x3.hpp \
+  include/glm/ext/matrix_double4x3_precision.hpp \
+  include/glm/ext/matrix_double4x4.hpp \
+  include/glm/ext/matrix_double4x4_precision.hpp \
+  include/glm/ext/matrix_float2x3.hpp \
+  include/glm/ext/matrix_float2x3_precision.hpp \
+  include/glm/ext/matrix_float2x4.hpp \
+  include/glm/ext/matrix_float2x4_precision.hpp \
+  include/glm/ext/matrix_float3x2.hpp \
+  include/glm/ext/matrix_float3x2_precision.hpp \
+  include/glm/ext/matrix_float3x3.hpp \
+  include/glm/ext/matrix_float3x3_precision.hpp \
+  include/glm/ext/matrix_float3x4.hpp \
+  include/glm/ext/matrix_float3x4_precision.hpp \
+  include/glm/ext/matrix_float4x2.hpp \
+  include/glm/ext/matrix_float4x2_precision.hpp \
+  include/glm/ext/matrix_float4x3.hpp \
+  include/glm/ext/matrix_float4x3_precision.hpp \
+  include/glm/ext/matrix_float4x4.hpp \
+  include/glm/ext/matrix_float4x4_precision.hpp \
+  include/glm/common.hpp \
+  include/glm/detail/func_vector_relational.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/vector_relational.hpp \
+  include/glm/detail/_fixes.hpp \
+  include/glm/detail/_vectorize.hpp \
+  include/glm/detail/compute_common.hpp \
+  include/glm/detail/func_common.inl \
+  include/glm/detail/func_exponential.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_vec1.hpp \
+  include/glm/detail/type_vec1.inl \
+  include/glm/exponential.hpp \
+  include/glm/detail/func_geometric.inl \
+  include/glm/geometric.hpp \
+  include/glm/detail/func_matrix.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/mat2x3.hpp \
+  include/glm/mat2x4.hpp \
+  include/glm/mat3x2.hpp \
+  include/glm/mat3x3.hpp \
+  include/glm/mat3x4.hpp \
+  include/glm/mat4x2.hpp \
+  include/glm/mat4x3.hpp \
+  include/glm/mat4x4.hpp \
+  include/glm/matrix.hpp \
+  include/glm/detail/compute_vector_relational.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_mat2x2.hpp \
+  include/glm/detail/type_mat2x2.inl \
+  include/glm/detail/type_vec2.hpp \
+  include/glm/detail/type_vec2.inl \
+  include/glm/detail/type_vec3.hpp \
+  include/glm/detail/type_vec3.inl \
+  include/glm/detail/type_vec4.hpp \
+  include/glm/detail/type_vec4.inl \
+  include/glm/detail/setup.hpp \
+  include/glm/ext/scalar_int_sized.hpp \
+  include/glm/ext/scalar_uint_sized.hpp \
+  include/glm/ext/matrix_double2x2.hpp \
+  include/glm/ext/matrix_double2x2_precision.hpp \
+  include/glm/ext/matrix_float2x2.hpp \
+  include/glm/ext/matrix_float2x2_precision.hpp \
+  include/glm/ext/vector_bool2.hpp \
+  include/glm/ext/vector_bool2_precision.hpp \
+  include/glm/ext/vector_bool3.hpp \
+  include/glm/ext/vector_bool3_precision.hpp \
+  include/glm/ext/vector_bool4.hpp \
+  include/glm/ext/vector_bool4_precision.hpp \
+  include/glm/ext/vector_double2.hpp \
+  include/glm/ext/vector_double2_precision.hpp \
+  include/glm/ext/vector_double3.hpp \
+  include/glm/ext/vector_double3_precision.hpp \
+  include/glm/ext/vector_double4.hpp \
+  include/glm/ext/vector_double4_precision.hpp \
+  include/glm/ext/vector_float2.hpp \
+  include/glm/ext/vector_float2_precision.hpp \
+  include/glm/ext/vector_float3.hpp \
+  include/glm/ext/vector_float3_precision.hpp \
+  include/glm/ext/vector_float4.hpp \
+  include/glm/ext/vector_float4_precision.hpp \
+  include/glm/ext/vector_int2.hpp \
+  include/glm/ext/vector_int2_sized.hpp \
+  include/glm/ext/vector_int3.hpp \
+  include/glm/ext/vector_int3_sized.hpp \
+  include/glm/ext/vector_int4.hpp \
+  include/glm/ext/vector_int4_sized.hpp \
+  include/glm/ext/vector_uint2.hpp \
+  include/glm/ext/vector_uint2_sized.hpp \
+  include/glm/ext/vector_uint3.hpp \
+  include/glm/ext/vector_uint3_sized.hpp \
+  include/glm/ext/vector_uint4.hpp \
+  include/glm/ext/vector_uint4_sized.hpp \
+  include/glm/simd/platform.h \
+  include/glm/detail/_fixes.hpp \
+  include/glm/detail/func_integer.inl \
+  include/glm/detail/func_packing.inl \
+  include/glm/detail/func_trigonometric.inl \
+  include/glm/detail/qualifier.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/detail/type_half.hpp \
+  include/glm/detail/type_half.inl \
+  include/glm/fwd.hpp \
+  include/glm/glm.hpp \
+  include/glm/detail/setup.hpp \
+  include/glm/ext/scalar_constants.hpp \
+  include/glm/ext/scalar_constants.inl \
+  include/glm/gtc/constants.hpp \
+  include/glm/gtc/constants.inl \
+  include/glm/ext/matrix_clip_space.hpp \
+  include/glm/ext/matrix_clip_space.inl \
+  include/glm/ext/matrix_projection.hpp \
+  include/glm/ext/matrix_projection.inl \
+  include/glm/ext/matrix_transform.hpp \
+  include/glm/ext/matrix_transform.inl \
+  include/glm/gtc/matrix_transform.hpp \
+  include/glm/gtc/matrix_transform.inl \
+  include/glm/integer.hpp \
+  include/glm/mat2x2.hpp \
+  include/glm/packing.hpp \
+  include/glm/trigonometric.hpp \
+  include/glm/vec2.hpp \
+  include/glm/vec3.hpp \
+  include/glm/vec4.hpp \
+  include/stb_image.h \
+  src/camera.h \
+  src/game_object.h \
+  src/model.h \
+  src/sphere_collision.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -5890,7 +6638,6 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
   /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
   /usr/include/c++/15.2.1/bits/unique_ptr.h \
-  /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/unordered_set.h \
   /usr/include/c++/15.2.1/bits/uses_allocator.h \
   /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
@@ -5963,7 +6710,6 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   /usr/include/c++/15.2.1/tuple \
   /usr/include/c++/15.2.1/type_traits \
   /usr/include/c++/15.2.1/typeinfo \
-  /usr/include/c++/15.2.1/unordered_map \
   /usr/include/c++/15.2.1/unordered_set \
   /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
@@ -6771,6 +7517,425 @@ CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o: src/texture_debugge
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
 
+CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o: tracy/public/TracyClient.cpp \
+  tracy/public/common/TracyAlign.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyForceInline.hpp \
+  tracy/public/common/TracyMutex.hpp \
+  tracy/public/common/TracyProtocol.hpp \
+  tracy/public/common/TracyQueue.hpp \
+  tracy/public/common/TracySocket.hpp \
+  tracy/public/common/TracyStackFrames.cpp \
+  tracy/public/common/TracyStackFrames.hpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/common/TracyWinFamily.hpp \
+  tracy/public/common/TracyYield.hpp \
+  tracy/public/common/tracy_lz4.hpp \
+  tracy/public/client/TracyFastVector.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/libbacktrace/alloc.cpp \
+  tracy/public/libbacktrace/backtrace.hpp \
+  tracy/public/libbacktrace/config.h \
+  tracy/public/libbacktrace/dwarf.cpp \
+  tracy/public/libbacktrace/elf.cpp \
+  tracy/public/libbacktrace/fileline.cpp \
+  tracy/public/libbacktrace/filenames.hpp \
+  tracy/public/libbacktrace/internal.hpp \
+  tracy/public/libbacktrace/mmapio.cpp \
+  tracy/public/libbacktrace/posix.cpp \
+  tracy/public/libbacktrace/sort.cpp \
+  tracy/public/libbacktrace/state.cpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/tracy/TracyC.h \
+  tracy/public/client/TracyAlloc.cpp \
+  tracy/public/client/TracyArmCpuTable.hpp \
+  tracy/public/client/TracyCallstack.cpp \
+  tracy/public/client/TracyCallstack.h \
+  tracy/public/client/TracyCallstack.hpp \
+  tracy/public/client/TracyCpuid.hpp \
+  tracy/public/client/TracyDebug.hpp \
+  tracy/public/client/TracyDxt1.cpp \
+  tracy/public/client/TracyDxt1.hpp \
+  tracy/public/client/TracyFastVector.hpp \
+  tracy/public/client/TracyKCore.cpp \
+  tracy/public/client/TracyKCore.hpp \
+  tracy/public/client/TracyOverride.cpp \
+  tracy/public/client/TracyProfiler.cpp \
+  tracy/public/client/TracyProfiler.hpp \
+  tracy/public/client/TracyRingBuffer.hpp \
+  tracy/public/client/TracyScoped.hpp \
+  tracy/public/client/TracyStringHelpers.hpp \
+  tracy/public/client/TracySysPower.cpp \
+  tracy/public/client/TracySysPower.hpp \
+  tracy/public/client/TracySysTime.cpp \
+  tracy/public/client/TracySysTime.hpp \
+  tracy/public/client/TracySysTrace.cpp \
+  tracy/public/client/TracySysTrace.hpp \
+  tracy/public/client/TracyThread.hpp \
+  tracy/public/client/tracy_SPSCQueue.h \
+  tracy/public/client/tracy_concurrentqueue.h \
+  tracy/public/client/tracy_rpmalloc.cpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/client/tracy_rpmalloc.hpp \
+  tracy/public/common/TracyAlloc.hpp \
+  tracy/public/common/TracyApi.h \
+  tracy/public/common/TracyForceInline.hpp \
+  tracy/public/common/TracySocket.cpp \
+  tracy/public/common/TracySocket.hpp \
+  tracy/public/common/TracySystem.cpp \
+  tracy/public/common/TracySystem.hpp \
+  tracy/public/common/tracy_lz4.cpp \
+  tracy/public/common/tracy_lz4.hpp \
+  /usr/include/alloca.h \
+  /usr/include/arpa/inet.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/int-ll64.h \
+  /usr/include/asm-generic/ioctl.h \
+  /usr/include/asm-generic/ioctls.h \
+  /usr/include/asm-generic/param.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/asm-generic/socket.h \
+  /usr/include/asm-generic/sockios.h \
+  /usr/include/asm-generic/types.h \
+  /usr/include/asm/bitsperlong.h \
+  /usr/include/asm/byteorder.h \
+  /usr/include/asm/errno.h \
+  /usr/include/asm/ioctl.h \
+  /usr/include/asm/ioctls.h \
+  /usr/include/asm/param.h \
+  /usr/include/asm/posix_types.h \
+  /usr/include/asm/posix_types_64.h \
+  /usr/include/asm/socket.h \
+  /usr/include/asm/sockios.h \
+  /usr/include/asm/swab.h \
+  /usr/include/asm/types.h \
+  /usr/include/asm/unistd.h \
+  /usr/include/asm/unistd_64.h \
+  /usr/include/assert.h \
+  /usr/include/bits/atomic_wide_counter.h \
+  /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
+  /usr/include/bits/cpu-set.h \
+  /usr/include/bits/dirent.h \
+  /usr/include/bits/dirent_ext.h \
+  /usr/include/bits/dl_find_object.h \
+  /usr/include/bits/dlfcn.h \
+  /usr/include/bits/elfclass.h \
+  /usr/include/bits/endian.h \
+  /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
+  /usr/include/bits/errno.h \
+  /usr/include/bits/fcntl-linux.h \
+  /usr/include/bits/fcntl.h \
+  /usr/include/bits/floatn-common.h \
+  /usr/include/bits/floatn.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
+  /usr/include/bits/in.h \
+  /usr/include/bits/ioctl-types.h \
+  /usr/include/bits/ioctls.h \
+  /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/link.h \
+  /usr/include/bits/link_lavcurrent.h \
+  /usr/include/bits/local_lim.h \
+  /usr/include/bits/locale.h \
+  /usr/include/bits/long-double.h \
+  /usr/include/bits/mman-linux.h \
+  /usr/include/bits/mman-map-flags-generic.h \
+  /usr/include/bits/mman-shared.h \
+  /usr/include/bits/mman.h \
+  /usr/include/bits/mman_ext.h \
+  /usr/include/bits/netdb.h \
+  /usr/include/bits/param.h \
+  /usr/include/bits/poll.h \
+  /usr/include/bits/posix1_lim.h \
+  /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
+  /usr/include/bits/pthread_stack_min-dynamic.h \
+  /usr/include/bits/pthreadtypes-arch.h \
+  /usr/include/bits/pthreadtypes.h \
+  /usr/include/bits/sched.h \
+  /usr/include/bits/select.h \
+  /usr/include/bits/setjmp.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/bits/sigevent-consts.h \
+  /usr/include/bits/siginfo-arch.h \
+  /usr/include/bits/siginfo-consts-arch.h \
+  /usr/include/bits/siginfo-consts.h \
+  /usr/include/bits/signal_ext.h \
+  /usr/include/bits/signum-arch.h \
+  /usr/include/bits/signum-generic.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/bits/sigstksz.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/bits/sockaddr.h \
+  /usr/include/bits/socket.h \
+  /usr/include/bits/socket_type.h \
+  /usr/include/bits/ss_flags.h \
+  /usr/include/bits/stat.h \
+  /usr/include/bits/statx-generic.h \
+  /usr/include/bits/statx.h \
+  /usr/include/bits/stdint-intn.h \
+  /usr/include/bits/stdint-least.h \
+  /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-float.h \
+  /usr/include/bits/struct_mutex.h \
+  /usr/include/bits/struct_rwlock.h \
+  /usr/include/bits/struct_stat.h \
+  /usr/include/bits/syscall.h \
+  /usr/include/bits/thread-shared-types.h \
+  /usr/include/bits/time.h \
+  /usr/include/bits/time64.h \
+  /usr/include/bits/timesize.h \
+  /usr/include/bits/timex.h \
+  /usr/include/bits/types.h \
+  /usr/include/bits/types/FILE.h \
+  /usr/include/bits/types/__FILE.h \
+  /usr/include/bits/types/__fpos64_t.h \
+  /usr/include/bits/types/__fpos_t.h \
+  /usr/include/bits/types/__locale_t.h \
+  /usr/include/bits/types/__mbstate_t.h \
+  /usr/include/bits/types/__sigset_t.h \
+  /usr/include/bits/types/__sigval_t.h \
+  /usr/include/bits/types/clock_t.h \
+  /usr/include/bits/types/clockid_t.h \
+  /usr/include/bits/types/cookie_io_functions_t.h \
+  /usr/include/bits/types/error_t.h \
+  /usr/include/bits/types/idtype_t.h \
+  /usr/include/bits/types/locale_t.h \
+  /usr/include/bits/types/mbstate_t.h \
+  /usr/include/bits/types/sig_atomic_t.h \
+  /usr/include/bits/types/sigevent_t.h \
+  /usr/include/bits/types/siginfo_t.h \
+  /usr/include/bits/types/sigset_t.h \
+  /usr/include/bits/types/sigval_t.h \
+  /usr/include/bits/types/stack_t.h \
+  /usr/include/bits/types/struct_FILE.h \
+  /usr/include/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/bits/types/struct_iovec.h \
+  /usr/include/bits/types/struct_itimerspec.h \
+  /usr/include/bits/types/struct_osockaddr.h \
+  /usr/include/bits/types/struct_sched_param.h \
+  /usr/include/bits/types/struct_sigstack.h \
+  /usr/include/bits/types/struct_statx.h \
+  /usr/include/bits/types/struct_statx_timestamp.h \
+  /usr/include/bits/types/struct_timespec.h \
+  /usr/include/bits/types/struct_timeval.h \
+  /usr/include/bits/types/struct_tm.h \
+  /usr/include/bits/types/time_t.h \
+  /usr/include/bits/types/timer_t.h \
+  /usr/include/bits/types/wint_t.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/bits/uintn-identity.h \
+  /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
+  /usr/include/bits/utsname.h \
+  /usr/include/bits/waitflags.h \
+  /usr/include/bits/waitstatus.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/bits/xopen_lim.h \
+  /usr/include/c++/15.2.1/algorithm \
+  /usr/include/c++/15.2.1/array \
+  /usr/include/c++/15.2.1/atomic \
+  /usr/include/c++/15.2.1/backward/binders.h \
+  /usr/include/c++/15.2.1/bit \
+  /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+  /usr/include/c++/15.2.1/bits/alloc_traits.h \
+  /usr/include/c++/15.2.1/bits/allocator.h \
+  /usr/include/c++/15.2.1/bits/atomic_base.h \
+  /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
+  /usr/include/c++/15.2.1/bits/basic_string.h \
+  /usr/include/c++/15.2.1/bits/basic_string.tcc \
+  /usr/include/c++/15.2.1/bits/char_traits.h \
+  /usr/include/c++/15.2.1/bits/charconv.h \
+  /usr/include/c++/15.2.1/bits/chrono.h \
+  /usr/include/c++/15.2.1/bits/concept_check.h \
+  /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
+  /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
+  /usr/include/c++/15.2.1/bits/cxxabi_init_exception.h \
+  /usr/include/c++/15.2.1/bits/exception.h \
+  /usr/include/c++/15.2.1/bits/exception_defines.h \
+  /usr/include/c++/15.2.1/bits/exception_ptr.h \
+  /usr/include/c++/15.2.1/bits/functexcept.h \
+  /usr/include/c++/15.2.1/bits/functional_hash.h \
+  /usr/include/c++/15.2.1/bits/hash_bytes.h \
+  /usr/include/c++/15.2.1/bits/invoke.h \
+  /usr/include/c++/15.2.1/bits/localefwd.h \
+  /usr/include/c++/15.2.1/bits/memory_resource.h \
+  /usr/include/c++/15.2.1/bits/memoryfwd.h \
+  /usr/include/c++/15.2.1/bits/move.h \
+  /usr/include/c++/15.2.1/bits/nested_exception.h \
+  /usr/include/c++/15.2.1/bits/new_allocator.h \
+  /usr/include/c++/15.2.1/bits/ostream_insert.h \
+  /usr/include/c++/15.2.1/bits/parse_numbers.h \
+  /usr/include/c++/15.2.1/bits/postypes.h \
+  /usr/include/c++/15.2.1/bits/predefined_ops.h \
+  /usr/include/c++/15.2.1/bits/ptr_traits.h \
+  /usr/include/c++/15.2.1/bits/range_access.h \
+  /usr/include/c++/15.2.1/bits/refwrap.h \
+  /usr/include/c++/15.2.1/bits/requires_hosted.h \
+  /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_mutex.h \
+  /usr/include/c++/15.2.1/bits/std_thread.h \
+  /usr/include/c++/15.2.1/bits/stl_algo.h \
+  /usr/include/c++/15.2.1/bits/stl_algobase.h \
+  /usr/include/c++/15.2.1/bits/stl_construct.h \
+  /usr/include/c++/15.2.1/bits/stl_function.h \
+  /usr/include/c++/15.2.1/bits/stl_heap.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
+  /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
+  /usr/include/c++/15.2.1/bits/stl_pair.h \
+  /usr/include/c++/15.2.1/bits/stl_relops.h \
+  /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+  /usr/include/c++/15.2.1/bits/string_view.tcc \
+  /usr/include/c++/15.2.1/bits/stringfwd.h \
+  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
+  /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+  /usr/include/c++/15.2.1/bits/unique_lock.h \
+  /usr/include/c++/15.2.1/bits/unique_ptr.h \
+  /usr/include/c++/15.2.1/bits/uses_allocator.h \
+  /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
+  /usr/include/c++/15.2.1/bits/utility.h \
+  /usr/include/c++/15.2.1/bits/version.h \
+  /usr/include/c++/15.2.1/cassert \
+  /usr/include/c++/15.2.1/cctype \
+  /usr/include/c++/15.2.1/cerrno \
+  /usr/include/c++/15.2.1/chrono \
+  /usr/include/c++/15.2.1/climits \
+  /usr/include/c++/15.2.1/clocale \
+  /usr/include/c++/15.2.1/compare \
+  /usr/include/c++/15.2.1/concepts \
+  /usr/include/c++/15.2.1/cstddef \
+  /usr/include/c++/15.2.1/cstdint \
+  /usr/include/c++/15.2.1/cstdio \
+  /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/ctime \
+  /usr/include/c++/15.2.1/cwchar \
+  /usr/include/c++/15.2.1/cxxabi.h \
+  /usr/include/c++/15.2.1/debug/assertions.h \
+  /usr/include/c++/15.2.1/debug/debug.h \
+  /usr/include/c++/15.2.1/exception \
+  /usr/include/c++/15.2.1/ext/alloc_traits.h \
+  /usr/include/c++/15.2.1/ext/atomicity.h \
+  /usr/include/c++/15.2.1/ext/numeric_traits.h \
+  /usr/include/c++/15.2.1/ext/string_conversions.h \
+  /usr/include/c++/15.2.1/ext/type_traits.h \
+  /usr/include/c++/15.2.1/initializer_list \
+  /usr/include/c++/15.2.1/iosfwd \
+  /usr/include/c++/15.2.1/limits \
+  /usr/include/c++/15.2.1/mutex \
+  /usr/include/c++/15.2.1/new \
+  /usr/include/c++/15.2.1/pstl/execution_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
+  /usr/include/c++/15.2.1/pstl/pstl_config.h \
+  /usr/include/c++/15.2.1/ratio \
+  /usr/include/c++/15.2.1/stdexcept \
+  /usr/include/c++/15.2.1/stdlib.h \
+  /usr/include/c++/15.2.1/string \
+  /usr/include/c++/15.2.1/string_view \
+  /usr/include/c++/15.2.1/thread \
+  /usr/include/c++/15.2.1/tuple \
+  /usr/include/c++/15.2.1/type_traits \
+  /usr/include/c++/15.2.1/typeinfo \
+  /usr/include/c++/15.2.1/utility \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cxxabi_tweaks.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/error_constants.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
+  /usr/include/ctype.h \
+  /usr/include/dirent.h \
+  /usr/include/dlfcn.h \
+  /usr/include/elf.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/execinfo.h \
+  /usr/include/fcntl.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gnu/stubs.h \
+  /usr/include/inttypes.h \
+  /usr/include/limits.h \
+  /usr/include/link.h \
+  /usr/include/linux/byteorder/little_endian.h \
+  /usr/include/linux/close_range.h \
+  /usr/include/linux/const.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/falloc.h \
+  /usr/include/linux/ioctl.h \
+  /usr/include/linux/kernel.h \
+  /usr/include/linux/limits.h \
+  /usr/include/linux/param.h \
+  /usr/include/linux/perf_event.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/prctl.h \
+  /usr/include/linux/sched/types.h \
+  /usr/include/linux/sockios.h \
+  /usr/include/linux/stat.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/linux/swab.h \
+  /usr/include/linux/sysinfo.h \
+  /usr/include/linux/types.h \
+  /usr/include/linux/version.h \
+  /usr/include/locale.h \
+  /usr/include/netdb.h \
+  /usr/include/netinet/in.h \
+  /usr/include/poll.h \
+  /usr/include/pthread.h \
+  /usr/include/rpc/netdb.h \
+  /usr/include/sched.h \
+  /usr/include/signal.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/sys/cdefs.h \
+  /usr/include/sys/ioctl.h \
+  /usr/include/sys/mman.h \
+  /usr/include/sys/param.h \
+  /usr/include/sys/poll.h \
+  /usr/include/sys/prctl.h \
+  /usr/include/sys/select.h \
+  /usr/include/sys/single_threaded.h \
+  /usr/include/sys/socket.h \
+  /usr/include/sys/stat.h \
+  /usr/include/sys/syscall.h \
+  /usr/include/sys/sysinfo.h \
+  /usr/include/sys/time.h \
+  /usr/include/sys/ttydefaults.h \
+  /usr/include/sys/types.h \
+  /usr/include/sys/ucontext.h \
+  /usr/include/sys/utsname.h \
+  /usr/include/sys/wait.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/wchar.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/cpuid.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/emmintrin.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/limits.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mm_malloc.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mmintrin.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdarg.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/xmmintrin.h
+
 hephaestus-openGL: /usr/lib/Scrt1.o \
   /usr/lib/crti.o \
   /usr/lib/crtn.o \
@@ -6821,17 +7986,19 @@ hephaestus-openGL: /usr/lib/Scrt1.o \
   CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o \
   include/freetype/lib/libfreetype.a
 
 
-CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o:
+CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o:
 
-CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o:
+CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o:
 
@@ -6843,13 +8010,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o:
 
-CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o:
-
-CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o:
-
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o:
-
-CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o:
 
 /usr/lib32/libz.so.1:
 
@@ -6861,15 +8022,9 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o
 
 /usr/lib/libxcb.so.1:
 
-/usr/lib/libm.so.6:
-
 /usr/lib/libc_nonshared.a:
 
 /usr/lib/libXdmcp.so.6:
-
-/usr/lib/libXau.so.6:
-
-/usr/lib/libX11.so.6:
 
 /usr/lib/libOpenGL.so:
 
@@ -6889,9 +8044,153 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o
 
 /usr/lib/Scrt1.o:
 
+CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/cpuid.h:
+
+/usr/lib/libm.so.6:
+
+/usr/include/sys/ttydefaults.h:
+
+/usr/include/sys/sysinfo.h:
+
+/usr/include/sys/syscall.h:
+
+/usr/include/sys/stat.h:
+
+/usr/include/sys/prctl.h:
+
+/usr/include/rpc/netdb.h:
+
+/usr/include/poll.h:
+
+/usr/include/linux/version.h:
+
+/usr/include/linux/prctl.h:
+
+/usr/include/linux/perf_event.h:
+
+/usr/include/linux/kernel.h:
+
+CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o:
+
+/usr/include/linux/falloc.h:
+
+/usr/include/linux/const.h:
+
+/usr/include/link.h:
+
+/usr/include/elf.h:
+
+/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cxxabi_tweaks.h:
+
+/usr/include/bits/types/struct_osockaddr.h:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o:
+
+/usr/include/bits/socket_type.h:
+
+/usr/lib/libX11.so.6:
+
+/usr/include/bits/sockaddr.h:
+
+/usr/include/bits/poll.h:
+
+/usr/include/bits/netdb.h:
+
+/usr/include/bits/mman.h:
+
+/usr/include/sys/utsname.h:
+
+/usr/include/bits/mman-shared.h:
+
+/usr/include/sys/time.h:
+
+/usr/include/bits/mman-map-flags-generic.h:
+
+/usr/include/bits/link.h:
+
+/usr/include/bits/ioctl-types.h:
+
+CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o:
+
+/usr/include/bits/fcntl.h:
+
+/usr/include/bits/fcntl-linux.h:
+
+/usr/include/bits/dirent_ext.h:
+
+/usr/include/bits/dirent.h:
+
+/usr/include/asm/unistd_64.h:
+
+/usr/include/asm/unistd.h:
+
+/usr/include/asm/swab.h:
+
+/usr/include/asm/sockios.h:
+
+CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o:
+
+/usr/include/asm/ioctls.h:
+
+/usr/include/asm/ioctl.h:
+
+/usr/include/asm-generic/sockios.h:
+
+/usr/include/asm-generic/ioctl.h:
+
+/usr/include/arpa/inet.h:
+
+tracy/public/common/tracy_lz4.cpp:
+
+tracy/public/common/TracySystem.cpp:
+
+tracy/public/common/TracySocket.cpp:
+
+tracy/public/client/tracy_rpmalloc.cpp:
+
+tracy/public/client/TracySysTrace.hpp:
+
+tracy/public/client/TracySysTrace.cpp:
+
+tracy/public/client/TracySysPower.cpp:
+
+/usr/lib/libXau.so.6:
+
+tracy/public/client/TracyStringHelpers.hpp:
+
+tracy/public/client/TracyRingBuffer.hpp:
+
+tracy/public/client/TracyProfiler.cpp:
+
+tracy/public/client/TracyKCore.cpp:
+
+tracy/public/client/TracyDxt1.cpp:
+
+tracy/public/client/TracyDebug.hpp:
+
+tracy/public/client/TracyCpuid.hpp:
+
+tracy/public/libbacktrace/internal.hpp:
+
+tracy/public/libbacktrace/filenames.hpp:
+
+tracy/public/libbacktrace/fileline.cpp:
+
+tracy/public/libbacktrace/elf.cpp:
+
+tracy/public/libbacktrace/dwarf.cpp:
+
+tracy/public/libbacktrace/alloc.cpp:
+
 src/texture_debugger.cpp:
 
+/usr/include/asm-generic/socket.h:
+
 src/stb_image.cpp:
+
+/usr/include/bits/mman_ext.h:
 
 src/render_manager.cpp:
 
@@ -6900,6 +8199,8 @@ src/model.cpp:
 include/glm/gtx/rotate_vector.inl:
 
 include/glm/gtx/norm.inl:
+
+/usr/include/bits/utsname.h:
 
 include/glm/gtx/norm.hpp:
 
@@ -6919,7 +8220,7 @@ src/input.cpp:
 
 src/glad.c:
 
-/usr/include/c++/15.2.1/valarray:
+/usr/include/execinfo.h:
 
 /usr/include/c++/15.2.1/unordered_map:
 
@@ -6947,9 +8248,13 @@ src/glad.c:
 
 /usr/include/c++/15.2.1/bits/stl_relops.h:
 
+tracy/public/common/TracyWinFamily.hpp:
+
 /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h:
 
 /usr/include/c++/15.2.1/bits/stl_numeric.h:
+
+/usr/include/c++/15.2.1/bits/std_mutex.h:
 
 /usr/include/c++/15.2.1/bits/std_function.h:
 
@@ -6961,17 +8266,55 @@ src/glad.c:
 
 /usr/include/c++/15.2.1/bits/gslice.h:
 
-/usr/include/c++/15.2.1/bits/forward_list.tcc:
-
 /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h:
 
 /usr/include/c++/15.2.1/bits/align.h:
 
+/usr/include/bits/mman-linux.h:
+
 /usr/include/c++/15.2.1/backward/auto_ptr.h:
+
+/usr/include/c++/15.2.1/atomic:
 
 include/glm/gtx/rotate_vector.hpp:
 
 /usr/include/c++/15.2.1/array:
+
+/usr/include/bits/param.h:
+
+/usr/include/c++/15.2.1/bits/forward_list.tcc:
+
+/usr/include/asm-generic/param.h:
+
+tracy/public/tracy/Tracy.hpp:
+
+/usr/include/sys/ioctl.h:
+
+tracy/public/common/TracyColor.hpp:
+
+tracy/public/client/tracy_concurrentqueue.h:
+
+tracy/public/client/TracySysTime.hpp:
+
+tracy/public/client/TracyScoped.hpp:
+
+tracy/public/client/TracyProfiler.hpp:
+
+tracy/public/client/TracyLock.hpp:
+
+tracy/public/client/TracyKCore.hpp:
+
+tracy/public/client/TracyCallstack.h:
+
+tracy/public/common/TracyForceInline.hpp:
+
+/usr/include/c++/15.2.1/valarray:
+
+tracy/public/client/tracy_rpmalloc.hpp:
+
+tracy/public/common/TracyApi.h:
+
+src/sphere_collision.h:
 
 src/render_manager.h:
 
@@ -6992,6 +8335,8 @@ include/glm/ext/vector_relational.inl:
 include/glm/ext/vector_int1_sized.hpp:
 
 include/glm/ext/vector_float1_precision.hpp:
+
+/usr/include/netinet/in.h:
 
 include/glm/ext/vector_double1_precision.hpp:
 
@@ -7047,6 +8392,8 @@ include/glm/ext/quaternion_common.inl:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h:
 
+/usr/include/bits/struct_stat.h:
+
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h:
@@ -7086,6 +8433,8 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o:
 /usr/include/c++/15.2.1/ext/alloc_traits.h:
 
 /usr/include/c++/15.2.1/ext/aligned_buffer.h:
+
+tracy/public/tracy/TracyOpenGL.hpp:
 
 /usr/include/c++/15.2.1/cwctype:
 
@@ -7135,11 +8484,15 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o:
 
 /usr/include/c++/15.2.1/bits/stl_multimap.h:
 
+src/sphere_collision.cpp:
+
 /usr/include/c++/15.2.1/bits/stl_map.h:
 
 /usr/include/c++/15.2.1/bits/stl_heap.h:
 
 /usr/include/c++/15.2.1/bits/stl_construct.h:
+
+tracy/public/common/TracyAlloc.hpp:
 
 include/glm/gtc/epsilon.inl:
 
@@ -7151,6 +8504,8 @@ include/glm/gtc/epsilon.inl:
 
 /usr/include/c++/15.2.1/bits/shared_ptr.h:
 
+/usr/include/bits/types/struct_statx.h:
+
 /usr/include/c++/15.2.1/bits/refwrap.h:
 
 /usr/include/c++/15.2.1/bits/range_access.h:
@@ -7159,9 +8514,13 @@ include/glm/gtc/epsilon.inl:
 
 /usr/include/c++/15.2.1/bits/parse_numbers.h:
 
+/usr/include/linux/sysinfo.h:
+
 /usr/include/c++/15.2.1/bits/nested_exception.h:
 
 /usr/include/c++/15.2.1/bits/locale_facets_nonio.h:
+
+/usr/include/bits/statx.h:
 
 /usr/include/c++/15.2.1/bits/locale_classes.tcc:
 
@@ -7178,6 +8537,8 @@ include/imgui/imgui.h:
 include/assimp/include/assimp/material.inl:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mmintrin.h:
+
+/usr/include/linux/stat.h:
 
 include/glm/detail/type_vec2.hpp:
 
@@ -7208,6 +8569,8 @@ include/glm/ext/vector_int3.hpp:
 CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o:
 
 /usr/include/stdc-predef.h:
+
+tracy/public/common/TracySystem.hpp:
 
 /usr/include/sys/ucontext.h:
 
@@ -7241,6 +8604,8 @@ include/glm/ext/matrix_transform.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2convertintrin.h:
 
+tracy/public/libbacktrace/backtrace.hpp:
+
 include/assimp/include/assimp/aabb.h:
 
 /usr/lib32/libXdmcp.so.6:
@@ -7252,6 +8617,8 @@ include/glm/mat3x3.hpp:
 /usr/include/c++/15.2.1/bits/ostream.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2-512minmaxintrin.h:
+
+tracy/public/common/TracyYield.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/mwaitintrin.h:
 
@@ -7287,6 +8654,8 @@ include/glm/ext/vector_int4.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/f16cintrin.h:
 
+tracy/public/TracyClient.cpp:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/amxfp16intrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2minmaxintrin.h:
@@ -7300,6 +8669,8 @@ include/glm/ext/vector_int4.hpp:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vnnivlintrin.h:
 
 include/glm/ext/matrix_float4x2.hpp:
+
+tracy/public/common/tracy_lz4.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/xsaveoptintrin.h:
 
@@ -7321,7 +8692,11 @@ include/glm/ext/matrix_float4x2.hpp:
 
 include/glm/detail/type_mat2x4.hpp:
 
+/usr/include/bits/ioctls.h:
+
 include/glm/detail/type_mat3x3.hpp:
+
+tracy/public/client/TracyThread.hpp:
 
 /usr/include/asm/posix_types_64.h:
 
@@ -7331,7 +8706,11 @@ include/glm/detail/type_mat3x3.hpp:
 
 /usr/include/strings.h:
 
+tracy/public/client/TracyAlloc.cpp:
+
 include/glm/matrix.hpp:
+
+/usr/include/sys/socket.h:
 
 src/raycast.h:
 
@@ -7363,11 +8742,17 @@ include/glm/gtx/transform.inl:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2mediaintrin.h:
 
+/usr/include/bits/stat.h:
+
 /usr/include/c++/15.2.1/bits/stringfwd.h:
 
 /usr/include/c++/15.2.1/cmath:
 
 /usr/include/endian.h:
+
+/usr/include/bits/socket.h:
+
+/usr/include/bits/in.h:
 
 include/assimp/include/assimp/defs.h:
 
@@ -7376,6 +8761,8 @@ include/assimp/include/assimp/defs.h:
 /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h:
 
 /usr/include/bits/ss_flags.h:
+
+tracy/public/common/TracyProtocol.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/pconfigintrin.h:
 
@@ -7391,17 +8778,23 @@ include/glm/ext/vector_bool1.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/movdirintrin.h:
 
+/usr/include/linux/byteorder/little_endian.h:
+
 include/glm/ext/matrix_double3x4.hpp:
 
 /usr/include/c++/15.2.1/limits:
 
 /usr/include/bits/struct_mutex.h:
 
+tracy/public/client/TracyCallstack.cpp:
+
 /usr/include/c++/15.2.1/bits/predefined_ops.h:
 
 /usr/include/bits/types/struct_itimerspec.h:
 
 /usr/include/c++/15.2.1/bits/functexcept.h:
+
+tracy/public/client/TracyDxt1.hpp:
 
 /usr/include/c++/15.2.1/bits/random.h:
 
@@ -7417,6 +8810,8 @@ include/glm/ext/matrix_double3x4.hpp:
 
 include/glm/mat4x2.hpp:
 
+tracy/public/client/TracyCallstack.hpp:
+
 /usr/include/c++/15.2.1/bits/exception.h:
 
 /usr/include/c++/15.2.1/bits/slice_array.h:
@@ -7426,6 +8821,10 @@ include/glm/mat4x2.hpp:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2bf16intrin.h:
 
 /usr/include/bits/types/sigval_t.h:
+
+/usr/include/bits/statx-generic.h:
+
+tracy/public/tracy/TracyC.h:
 
 /usr/include/c++/15.2.1/bits/stl_algobase.h:
 
@@ -7455,6 +8854,8 @@ include/glm/gtc/constants.hpp:
 
 /usr/include/bits/confname.h:
 
+tracy/public/client/TracyFastVector.hpp:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/fmaintrin.h:
 
 /usr/lib/crtn.o:
@@ -7481,6 +8882,8 @@ include/glm/detail/type_mat4x4.inl:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/adxintrin.h:
 
+/usr/include/fcntl.h:
+
 include/assimp/include/assimp/Compiler/poppack1.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h:
@@ -7503,6 +8906,8 @@ include/glm/ext/vector_double1.hpp:
 
 src/scene.cpp:
 
+/usr/include/sys/param.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512ifmaintrin.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/sm4intrin.h:
@@ -7512,6 +8917,8 @@ include/KHR/khrplatform.h:
 include/glm/ext/vector_double3_precision.hpp:
 
 /usr/include/bits/select.h:
+
+tracy/public/libbacktrace/state.cpp:
 
 include/glm/ext/matrix_float3x3.hpp:
 
@@ -7561,6 +8968,8 @@ include/glm/detail/func_packing.inl:
 
 /usr/include/bits/posix2_lim.h:
 
+tracy/public/libbacktrace/sort.cpp:
+
 include/glm/ext/scalar_int_sized.hpp:
 
 /usr/include/bits/iscanonical.h:
@@ -7584,6 +8993,8 @@ include/glm/ext/matrix_float2x3.hpp:
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_base.h:
 
 /usr/include/bits/floatn-common.h:
+
+tracy/public/common/TracyStackFrames.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/limits.h:
 
@@ -7618,6 +9029,8 @@ include/imgui/backends/imgui_impl_opengl3.cpp:
 src/main.cpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/wmmintrin.h:
+
+/usr/include/asm/byteorder.h:
 
 include/glm/ext/vector_int1.hpp:
 
@@ -7660,6 +9073,8 @@ include/glm/gtc/type_ptr.inl:
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/emmintrin.h:
 
 include/glm/detail/type_mat4x3.inl:
+
+/usr/include/c++/15.2.1/bits/unique_lock.h:
 
 include/glm/fwd.hpp:
 
@@ -7723,6 +9138,8 @@ include/assimp/include/assimp/vector3.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx512vbmivlintrin.h:
 
+/usr/include/linux/swab.h:
+
 /usr/include/bits/types/__FILE.h:
 
 /usr/include/c++/15.2.1/chrono:
@@ -7739,13 +9156,19 @@ include/glm/ext/matrix_clip_space.inl:
 
 /usr/include/bits/stdlib-float.h:
 
+/usr/include/sys/mman.h:
+
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/cldemoteintrin.h:
 
 include/glm/gtc/matrix_inverse.inl:
 
+tracy/public/client/TracySysPower.hpp:
+
 include/glm/ext/matrix_float3x4_precision.hpp:
 
 /usr/include/c++/15.2.1/bits/hash_bytes.h:
+
+/usr/include/bits/link_lavcurrent.h:
 
 include/imgui/backends/imgui_impl_glfw.cpp:
 
@@ -7774,6 +9197,8 @@ include/assimp/include/assimp/types.h:
 include/glm/common.hpp:
 
 /usr/include/string.h:
+
+/usr/include/bits/types/struct_statx_timestamp.h:
 
 include/glm/simd/platform.h:
 
@@ -7823,11 +9248,15 @@ include/stb_image.h:
 
 include/glm/ext/scalar_constants.hpp:
 
+/usr/include/linux/sockios.h:
+
 /usr/include/bits/waitflags.h:
 
 /usr/include/c++/15.2.1/tr1/special_function_util.h:
 
 /usr/include/c++/15.2.1/bits/std_abs.h:
+
+/usr/include/c++/15.2.1/cxxabi.h:
 
 include/glm/detail/type_vec1.hpp:
 
@@ -7836,6 +9265,8 @@ include/glm/detail/type_vec1.hpp:
 /usr/include/asm/errno.h:
 
 /usr/include/c++/15.2.1/cstdlib:
+
+/usr/include/sys/poll.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/fxsrintrin.h:
 
@@ -7850,6 +9281,8 @@ include/glm/gtx/component_wise.hpp:
 /usr/include/c++/15.2.1/bits/this_thread_sleep.h:
 
 /usr/include/bits/signum-generic.h:
+
+/usr/include/dirent.h:
 
 include/glm/detail/type_mat3x2.hpp:
 
@@ -7868,6 +9301,8 @@ include/glm/ext/vector_double2_precision.hpp:
 include/glm/ext/vector_bool4.hpp:
 
 /usr/include/dlfcn.h:
+
+/usr/include/linux/param.h:
 
 /usr/include/c++/15.2.1/new:
 
@@ -7889,9 +9324,13 @@ include/assimp/include/assimp/matrix3x3.inl:
 
 /usr/include/bits/posix1_lim.h:
 
+tracy/public/client/TracySysTime.cpp:
+
 include/glm/ext/matrix_float2x2_precision.hpp:
 
 include/glm/ext/vector_uint3.hpp:
+
+tracy/public/libbacktrace/config.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avxintrin.h:
 
@@ -7912,6 +9351,8 @@ include/glm/detail/type_mat4x2.inl:
 /usr/include/c++/15.2.1/bits/vector.tcc:
 
 include/glm/ext/matrix_float2x4_precision.hpp:
+
+tracy/public/libbacktrace/mmapio.cpp:
 
 include/glm/gtc/matrix_inverse.hpp:
 
@@ -7989,6 +9430,8 @@ include/glm/ext/quaternion_double.hpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/serializeintrin.h:
 
+/usr/include/bits/types/struct_iovec.h:
+
 /usr/include/c++/15.2.1/bits/std_thread.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/sgxintrin.h:
@@ -8043,6 +9486,8 @@ include/glm/integer.hpp:
 
 include/glm/detail/type_mat3x4.inl:
 
+/usr/include/linux/ioctl.h:
+
 /usr/include/c++/15.2.1/ext/atomicity.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/xsavesintrin.h:
@@ -8050,6 +9495,8 @@ include/glm/detail/type_mat3x4.inl:
 /usr/include/c++/15.2.1/bits/allocator.h:
 
 include/imgui/imgui_demo.cpp:
+
+tracy/public/client/TracyOverride.cpp:
 
 /usr/include/c++/15.2.1/ios:
 
@@ -8065,13 +9512,19 @@ include/glm/ext/matrix_projection.hpp:
 
 include/glm/vec2.hpp:
 
+tracy/public/client/TracyArmCpuTable.hpp:
+
 src/stb_image.h:
 
 include/imgui/imstb_rectpack.h:
 
+/usr/include/asm/socket.h:
+
 /usr/include/bits/mathcalls-helper-functions.h:
 
 include/glm/ext/matrix_double4x4.hpp:
+
+tracy/public/client/tracy_SPSCQueue.h:
 
 include/imgui/imgui_widgets.cpp:
 
@@ -8133,9 +9586,13 @@ include/assimp/include/assimp/light.h:
 
 include/assimp/include/assimp/material.h:
 
+tracy/public/common/TracySocket.hpp:
+
 include/assimp/include/assimp/mesh.h:
 
 include/assimp/include/assimp/postprocess.h:
+
+/usr/include/asm/param.h:
 
 include/assimp/include/assimp/metadata.h:
 
@@ -8146,6 +9603,8 @@ include/glm/ext/matrix_double3x3.hpp:
 include/glm/detail/type_float.hpp:
 
 include/assimp/include/assimp/quaternion.h:
+
+tracy/public/common/TracyQueue.hpp:
 
 include/glm/detail/type_mat4x3.hpp:
 
@@ -8174,6 +9633,8 @@ include/assimp/include/assimp/vector2.inl:
 include/imgui/backends/imgui_impl_opengl3.h:
 
 include/glad/glad.h:
+
+/usr/include/netdb.h:
 
 /usr/include/sched.h:
 
@@ -8297,6 +9758,8 @@ include/glm/ext/vector_uint4_sized.hpp:
 
 include/glm/detail/compute_vector_relational.hpp:
 
+/usr/include/bits/syscall.h:
+
 include/glm/ext/matrix_projection.inl:
 
 include/glm/ext/quaternion_transform.hpp:
@@ -8317,7 +9780,11 @@ include/glm/detail/type_vec3.inl:
 
 /usr/include/c++/15.2.1/bits/cxxabi_forced.h:
 
+/usr/include/c++/15.2.1/mutex:
+
 include/glm/detail/type_vec4.hpp:
+
+tracy/public/common/TracyAlign.hpp:
 
 /usr/include/bits/mathcalls-macros.h:
 
@@ -8327,6 +9794,8 @@ include/glm/detail/type_vec4.inl:
 
 include/glm/ext/matrix_float2x2.hpp:
 
+/usr/include/asm-generic/ioctls.h:
+
 /usr/include/GL/glext.h:
 
 include/glm/ext/vector_bool2_precision.hpp:
@@ -8334,6 +9803,8 @@ include/glm/ext/vector_bool2_precision.hpp:
 include/glm/ext/vector_bool3.hpp:
 
 include/glm/ext/vector_bool3_precision.hpp:
+
+/usr/include/bits/elfclass.h:
 
 /usr/include/sys/cdefs.h:
 
@@ -8405,6 +9876,8 @@ include/glm/ext/vector_float3.hpp:
 
 /usr/include/asm-generic/errno-base.h:
 
+tracy/public/common/TracyMutex.hpp:
+
 /usr/include/sys/single_threaded.h:
 
 /usr/include/asm-generic/errno.h:
@@ -8474,6 +9947,10 @@ include/glm/ext/matrix_double4x2.hpp:
 /usr/include/bits/atomic_wide_counter.h:
 
 /usr/include/c++/15.2.1/bits/enable_special_members.h:
+
+tracy/public/libbacktrace/posix.cpp:
+
+tracy/public/common/TracyStackFrames.cpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/pkuintrin.h:
 

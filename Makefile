@@ -537,6 +537,30 @@ src/scene.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.s
 .PHONY : src/scene.cpp.s
 
+src/sphere_collision.o: src/sphere_collision.cpp.o
+.PHONY : src/sphere_collision.o
+
+# target to build an object file
+src/sphere_collision.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o
+.PHONY : src/sphere_collision.cpp.o
+
+src/sphere_collision.i: src/sphere_collision.cpp.i
+.PHONY : src/sphere_collision.i
+
+# target to preprocess a source file
+src/sphere_collision.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.i
+.PHONY : src/sphere_collision.cpp.i
+
+src/sphere_collision.s: src/sphere_collision.cpp.s
+.PHONY : src/sphere_collision.s
+
+# target to generate assembly for a file
+src/sphere_collision.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.s
+.PHONY : src/sphere_collision.cpp.s
+
 src/stb_image.o: src/stb_image.cpp.o
 .PHONY : src/stb_image.o
 
@@ -609,6 +633,30 @@ src/texture_debugger.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s
 .PHONY : src/texture_debugger.cpp.s
 
+tracy/public/TracyClient.o: tracy/public/TracyClient.cpp.o
+.PHONY : tracy/public/TracyClient.o
+
+# target to build an object file
+tracy/public/TracyClient.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o
+.PHONY : tracy/public/TracyClient.cpp.o
+
+tracy/public/TracyClient.i: tracy/public/TracyClient.cpp.i
+.PHONY : tracy/public/TracyClient.i
+
+# target to preprocess a source file
+tracy/public/TracyClient.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.i
+.PHONY : tracy/public/TracyClient.cpp.i
+
+tracy/public/TracyClient.s: tracy/public/TracyClient.cpp.s
+.PHONY : tracy/public/TracyClient.s
+
+# target to generate assembly for a file
+tracy/public/TracyClient.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.s
+.PHONY : tracy/public/TracyClient.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -669,6 +717,9 @@ help:
 	@echo "... src/scene.o"
 	@echo "... src/scene.i"
 	@echo "... src/scene.s"
+	@echo "... src/sphere_collision.o"
+	@echo "... src/sphere_collision.i"
+	@echo "... src/sphere_collision.s"
 	@echo "... src/stb_image.o"
 	@echo "... src/stb_image.i"
 	@echo "... src/stb_image.s"
@@ -678,6 +729,9 @@ help:
 	@echo "... src/texture_debugger.o"
 	@echo "... src/texture_debugger.i"
 	@echo "... src/texture_debugger.s"
+	@echo "... tracy/public/TracyClient.o"
+	@echo "... tracy/public/TracyClient.i"
+	@echo "... tracy/public/TracyClient.s"
 .PHONY : help
 
 

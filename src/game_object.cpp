@@ -4,13 +4,24 @@
 
 namespace fs = std::filesystem;
 
-GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale)
+GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
     : model(fs::path(modelPath)), // Initialize Model here!
       name(name),
       position(position),
-      rotaion(rotaion),
+      rotation(rotation),
       scale(scale),
       speed(glm::vec3(0, 0, 0))
+{
+}
+
+GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius)
+    : model(fs::path(modelPath)), // Initialize Model here!
+      name(name),
+      position(position),
+      rotation(rotation),
+      scale(scale),
+      speed(glm::vec3(0, 0, 0)),
+      collisionRadius(collisionRadius)
 {
 }
 
@@ -21,7 +32,7 @@ GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
       ,
       position(gameObject->position) // Copy position
       ,
-      rotaion(gameObject->rotaion) // Copy rotation (note: typo in original)
+      rotation(gameObject->rotation) // Copy rotation (note: typo in original)
       ,
       scale(gameObject->scale) // Copy scale
       ,

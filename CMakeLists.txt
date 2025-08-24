@@ -48,6 +48,9 @@ set(FREETYPE_LIBRARIES "${FREETYPE_DIR}/lib/libfreetype.a") # adjust if it's .li
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/imgui")
 set(IMGUI_INCLUDE_DIR "${IMGUI_DIR}")
 
+# Tracy
+set(TRACY_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tracy/public")
+
 # --------- ImGui Files ---------
 # Collect ImGui source files
 file(GLOB IMGUI_SOURCES
@@ -94,6 +97,7 @@ include_directories(
     ${ASSIMP_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${TRACY_PUBLIC_DIR}
 )
 
 # --------- Main project source files ---------
@@ -111,6 +115,7 @@ set(PROJECT_SOURCES
     src/render_manager.cpp
     src/texture.cpp
     src/audio_manager.cpp
+    src/sphere_collision.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------
@@ -126,6 +131,7 @@ add_executable(${PROJECT_NAME}
     ${IMGUI_SOURCES}
     ${IMGUI_HEADERS}
     ${IMGUI_BACKEND_SOURCES}
+    ${TRACY_PUBLIC_DIR}/TracyClient.cpp
 )
 
 # --------- Link directories ---------
@@ -142,3 +148,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenAL::OpenAL
     assimp # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
 )
+
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE)

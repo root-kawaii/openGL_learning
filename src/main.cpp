@@ -26,7 +26,6 @@
 // #include "../src/texture_debugger.cpp"
 #include "../src/game.h"
 #include "../src/texture.h"
-#include "../src/serialization_utilities.h"
 
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -49,31 +48,10 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include "../src/audio_manager.h"
+#include "../src/sphere_collision.h"
+#include "../tracy/public/tracy/Tracy.hpp"
+#include "../tracy/public/tracy/TracyOpenGL.hpp"
 
-struct Sphere
-{
-    glm::vec3 center;
-    float radius;
-
-    Sphere(glm::vec3 c, float r) : center(c), radius(r) {}
-};
-
-struct CollisionInfo
-{
-    int objectA, objectB;
-    glm::vec3 contactPoint;
-    glm::vec3 normal;
-    float penetration;
-    bool isValid = false;
-
-    CollisionInfo() {}
-
-    CollisionInfo(int a, int b, glm::vec3 point, glm::vec3 n, float pen)
-        : objectA(a), objectB(b), contactPoint(point), normal(n), penetration(pen) {}
-};
-
-glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo &collision);
-bool sphereVsSphere(const Sphere &a, const Sphere &b, CollisionInfo &info);
 unsigned int loadCubemap(vector<std::string> faces);
 GameObject loadSceneObject(const std::string &path, int stride, unsigned int textureID);
 void shaderUser(Shader &shader, glm::mat4 *projection, glm::mat4 *model, glm::mat4 *view, glm::vec3 *cameraPos);
@@ -122,6 +100,7 @@ int main()
     renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
     renderManager.setupGBuffer();
     renderManager.setupMSAAGBuffer();
+    // TracyGpuContext;
 
     namespace fs = std::filesystem;
     // unsigned int albedo = loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
@@ -214,9 +193,6 @@ int main()
 
     // Shader selectedShader("shaders/selected_shader.vs", "shaders/selected_shader.fs");
 
-    SerializationUtilities serializer;
-    serializer.loadScene("levels/one.json");
-
     // for(auto i : serializer.getObjects()){
 
     // }
@@ -224,26 +200,13 @@ int main()
     Model backpack(fs::path("assets/backpack/backpack.obj"));
     // Model plane(fs::path("assets/planes/plane_2.obj"));
 
-    auto waterPlane = std::make_shared<GameObject>("water_plane_01", "assets/planes/plane_2.obj", serializer.getObjectWithId("water_plane_01")->position, serializer.getObjectWithId("water_plane_01")->rotation, serializer.getObjectWithId("water_plane_01")->scale);
-    auto plane = std::make_shared<GameObject>("plane_01", "assets/planes/plane_2.obj", serializer.getObjectWithId("plane_01")->position, serializer.getObjectWithId("plane_01")->rotation, serializer.getObjectWithId("plane_01")->scale);
-    auto gun = std::make_shared<GameObject>("gun_01", "assets/cerberus/cerberus.glb", serializer.getObjectWithId("gun_01")->position, serializer.getObjectWithId("gun_01")->rotation, serializer.getObjectWithId("gun_01")->scale);
-    auto ball = std::make_shared<GameObject>("ball_01", "assets/ball_2.obj", serializer.getObjectWithId("ball_01")->position, serializer.getObjectWithId("ball_01")->rotation, serializer.getObjectWithId("ball_01")->scale);
-    auto bullet = std::make_shared<GameObject>("ball_01", "assets/ball_2.obj", serializer.getObjectWithId("ball_01")->position, serializer.getObjectWithId("ball_01")->rotation, serializer.getObjectWithId("ball_01")->scale);
-
-    GameObject *ballPtr = ball.get(); // Get raw pointer before moving
-    GameObject *gunPtr = gun.get();   // Get raw pointer before moving
-
-    // Add to scene
-    mainScene.addGameObject(gun);
-    mainScene.addGameObject(ball);
-    mainScene.addGameObject(plane);
-    mainScene.addGameObject(waterPlane);
-
-    plane->setRadius(3.0f);
-    ball->setRadius(3.0f);
-
-    Sphere ballSphere(ball->position, ball->collisionRadius);
-    Sphere planeSphere(plane->position, plane->collisionRadius);
+    auto waterPlane = mainScene.findObjectByName("water_plane_01");
+    auto plane = mainScene.findObjectByName("plane_01");
+    auto gun = mainScene.findObjectByName("gun_01");
+    auto ball = mainScene.findObjectByName("ball_01");
+    auto ball_2 = mainScene.findObjectByName("ball_02");
+    auto ball_3 = mainScene.findObjectByName("ball_03");
+    auto bullet = mainScene.findObjectByName("bullet_01");
 
     Model helmet(fs::path("assets/helmet.glb"));
 
@@ -367,16 +330,16 @@ int main()
     glm::mat4 viewCopy;
     bool viewFrozen = false;
     bool intersect = false;
-    Sphere cameraSphere(game.camera.Position, 2.0f);
-    CollisionInfo *planez = new CollisionInfo();
-    CollisionInfo *ballz = new CollisionInfo();
 
     audioManager.playSource();
 
+    lastFrame = static_cast<float>(glfwGetTime());
     while (!glfwWindowShouldClose(game.getWindow()))
     {
 
-        audioManager.loopAudio();
+        glm::vec3 lastFrameCameraPos = game.camera.Position;
+
+        // audioManager.loopAudio();
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -384,20 +347,6 @@ int main()
 
         // NOW this is safe:
         ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x, game.camera.Position.y, game.camera.Position.z);
-
-        // std::cout << ballz->normal.x << std::endl;
-        // std::cout << ballz->normal.y << std::endl;
-        // std::cout << ballz->normal.z << std::endl;
-        cameraSphere.center = game.camera.Position;
-        // if(sphereVsSphere(cameraSphere, planeSphere, *planez)){
-        //     std::cout << "collision with plane" << std::endl;
-        //    game.camera.Position = simplePositionCorrection(game.camera.Position, *planez);
-        // }
-        if (sphereVsSphere(ballSphere, cameraSphere, *ballz))
-        {
-            std::cout << "collision with ballz" << std::endl;
-            game.camera.Position += simplePositionCorrection(game.camera.Position, *ballz);
-        }
 
         if (shadows)
         {
@@ -414,7 +363,10 @@ int main()
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
-        std::cout << deltaTime << std::endl;
+        ImGui::Text("Frametime %f", deltaTime);
+        ImGui::Text("FPS %f", 1 / deltaTime);
+
+        // std::cout << deltaTime << std::endl;
         lastFrame = currentFrame;
 
         lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
@@ -455,7 +407,7 @@ int main()
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(1.0f));
             simpleDepthShader.setMat4("model", model);
-            ballPtr->model.Draw(simpleDepthShader);
+            renderManager.renderGameObject(*ball, simpleDepthShader);
         }
 
         // model = glm::mat4(1.0f);
@@ -488,13 +440,14 @@ int main()
 
         if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
         {
+            // TracyGpuZone("Game cycle");
             ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f, game.SCR_HEIGHT / 2.0f),
                                    game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
-            bool intersect = rayIntersectMesh(ray, ballPtr->model.meshes);
+            bool intersect = rayIntersectMesh(ray, ball->model.meshes);
             selected = true;
             frozenView = game.camera.GetViewMatrix(); //
             viewFrozen = true;
-            selectedID = ballPtr->ID;
+            selectedID = ball->ID;
 
             if (intersect)
             {
@@ -527,27 +480,27 @@ int main()
             // std::cout << "moving" << std::endl;
             if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
             {
-                ballPtr->position.x += 1;
+                ball->position.x += 1;
             }
             if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
             {
-                ballPtr->position.x -= 1;
+                ball->position.x -= 1;
             }
             if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
             {
-                ballPtr->position.z += 1;
+                ball->position.z += 1;
             }
             if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
             {
-                ballPtr->position.z -= 1;
+                ball->position.z -= 1;
             }
             if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
             {
-                ballPtr->position.y += 1;
+                ball->position.y += 1;
             }
             if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
             {
-                ballPtr->position.y -= 1;
+                ball->position.y -= 1;
             }
         }
 
@@ -571,7 +524,7 @@ int main()
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
             shaderGeometryPass.setMat4("model", model);
-            ballPtr->model.Draw(shaderGeometryPass);
+            ball->model.Draw(shaderGeometryPass);
             model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
             shaderGeometryPass.setMat4("model", model);
 
@@ -580,18 +533,19 @@ int main()
             // plane.Draw(shaderGeometryPass);
         }
 
-        // plane.Draw(shaderGeometryPass);
+        // plane->model.Draw(shaderGeometryPass);
         // model = glm::mat4(1.0f);
-        // model = glm::translate(model, glm::vec3( 0.0,  -2.0,  0.0));
+        // model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
         // shaderGeometryPass.setMat4("model", model);
-        // plane.Draw(shaderGeometryPass);
-        renderManager.renderGameObject(*plane, shaderGeometryPass);
+        // plane->model.Draw(shaderGeometryPass);
+        // renderManager.renderGameObject(*plane, shaderGeometryPass);
 
         selectedShader.use();
 
         // std::cout << selectedID << std::endl;
         // std::cout << ballPtr->ID << std::endl;
 
+        renderManager.renderGameObject(*ball_3, shaderGeometryPass);
         renderManager.renderGameObject(*ball, shaderGeometryPass);
 
         shaderGeometryPass.setFloat("objectID", 0);
@@ -632,7 +586,7 @@ int main()
         model = glm::scale(model, glm::vec3(1000.0f));
         model = glm::translate(model, glm::vec3(25.0, -5.0, 25.0));
         terrainShader.setMat4("model", model);
-        // plane.Draw(terrainShader);
+        // plane->model.Draw(terrainShader);
 
         if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired == false)
         {
@@ -767,7 +721,7 @@ int main()
 
         waterShader.use();
         waterShader.setFloat("time", glfwGetTime());
-        waterShader.setFloat("waveHeight", 0.75f);
+        waterShader.setFloat("waveHeight", 1.75f);
         waterShader.setFloat("waveSpeed", 0.3f);
         waterShader.setFloat("waveFreq", 0.3f);
 
@@ -838,8 +792,9 @@ int main()
         waterShader.setInt("gLinearDepth", 3);
 
         // Now render the water
-        model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your water position
+        // model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your water position
         waterShader.setMat4("model", model);
+        // waterPlane->model.Draw(waterShader);
         renderManager.renderGameObject(*waterPlane, waterShader);
 
         // Light boxes
@@ -877,63 +832,91 @@ int main()
 
         ///////////
 
-        glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
-        skyboxShader.use();
-        view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
-        // skybox cube
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS);
+        // glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
+        // skyboxShader.use();
+        // view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
+        // skyboxShader.setMat4("view", view);
+        // skyboxShader.setMat4("projection", projection);
+        // // skybox cube
+        // glBindVertexArray(skyboxVAO);
+        // glActiveTexture(GL_TEXTURE5);
+        // glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glBindVertexArray(0);
+        // glDepthFunc(GL_LESS);
 
         ////////////////////////////////////
 
-        std::vector<glm::vec3> smokePositions;
-        const int numParticles = 5;
+        // std::vector<glm::vec3> smokePositions;
+        // const int numParticles = 5;
 
-        // You can randomize this for a more natural effect
-        for (int i = 0; i < numParticles; ++i)
-        {
-            // Offset each particle from the gun's position
-            glm::vec3 particleOffset = glm::vec3(0.0f, 0.0f, -0.125f - (float)i * 0.05f);
-            smokePositions.push_back(gun->position + particleOffset);
-        }
+        // // You can randomize this for a more natural effect
+        // for (int i = 0; i < numParticles; ++i)
+        // {
+        //     // Offset each particle from the gun's position
+        //     glm::vec3 particleOffset = glm::vec3(0.0f, 0.0f, -0.125f - (float)i * 0.05f);
+        //     smokePositions.push_back(gun->position + particleOffset);
+        // }
 
-        // 2. Sort the particle positions from farthest to nearest
-        glm::vec3 cameraPosition = glm::vec3(glm::inverse(view)[3]); // Extract camera position from the view matrix
-        std::sort(smokePositions.begin(), smokePositions.end(), [&cameraPosition](const glm::vec3 &a, const glm::vec3 &b)
-                  { return glm::length2(a - cameraPosition) > glm::length2(b - cameraPosition); });
+        // // 2. Sort the particle positions from farthest to nearest
+        // glm::vec3 cameraPosition = glm::vec3(glm::inverse(view)[3]); // Extract camera position from the view matrix
+        // std::sort(smokePositions.begin(), smokePositions.end(), [&cameraPosition](const glm::vec3 &a, const glm::vec3 &b)
+        //           { return glm::length2(a - cameraPosition) > glm::length2(b - cameraPosition); });
 
-        // 3. Set up the OpenGL state for transparent rendering
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, smoke_texture);
-        smokeShader.use();
-        smokeShader.setMat4("view", view);
-        smokeShader.setMat4("projection", projection);
-        smokeShader.setInt("smokeTexture", 0);
-        smokeShader.setFloat("time", glfwGetTime());
+        // // 3. Set up the OpenGL state for transparent rendering
+        // glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, smoke_texture);
+        // smokeShader.use();
+        // smokeShader.setMat4("view", view);
+        // smokeShader.setMat4("projection", projection);
+        // smokeShader.setInt("smokeTexture", 0);
+        // smokeShader.setFloat("time", glfwGetTime());
 
-        // 4. Loop and render each sorted particle
-        const float particleSize = 0.05f;
-        for (const auto &position : smokePositions)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, position);
-            model = glm::scale(model, glm::vec3(particleSize));
+        // // 4. Loop and render each sorted particle
+        // const float particleSize = 0.05f;
+        // for (const auto &position : smokePositions)
+        // {
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, position);
+        //     model = glm::scale(model, glm::vec3(particleSize));
 
-            smokeShader.setMat4("model", model);
-            smokeShader.setFloat("alpha", 0.50f); // You can adjust alpha here based on distance if you want
-            renderManager.renderQuadForSmoke();
-        }
+        //     smokeShader.setMat4("model", model);
+        //     smokeShader.setFloat("alpha", 0.50f); // You can adjust alpha here based on distance if you want
+        //     renderManager.renderQuadForSmoke();
+        // }
 
-        // 5. Restore OpenGL state
-        glDisable(GL_BLEND);
+        // // 5. Restore OpenGL state
+        // glDisable(GL_BLEND);
+        // const float GRAVITY_STRENGTH = 1000.0f; // Controls how strong the pull is.
+        // const float DAMPING_FACTOR = 0.95;
+        glm::vec3 directionToBall = ball_3->position - game.camera.Position;
+
+        // // 2. Normalize the direction vector to get a unit vector.
+        // // This gives us the direction without a magnitude, which we will apply ourselves.
+        // glm::vec3 directionNormalized = glm::normalize(directionToBall);
+
+        // // 3. Calculate the acceleration due to "gravity".
+        // // Acceleration is the normalized direction multiplied by our gravity strength.
+        // glm::vec3 acceleration = directionNormalized * GRAVITY_STRENGTH;
+
+        // // 4. Update the camera's velocity using the acceleration over time.
+        // glm::vec3 velocity = (game.camera.Position - lastFrameCameraPos) / deltaTime + acceleration * deltaTime;
+
+        // // 5. Apply damping to the velocity to prevent endless oscillations
+        // // and make the camera settle at the target position.
+        // velocity *= DAMPING_FACTOR;
+
+        // // 6. Update the camera's position using its new velocity.
+        // glm::vec3 prod = velocity * deltaTime;
+        // ;
+        // std::cout << prod.x << std::endl;
+        // std::cout << prod.y << std::endl;
+        // std::cout << prod.z << std::endl;
+        // game.camera.Position += velocity * deltaTime;
+        // game.camera.updateCameraVectors(directionToBall);
+        game.update(deltaTime);
 
         // Render ImGui
         ImGui::Render();
@@ -941,8 +924,7 @@ int main()
 
         glfwSwapBuffers(game.getWindow());
         glfwPollEvents();
-
-        game.update(deltaTime);
+        FrameMark;
     }
 
     //
@@ -1000,33 +982,4 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
-}
-
-bool sphereVsSphere(const Sphere &a, const Sphere &b, CollisionInfo &info)
-{
-    glm::vec3 diff = b.center - a.center;
-    float distance = glm::length(diff);
-    float radiusSum = a.radius + b.radius;
-
-    if (distance < radiusSum)
-    {
-        // Collision detected
-        info.normal = glm::normalize(diff);
-        info.penetration = radiusSum - distance;
-        info.contactPoint = a.center + info.normal * a.radius;
-        info.isValid = true;
-        return true;
-    }
-    return false;
-}
-
-glm::vec3 simplePositionCorrection(glm::vec3 position, const CollisionInfo &collision)
-{
-    if (!collision.isValid)
-        return position;
-
-    std::cout << "pushingggggggggggggggg" << std::endl;
-
-    // Move character out by the penetration amount
-    return collision.normal * collision.penetration;
 }
