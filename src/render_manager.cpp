@@ -1062,6 +1062,60 @@ void RenderManager::renderGameObject(GameObject &gameObject, Shader shader)
     gameObject.model.Draw(shader);
 }
 
+// Overloaded version with vec4 color (includes alpha)
+void RenderManager::renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color)
+{
+    ZoneScoped;
+    shader.use();
+
+    shader.setVec4("objectColor", color);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, gameObject.position) * scaling;
+    shader.setMat4("projection", projectionMatrix);
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("model", model);
+    shader.setFloat("time", glfwGetTime());
+
+    // Optional: Set lighting uniforms if using lighting
+    shader.setVec3("lightPos", glm::vec3(10.0f, 10.0f, 10.0f));
+    shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    shader.setVec3("viewPos", glm::vec3(0.0f, 0.0f, 3.0f));
+
+    // Enable blending if using alpha
+    if (color.a < 1.0f)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    // Draw the model
+    gameObject.model.Draw(shader);
+
+    // Disable blending after drawing
+    if (color.a < 1.0f)
+    {
+        glDisable(GL_BLEND);
+    }
+}
+
+void RenderManager::renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID)
+{
+    ZoneScoped;
+    shader.use();
+    // Check if texture actually bound
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, gameObject.position) * scaling;
+    shader.setMat4("projection", projectionMatrix);
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("model", model);
+    shader.setFloat("time", glfwGetTime());
+    gameObject.model.SetDiffuseTexture(textureID);
+    gameObject.model.Draw(shader);
+}
+
 void RenderManager::renderCameraAttachedObject(GameObject &gameObject, Shader shader)
 {
     ZoneScoped;

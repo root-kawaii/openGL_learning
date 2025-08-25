@@ -87,6 +87,9 @@
         "typeindex": "cpp",
         "stdfloat": "cpp",
         "*.def": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "barrier": "cpp",
+        "latch": "cpp",
+        "syncstream": "cpp"
     }
 }

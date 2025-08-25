@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/src/glad.c" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
+  "/home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp" "CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o.d"

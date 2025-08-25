@@ -76,6 +76,7 @@ void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &sha
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         {
             gameMode = true;
+            camera->gameMode = true;
         }
     }
     else

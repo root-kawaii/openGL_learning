@@ -1,133 +1,139 @@
 [
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o -c /home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o -c /home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o -c /home/monolith/Desktop/openGL_learning/src/main.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o -c /home/monolith/Desktop/openGL_learning/src/main.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/main.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o -c /home/monolith/Desktop/openGL_learning/src/input.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o -c /home/monolith/Desktop/openGL_learning/src/input.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/input.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o -c /home/monolith/Desktop/openGL_learning/src/model.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o -c /home/monolith/Desktop/openGL_learning/src/model.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/model.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o -c /home/monolith/Desktop/openGL_learning/src/raycast.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o -c /home/monolith/Desktop/openGL_learning/src/raycast.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/raycast.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game_object.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game_object.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/game_object.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/cc -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -o CMakeFiles/hephaestus-openGL.dir/src/glad.c.o -c /home/monolith/Desktop/openGL_learning/src/glad.c",
+  "command": "/usr/bin/cc -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -o CMakeFiles/hephaestus-openGL.dir/src/glad.c.o -c /home/monolith/Desktop/openGL_learning/src/glad.c",
   "file": "/home/monolith/Desktop/openGL_learning/src/glad.c",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o -c /home/monolith/Desktop/openGL_learning/src/stb_image.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o -c /home/monolith/Desktop/openGL_learning/src/stb_image.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o -c /home/monolith/Desktop/openGL_learning/src/scene.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o -c /home/monolith/Desktop/openGL_learning/src/scene.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/scene.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/game.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/render_manager.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/render_manager.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/render_manager.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o -c /home/monolith/Desktop/openGL_learning/src/texture.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o -c /home/monolith/Desktop/openGL_learning/src/texture.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/texture.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/audio_manager.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o -c /home/monolith/Desktop/openGL_learning/src/sphere_collision.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o -c /home/monolith/Desktop/openGL_learning/src/sphere_collision.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/src/sphere_collision.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_demo.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_demo.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui_demo.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_draw.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_draw.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui_draw.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_tables.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_tables.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui_tables.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_widgets.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui_widgets.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui_widgets.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o"
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
-  "command": "/usr/bin/c++ -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o -c /home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o -c /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o -c /home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o"
 }

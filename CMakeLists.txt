@@ -48,6 +48,10 @@ set(FREETYPE_LIBRARIES "${FREETYPE_DIR}/lib/libfreetype.a") # adjust if it's .li
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/imgui")
 set(IMGUI_INCLUDE_DIR "${IMGUI_DIR}")
 
+# ImGuizmo - Set up paths
+set(IMGUIZMO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/ImGuizmo")
+set(IMGUIZMO_INCLUDE_DIR "${IMGUIZMO_DIR}")
+
 # Tracy
 set(TRACY_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tracy/public")
 
@@ -60,6 +64,16 @@ file(GLOB IMGUI_SOURCES
 # Collect ImGui header files
 file(GLOB IMGUI_HEADERS
     "${IMGUI_DIR}/*.h"
+)
+
+# --------- ImGuizmo Files ---------
+# ImGuizmo typically has the implementation in the .cpp file
+set(IMGUIZMO_SOURCES
+    "${IMGUIZMO_DIR}/ImGuizmo.cpp"
+)
+
+set(IMGUIZMO_HEADERS
+    "${IMGUIZMO_DIR}/ImGuizmo.h"
 )
 
 # Selectively include only the ImGui backends you need
@@ -98,6 +112,7 @@ include_directories(
     ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${TRACY_PUBLIC_DIR}
+    ${IMGUIZMO_DIR}
 )
 
 # --------- Main project source files ---------
@@ -131,6 +146,7 @@ add_executable(${PROJECT_NAME}
     ${IMGUI_SOURCES}
     ${IMGUI_HEADERS}
     ${IMGUI_BACKEND_SOURCES}
+    ${IMGUIZMO_SOURCES}  # Add ImGuizmo sources here
     ${TRACY_PUBLIC_DIR}/TracyClient.cpp
 )
 
@@ -138,6 +154,12 @@ add_executable(${PROJECT_NAME}
 link_directories(
     ${GLFW_LIB_DIR}
     ${ASSIMP_LIB_DIR}
+)
+
+# --------- Define preprocessor macros ---------
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    TRACY_ENABLE
+    GLM_ENABLE_EXPERIMENTAL  # Enable GLM experimental extensions
 )
 
 # --------- Link libraries ---------
@@ -148,6 +170,3 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenAL::OpenAL
     assimp # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
 )
-
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE)

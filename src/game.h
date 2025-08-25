@@ -1,3 +1,5 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -94,7 +96,7 @@ public:
 
     bool initWindow()
     {
-        camera = Camera(glm::vec3(50.0f, 30.0f, 3.0f));
+        camera = Camera(glm::vec3(0.0f, 10.0f, 3.0f));
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

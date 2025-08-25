@@ -27,6 +27,7 @@
 #include "../src/game.h"
 #include "../src/texture.h"
 
+#include <ImGuizmo/ImGuizmo.h>
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
@@ -109,6 +110,7 @@ int main()
     unsigned int texture_roughness = renderManager.loadTexture("texture_roughness", fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
     unsigned int smoke_texture = renderManager.loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
+    unsigned int wood_texture = renderManager.loadTexture("wood", fs::path("assets/wooden_texture.png").c_str());
 
     // configure global opengl state
     // -----------------------------
@@ -186,6 +188,7 @@ int main()
     Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
     Shader simpleDepthShader("shaders/simple_depth_shader.vs", "shaders/simple_depth_shader.fs", "shaders/simple_depth_shader.gs");
     Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
+    Shader simpleColorShader("shaders/shader.vs", "shaders/shader_flat_color.fs");
     Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
     Shader modelShader("shaders/model.vs", "shaders/model.fs");
     Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
@@ -338,12 +341,22 @@ int main()
     {
 
         glm::vec3 lastFrameCameraPos = game.camera.Position;
-
+        float near_plane = 0.10f;
+        float far_plane = 1000.0f;
+        glm::mat4 projection = glm::perspective(glm::radians(game.camera.Zoom), (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
+        glm::mat4 view = game.camera.GetViewMatrix();
+        renderManager.setViewMatrix(view);
+        renderManager.setProjectionMatrix(projection);
         // audioManager.loopAudio();
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
+        ImGuiIO &io = ImGui::GetIO();
+        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+        mainScene.handleInput(view, projection);
+        mainScene.renderGizmo(view, projection);
 
         // NOW this is safe:
         ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x, game.camera.Position.y, game.camera.Position.z);
@@ -380,8 +393,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // shadows
-        float near_plane = 0.10f;
-        float far_plane = 100.0f;
         glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
         std::vector<glm::mat4> shadowTransforms;
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -429,195 +440,195 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-        glm::mat4 projection = glm::perspective(glm::radians(game.camera.Zoom), (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
-        glm::mat4 view = game.camera.GetViewMatrix();
-        renderManager.setViewMatrix(view);
-        renderManager.setProjectionMatrix(projection);
-        model = glm::mat4(1.0f);
 
-        glm::mat4 frozenView; // outside render loop
-        bool viewFrozen;
+        // model = glm::mat4(1.0f);
 
-        if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
-        {
-            // TracyGpuZone("Game cycle");
-            ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f, game.SCR_HEIGHT / 2.0f),
-                                   game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
-            bool intersect = rayIntersectMesh(ray, ball->model.meshes);
-            selected = true;
-            frozenView = game.camera.GetViewMatrix(); //
-            viewFrozen = true;
-            selectedID = ball->ID;
+        // glm::mat4 frozenView; // outside render loop
+        // bool viewFrozen;
 
-            if (intersect)
-            {
-                std::cout << "intersect" << std::endl;
-                // selected = true;
-                // frozenView = camera.GetViewMatrix();
-                // viewFrozen = true;
-            }
-            else
-            {
-                std::cout << "no intersection" << std::endl;
-                // selected = false;
-                // viewFrozen = false;
-            }
-        }
+        // if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
+        // {
+        //     // TracyGpuZone("Game cycle");
+        //     for (std::shared_ptr<GameObject> obj : mainScene.getGameObjects())
+        //     {
+        //     }
+        //     ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f, game.SCR_HEIGHT / 2.0f),
+        //                            game.camera, game.SCR_WIDTH, game.SCR_HEIGHT, projection);
+        //     bool intersect = rayIntersectMesh(ray, ball->model.meshes);
+        //     selected = true;
+        //     frozenView = game.camera.GetViewMatrix(); //
+        //     viewFrozen = true;
+        //     selectedID = ball->ID;
 
-        modelShader.use();
-        modelShader.setMat4("projection", projection);
-        modelShader.setMat4("view", view);
-        modelShader.setMat4("model", model);
+        //     if (intersect)
+        //     {
+        //         std::cout << "intersect" << std::endl;
+        //         // selected = true;
+        //         // frozenView = camera.GetViewMatrix();
+        //         // viewFrozen = true;
+        //     }
+        //     else
+        //     {
+        //         std::cout << "no intersection" << std::endl;
+        //         // selected = false;
+        //         // viewFrozen = false;
+        //     }
+        // }
 
-        if (selected && viewFrozen)
-        {
-            std::cout << "lining" << std::endl;
-            renderManager.renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
-        }
+        // modelShader.use();
+        // modelShader.setMat4("projection", projection);
+        // modelShader.setMat4("view", view);
+        // modelShader.setMat4("model", model);
 
-        if (true)
-        {
-            // std::cout << "moving" << std::endl;
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
-            {
-                ball->position.x += 1;
-            }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
-            {
-                ball->position.x -= 1;
-            }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
-            {
-                ball->position.z += 1;
-            }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
-            {
-                ball->position.z -= 1;
-            }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-            {
-                ball->position.y += 1;
-            }
-            if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-            {
-                ball->position.y -= 1;
-            }
-        }
+        // if (selected && viewFrozen)
+        // {
+        //     std::cout << "lining" << std::endl;
+        //     renderManager.renderLine(ray.origin, ray.direction, frozenView, 0.01f, 1000.0f);
+        // }
+
+        // if (true)
+        // {
+        //     // std::cout << "moving" << std::endl;
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+        //     {
+        //         ball->position.x += 1;
+        //     }
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+        //     {
+        //         ball->position.x -= 1;
+        //     }
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
+        //     {
+        //         ball->position.z += 1;
+        //     }
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
+        //     {
+        //         ball->position.z -= 1;
+        //     }
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        //     {
+        //         ball->position.y += 1;
+        //     }
+        //     if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        //     {
+        //         ball->position.y -= 1;
+        //     }
+        // }
 
         shaderGeometryPass.use();
 
         shaderGeometryPass.setInt("texture_metallic", 6);
         shaderGeometryPass.setInt("texture_roughness", 7);
 
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, texture_metallic);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, texture_roughness);
+        // glActiveTexture(GL_TEXTURE6);
+        // glBindTexture(GL_TEXTURE_2D, texture_metallic);
+        // glActiveTexture(GL_TEXTURE7);
+        // glBindTexture(GL_TEXTURE_2D, texture_roughness);
 
-        shaderGeometryPass.setMat4("projection", projection);
-        shaderGeometryPass.setMat4("view", view);
-        shaderGeometryPass.setFloat("near_plane", near_plane); // Add this
-        shaderGeometryPass.setFloat("far_plane", far_plane);   // Add this
-        for (unsigned int i = 0; i < objectPositions.size(); i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            shaderGeometryPass.setMat4("model", model);
-            ball->model.Draw(shaderGeometryPass);
-            model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
-            shaderGeometryPass.setMat4("model", model);
+        // shaderGeometryPass.setMat4("projection", projection);
+        // shaderGeometryPass.setMat4("view", view);
+        // shaderGeometryPass.setFloat("near_plane", near_plane); // Add this
+        // shaderGeometryPass.setFloat("far_plane", far_plane);   // Add this
+        // for (unsigned int i = 0; i < objectPositions.size(); i++)
+        // {
+        //     model = glm::mat4(1.0f);
+        //     model = glm::translate(model, objectPositions[i]);
+        //     model = glm::scale(model, glm::vec3(0.5f));
+        //     shaderGeometryPass.setMat4("model", model);
+        //     ball->model.Draw(shaderGeometryPass);
+        //     model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
+        //     shaderGeometryPass.setMat4("model", model);
 
-            // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
-            // shaderGeometryPass.setMat4("model", model);
-            // plane.Draw(shaderGeometryPass);
-        }
+        //     // model = glm::translate(model, glm::vec3(15.5f,-2.5f,0.5f));
+        //     // shaderGeometryPass.setMat4("model", model);
+        //     // plane.Draw(shaderGeometryPass);
+        // }
 
-        // plane->model.Draw(shaderGeometryPass);
+        // // plane->model.Draw(shaderGeometryPass);
+        // // model = glm::mat4(1.0f);
+        // // model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
+        // // shaderGeometryPass.setMat4("model", model);
+        // // plane->model.Draw(shaderGeometryPass);
+        // // renderManager.renderGameObject(*plane, shaderGeometryPass);
+
+        // selectedShader.use();
+
+        // // std::cout << selectedID << std::endl;
+        // // std::cout << ballPtr->ID << std::endl;
+
+        // renderManager.renderGameObject(*ball_3, shaderGeometryPass);
+        // renderManager.renderGameObject(*ball, shaderGeometryPass);
+
+        // shaderGeometryPass.setFloat("objectID", 0);
         // model = glm::mat4(1.0f);
-        // model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
+        // model = glm::translate(model, glm::vec3(9.0, -1.0, lightPos.z));
+        // model = glm::scale(model, glm::vec3(0.3f));
         // shaderGeometryPass.setMat4("model", model);
-        // plane->model.Draw(shaderGeometryPass);
-        // renderManager.renderGameObject(*plane, shaderGeometryPass);
+        // backpack.Draw(shaderGeometryPass);
 
-        selectedShader.use();
+        // shaderGeometryPass.use();
 
-        // std::cout << selectedID << std::endl;
-        // std::cout << ballPtr->ID << std::endl;
+        // if (fired)
+        // {
+        //     selectedShader.use();
+        //     renderManager.renderCameraAttachedObject(*gun, selectedShader);
+        // }
+        // else
+        // {
+        //     renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
+        // }
 
-        renderManager.renderGameObject(*ball_3, shaderGeometryPass);
-        renderManager.renderGameObject(*ball, shaderGeometryPass);
+        // shaderGeometryPass.use();
 
-        shaderGeometryPass.setFloat("objectID", 0);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(9.0, -1.0, lightPos.z));
-        model = glm::scale(model, glm::vec3(0.3f));
-        shaderGeometryPass.setMat4("model", model);
-        backpack.Draw(shaderGeometryPass);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0, 3.0, 0.0));
+        // model = glm::scale(model, glm::vec3(0.5f));
+        // shaderGeometryPass.setMat4("model", model);
+        // helmet.Draw(shaderGeometryPass);
 
-        shaderGeometryPass.use();
+        // terrainShader.use();
+        // terrainShader.setFloat("seed", game.seed);
+        // terrainShader.setMat4("projection", projection);
+        // terrainShader.setMat4("view", view);
+        // terrainShader.setFloat("near_plane", near_plane); // Add thiss
+        // terrainShader.setFloat("far_plane", far_plane);   // Add this
 
-        if (fired)
-        {
-            selectedShader.use();
-            renderManager.renderCameraAttachedObject(*gun, selectedShader);
-        }
-        else
-        {
-            renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
-        }
+        // model = glm::mat4(1.0f);
+        // model = glm::scale(model, glm::vec3(1000.0f));
+        // model = glm::translate(model, glm::vec3(25.0, -5.0, 25.0));
+        // terrainShader.setMat4("model", model);
+        // // plane->model.Draw(terrainShader);
 
-        shaderGeometryPass.use();
+        // if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired == false)
+        // {
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0, 3.0, 0.0));
-        model = glm::scale(model, glm::vec3(0.5f));
-        shaderGeometryPass.setMat4("model", model);
-        helmet.Draw(shaderGeometryPass);
+        //     auto newBullet = std::make_shared<GameObject>(bullet); // Copy constructor
+        //     newBullet->scale = glm::vec3(0.10, 0.10, 0.10);
+        //     float forwardOffset = 2.0f;
+        //     float rightOffset = 0.2f; // Slight offset to the right
+        //     float upOffset = -0.22f;  // Slight offset downward
 
-        terrainShader.use();
-        terrainShader.setFloat("seed", game.seed);
-        terrainShader.setMat4("projection", projection);
-        terrainShader.setMat4("view", view);
-        terrainShader.setFloat("near_plane", near_plane); // Add thiss
-        terrainShader.setFloat("far_plane", far_plane);   // Add this
-
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(1000.0f));
-        model = glm::translate(model, glm::vec3(25.0, -5.0, 25.0));
-        terrainShader.setMat4("model", model);
-        // plane->model.Draw(terrainShader);
-
-        if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired == false)
-        {
-
-            auto newBullet = std::make_shared<GameObject>(bullet); // Copy constructor
-            newBullet->scale = glm::vec3(0.10, 0.10, 0.10);
-            float forwardOffset = 2.0f;
-            float rightOffset = 0.2f; // Slight offset to the right
-            float upOffset = -0.22f;  // Slight offset downward
-
-            newBullet->position = game.camera.Position +
-                                  (game.camera.Front * forwardOffset) +
-                                  (game.camera.Right * rightOffset) +
-                                  (game.camera.Up * upOffset);
-            newBullet->speed = game.camera.Front * glm::vec3(10, 10, 10);
-            mainScene.addGameObject(newBullet);
-            fired = true;
-            std::cout << "fired" << std::endl;
-        }
-        if (glfwGetKey(game.getWindow(), GLFW_KEY_R) == GLFW_PRESS)
-        {
-            fired = false;
-        }
+        //     newBullet->position = game.camera.Position +
+        //                           (game.camera.Front * forwardOffset) +
+        //                           (game.camera.Right * rightOffset) +
+        //                           (game.camera.Up * upOffset);
+        //     newBullet->speed = game.camera.Front * glm::vec3(10, 10, 10);
+        //     mainScene.addGameObject(newBullet);
+        //     fired = true;
+        //     std::cout << "fired" << std::endl;
+        // }
+        // if (glfwGetKey(game.getWindow(), GLFW_KEY_R) == GLFW_PRESS)
+        // {
+        //     fired = false;
+        // }
 
         // renderManager.renderGameObject(*bullet, shaderGeometryPass);
         // game.getScene().
-        auto gameObjects = game.getScene()->getGameObjects();
-        for (auto &i : gameObjects)
-        {
-            renderManager.renderGameObject(*i, shaderGeometryPass);
-        }
+        // auto gameObjects = game.getScene()->getGameObjects();
+        // for (auto &i : gameObjects)
+        // {
+        //     renderManager.renderGameObjectWithTexture(*i, shaderGeometryPass, smoke_texture);
+        // }
 
         // 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
         // -----------------------------------------------------------------------------------------------------------------------
@@ -796,6 +807,7 @@ int main()
         waterShader.setMat4("model", model);
         // waterPlane->model.Draw(waterShader);
         renderManager.renderGameObject(*waterPlane, waterShader);
+        //
 
         // Light boxes
 
@@ -820,6 +832,13 @@ int main()
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
+        ///
+        auto gameObjects = game.getScene()->getGameObjects();
+        for (auto &i : gameObjects)
+        {
+            renderManager.renderGameObjectWithColor(*i, simpleColorShader, glm::vec4(1, 0, 1, 1));
+        }
+
         // Engine Grid
 
         // gridShader.use();
@@ -827,23 +846,26 @@ int main()
         // renderManager.renderGrid(view, projection);
 
         modelShader.use();
+        modelShader.setMat4("projection", projection);
+        modelShader.setMat4("view", view);
         model = glm::mat4(1.0f);
+        modelShader.setMat4("model", model);
         renderManager.renderInfiniteGrid(view, game.camera.Position, 1.0f, 500, 0.02f, 1000);
 
         ///////////
 
-        // glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
-        // skyboxShader.use();
-        // view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
-        // skyboxShader.setMat4("view", view);
-        // skyboxShader.setMat4("projection", projection);
-        // // skybox cube
-        // glBindVertexArray(skyboxVAO);
-        // glActiveTexture(GL_TEXTURE5);
-        // glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        // glBindVertexArray(0);
-        // glDepthFunc(GL_LESS);
+        glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(game.camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
 
         ////////////////////////////////////
 

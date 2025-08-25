@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/link.d"
+  "CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o"

@@ -366,10 +366,24 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.s: c
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.cpp -o CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.s
 
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o: include/ImGuizmo/ImGuizmo.cpp
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o -c /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp > CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.i
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.cpp -o CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.s
+
 CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o: tracy/public/TracyClient.cpp
 CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o -c /home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp
 
 CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.i: cmake_force
@@ -403,6 +417,7 @@ hephaestus__openGL_OBJECTS = \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o"
 
 # External object files for target hephaestus-openGL
@@ -429,6 +444,7 @@ hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_tables.c
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/build.make
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
@@ -438,7 +454,7 @@ hephaestus-openGL: /usr/lib/libopenal.so
 hephaestus-openGL: /usr/lib/libGLX.so
 hephaestus-openGL: /usr/lib/libOpenGL.so
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX executable hephaestus-openGL"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX executable hephaestus-openGL"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hephaestus-openGL.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

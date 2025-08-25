@@ -401,6 +401,48 @@ CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/stb_image.h \
  /usr/include/c++/15.2.1/stdlib.h \
  /home/monolith/Desktop/openGL_learning/src/game_object.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/quaternion.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/vector_relational.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/vector_relational.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/type_float.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/setup.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_common.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../ext/quaternion_geometric.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../ext/quaternion_geometric.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_common.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_float.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/type_quat.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/../ext/quaternion_relational.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/../ext/quaternion_relational.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/../detail/type_quat.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_float_precision.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_double.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_double_precision.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_trigonometric.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_trigonometric.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_transform.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../ext/quaternion_transform.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/quaternion.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/epsilon.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/../detail/setup.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtc/epsilon.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/vec1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_bool1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_float1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_double1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_int1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_uint1.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.inl \
  /usr/include/c++/15.2.1/filesystem /usr/include/c++/15.2.1/bits/fs_fwd.h \
  /usr/include/c++/15.2.1/bits/chrono.h /usr/include/c++/15.2.1/ratio \
  /usr/include/c++/15.2.1/ctime \
@@ -422,4 +464,8 @@ CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: \
  /usr/include/c++/15.2.1/bits/unique_ptr.h \
  /usr/include/c++/15.2.1/bits/fs_dir.h \
  /usr/include/c++/15.2.1/bits/fs_ops.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/src/camera.h

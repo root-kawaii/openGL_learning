@@ -129,6 +129,30 @@ hephaestus-openGL/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/build
 .PHONY : hephaestus-openGL/fast
 
+include/ImGuizmo/ImGuizmo.o: include/ImGuizmo/ImGuizmo.cpp.o
+.PHONY : include/ImGuizmo/ImGuizmo.o
+
+# target to build an object file
+include/ImGuizmo/ImGuizmo.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o
+.PHONY : include/ImGuizmo/ImGuizmo.cpp.o
+
+include/ImGuizmo/ImGuizmo.i: include/ImGuizmo/ImGuizmo.cpp.i
+.PHONY : include/ImGuizmo/ImGuizmo.i
+
+# target to preprocess a source file
+include/ImGuizmo/ImGuizmo.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.i
+.PHONY : include/ImGuizmo/ImGuizmo.cpp.i
+
+include/ImGuizmo/ImGuizmo.s: include/ImGuizmo/ImGuizmo.cpp.s
+.PHONY : include/ImGuizmo/ImGuizmo.s
+
+# target to generate assembly for a file
+include/ImGuizmo/ImGuizmo.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.s
+.PHONY : include/ImGuizmo/ImGuizmo.cpp.s
+
 include/imgui/backends/imgui_impl_glfw.o: include/imgui/backends/imgui_impl_glfw.cpp.o
 .PHONY : include/imgui/backends/imgui_impl_glfw.o
 
@@ -666,6 +690,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... hephaestus-openGL"
+	@echo "... include/ImGuizmo/ImGuizmo.o"
+	@echo "... include/ImGuizmo/ImGuizmo.i"
+	@echo "... include/ImGuizmo/ImGuizmo.s"
 	@echo "... include/imgui/backends/imgui_impl_glfw.o"
 	@echo "... include/imgui/backends/imgui_impl_glfw.i"
 	@echo "... include/imgui/backends/imgui_impl_glfw.s"

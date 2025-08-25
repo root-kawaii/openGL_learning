@@ -212,6 +212,8 @@ public:
     int getTextureCounter() { return textureCounter; }
 
     void renderGameObject(GameObject &gameObject, Shader shader);
+    void renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID);
+    void renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color);
 
     void renderCameraAttachedObject(GameObject &gameObject, Shader shader);
 

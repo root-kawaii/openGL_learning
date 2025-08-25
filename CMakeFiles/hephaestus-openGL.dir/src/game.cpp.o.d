@@ -445,6 +445,10 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/../src/input.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/game_object.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
  /home/monolith/Desktop/openGL_learning/include/../src/model.h \
  /usr/include/c++/15.2.1/filesystem /usr/include/c++/15.2.1/bits/fs_fwd.h \
  /usr/include/c++/15.2.1/bits/chrono.h /usr/include/c++/15.2.1/ratio \
@@ -467,6 +471,10 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/bits/unique_ptr.h \
  /usr/include/c++/15.2.1/bits/fs_dir.h \
  /usr/include/c++/15.2.1/bits/fs_ops.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
  /usr/include/c++/15.2.1/unordered_map \
  /usr/include/c++/15.2.1/bits/unordered_map.h \
@@ -504,8 +512,13 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/numeric \
  /usr/include/c++/15.2.1/bits/stl_numeric.h \
  /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
- /usr/include/c++/15.2.1/any /usr/include/c++/15.2.1/chrono \
- /usr/include/c++/15.2.1/thread /usr/include/c++/15.2.1/bits/std_thread.h \
+ /usr/include/c++/15.2.1/any \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
+ /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
+ /usr/include/c++/15.2.1/chrono /usr/include/c++/15.2.1/thread \
+ /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
@@ -514,8 +527,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/texture.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/src/../src/model.h \

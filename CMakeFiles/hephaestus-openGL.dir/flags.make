@@ -3,15 +3,15 @@
 
 # compile C with /usr/bin/cc
 # compile CXX with /usr/bin/c++
-C_DEFINES = -DTRACY_ENABLE
+C_DEFINES = -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE
 
-C_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
+C_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL
 
 C_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG
 
-CXX_DEFINES = -DTRACY_ENABLE
+CXX_DEFINES = -DGLM_ENABLE_EXPERIMENTAL -DTRACY_ENABLE
 
-CXX_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
+CXX_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/tracy/public -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -isystem /usr/include/AL
 
 CXX_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17
 

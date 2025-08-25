@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <../json/single_include/nlohmann/json.hpp>
 #include <glm/glm.hpp>
+#include "game_object.h"
 
 struct SceneObject
 {
@@ -155,6 +156,68 @@ public:
         }
 
         return obj;
+    }
+    bool saveScene(const std::string &filename, const std::vector<std::shared_ptr<GameObject>> &objects)
+    {
+        try
+        {
+            nlohmann::json sceneData;
+            sceneData["objects"] = nlohmann::json::array();
+
+            for (const auto &objPtr : objects)
+            {
+                if (!objPtr)
+                {
+                    std::cerr << "Warning: skipping null GameObject in saveScene\n";
+                    continue; // prevent crash
+                }
+
+                const auto &obj = *objPtr; // safe now
+                nlohmann::json objData;
+
+                objData["id"] = obj.name;
+                // objData["name"] = std::to_string(obj.ID);
+                objData["path"] = obj.modelPath;
+
+                objData["position"] = {
+                    {"x", obj.position.x},
+                    {"y", obj.position.y},
+                    {"z", obj.position.z}};
+
+                objData["rotation"] = {
+                    {"x", obj.rotation.x},
+                    {"y", obj.rotation.y},
+                    {"z", obj.rotation.z}};
+
+                objData["scale"] = {
+                    {"x", obj.scale.x},
+                    {"y", obj.scale.y},
+                    {"z", obj.scale.z}};
+
+                objData["collision_radius"] = {
+                    {"v", obj.collisionRadius}};
+
+                sceneData["objects"].push_back(objData);
+            }
+
+            std::ofstream file(filename);
+            if (!file.is_open())
+            {
+                std::cerr << "Error: Could not open file for writing: " << filename << std::endl;
+                return false;
+            }
+
+            file << sceneData.dump(4); // pretty-print JSON
+            file.close();
+
+            std::cout << "Scene saved successfully to " << filename << std::endl;
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error saving scene: " << e.what() << std::endl;
+            return false;
+        }
     }
 
 private:

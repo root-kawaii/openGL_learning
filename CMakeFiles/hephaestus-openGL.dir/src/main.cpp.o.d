@@ -443,6 +443,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/../src/input.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/game_object.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
  /home/monolith/Desktop/openGL_learning/include/../src/model.h \
  /usr/include/c++/15.2.1/filesystem /usr/include/c++/15.2.1/bits/fs_fwd.h \
  /usr/include/c++/15.2.1/bits/chrono.h /usr/include/c++/15.2.1/ratio \
@@ -465,6 +469,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/unique_ptr.h \
  /usr/include/c++/15.2.1/bits/fs_dir.h \
  /usr/include/c++/15.2.1/bits/fs_ops.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
  /usr/include/c++/15.2.1/functional \
  /usr/include/c++/15.2.1/bits/std_function.h \
@@ -509,13 +517,15 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
  /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
+ /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/render_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/model.h \
@@ -535,8 +545,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/../ext/scalar_common.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/norm.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
- /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/rotate_vector.inl \
  /usr/include/sndfile.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \

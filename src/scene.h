@@ -3,6 +3,9 @@
 #include "game_object.h"
 #include <unordered_map>
 #include "serialization_utilities.h"
+#include <imgui.h>
+#include <ImGuizmo/ImGuizmo.h>
+#include "object_picker.h"
 
 class Scene
 {
@@ -18,6 +21,8 @@ private:
     // Scene environment data
     // Skybox skybox;
     // Environment environment;
+    std::shared_ptr<GameObject> selectedObject;
+    ObjectPicker picker;
 
 public:
     Scene();
@@ -33,7 +38,12 @@ public:
     std::vector<std::shared_ptr<GameObject>> getGameObjects() { return gameObjects; };
     // Environment& getEnvironment() { return environment; }
 
+    void handleInput(const glm::mat4 &view, const glm::mat4 &projection);
+    void renderGizmo(const glm::mat4 &view, const glm::mat4 &projection);
+
     // Serialization (data persistence)
     void save(const std::string &path);
     void load(const std::string &path);
+
+    void setSelectedObject(std::shared_ptr<GameObject> object) { selectedObject = object; };
 };

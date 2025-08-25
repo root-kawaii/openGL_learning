@@ -414,6 +414,10 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/texture.h \
  /usr/include/GLFW/glfw3.h \
  /home/monolith/Desktop/openGL_learning/src/../src/game_object.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
  /home/monolith/Desktop/openGL_learning/src/../src/model.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
@@ -474,6 +478,10 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /usr/include/c++/15.2.1/bits/quoted_string.h \
  /usr/include/c++/15.2.1/codecvt /usr/include/c++/15.2.1/bits/fs_dir.h \
  /usr/include/c++/15.2.1/bits/fs_ops.h \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
+ /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyColor.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracySystem.hpp \
