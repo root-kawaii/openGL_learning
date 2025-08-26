@@ -67,13 +67,22 @@ file(GLOB IMGUI_HEADERS
 )
 
 # --------- ImGuizmo Files ---------
-# ImGuizmo typically has the implementation in the .cpp file
+# Include all ImGuizmo source files
 set(IMGUIZMO_SOURCES
     "${IMGUIZMO_DIR}/ImGuizmo.cpp"
+    "${IMGUIZMO_DIR}/GraphEditor.cpp"
+    "${IMGUIZMO_DIR}/ImCurveEdit.cpp"
+    "${IMGUIZMO_DIR}/ImGradient.cpp"
+    "${IMGUIZMO_DIR}/ImSequencer.cpp"
 )
 
 set(IMGUIZMO_HEADERS
     "${IMGUIZMO_DIR}/ImGuizmo.h"
+    "${IMGUIZMO_DIR}/GraphEditor.h"
+    "${IMGUIZMO_DIR}/ImCurveEdit.h"
+    "${IMGUIZMO_DIR}/ImGradient.h"
+    "${IMGUIZMO_DIR}/ImSequencer.h"
+    "${IMGUIZMO_DIR}/ImZoomSlider.h"
 )
 
 # Selectively include only the ImGui backends you need
@@ -103,17 +112,6 @@ set(IMGUI_ALL_FILES ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_EXISTING_BACKENDS}
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenAL REQUIRED)
-
-# --------- Include directories ---------
-include_directories(
-    ${IMGUI_INCLUDE_DIR}
-    ${GLFW_INCLUDE_DIR}
-    ${ASSIMP_INCLUDE_DIR}
-    ${FREETYPE_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${TRACY_PUBLIC_DIR}
-    ${IMGUIZMO_DIR}
-)
 
 # --------- Main project source files ---------
 set(PROJECT_SOURCES
@@ -150,6 +148,17 @@ add_executable(${PROJECT_NAME}
     ${TRACY_PUBLIC_DIR}/TracyClient.cpp
 )
 
+# --------- Target-specific include directories (FIXED ORDER) ---------
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${IMGUI_INCLUDE_DIR}                    # ImGui MUST come first!
+    ${IMGUI_INCLUDE_DIR}/backends           # ImGui backends
+    ${IMGUIZMO_DIR}                         # ImGuizmo after ImGui
+    ${CMAKE_CURRENT_SOURCE_DIR}/include     # Your project includes
+    ${ASSIMP_INCLUDE_DIR}                   # Assimp
+    ${FREETYPE_INCLUDE_DIRS}                # FreeType
+    ${TRACY_PUBLIC_DIR}                     # Tracy
+)
+
 # --------- Link directories ---------
 link_directories(
     ${GLFW_LIB_DIR}
@@ -159,7 +168,9 @@ link_directories(
 # --------- Define preprocessor macros ---------
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     TRACY_ENABLE
-    GLM_ENABLE_EXPERIMENTAL  # Enable GLM experimental extensions
+    GLM_ENABLE_EXPERIMENTAL          # Enable GLM experimental extensions
+    IMGUI_DEFINE_MATH_OPERATORS     # Help ImGuizmo with ImGui types
+    IMGUI_DISABLE_OBSOLETE_FUNCTIONS # Sometimes helps with compatibility
 )
 
 # --------- Link libraries ---------

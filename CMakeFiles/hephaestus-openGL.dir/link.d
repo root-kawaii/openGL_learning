@@ -24,6 +24,10 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/GraphEditor.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImCurveEdit.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGradient.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImSequencer.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o \
   /usr/lib/libglfw.so.3.4 \
   include/freetype/lib/libfreetype.a \
@@ -120,6 +124,14 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_opengl3.cpp.o
 CMakeFiles/hephaestus-openGL.dir/include/imgui/backends/imgui_impl_glfw.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGuizmo.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/GraphEditor.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImCurveEdit.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGradient.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImSequencer.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o:
 

@@ -476,9 +476,10 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
  /usr/include/c++/15.2.1/unordered_map \
  /usr/include/c++/15.2.1/bits/unordered_map.h \
- /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
  /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
  /usr/include/c++/15.2.1/functional \
  /usr/include/c++/15.2.1/bits/std_function.h \
@@ -515,8 +516,9 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/any \
  /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
  /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.h \
  /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
- /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
  /usr/include/c++/15.2.1/chrono /usr/include/c++/15.2.1/thread \
  /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \

@@ -1,123 +1,162 @@
 #include "scene.h"
+#include "game_object.h"
+#include <memory>
 
 Scene::Scene()
 {
-    entityCounter = 0;
-    serializer.loadScene("levels/one.json");
-    for (auto i : serializer.getObjects())
-    {
-        addGameObject(std::make_shared<GameObject>(i.id, i.path, i.position, i.rotation, i.scale, i.collisionRadius));
-    }
+  entityCounter = 0;
+  serializer.loadScene("levels/one.json");
+  for (auto i : serializer.getObjects())
+  {
+    addGameObject(std::make_shared<GameObject>(
+        i.id, i.path, i.position, i.rotation, i.scale, i.collisionRadius));
+  }
 }
 
 Scene::~Scene()
 {
 
-    serializer.saveScene("levels/one.json", gameObjects);
-    // TBD
+  serializer.saveScene("levels/one.json", gameObjects);
+  // TBD
 }
 
 uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
 {
-    // Better ID generation
-    uint32_t id = generateUniqueId();
-    gameObject->ID = id;
+  // Better ID generation
+  uint32_t id = generateUniqueId();
+  gameObject->ID = id;
 
-    // Add to both containers
-    objectsById[id] = gameObject;
-    gameObjects.push_back(gameObject);
+  // Add to both containers
+  objectsById[id] = gameObject;
+  gameObjects.push_back(gameObject);
 
-    return id;
+  return id;
 }
 
-void Scene::destroyGameObject(GameObject *obj)
-{
-    obj->~GameObject();
-}
+void Scene::destroyGameObject(GameObject *obj) { obj->~GameObject(); }
 
 // linear lookup time, not made for frequent use
 std::shared_ptr<GameObject> Scene::findObjectByName(const std::string &name)
 {
-    for (const auto &gameObject : gameObjects)
+  for (const auto &gameObject : gameObjects)
+  {
+    if (gameObject->name == name)
     {
-        if (gameObject->name == name)
-        {
-            return gameObject;
-        }
+      return gameObject;
     }
-    return nullptr; // Not found
+  }
+  return nullptr; // Not found
 }
 
 // constant lookup
 std::shared_ptr<GameObject> Scene::findObjectById(uint32_t id)
 {
-    auto it = objectsById.find(id);
-    return (it != objectsById.end()) ? it->second : nullptr;
+  auto it = objectsById.find(id);
+  return (it != objectsById.end()) ? it->second : nullptr;
 }
 
-uint32_t Scene::generateUniqueId()
-{
-    return ++entityCounter;
-}
+uint32_t Scene::generateUniqueId() { return ++entityCounter; }
 
 void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection)
 {
-    ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO &io = ImGui::GetIO();
 
-    // Only handle clicks if not over ImGui or ImGuizmo
-    if (!io.WantCaptureMouse && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+  // Only handle clicks if not over ImGui or ImGuizmo
+  if (!io.WantCaptureMouse && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+  {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
     {
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-        {
-            selectedObject = picker.PickObject(
-                io.MousePos.x, io.MousePos.y,
-                gameObjects,
-                view, projection,
-                io.DisplaySize.x, io.DisplaySize.y);
-        }
+      selectedObject =
+          picker.PickObject(io.MousePos.x, io.MousePos.y, gameObjects, view,
+                            projection, io.DisplaySize.x, io.DisplaySize.y);
+
+      if (selectedObject == nullptr)
+      {
+        std::cout << "grounded";
+        groundSelection = picker.PickGroundPosition(
+            io.MousePos.x, io.MousePos.y, view, projection, io.DisplaySize.x,
+            io.DisplaySize.y, 0.0f);
+      }
     }
+  }
 }
 
 void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
 {
-    if (!selectedObject)
-        return;
+  if (!selectedObject)
+    return;
 
-    ImGuizmo::BeginFrame();
-    ImGuiIO &io = ImGui::GetIO();
-    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+  ImGuizmo::BeginFrame();
+  ImGuiIO &io = ImGui::GetIO();
+  ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-    static ImGuizmo::OPERATION operation = ImGuizmo::TRANSLATE;
-    static ImGuizmo::MODE mode = ImGuizmo::WORLD;
+  static ImGuizmo::OPERATION operation = ImGuizmo::TRANSLATE;
+  static ImGuizmo::MODE mode = ImGuizmo::WORLD;
 
-    // UI for gizmo controls
-    if (ImGui::Begin("Transform"))
-    {
-        if (ImGui::RadioButton("Translate", operation == ImGuizmo::TRANSLATE))
-            operation = ImGuizmo::TRANSLATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Rotate", operation == ImGuizmo::ROTATE))
-            operation = ImGuizmo::ROTATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Scale", operation == ImGuizmo::SCALE))
-            operation = ImGuizmo::SCALE;
-    }
-    ImGui::End();
+  // UI for gizmo controls
+  if (ImGui::Begin("Transform"))
+  {
+    if (ImGui::RadioButton("Translate", operation == ImGuizmo::TRANSLATE))
+      operation = ImGuizmo::TRANSLATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Rotate", operation == ImGuizmo::ROTATE))
+      operation = ImGuizmo::ROTATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Scale", operation == ImGuizmo::SCALE))
+      operation = ImGuizmo::SCALE;
+  }
+  ImGui::End();
 
-    // Get transform matrix
-    glm::mat4 transform = selectedObject->GetTransform();
+  // Get transform matrix
+  glm::mat4 transform = selectedObject->GetTransform();
 
-    // Manipulate with ImGuizmo
-    ImGuizmo::Manipulate(
-        glm::value_ptr(view),
-        glm::value_ptr(projection),
-        operation,
-        mode,
-        glm::value_ptr(transform));
+  // Manipulate with ImGuizmo
+  ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
+                       operation, mode, glm::value_ptr(transform));
 
-    // Update object if gizmo was used
-    if (ImGuizmo::IsUsing())
-    {
-        selectedObject->SetTransform(transform);
-    }
+  // Update object if gizmo was used
+  if (ImGuizmo::IsUsing())
+  {
+    selectedObject->SetTransform(transform);
+  }
+}
+
+void Scene::addCubeOnTop()
+{
+  // Helper lambda to round to nearest half integer
+  auto roundToHalf = [](float value) -> float
+  {
+    return std::round(value * 2.0f) / 2.0f;
+  };
+
+  // Round groundSelection to nearest half integers
+  glm::vec3 roundedGroundSelection(
+      roundToHalf(groundSelection.x),
+      roundToHalf(groundSelection.y),
+      roundToHalf(groundSelection.z));
+
+  // Round groundSelection to nearest half integers
+  glm::vec3 roundedObjectPos(
+      roundToHalf(selectedObject->position.x),
+      roundToHalf(selectedObject->position.y),
+      roundToHalf(selectedObject->position.z));
+
+  if (!selectedObject)
+  {
+    std::cout << "building flat" << std::endl;
+    std::shared_ptr<GameObject> p = std::make_shared<GameObject>(
+        "cube", "assets/cube.obj", roundedGroundSelection,
+        glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 0.0f);
+    addGameObject(p);
+    selectedObject = p;
+  }
+  else
+  {
+    std::cout << "building on top" << std::endl;
+    std::shared_ptr<GameObject> pp = std::make_shared<GameObject>(
+        "cube", "assets/cube.obj", roundedObjectPos + glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 0.0f);
+    addGameObject(pp);
+    selectedObject = pp;
+  }
 }
