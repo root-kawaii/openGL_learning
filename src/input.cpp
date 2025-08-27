@@ -22,7 +22,7 @@
 bool gameMode = false;
 bool shadowsKeyPressed = false;
 
-void InputManager::processInput(Game game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
+void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
 {
     if (!gameMode)
     {
@@ -76,23 +76,29 @@ void InputManager::processInput(Game game, GLFWwindow *window, Camera *camera, f
             static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
             seed = dis(gen) * 1;
         }
-        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+        if (wasKeyJustPressed(GLFW_KEY_M, window))
         {
-            if (game.getGameMode() == ENGINE)
+            if (game->getGameMode() == ENGINE)
             {
-                game.setGameMode(GAME);
+                game->setGameMode(GAME);
                 return;
             }
-            game.setGameMode(ENGINE);
+            game->setGameMode(ENGINE);
         }
     }
     else
     {
-        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-        {
-            gameMode = false;
-        }
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
     }
+}
+
+bool InputManager::wasKeyJustPressed(int key, GLFWwindow *window)
+{
+    bool currentlyPressed = (glfwGetKey(window, key) == GLFW_PRESS);
+    bool wasPressed = previousKeyStates[key];
+
+    previousKeyStates[key] = currentlyPressed;
+
+    return currentlyPressed && !wasPressed;
 }

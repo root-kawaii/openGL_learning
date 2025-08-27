@@ -260,5 +260,5 @@ void Game::cleanup()
 
 void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
 {
-    inputManager.processInput(*this, window, camera, deltaTime, shadows, seed);
+    inputManager.processInput(this, window, camera, deltaTime, shadows, seed);
 }

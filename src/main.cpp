@@ -922,6 +922,7 @@ int main()
       selected = false;
     }
 
+    std::cout << game.getGameMode() << std::endl;
     if (game.getGameMode() == ENGINE)
     {
       gridShader2.use();

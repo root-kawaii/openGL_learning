@@ -9565,15 +9565,12 @@ CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o: tracy/public/Tr
 hephaestus-openGL: /usr/lib/Scrt1.o \
   /usr/lib/crti.o \
   /usr/lib/crtn.o \
-  /usr/lib/libasan.so \
-  /usr/lib/libasan_preinit.o \
   /usr/lib/libassimp.so \
   /usr/lib/libc.so \
   /usr/lib/libgcc_s.so \
   /usr/lib/libgcc_s.so.1 \
   /usr/lib/libm.so \
   /usr/lib/libstdc++.so \
-  /usr/lib/libubsan.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/libgcc.a \
@@ -9674,15 +9671,11 @@ CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImGradient.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o:
 
-/usr/lib/libubsan.so:
-
 /usr/lib/libstdc++.so:
 
 /usr/lib/libgcc_s.so.1:
 
 /usr/lib/libassimp.so:
-
-/usr/lib/libasan_preinit.o:
 
 /usr/lib/Scrt1.o:
 
@@ -10403,8 +10396,6 @@ include/glm/ext/matrix_double3x2_precision.hpp:
 /usr/include/bits/endian.h:
 
 /usr/include/c++/15.2.1/tr1/gamma.tcc:
-
-/usr/lib/libasan.so:
 
 include/ImGuizmo/ImGradient.cpp:
 
