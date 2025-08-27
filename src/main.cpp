@@ -912,7 +912,7 @@ int main()
 
     if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && selected == false)
     {
-      std::cout << "building";
+      std::cout << "building" << std::endl;
       mainScene.addCubeOnTop();
       selected = true;
     }

@@ -97,6 +97,12 @@ public:
     bool initialize(int width, int height);
     void cleanup();
 
+    void setRes(int height, int width)
+    {
+        screenWidth = width;
+        screenHeight = height;
+    };
+
     // Frame management
     void beginFrame();
     void endFrame();

@@ -72,10 +72,13 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection)
 
       if (selectedObject == nullptr)
       {
-        std::cout << "grounded";
+        std::cout << "grounded" << std::endl;
         groundSelection = picker.PickGroundPosition(
             io.MousePos.x, io.MousePos.y, view, projection, io.DisplaySize.x,
             io.DisplaySize.y, 0.0f);
+        std::cout << groundSelection.x << std::endl;
+        std::cout << groundSelection.y << std::endl;
+        std::cout << groundSelection.z << std::endl;
       }
     }
   }
@@ -123,10 +126,11 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
 
 void Scene::addCubeOnTop()
 {
-  // Helper lambda to round to nearest half integer
+  // Helper lambda to round to nearest half integer (0.5 or 1.5)
   auto roundToHalf = [](float value) -> float
   {
-    return std::round(value * 2.0f) / 2.0f;
+    float base = std::floor(value);
+    return (value - base < 0.5f) ? base + 0.5f : base + 1.5f;
   };
 
   // Round groundSelection to nearest half integers
@@ -135,27 +139,26 @@ void Scene::addCubeOnTop()
       roundToHalf(groundSelection.y),
       roundToHalf(groundSelection.z));
 
-  // Round groundSelection to nearest half integers
-  glm::vec3 roundedObjectPos(
-      roundToHalf(selectedObject->position.x),
-      roundToHalf(selectedObject->position.y),
-      roundToHalf(selectedObject->position.z));
-
   if (!selectedObject)
   {
     std::cout << "building flat" << std::endl;
     std::shared_ptr<GameObject> p = std::make_shared<GameObject>(
         "cube", "assets/cube.obj", roundedGroundSelection,
-        glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 0.0f);
+        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f);
     addGameObject(p);
     selectedObject = p;
+
+    std::cout << roundedGroundSelection.x << std::endl;
+    std::cout << roundedGroundSelection.y << std::endl;
+    std::cout << roundedGroundSelection.z << std::endl;
   }
   else
   {
+
     std::cout << "building on top" << std::endl;
     std::shared_ptr<GameObject> pp = std::make_shared<GameObject>(
-        "cube", "assets/cube.obj", roundedObjectPos + glm::vec3(0, 1, 0),
-        glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 0.0f);
+        "cube", "assets/cube.obj", selectedObject->position + glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f);
     addGameObject(pp);
     selectedObject = pp;
   }

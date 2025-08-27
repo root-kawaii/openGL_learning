@@ -57,8 +57,7 @@ private:
     Scene *scene;
 
 public:
-    bool
-    initialize();
+    bool initialize();
     void run();
     void update(float deltaTime);
     void render();
@@ -101,7 +100,8 @@ public:
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_SAMPLES, 8); // Request 8x MSAA
+        glfwWindowHint(GLFW_SAMPLES, 8);           // Request 8x MSAA
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // Make window resizable
 
 #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -163,7 +163,21 @@ public:
 
     void framebuffer_size_callback_impl(int width, int height)
     {
+        // Update the viewport
         glViewport(0, 0, width, height);
+
+        // Update screen dimensions
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+
+        // Update camera aspect ratio if your camera supports it
+        if (width > 0 && height > 0)
+        {
+            // camera.SetAspectRatio(static_cast<float>(width) / static_cast<float>(height));
+        }
+
+        // Notify render manager about the resize if it needs to update framebuffers
+        renderManager.setRes(width, height);
     }
 
     void mouse_callback_impl(double xposIn, double yposIn)
@@ -189,5 +203,13 @@ public:
     void scroll_callback_impl(double xoffset, double yoffset)
     {
         camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    }
+
+    // Helper method to get current window dimensions
+    void getCurrentWindowSize(int &width, int &height)
+    {
+        glfwGetWindowSize(window, &width, &height);
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
     }
 };
