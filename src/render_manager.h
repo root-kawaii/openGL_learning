@@ -18,6 +18,16 @@
 // class Mesh;
 // class Camera;
 
+struct GridLineInstance
+{
+    glm::vec3 startPos;
+    glm::vec3 direction;
+    float thickness;
+    float length;
+    glm::vec3 color;
+    float _padding; // Align to 16 bytes
+};
+
 struct RenderCommand
 {
     Mesh *mesh;
@@ -86,6 +96,12 @@ private:
     unsigned int skyboxTexture;
     bool skyboxInitialized;
     Shader *skyboxShader;
+
+    unsigned int gridVAO = 0;
+    unsigned int gridVBO = 0;         // Base line geometry
+    unsigned int gridInstanceVBO = 0; // Instance data
+    unsigned int gridShader = 0;
+    bool gridInitialized = false;
 
 public:
     RenderManager();
@@ -227,8 +243,7 @@ public:
     void renderQuad();
     void renderCube();
     void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);
-    void renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition,
-                            float spacing, float fadeDistance,
+    void renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition, Shader shader, float spacing, float fadeDistance,
                             float lineThickness, int visibleRange);
     void renderGridAdvanced(glm::mat4 view, int gridSize, float spacing,
                             float lineThickness, bool drawCenterLines,
@@ -249,4 +264,6 @@ private:
     // MSAA G-Buffer helper functions
     bool checkMSAAGBufferStatus();
     void createMSAAGBufferTextures();
+
+    void initializeGridBuffers();
 };

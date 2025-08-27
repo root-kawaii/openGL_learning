@@ -1286,6 +1286,18 @@
 			"value" : "FALSE"
 		},
 		{
+			"name" : "ENABLE_SANITIZERS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable AddressSanitizer and UBSan"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenAL",
 			"properties" : 
 			[

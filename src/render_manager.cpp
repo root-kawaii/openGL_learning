@@ -775,8 +775,8 @@ unsigned int RenderManager::loadCubemap(const std::vector<std::string> &faces)
 void RenderManager::renderCube()
 {
     ZoneScoped;
-    unsigned int cubeVAO = 0;
-    unsigned int cubeVBO = 0;
+    static unsigned int cubeVAO = 0;
+    static unsigned int cubeVBO = 0;
     // initialize (if necessary)
     if (cubeVAO == 0)
     {
@@ -849,8 +849,8 @@ void RenderManager::renderCube()
 void RenderManager::renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness = 0.1f, float length = 0.1f)
 {
     ZoneScoped;
-    unsigned int lineVAO = 0;
-    unsigned int lineVBO = 0;
+    static unsigned int lineVAO = 0; // Add 'static'
+    static unsigned int lineVBO = 0; // Add 'static'
     if (lineVAO == 0)
     {
         glGenVertexArrays(1, &lineVAO);
@@ -959,8 +959,8 @@ void RenderManager::renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 
 void RenderManager::renderQuad()
 {
     ZoneScoped;
-    unsigned int quadVAO = 0;
-    unsigned int quadVBO;
+    static unsigned int quadVAO = 0;
+    static unsigned int quadVBO;
     if (quadVAO == 0)
     {
         float quadVertices[] = {
@@ -1005,8 +1005,8 @@ void RenderManager::renderQuad()
 void RenderManager::renderQuadForSmoke()
 {
     ZoneScoped;
-    unsigned int quadVAO = 0;
-    unsigned int quadVBO;
+    static unsigned int quadVAO = 0;
+    static unsigned int quadVBO;
     if (quadVAO == 0)
     {
         float quadVertices[] = {
@@ -1182,83 +1182,106 @@ void RenderManager::renderGridAdvanced(glm::mat4 view, int gridSize = 20, float 
 }
 
 // Infinite grid version that follows the camera
-void RenderManager::renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition,
-                                       float spacing = 1.0f, float fadeDistance = 50.0f,
+void RenderManager::renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition, Shader shader, float spacing = 1.0f, float fadeDistance = 50.0f,
                                        float lineThickness = 0.02f, int visibleRange = 100)
 {
     ZoneScoped;
-    GLint currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    // Snap camera position to grid for seamless infinite effect
+    gridShader = shader.ID;
+    initializeGridBuffers();
+
+    // Prepare instance data
+    std::vector<GridLineInstance> instances;
+    instances.reserve(visibleRange * 2); // Pre-allocate for performance
+
+    // Snap camera to grid
     int centerX = static_cast<int>(std::round(cameraPosition.x / spacing));
     int centerZ = static_cast<int>(std::round(cameraPosition.z / spacing));
     float gridCenterX = centerX * spacing;
     float gridCenterZ = centerZ * spacing;
     int halfRange = visibleRange / 2;
 
-    // Render X-parallel lines
+    // X-parallel lines
     for (int i = -halfRange; i <= halfRange; i++)
     {
         float z = gridCenterZ + (i * spacing);
-        glm::vec3 startPoint(gridCenterX - halfRange * spacing, 0.0f, z);
-        glm::vec3 direction(1.0f, 0.0f, 0.0f);
-
-        // Calculate distance-based thickness (optional fade effect)
         float distanceFromCamera = std::abs(z - cameraPosition.z);
         float fadeFactor = std::max(0.1f, 1.0f - (distanceFromCamera / fadeDistance));
         float adjustedThickness = lineThickness * fadeFactor;
 
-        // Check if this is the Z-axis (x-parallel line at z=0)
-        bool isZAxis = (std::abs(z) < spacing * 0.1f);
-        if (isZAxis)
-        {
-            // Set blue color for Z-axis
-            glUniform3f(glGetUniformLocation(currentProgram, "axisColor"), 0.3f, 0.3f, 0.8f);
-            adjustedThickness *= 2.0f; // Make axis thicker
-        }
-        else
-        {
-            // Set default grid color
-            glUniform3f(glGetUniformLocation(currentProgram, "axisColor"), 0.3f, 0.3f, 0.3f);
-        }
-
         if (adjustedThickness > 0.01f)
         {
-            renderLine(startPoint, direction, view, adjustedThickness, visibleRange * spacing);
+            GridLineInstance instance;
+            instance.startPos = glm::vec3(gridCenterX - halfRange * spacing, 0.0f, z);
+            instance.direction = glm::vec3(1.0f, 0.0f, 0.0f);
+            instance.thickness = adjustedThickness;
+            instance.length = visibleRange * spacing;
+
+            // Check if this is Z-axis
+            bool isZAxis = (std::abs(z) < spacing * 0.1f);
+            if (isZAxis)
+            {
+                instance.color = glm::vec3(0.3f, 0.3f, 0.8f); // Blue
+                instance.thickness *= 2.0f;
+            }
+            else
+            {
+                instance.color = glm::vec3(0.3f, 0.3f, 0.3f); // Gray
+            }
+
+            instances.push_back(instance);
         }
     }
 
-    // Render Z-parallel lines
+    // Z-parallel lines
     for (int i = -halfRange; i <= halfRange; i++)
     {
         float x = gridCenterX + (i * spacing);
-        glm::vec3 startPoint(x, 0.0f, gridCenterZ - halfRange * spacing);
-        glm::vec3 direction(0.0f, 0.0f, 1.0f);
-
-        // Calculate distance-based thickness
         float distanceFromCamera = std::abs(x - cameraPosition.x);
         float fadeFactor = std::max(0.1f, 1.0f - (distanceFromCamera / fadeDistance));
         float adjustedThickness = lineThickness * fadeFactor;
 
-        // Check if this is the X-axis (z-parallel line at x=0)
-        bool isXAxis = (std::abs(x) < spacing * 0.1f);
-        if (isXAxis)
-        {
-            // Set red color for X-axis
-            glUniform3f(glGetUniformLocation(currentProgram, "axisColor"), 0.8f, 0.3f, 0.3f);
-            adjustedThickness *= 2.0f; // Make axis thicker
-        }
-        else
-        {
-            // Set default grid color
-            glUniform3f(glGetUniformLocation(currentProgram, "axisColor"), 0.3f, 0.3f, 0.3f);
-        }
-
         if (adjustedThickness > 0.01f)
         {
-            renderLine(startPoint, direction, view, adjustedThickness, visibleRange * spacing);
+            GridLineInstance instance;
+            instance.startPos = glm::vec3(x, 0.0f, gridCenterZ - halfRange * spacing);
+            instance.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+            instance.thickness = adjustedThickness;
+            instance.length = visibleRange * spacing;
+
+            // Check if this is X-axis
+            bool isXAxis = (std::abs(x) < spacing * 0.1f);
+            if (isXAxis)
+            {
+                instance.color = glm::vec3(0.8f, 0.3f, 0.3f); // Red
+                instance.thickness *= 2.0f;
+            }
+            else
+            {
+                instance.color = glm::vec3(0.3f, 0.3f, 0.3f); // Gray
+            }
+
+            instances.push_back(instance);
         }
     }
+
+    if (instances.empty())
+        return;
+
+    // Upload instance data
+    glBindBuffer(GL_ARRAY_BUFFER, gridInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 instances.size() * sizeof(GridLineInstance),
+                 instances.data(), GL_DYNAMIC_DRAW);
+
+    // Render all lines in one draw call
+    glUseProgram(gridShader);
+    glUniformMatrix4fv(glGetUniformLocation(gridShader, "view"), 1, GL_FALSE, &view[0][0]);
+
+    glBindVertexArray(gridVAO);
+    glDisable(GL_CULL_FACE);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, instances.size()); // 36 vertices for cube
+    glEnable(GL_CULL_FACE);
+    glBindVertexArray(0);
 }
 
 void RenderManager::renderGrid(glm::mat4 view, glm::mat4 projection)
@@ -1331,4 +1354,105 @@ void RenderManager::renderGrid(glm::mat4 view, glm::mat4 projection)
     // glEnable(GL_DEPTH_TEST); // Re-enable depth testing
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
+}
+
+void RenderManager::initializeGridBuffers()
+{
+    if (gridInitialized)
+        return;
+
+    // Create base line geometry (unit cube that we'll transform)
+    float baseLineVertices[] = {
+        // Simple box vertices (will be transformed by instances)
+        -0.5f, -0.5f, 0.0f, // Bottom face
+        0.5f, -0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f,
+        -0.5f, 0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+
+        -0.5f, -0.5f, 1.0f, // Top face
+        0.5f, -0.5f, 1.0f,
+        0.5f, 0.5f, 1.0f,
+        0.5f, 0.5f, 1.0f,
+        -0.5f, 0.5f, 1.0f,
+        -0.5f, -0.5f, 1.0f,
+
+        // Add side faces...
+        -0.5f, -0.5f, 0.0f, // Front
+        -0.5f, 0.5f, 0.0f,
+        -0.5f, 0.5f, 1.0f,
+        -0.5f, 0.5f, 1.0f,
+        -0.5f, -0.5f, 1.0f,
+        -0.5f, -0.5f, 0.0f,
+
+        0.5f, -0.5f, 0.0f, // Back
+        0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, 1.0f,
+        0.5f, 0.5f, 1.0f,
+        0.5f, -0.5f, 1.0f,
+        0.5f, -0.5f, 0.0f,
+
+        -0.5f, -0.5f, 0.0f, // Left
+        0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 1.0f,
+        0.5f, -0.5f, 1.0f,
+        -0.5f, -0.5f, 1.0f,
+        -0.5f, -0.5f, 0.0f,
+
+        -0.5f, 0.5f, 0.0f, // Right
+        0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, 1.0f,
+        0.5f, 0.5f, 1.0f,
+        -0.5f, 0.5f, 1.0f,
+        -0.5f, 0.5f, 0.0f};
+
+    glGenVertexArrays(1, &gridVAO);
+    glGenBuffers(1, &gridVBO);
+    glGenBuffers(1, &gridInstanceVBO);
+
+    glBindVertexArray(gridVAO);
+
+    // Base geometry
+    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(baseLineVertices), baseLineVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
+    // Instance data buffer (will be updated each frame)
+    glBindBuffer(GL_ARRAY_BUFFER, gridInstanceVBO);
+
+    // Instance attributes
+    // startPos (vec3)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GridLineInstance),
+                          (void *)offsetof(GridLineInstance, startPos));
+    glVertexAttribDivisor(1, 1);
+
+    // direction (vec3)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(GridLineInstance),
+                          (void *)offsetof(GridLineInstance, direction));
+    glVertexAttribDivisor(2, 1);
+
+    // thickness (float)
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(GridLineInstance),
+                          (void *)offsetof(GridLineInstance, thickness));
+    glVertexAttribDivisor(3, 1);
+
+    // length (float)
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(GridLineInstance),
+                          (void *)offsetof(GridLineInstance, length));
+    glVertexAttribDivisor(4, 1);
+
+    // color (vec3)
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(GridLineInstance),
+                          (void *)offsetof(GridLineInstance, color));
+    glVertexAttribDivisor(5, 1);
+
+    glBindVertexArray(0);
+    gridInitialized = true;
 }

@@ -25,6 +25,18 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
+# --------- AddressSanitizer Configuration ---------
+# Add option to enable sanitizers
+option(ENABLE_SANITIZERS "Enable AddressSanitizer and UBSan" OFF)
+
+if(ENABLE_SANITIZERS)
+    message(STATUS "Building with AddressSanitizer and UBSan enabled")
+    set(SANITIZER_FLAGS "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+endif()
+
 # Generate compile_commands.json for better IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

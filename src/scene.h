@@ -1,3 +1,5 @@
+#pragma once
+
 #include "game_object.h"
 #include "object_picker.h"
 #include "serialization_utilities.h"

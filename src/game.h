@@ -1,5 +1,5 @@
 #define GLM_ENABLE_EXPERIMENTAL
-
+#pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -32,6 +32,14 @@
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
 
+class InputManager;
+
+enum GameModeEnum
+{
+    GAME,
+    ENGINE
+};
+
 class Game
 {
 private:
@@ -44,13 +52,13 @@ private:
     // PhysicsManager physicsManager;
     // ResourceManager resourceManager;
     SphereCollision sphereCollision;
+    InputManager inputManager;
 
     // Game state
     // GameState currentState;
     float deltaTime;
     bool isRunning;
-    bool isDebug;
-    bool isGameMode;
+    GameModeEnum mode;
 
     // Window/context
     GLFWwindow *window;
@@ -74,6 +82,11 @@ public:
 
     void setScene(Scene *newScene) { scene = newScene; };
     Scene *getScene() { return scene; };
+
+    void setGameMode(GameModeEnum modeEnum) { mode = modeEnum; };
+    GameModeEnum getGameMode() { return mode; };
+
+    void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed);
 
     unsigned int SCR_WIDTH = 1440;
     unsigned int SCR_HEIGHT = 1440;

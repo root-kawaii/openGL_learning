@@ -16,10 +16,13 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "input.h"
+#include "game.h"
+
 bool gameMode = false;
 bool shadowsKeyPressed = false;
 
-void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
+void InputManager::processInput(Game game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
 {
     if (!gameMode)
     {
@@ -75,8 +78,12 @@ void processInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &sha
         }
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         {
-            gameMode = true;
-            camera->gameMode = true;
+            if (game.getGameMode() == ENGINE)
+            {
+                game.setGameMode(GAME);
+                return;
+            }
+            game.setGameMode(ENGINE);
         }
     }
     else

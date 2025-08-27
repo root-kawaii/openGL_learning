@@ -179,6 +179,7 @@ int main()
   Shader modelShader("shaders/model.vs", "shaders/model.fs");
   Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
   Shader gridShader("shaders/grid.vs", "shaders/grid.fs");
+  Shader gridShader2("shaders/grid_2.vs", "shaders/grid_2.fs");
 
   // Shader selectedShader("shaders/selected_shader.vs",
   // "shaders/selected_shader.fs");
@@ -386,7 +387,7 @@ int main()
     lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
     // input
     // -----
-    processInput(game.getWindow(), &game.camera, deltaTime, shadows, game.seed);
+    game.processGameInput(game.getWindow(), &game.camera, deltaTime, shadows, game.seed);
 
     // render
     // ------
@@ -921,14 +922,16 @@ int main()
       selected = false;
     }
 
-    modelShader.use();
-    modelShader.setMat4("projection", projection);
-    modelShader.setMat4("view", view);
-    model = glm::mat4(1.0f);
-    modelShader.setMat4("model", model);
-    renderManager.renderInfiniteGrid(view, game.camera.Position, 1.0f, 500,
-                                     0.02f, 1000);
-
+    if (game.getGameMode() == ENGINE)
+    {
+      gridShader2.use();
+      gridShader2.setMat4("projection", projection);
+      gridShader2.setMat4("view", view);
+      model = glm::mat4(1.0f);
+      gridShader2.setMat4("model", model);
+      renderManager.renderInfiniteGrid(view, game.camera.Position, gridShader2, 1.0f, 500,
+                                       0.02f, 1000);
+    }
     ///////////
 
     glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when

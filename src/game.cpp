@@ -9,6 +9,7 @@ Game::Game()
     : deltaTime(0.0f), isRunning(true), window(nullptr)
 {
     this->initWindow();
+    mode = ENGINE;
 }
 
 Game::~Game()
@@ -256,3 +257,8 @@ void Game::cleanup()
 // {
 //     // TODO: Save current game progress
 // }
+
+void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
+{
+    inputManager.processInput(*this, window, camera, deltaTime, shadows, seed);
+}
