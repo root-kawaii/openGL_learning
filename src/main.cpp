@@ -53,6 +53,30 @@
 // #include <../src/scene.h>
 // #include "../src/texture_debugger.cpp"
 
+#include <vector>
+#include <glm/glm.hpp>
+#include <random>
+
+std::vector<glm::vec3> makeThousandVecs()
+{
+  std::vector<glm::vec3> vecs;
+  vecs.reserve(1000);
+
+  // Random engine for variation
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<float> dist(-1.35f, 1.35f); // ±0.05 variation
+
+  for (int i = 0; i < 1000; ++i)
+  {
+    glm::vec3 base(0.0f, 0.5f, 0.0f);
+    glm::vec3 variation(dist(gen), 0, dist(gen));
+    vecs.push_back(base + variation);
+  }
+
+  return vecs;
+}
+
 unsigned int loadCubemap(vector<std::string> faces);
 GameObject loadSceneObject(const std::string &path, int stride,
                            unsigned int textureID);
@@ -170,9 +194,9 @@ int main()
   Shader shaderLightBox("shaders/deferred_light_box.vs",
                         "shaders/deferred_light_box.fs");
   Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
-  // Shader simpleDepthShader("shaders/simple_depth_shader.vs",
-  //                          "shaders/simple_depth_shader.fs",
-  //                          "shaders/simple_depth_shader.gs");
+  Shader simpleDepthShader("shaders/simple_depth_shader.vs",
+                           "shaders/simple_depth_shader.fs",
+                           "shaders/simple_depth_shader.gs");
   Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
   Shader simpleColorShader("shaders/shader.vs", "shaders/shader_flat_color.fs");
   Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
@@ -180,6 +204,7 @@ int main()
   Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
   Shader gridShader("shaders/grid.vs", "shaders/grid.fs");
   Shader gridShader2("shaders/grid_2.vs", "shaders/grid_2.fs");
+  Shader grassShader("shaders/grass.vs", "shaders/grass.fs", "shaders/grass.gs");
 
   // Shader selectedShader("shaders/selected_shader.vs",
   // "shaders/selected_shader.fs");
@@ -334,6 +359,8 @@ int main()
 
   audioManager.playSource();
   bool selected = false;
+
+  std::vector<glm::vec3> vec = makeThousandVecs();
 
   lastFrame = static_cast<float>(glfwGetTime());
   while (!glfwWindowShouldClose(game.getWindow()))
@@ -905,6 +932,47 @@ int main()
                                               glm::vec4(1, 0, 1, 1));
     }
 
+    ////////////////////////////////////////////////////
+
+    grassShader.use();
+    model = glm::mat4(1.0f);
+    grassShader.setMat4("model", model);
+    grassShader.setMat4("view", view);
+    grassShader.setMat4("projection", projection);
+
+    // Lighting uniforms
+    glm::vec3 lightDir = glm::vec3(0.2f, -1.0f, 0.3f);
+    grassShader.setVec3("lightDir", lightDir);
+    // Grass appearance
+    glm::vec3 grassColor = glm::vec3(0.2f, 0.6f, 0.2f);
+    glm::vec3 grassTipColor = glm::vec3(0.4f, 0.8f, 0.3f);
+    grassShader.setVec3("grassColor", grassColor);
+    grassShader.setVec3("grassTipColor", grassTipColor);
+    grassShader.setFloat("alphaThreshold", 0.1f);
+
+    grassShader.setFloat("time", glfwGetTime());
+    grassShader.setFloat("windSpeed", 0.4f);
+    grassShader.setFloat("windStrength", 0.4f);
+    grassShader.setFloat("grassHeight", 0.4f);
+    grassShader.setFloat("grassWidth", 0.05f);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_roughness);
+    grassShader.setInt("grassTexture", 0);
+
+    // Enable blending for grass transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Disable face culling so grass is visible from both sides
+    glDisable(GL_CULL_FACE);
+
+    // Render the grass
+    renderManager.renderGrassPoints(vec);
+
+    // Restore OpenGL state
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+
     // Engine Grid
 
     // gridShader.use();
@@ -922,7 +990,6 @@ int main()
       selected = false;
     }
 
-    std::cout << game.getGameMode() << std::endl;
     if (game.getGameMode() == ENGINE)
     {
       gridShader2.use();

@@ -249,6 +249,7 @@ public:
                             float lineThickness, bool drawCenterLines,
                             bool drawYAxis, float yAxisHeight);
     void renderGrid(glm::mat4 view, glm::mat4 projection);
+    void renderGrassPoints(const std::vector<glm::vec3> &positions);
 
 private:
     // Internal helper functions

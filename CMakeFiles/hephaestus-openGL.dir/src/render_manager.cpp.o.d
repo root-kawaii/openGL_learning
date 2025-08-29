@@ -383,7 +383,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glad/glad.h \
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h \
  /home/monolith/Desktop/openGL_learning/src/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
  /usr/include/c++/15.2.1/fstream /usr/include/c++/15.2.1/istream \
  /usr/include/c++/15.2.1/ios /usr/include/c++/15.2.1/bits/ios_base.h \
  /usr/include/c++/15.2.1/bits/locale_classes.h \
@@ -457,7 +457,6 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/anim.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
- /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /usr/include/c++/15.2.1/map /usr/include/c++/15.2.1/bits/stl_tree.h \
  /usr/include/c++/15.2.1/bits/stl_map.h \
  /usr/include/c++/15.2.1/bits/stl_multimap.h \

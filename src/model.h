@@ -1,5 +1,4 @@
-#ifndef MODEL_H
-#define MODEL_H
+#pragma once
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -10,7 +9,7 @@
 #include <assimp/postprocess.h>
 
 #include <../src/mesh.h>
-#include <../src/shader_s.h>
+#include "shader_m.h"
 
 #include <string>
 #include <fstream>
@@ -58,5 +57,3 @@ unsigned int TextureFromAssimp(const aiTexture *assimpTexture);
 unsigned int loadWhiteTexture();
 unsigned int loadDefaultMetallicTexture();
 unsigned int loadDefaultRoughnessTexture();
-
-#endif // MODEL_H

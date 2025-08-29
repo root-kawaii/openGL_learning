@@ -269,7 +269,7 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/matrix_transform.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_transform.inl \
  /home/monolith/Desktop/openGL_learning/src/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /home/monolith/Desktop/openGL_learning/src/shader_m.h \
  /usr/include/c++/15.2.1/string /usr/include/c++/15.2.1/bits/stringfwd.h \
  /usr/include/c++/15.2.1/bits/char_traits.h \
  /usr/include/c++/15.2.1/bits/postypes.h /usr/include/c++/15.2.1/cwchar \

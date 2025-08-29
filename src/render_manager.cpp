@@ -1456,3 +1456,38 @@ void RenderManager::initializeGridBuffers()
     glBindVertexArray(0);
     gridInitialized = true;
 }
+
+void RenderManager::renderGrassPoints(const std::vector<glm::vec3> &positions)
+{
+    ZoneScoped;
+    static unsigned int grassPointsVAO = 0;
+    static unsigned int grassPointsVBO = 0;
+
+    if (grassPointsVAO == 0)
+    {
+        glGenVertexArrays(1, &grassPointsVAO);
+        glGenBuffers(1, &grassPointsVBO);
+
+        glBindVertexArray(grassPointsVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, grassPointsVBO);
+
+        // Position attribute only
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+
+    if (!positions.empty())
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, grassPointsVBO);
+        glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), &positions[0], GL_DYNAMIC_DRAW);
+
+        glBindVertexArray(grassPointsVAO);
+        glDrawArrays(GL_POINTS, 0, positions.size());
+        glBindVertexArray(0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}

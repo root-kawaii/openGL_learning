@@ -430,7 +430,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
  /usr/include/c++/15.2.1/vector \
  /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
  /usr/include/c++/15.2.1/bits/stl_vector.h \
@@ -451,7 +451,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
- /home/monolith/Desktop/openGL_learning/include/../src/model.h \
  /usr/include/c++/15.2.1/filesystem /usr/include/c++/15.2.1/bits/fs_fwd.h \
  /usr/include/c++/15.2.1/bits/chrono.h /usr/include/c++/15.2.1/ratio \
  /usr/include/c++/15.2.1/ctime \
@@ -523,15 +522,12 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
- /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/render_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
- /home/monolith/Desktop/openGL_learning/src/../src/model.h \
  /home/monolith/Desktop/openGL_learning/src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \

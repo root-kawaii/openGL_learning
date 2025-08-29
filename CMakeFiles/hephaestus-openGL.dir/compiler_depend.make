@@ -2640,7 +2640,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o: include/imgu
 
 CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o: src/audio_manager.cpp \
   src/mesh.h \
-  src/shader_s.h \
+  src/shader_m.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -2828,6 +2828,7 @@ CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o: src/audio_manager.cpp 
   include/stb_image.h \
   src/audio_manager.h \
   src/model.h \
+  src/shader_m.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/alloca.h \
@@ -3149,7 +3150,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   src/scene.h \
   src/serialization_utilities.h \
   src/shader_m.h \
-  src/shader_s.h \
   src/stb_image.h \
   include/ImGuizmo/ImGuizmo.h \
   include/KHR/khrplatform.h \
@@ -3388,12 +3388,10 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   include/imgui/imgui.h \
   include/stb_image.h \
   src/camera.h \
-  src/mesh.h \
   src/shader_m.h \
   src/texture.h \
   src/audio_manager.h \
   src/camera.h \
-  src/model.h \
   src/render_manager.h \
   src/sphere_collision.h \
   tracy/public/common/TracyApi.h \
@@ -3815,7 +3813,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
 
 CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o: src/game_object.cpp \
   src/mesh.h \
-  src/shader_s.h \
+  src/shader_m.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -4049,6 +4047,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o: src/game_object.cpp \
   include/stb_image.h \
   src/game_object.h \
   src/model.h \
+  src/shader_m.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -4436,7 +4435,6 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   src/scene.h \
   src/serialization_utilities.h \
   src/shader_m.h \
-  src/shader_s.h \
   src/stb_image.h \
   include/ImGuizmo/ImGuizmo.h \
   include/KHR/khrplatform.h \
@@ -4675,12 +4673,10 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   include/imgui/imgui.h \
   include/stb_image.h \
   src/camera.h \
-  src/mesh.h \
   src/shader_m.h \
   src/texture.h \
   src/audio_manager.h \
   src/camera.h \
-  src/model.h \
   src/render_manager.h \
   src/sphere_collision.h \
   src/camera.h \
@@ -5053,7 +5049,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/scene.h \
   src/serialization_utilities.h \
   src/shader_m.h \
-  src/shader_s.h \
   src/stb_image.h \
   include/ImGuizmo/ImGuizmo.h \
   include/KHR/khrplatform.h \
@@ -5305,12 +5300,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   include/imgui/imgui.h \
   include/stb_image.h \
   src/camera.h \
-  src/mesh.h \
   src/shader_m.h \
   src/texture.h \
   src/audio_manager.h \
   src/camera.h \
-  src/model.h \
   src/render_manager.h \
   src/sphere_collision.h \
   src/game.h \
@@ -5536,6 +5529,8 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/bits/predefined_ops.h \
   /usr/include/c++/15.2.1/bits/ptr_traits.h \
   /usr/include/c++/15.2.1/bits/quoted_string.h \
+  /usr/include/c++/15.2.1/bits/random.h \
+  /usr/include/c++/15.2.1/bits/random.tcc \
   /usr/include/c++/15.2.1/bits/range_access.h \
   /usr/include/c++/15.2.1/bits/refwrap.h \
   /usr/include/c++/15.2.1/bits/requires_hosted.h \
@@ -5642,6 +5637,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
   /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
   /usr/include/c++/15.2.1/pstl/pstl_config.h \
+  /usr/include/c++/15.2.1/random \
   /usr/include/c++/15.2.1/ratio \
   /usr/include/c++/15.2.1/sstream \
   /usr/include/c++/15.2.1/stdexcept \
@@ -5685,6 +5681,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
@@ -5736,7 +5733,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
 
 CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
   src/mesh.h \
-  src/shader_s.h \
+  src/shader_m.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -5923,6 +5920,7 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
   include/glm/vec4.hpp \
   include/stb_image.h \
   src/model.h \
+  src/shader_m.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -6207,7 +6205,6 @@ CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o: src/model.cpp \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
 
 CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
-  src/shader_s.h \
   include/KHR/khrplatform.h \
   include/glad/glad.h \
   include/glm/detail/type_mat2x3.hpp \
@@ -6369,6 +6366,7 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
   src/camera.h \
   src/mesh.h \
   src/raycast.h \
+  src/shader_m.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -6628,8 +6626,6 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: src/raycast.cpp \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
 
 CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cpp \
-  src/mesh.h \
-  src/shader_s.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -7261,7 +7257,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: src/render_manager.cp
 CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   json/single_include/nlohmann/json.hpp \
   src/mesh.h \
-  src/shader_s.h \
+  src/shader_m.h \
   include/ImGuizmo/ImGuizmo.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
@@ -7503,6 +7499,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
   src/object_picker.h \
   src/scene.h \
   src/serialization_utilities.h \
+  src/shader_m.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -7849,7 +7846,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: src/scene.cpp \
 
 CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: src/sphere_collision.cpp \
   src/mesh.h \
-  src/shader_s.h \
+  src/shader_m.h \
   include/KHR/khrplatform.h \
   include/assimp/include/assimp/Compiler/poppack1.h \
   include/assimp/include/assimp/Compiler/pushpack1.h \
@@ -8084,6 +8081,7 @@ CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: src/sphere_collisio
   src/camera.h \
   src/game_object.h \
   src/model.h \
+  src/shader_m.h \
   src/sphere_collision.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -9979,8 +9977,6 @@ include/glm/detail/type_quat.inl:
 
 include/glm/ext/quaternion_relational.hpp:
 
-src/shader_m.h:
-
 src/scene.h:
 
 json/single_include/nlohmann/json.hpp:
@@ -10314,6 +10310,8 @@ include/glm/detail/type_mat2x4.hpp:
 tracy/public/client/TracyAlloc.cpp:
 
 include/glm/matrix.hpp:
+
+/usr/include/stdlib.h:
 
 /usr/include/endian.h:
 
@@ -10746,6 +10744,8 @@ include/glm/detail/type_mat4x2.hpp:
 include/glm/gtx/transform.hpp:
 
 include/glm/ext/matrix_double4x4_precision.hpp:
+
+src/shader_m.h:
 
 tracy/public/client/TracySysTime.hpp:
 
@@ -11415,14 +11415,6 @@ include/glm/mat2x4.hpp:
 
 src/audio_manager.cpp:
 
-/usr/include/stdlib.h:
-
-src/shader_s.h:
-
-src/game_object.cpp:
-
-include/glm/ext/matrix_double4x3_precision.hpp:
-
 include/glm/gtc/quaternion.hpp:
 
 include/glm/ext/matrix_clip_space.hpp:
@@ -11522,6 +11514,10 @@ CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o:
 include/glm/ext/matrix_double3x4_precision.hpp:
 
 include/glm/ext/matrix_double4x3.hpp:
+
+src/game_object.cpp:
+
+include/glm/ext/matrix_double4x3_precision.hpp:
 
 include/glm/ext/matrix_float2x3_precision.hpp:
 

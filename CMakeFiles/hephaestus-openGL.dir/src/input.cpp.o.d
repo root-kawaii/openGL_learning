@@ -309,7 +309,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /usr/include/c++/15.2.1/tuple \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
- /home/monolith/Desktop/openGL_learning/include/../src/shader_s.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
  /usr/include/c++/15.2.1/string /usr/include/c++/15.2.1/bits/stringfwd.h \
  /usr/include/c++/15.2.1/bits/char_traits.h \
  /usr/include/c++/15.2.1/bits/postypes.h /usr/include/c++/15.2.1/cwchar \
@@ -468,7 +468,6 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/anim.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/metadata.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
- /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /usr/include/c++/15.2.1/map /usr/include/c++/15.2.1/bits/stl_tree.h \
  /usr/include/c++/15.2.1/bits/stl_map.h \
  /usr/include/c++/15.2.1/bits/stl_multimap.h \
@@ -480,7 +479,6 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/euler_angles.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
- /home/monolith/Desktop/openGL_learning/include/../src/model.h \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
@@ -528,11 +526,9 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/src/../src/render_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
- /home/monolith/Desktop/openGL_learning/src/../src/model.h \
  /home/monolith/Desktop/openGL_learning/src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/camera.h
