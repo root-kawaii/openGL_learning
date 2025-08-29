@@ -20,7 +20,7 @@ void main()
     vec3 color = texture(texture_diffuse1, TexCoords).rgb;
     
     // Optional: Add simple lighting
-    vec3 ambient = 0.15 * color;
+    vec3 ambient = 0.99 * color;
     
     // Diffuse lighting
     vec3 lightColor = vec3(1.0);

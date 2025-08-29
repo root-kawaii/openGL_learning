@@ -2,53 +2,61 @@
 in vec2 FragTexCoord;
 in vec3 FragWorldPos;
 in float GrassHeight;
+in vec3 FragNormal;
 
-uniform sampler2D grassTexture;
-uniform vec3 grassColor;
-uniform vec3 grassTipColor;
-uniform float alphaThreshold;
+uniform sampler2D groundTexture;
 uniform vec3 lightDir;
+uniform vec3 lightColor;
+uniform float translucentGain;
+uniform float alphaThreshold;
 
 out vec4 FragColor;
 
-void main()
-{
-    vec4 texColor = texture(grassTexture, FragTexCoord);
+void main() {
+    // Sample ground texture
+    vec4 texColor = texture(groundTexture, FragTexCoord);
     
-    // Create procedural alpha if texture doesn't have it
-    float proceduralAlpha = 1.0;
+    // Create procedural alpha for grass blade shape
+    float edgeDistance = abs(FragTexCoord.x - 0.5) * 2.0;
+    float edgeFalloff = 1.0 - smoothstep(0.8, 1.0, edgeDistance);
+    float heightTaper = 1.0 - pow(GrassHeight, 1.5);
+    heightTaper = clamp(heightTaper, 0.1, 1.0);
     
-    // Make edges more transparent for softer look
-    float edgeFade = 1.0 - abs(FragTexCoord.x - 0.5) * 2.0; // Fade at sides
-    edgeFade = smoothstep(0.0, 0.5, edgeFade);
-    
-    // Taper towards top
-    float topTaper = 1.0 - pow(GrassHeight, 2.0);
-    topTaper = max(topTaper, 0.1); // Don't fade completely
-    
-    proceduralAlpha = edgeFade * topTaper;
-    
-    // Combine with texture alpha
-    float finalAlpha = 1;
+    float proceduralAlpha = edgeFalloff * heightTaper;
+    float finalAlpha = texColor.a * proceduralAlpha;
     
     if (finalAlpha < alphaThreshold) {
         discard;
     }
     
-    // Natural color variation
-    float heightFactor = smoothstep(0.0, 1.0, GrassHeight);
-    vec3 blendedColor = mix(grassColor, grassTipColor, heightFactor);
+    // Determine face direction (Unity-style two-sided lighting)
+    vec3 normal = normalize(FragNormal);
+    if (!gl_FrontFacing) {
+        normal = -normal;
+    }
     
-    // Simple lighting with subsurface scattering
+    // Unity-style lighting calculation
     vec3 lightDirection = normalize(-lightDir);
-    float NdotL = max(dot(vec3(0, 1, 0), lightDirection), 0.0);
-    float subsurface = max(dot(vec3(0, 1, 0), -lightDirection), 0.0) * 0.3;
-    float lightFactor = NdotL + subsurface + 0.4; // Ambient
     
-    vec3 finalColor = texColor.rgb * blendedColor * lightFactor;
+    // Diffuse with translucency (subsurface scattering approximation)
+    float NdotL = max(dot(normal, lightDirection), 0.0);
+    float translucency = max(dot(normal, -lightDirection), 0.0) * translucentGain;
+    float lighting = clamp(NdotL + translucency, 0.0, 1.0);
     
-    // Ambient occlusion at base
-    float ao = mix(0.8, 1.0, pow(GrassHeight, 0.5));
+    // Apply lighting
+    vec3 diffuse = lighting * lightColor;
+    
+    // Simple ambient (in Unity this would be SH lighting)
+    vec3 ambient = vec3(0.2, 0.25, 0.3); // Subtle blue-tinted ambient
+    
+    // Combine lighting
+    vec3 finalLighting = diffuse + ambient + 0.01; // Small constant to prevent pure black
+    
+    // Apply to texture
+    vec3 finalColor = texColor.rgb * finalLighting;
+    
+    // Simple ambient occlusion at base
+    float ao = mix(0.7, 1.0, pow(GrassHeight, 0.5));
     finalColor *= ao;
     
     FragColor = vec4(finalColor, finalAlpha);

@@ -60,14 +60,14 @@
 std::vector<glm::vec3> makeThousandVecs()
 {
   std::vector<glm::vec3> vecs;
-  vecs.reserve(1000);
+  vecs.reserve(10000);
 
   // Random engine for variation
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<float> dist(-1.35f, 1.35f); // ±0.05 variation
+  std::uniform_real_distribution<float> dist(-1.75f, 1.75f); // ±0.05 variation
 
-  for (int i = 0; i < 1000; ++i)
+  for (int i = 0; i < 10000; ++i)
   {
     glm::vec3 base(0.0f, 0.5f, 0.0f);
     glm::vec3 variation(dist(gen), 0, dist(gen));
@@ -143,8 +143,18 @@ int main()
 
   unsigned int smoke_texture =
       renderManager.loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
+
   unsigned int wood_texture = renderManager.loadTexture(
       "wood", fs::path("assets/wooden_texture.png").c_str());
+
+  unsigned int groundTexture = renderManager.loadTexture(
+      "groundTexture", fs::path("assets/GroundTexture.png").c_str());
+
+  unsigned int grassMaskTexture = renderManager.loadTexture(
+      "grassMaskTexture", fs::path("assets/GrassMask.png").c_str());
+
+  unsigned int windDistortionTexture = renderManager.loadTexture(
+      "windDistortionTexture", fs::path("assets/CircleDisplacementObject.png").c_str());
 
   // configure global opengl state
   // -----------------------------
@@ -928,6 +938,11 @@ int main()
     auto gameObjects = game.getScene()->getGameObjects();
     for (auto &i : gameObjects)
     {
+      if (i->name == "plane_01")
+      {
+        renderManager.renderGameObjectWithTexture(*i, simpleShader, groundTexture);
+        continue;
+      }
       renderManager.renderGameObjectWithColor(*i, simpleColorShader,
                                               glm::vec4(1, 0, 1, 1));
     }
@@ -940,24 +955,44 @@ int main()
     grassShader.setMat4("view", view);
     grassShader.setMat4("projection", projection);
 
-    // Lighting uniforms
-    glm::vec3 lightDir = glm::vec3(0.2f, -1.0f, 0.3f);
-    grassShader.setVec3("lightDir", lightDir);
-    // Grass appearance
-    glm::vec3 grassColor = glm::vec3(0.2f, 0.6f, 0.2f);
-    glm::vec3 grassTipColor = glm::vec3(0.4f, 0.8f, 0.3f);
-    grassShader.setVec3("grassColor", grassColor);
-    grassShader.setVec3("grassTipColor", grassTipColor);
-    grassShader.setFloat("alphaThreshold", 0.1f);
-
+    // Time and basic wind
     grassShader.setFloat("time", glfwGetTime());
-    grassShader.setFloat("windSpeed", 0.4f);
-    grassShader.setFloat("windStrength", 0.4f);
-    grassShader.setFloat("grassHeight", 0.4f);
-    grassShader.setFloat("grassWidth", 0.05f);
+    grassShader.setFloat("windSpeed", 1.0f);
+    grassShader.setFloat("windStrength", 0.5f);
+
+    // Unity-style grass properties
+    grassShader.setFloat("grassHeight", 0.8f);        // _BladeHeight
+    grassShader.setFloat("grassWidth", 0.05f);        // _BladeWidth
+    grassShader.setFloat("bladeHeightRandom", 0.3f);  // _BladeHeightRandom
+    grassShader.setFloat("bladeWidthRandom", 0.02f);  // _BladeWidthRandom
+    grassShader.setFloat("bendRotationRandom", 0.2f); // _BendRotationRandom
+    grassShader.setFloat("bladeForward", 0.38f);      // _BladeForward
+    grassShader.setFloat("bladeCurve", 2.0f);         // _BladeCurve
+    grassShader.setFloat("bendRotationRandom", 0.4f); // Increase for more wild grass
+
+    // Wind settings
+    grassShader.setVec2("windFrequency", glm::vec2(0.05f, 0.05f)); // _WindFrequency
+
+    // Mask settings
+    grassShader.setFloat("grassMaskThreshold", 0.1f); // _GrassMaskThreshold
+
+    // Lighting
+    grassShader.setVec3("lightDir", glm::vec3(0.3f, -0.8f, 0.2f));
+    grassShader.setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.8f)); // Warm sunlight
+    grassShader.setFloat("translucentGain", 0.5f);                   // _TranslucentGain
+    grassShader.setFloat("alphaThreshold", 0.05f);
+
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_roughness);
-    grassShader.setInt("grassTexture", 0);
+    glBindTexture(GL_TEXTURE_2D, groundTexture);
+    grassShader.setInt("groundTexture", 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, windDistortionTexture);
+    grassShader.setInt("windDistortionMap", 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, grassMaskTexture);
+    grassShader.setInt("grassMask", 2);
 
     // Enable blending for grass transparency
     glEnable(GL_BLEND);
