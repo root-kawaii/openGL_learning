@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <float.h>
+#include "shader_m.h"
 
 // AABB (Axis-Aligned Bounding Box) structure
 struct AABB
@@ -61,6 +62,7 @@ class GameObject
 public:
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale);
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius);
+    GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius, std::string shaderName);
     GameObject(std::shared_ptr<GameObject> gameObject);
     ~GameObject();
 
@@ -80,6 +82,7 @@ public:
     void CalculateAABB(); // Call this after loading model to calculate local AABB
 
     Model model;
+    std::string shaderName;
     std::string modelPath;
     glm::vec3 position;
     glm::vec3 rotation; // Euler angles in radians

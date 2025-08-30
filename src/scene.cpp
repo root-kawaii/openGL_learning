@@ -9,7 +9,7 @@ Scene::Scene()
   for (auto i : serializer.getObjects())
   {
     addGameObject(std::make_shared<GameObject>(
-        i.id, i.path, i.position, i.rotation, i.scale, i.collisionRadius));
+        i.id, i.path, i.position, i.rotation, i.scale, i.collisionRadius, i.shader_name));
   }
 }
 
@@ -124,7 +124,7 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   }
 }
 
-void Scene::addCubeOnTop()
+void Scene::addCubeOnTop(std::string shader_name)
 {
   // Helper lambda to round to nearest half integer (0.5 or 1.5)
   auto roundToHalf = [](float value) -> float
@@ -144,7 +144,7 @@ void Scene::addCubeOnTop()
     std::cout << "building flat" << std::endl;
     std::shared_ptr<GameObject> p = std::make_shared<GameObject>(
         "cube", "assets/cube.obj", roundedGroundSelection,
-        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f);
+        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
     addGameObject(p);
     selectedObject = p;
 
@@ -158,7 +158,7 @@ void Scene::addCubeOnTop()
     std::cout << "building on top" << std::endl;
     std::shared_ptr<GameObject> pp = std::make_shared<GameObject>(
         "cube", "assets/cube.obj", selectedObject->position + glm::vec3(0, 1, 0),
-        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f);
+        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
     addGameObject(pp);
     selectedObject = pp;
   }

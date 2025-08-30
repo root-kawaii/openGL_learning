@@ -27,6 +27,19 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 {
 }
 
+GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName)
+    : model(fs::path(modelPath)), // Initialize Model here!
+      modelPath(modelPath),
+      name(name),
+      position(position),
+      rotation(rotation),
+      scale(scale),
+      speed(glm::vec3(0, 0, 0)),
+      collisionRadius(collisionRadius),
+      shaderName(shaderName)
+{
+}
+
 GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
     : model(gameObject->model) // Copy the model
       ,

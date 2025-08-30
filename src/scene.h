@@ -54,7 +54,7 @@ public:
   void save(const std::string &path);
   void load(const std::string &path);
 
-  void addCubeOnTop();
+  void addCubeOnTop(std::string shaderName);
   void setSelectedObject(std::shared_ptr<GameObject> object)
   {
     selectedObject = object;

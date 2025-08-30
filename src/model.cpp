@@ -197,33 +197,33 @@ vector<Mesh_Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
     }
 
     // Provide default textures if none are found
-    if (textures.empty())
-    {
-        Mesh_Texture defaultTex;
-        if (type == aiTextureType_DIFFUSE)
-        {
-            defaultTex.id = loadWhiteTexture();
-            defaultTex.type = "texture_diffuse";
-            defaultTex.path = "default_white";
-        }
-        else if (type == aiTextureType_METALNESS)
-        {
-            defaultTex.id = loadDefaultMetallicTexture();
-            defaultTex.type = "texture_metallic";
-            defaultTex.path = "default_metallic";
-        }
-        else if (type == aiTextureType_DIFFUSE_ROUGHNESS)
-        {
-            defaultTex.id = loadDefaultRoughnessTexture();
-            defaultTex.type = "texture_roughness";
-            defaultTex.path = "default_roughness";
-        }
+    // if (textures.empty())
+    // {
+    //     Mesh_Texture defaultTex;
+    //     if (type == aiTextureType_DIFFUSE)
+    //     {
+    //         defaultTex.id = loadWhiteTexture();
+    //         defaultTex.type = "texture_diffuse";
+    //         defaultTex.path = "default_white";
+    //     }
+    //     else if (type == aiTextureType_METALNESS)
+    //     {
+    //         defaultTex.id = loadDefaultMetallicTexture();
+    //         defaultTex.type = "texture_metallic";
+    //         defaultTex.path = "default_metallic";
+    //     }
+    //     else if (type == aiTextureType_DIFFUSE_ROUGHNESS)
+    //     {
+    //         defaultTex.id = loadDefaultRoughnessTexture();
+    //         defaultTex.type = "texture_roughness";
+    //         defaultTex.path = "default_roughness";
+    //     }
 
-        if (defaultTex.id != 0)
-        {
-            textures.push_back(defaultTex);
-        }
-    }
+    //     if (defaultTex.id != 0)
+    //     {
+    //         textures.push_back(defaultTex);
+    //     }
+    // }
 
     return textures;
 }

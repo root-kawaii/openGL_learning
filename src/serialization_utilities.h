@@ -13,6 +13,7 @@ struct SceneObject
     std::string id;
     std::string name;
     std::string path;
+    std::string shader_name;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
@@ -96,6 +97,7 @@ public:
     {
         SceneObject obj;
         obj.collisionRadius = 0;
+        obj.shader_name = "default";
 
         try
         {
@@ -111,6 +113,10 @@ public:
             if (objData.contains("path"))
             {
                 obj.path = objData["path"];
+            }
+            if (objData.contains("shader_name"))
+            {
+                obj.shader_name = objData["shader_name"];
             }
 
             // Extract position
@@ -178,6 +184,7 @@ public:
                 objData["id"] = obj.name;
                 // objData["name"] = std::to_string(obj.ID);
                 objData["path"] = obj.modelPath;
+                objData["shader_name"] = obj.shaderName;
 
                 objData["position"] = {
                     {"x", obj.position.x},

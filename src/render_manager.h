@@ -54,7 +54,7 @@ private:
     std::vector<RenderCommand> uiQueue;
 
     // Shader management
-    // std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
+    std::unordered_map<std::string, std::shared_ptr<Shader>> shaders;
     std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
     // std::unordered_map<std::string, std::unique_ptr<Mesh>> meshes;
 
@@ -108,6 +108,9 @@ public:
     ~RenderManager();
 
     Camera *currentCamera;
+
+    unsigned int depthFBO;
+    unsigned int depthTexture;
 
     // Initialization
     bool initialize(int width, int height);
@@ -188,6 +191,7 @@ public:
     Mesh *loadMesh(const std::string &name, const std::string &path);
 
     Shader *getShader(const std::string &name);
+    void useShader(GameObject &gameObject, Shader *shader);
     Texture *getTexture(const std::string &name);
     Mesh *getMesh(const std::string &name);
 
@@ -233,7 +237,8 @@ public:
 
     int getTextureCounter() { return textureCounter; }
 
-    void renderGameObject(GameObject &gameObject, Shader shader);
+    void renderGameObject(GameObject &gameObject);
+    void renderGameObjectWithShader(GameObject &gameObject, Shader shader);
     void renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID);
     void renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color);
 
@@ -250,6 +255,9 @@ public:
                             bool drawYAxis, float yAxisHeight);
     void renderGrid(glm::mat4 view, glm::mat4 projection);
     void renderGrassPoints(const std::vector<glm::vec3> &positions);
+
+    void initializeShaders();
+    void initializeDepthFBO();
 
 private:
     // Internal helper functions

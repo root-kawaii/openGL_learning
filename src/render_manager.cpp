@@ -15,8 +15,7 @@ RenderManager::~RenderManager()
 bool RenderManager::initialize(int width, int height)
 {
     // TODO: Initialize OpenGL states, default shaders, etc.
-    screenHeight = height;
-    screenWidth = width;
+    setRes(height, width);
     return true;
 }
 
@@ -116,8 +115,9 @@ Mesh *RenderManager::loadMesh(const std::string &name, const std::string &path)
 
 Shader *RenderManager::getShader(const std::string &name)
 {
-    // TODO: Return shader by name
-    return nullptr;
+    if (name == "default")
+        return shaders.at("simple_shader").get();
+    return shaders.at(name).get();
 }
 
 Texture *RenderManager::getTexture(const std::string &name)
@@ -1048,7 +1048,7 @@ void RenderManager::renderQuadForSmoke()
     glBindVertexArray(0);
 }
 
-void RenderManager::renderGameObject(GameObject &gameObject, Shader shader)
+void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader shader)
 {
     ZoneScoped;
     shader.use();
@@ -1060,6 +1060,73 @@ void RenderManager::renderGameObject(GameObject &gameObject, Shader shader)
     shader.setMat4("model", model);
     shader.setFloat("time", glfwGetTime());
     gameObject.model.Draw(shader);
+}
+
+void RenderManager::renderGameObject(GameObject &gameObject)
+{
+    ZoneScoped;
+    Shader shader = *getShader(gameObject.shaderName);
+    useShader(gameObject, &shader);
+    gameObject.model.Draw(shader);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+void RenderManager::useShader(GameObject &gameObject, Shader *shader)
+{
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, gameObject.position) * scaling;
+    shader->use();
+    shader->setMat4("projection", projectionMatrix);
+    shader->setMat4("view", viewMatrix);
+    shader->setMat4("model", model);
+    shader->setFloat("time", glfwGetTime());
+    if (gameObject.shaderName == "water_noG")
+    {
+        // Camera and view uniforms
+        glUniform3fv(glGetUniformLocation(shader->ID, "cameraPos"), 1, &currentCamera->Position[0]);
+        glUniform1f(glGetUniformLocation(shader->ID, "nearPlane"), 0.1f);
+        glUniform1f(glGetUniformLocation(shader->ID, "farPlane"), 1000.0f);
+
+        // Lighting uniforms
+        // glUniform3fv(glGetUniformLocation(shader->ID, "lightDir"), 1, &lightDirection[0]);
+        // glUniform3fv(glGetUniformLocation(shader->ID, "lightColor"), 1, &lightColor[0]);
+        // glUniformMatrix4fv(glGetUniformLocation(shader->ID, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+
+        // Water color properties (based on your reference image)
+        glm::vec3 shallowColor = glm::vec3(0.4f, 0.8f, 0.9f); // Light turquoise
+        glm::vec3 deepColor = glm::vec3(0.1f, 0.4f, 0.6f);    // Deeper blue
+        glUniform3fv(glGetUniformLocation(shader->ID, "waterColorShallow"), 1, &shallowColor[0]);
+        glUniform3fv(glGetUniformLocation(shader->ID, "waterColorDeep"), 1, &deepColor[0]);
+
+        // Water behavior parameters
+        glUniform1f(glGetUniformLocation(shader->ID, "waterTransparency"), 0.6f);
+        glUniform1f(glGetUniformLocation(shader->ID, "foamThreshold"), 1.0f);
+        glUniform1f(glGetUniformLocation(shader->ID, "foamStrength"), 2.2f);
+        glUniform1f(glGetUniformLocation(shader->ID, "time"), glfwGetTime());
+
+        // Bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glUniform1i(glGetUniformLocation(shader->ID, "depthTexture"), 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textures.at("foam").get()->id);
+        glUniform1i(glGetUniformLocation(shader->ID, "foamTexture"), 1);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, textures.at("water_normal").get()->id);
+        glUniform1i(glGetUniformLocation(shader->ID, "normalMap"), 2);
+
+        // glActiveTexture(GL_TEXTURE3);
+        // glBindTexture(GL_TEXTURE_2D, shadowMap);
+        // glUniform1i(glGetUniformLocation(shader->ID, "shadowMap"), 3);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+    }
 }
 
 // Overloaded version with vec4 color (includes alpha)
@@ -1489,5 +1556,66 @@ void RenderManager::renderGrassPoints(const std::vector<glm::vec3> &positions)
         glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}
+
+void RenderManager::initializeShaders()
+{
+    // Two-file shaders (vertex + fragment)
+    shaders["depth_pre_pass"] = std::make_shared<Shader>("shaders/depth_pre_pass.vs", "shaders/depth_pre_pass.fs");
+    shaders["water_shader"] = std::make_shared<Shader>("shaders/water.vs", "shaders/water.fs");
+    shaders["terrain_shader"] = std::make_shared<Shader>("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
+    shaders["geometry_pass_shader"] = std::make_shared<Shader>("shaders/g_buffer.vs", "shaders/g_buffer.fs");
+    shaders["selected_shader"] = std::make_shared<Shader>("shaders/g_buffer.vs", "shaders/g_buffer_selected.fs");
+    shaders["lighting_pass_shader"] = std::make_shared<Shader>("shaders/deferred_shading.vs", "shaders/deferred_shading.fs");
+    shaders["light_box_shader"] = std::make_shared<Shader>("shaders/deferred_light_box.vs", "shaders/deferred_light_box.fs");
+    shaders["skybox_shader"] = std::make_shared<Shader>("shaders/cubemap.vs", "shaders/cubemap.fs");
+    shaders["simple_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader.fs");
+    shaders["simple_color_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_flat_color.fs");
+    shaders["debug_shader"] = std::make_shared<Shader>("shaders/debug.vs", "shaders/debug.fs");
+    shaders["model_shader"] = std::make_shared<Shader>("shaders/model.vs", "shaders/model.fs");
+    shaders["smoke_shader"] = std::make_shared<Shader>("shaders/smoke.vs", "shaders/smoke.fs");
+    shaders["grid_shader"] = std::make_shared<Shader>("shaders/grid.vs", "shaders/grid.fs");
+    shaders["grid_shader_2"] = std::make_shared<Shader>("shaders/grid_2.vs", "shaders/grid_2.fs");
+    shaders["water_noG"] = std::make_shared<Shader>("shaders/water_2.vs", "shaders/water_2.fs");
+
+    // Three-file shaders (vertex + fragment + geometry)
+    shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
+                                                              "shaders/simple_depth_shader.fs",
+                                                              "shaders/simple_depth_shader.gs");
+    shaders["grass_shader"] = std::make_shared<Shader>("shaders/grass.vs",
+                                                       "shaders/grass.fs",
+                                                       "shaders/grass.gs");
+}
+
+void RenderManager::initializeDepthFBO()
+{
+    // Create depth framebuffer
+    glGenFramebuffers(1, &depthFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+
+    // Create depth texture
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, screenWidth, screenHeight,
+                 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Attach depth texture to framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+    // We only need depth, so disable color buffer
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    // Check framebuffer completeness
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "Depth framebuffer not complete!" << std::endl;
     }
 }

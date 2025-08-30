@@ -127,6 +127,8 @@ int main()
   renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
   renderManager.setupGBuffer();
   renderManager.setupMSAAGBuffer();
+  renderManager.initializeShaders();
+  renderManager.initializeDepthFBO();
   // TracyGpuContext;
 
   namespace fs = std::filesystem;
@@ -146,6 +148,12 @@ int main()
 
   unsigned int wood_texture = renderManager.loadTexture(
       "wood", fs::path("assets/wooden_texture.png").c_str());
+
+  unsigned int water_normal_texture = renderManager.loadTexture(
+      "water_normal", fs::path("assets/water_normal.png").c_str());
+
+  unsigned int foam_texture = renderManager.loadTexture(
+      "foam", fs::path("assets/foam.png").c_str());
 
   unsigned int groundTexture = renderManager.loadTexture(
       "groundTexture", fs::path("assets/GroundTexture.png").c_str());
@@ -195,27 +203,6 @@ int main()
       "assets/skybox/front.jpg", "assets/skybox/back.jpg"};
   unsigned int cubemapTexture = loadCubemap(faces);
 
-  Shader waterShader("shaders/water.vs", "shaders/water.fs");
-  Shader terrainShader("shaders/g_buffer_2.vs", "shaders/g_buffer.fs");
-  Shader shaderGeometryPass("shaders/g_buffer.vs", "shaders/g_buffer.fs");
-  Shader selectedShader("shaders/g_buffer.vs", "shaders/g_buffer_selected.fs");
-  Shader shaderLightingPass("shaders/deferred_shading.vs",
-                            "shaders/deferred_shading.fs");
-  Shader shaderLightBox("shaders/deferred_light_box.vs",
-                        "shaders/deferred_light_box.fs");
-  Shader skyboxShader("shaders/cubemap.vs", "shaders/cubemap.fs");
-  Shader simpleDepthShader("shaders/simple_depth_shader.vs",
-                           "shaders/simple_depth_shader.fs",
-                           "shaders/simple_depth_shader.gs");
-  Shader simpleShader("shaders/shader.vs", "shaders/shader.fs");
-  Shader simpleColorShader("shaders/shader.vs", "shaders/shader_flat_color.fs");
-  Shader debugShader("shaders/debug.vs", "shaders/debug.fs");
-  Shader modelShader("shaders/model.vs", "shaders/model.fs");
-  Shader smokeShader("shaders/smoke.vs", "shaders/smoke.fs");
-  Shader gridShader("shaders/grid.vs", "shaders/grid.fs");
-  Shader gridShader2("shaders/grid_2.vs", "shaders/grid_2.fs");
-  Shader grassShader("shaders/grass.vs", "shaders/grass.fs", "shaders/grass.gs");
-
   // Shader selectedShader("shaders/selected_shader.vs",
   // "shaders/selected_shader.fs");
 
@@ -229,9 +216,6 @@ int main()
   auto waterPlane = mainScene.findObjectByName("water_plane_01");
   auto plane = mainScene.findObjectByName("plane_01");
   auto gun = mainScene.findObjectByName("gun_01");
-  auto ball = mainScene.findObjectByName("ball_01");
-  auto ball_2 = mainScene.findObjectByName("ball_02");
-  auto ball_3 = mainScene.findObjectByName("ball_03");
   auto bullet = mainScene.findObjectByName("bullet_01");
 
   Model helmet(fs::path("assets/helmet.glb"));
@@ -324,28 +308,19 @@ int main()
   // shadowmaps
 
   const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
-  unsigned int depthMapFBO;
-  glGenFramebuffers(1, &depthMapFBO);
-  // create depth cubemap texture
-  unsigned int depthCubemap;
-  glGenTextures(1, &depthCubemap);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-  for (unsigned int i = 0; i < 6; ++i)
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-                 SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                 NULL);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-  // attach depth texture as FBO's depth buffer
-  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-  glDrawBuffer(GL_NONE);
-  glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  Shader skyboxShader = *renderManager.getShader("skybox_shader");
+  Shader shaderLightingPass = *renderManager.getShader("lighting_pass_shader");
+  Shader waterShader = *renderManager.getShader("water_shader");
+  Shader gridShader2 = *renderManager.getShader("grid_shader_2");
+  Shader simpleShader = *renderManager.getShader("simple_shader");
+  Shader simpleColorShader = *renderManager.getShader("simple_color_shader");
+  Shader grassShader = *renderManager.getShader("grass_shader");
+  Shader shaderLightBox = *renderManager.getShader("light_box_shader");
+  Shader shaderGeometryPass = *renderManager.getShader("geometry_pass_shader");
+  Shader depthPrePass = *renderManager.getShader("depth_pre_pass");
 
   shaderLightingPass.use();
   shaderLightingPass.setInt("gPosition", 0);
@@ -379,6 +354,7 @@ int main()
     glm::vec3 lastFrameCameraPos = game.camera.Position;
     float near_plane = 0.10f;
     float far_plane = 1000.0f;
+    glm::mat4 model;
     glm::mat4 projection = glm::perspective(
         glm::radians(game.camera.Zoom),
         (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
@@ -431,40 +407,51 @@ int main()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // shadows
-    glm::mat4 shadowProj = glm::perspective(
-        glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT,
-        near_plane, far_plane);
-    std::vector<glm::mat4> shadowTransforms;
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(1.0f, 0.0f, 0.0f),
-                                 glm::vec3(0.0f, -1.0f, 0.0f)));
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(-1.0f, 0.0f, 0.0f),
-                                 glm::vec3(0.0f, -1.0f, 0.0f)));
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(0.0f, 1.0f, 0.0f),
-                                 glm::vec3(0.0f, 0.0f, 1.0f)));
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(0.0f, -1.0f, 0.0f),
-                                 glm::vec3(0.0f, 0.0f, -1.0f)));
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(0.0f, 0.0f, 1.0f),
-                                 glm::vec3(0.0f, -1.0f, 0.0f)));
-    shadowTransforms.push_back(
-        shadowProj * glm::lookAt(lightPos,
-                                 lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
-                                 glm::vec3(0.0f, -1.0f, 0.0f)));
+    // // shadows
+    // glm::mat4 shadowProj = glm::perspective(
+    //     glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT,
+    //     near_plane, far_plane);
+    // std::vector<glm::mat4> shadowTransforms;
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(1.0f, 0.0f, 0.0f),
+    //                              glm::vec3(0.0f, -1.0f, 0.0f)));
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(-1.0f, 0.0f, 0.0f),
+    //                              glm::vec3(0.0f, -1.0f, 0.0f)));
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(0.0f, 1.0f, 0.0f),
+    //                              glm::vec3(0.0f, 0.0f, 1.0f)));
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(0.0f, -1.0f, 0.0f),
+    //                              glm::vec3(0.0f, 0.0f, -1.0f)));
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(0.0f, 0.0f, 1.0f),
+    //                              glm::vec3(0.0f, -1.0f, 0.0f)));
+    // shadowTransforms.push_back(
+    //     shadowProj * glm::lookAt(lightPos,
+    //                              lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
+    //                              glm::vec3(0.0f, -1.0f, 0.0f)));
 
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderManager.depthFBO);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glm::mat4 model;
+    glDrawBuffer(GL_NONE);
+    auto gameObjects = game.getScene()->getGameObjects();
+    for (auto &i : gameObjects)
+    {
+      if (i->shaderName == "water_noG")
+      {
+        continue;
+      }
+      renderManager.renderGameObjectWithShader(*i, depthPrePass);
+    }
     // simpleDepthShader.use();
     // for (unsigned int i = 0; i < 6; ++i)
     //   simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]",
@@ -496,10 +483,10 @@ int main()
     // 1. geometry pass: render scene's geometry/color data into gbuffer
     // -----------------------------------------------------------------
     glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderManager.getGBuffer());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    // glBindFramebuffer(GL_FRAMEBUFFER, renderManager.getGBuffer());
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glEnable(GL_DEPTH_TEST);
+    // glDisable(GL_BLEND);
 
     // model = glm::mat4(1.0f);
 
@@ -702,109 +689,109 @@ int main()
     // quad pixel-by-pixel using the gbuffer's content.
     // -----------------------------------------------------------------------------------------------------------------------
 
-    glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-    glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
+    // glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
+    // glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager.getGBuffer());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-    // blit to default framebuffer. Note that this may or may not work as the
-    // internal formats of both the FBO and default framebuffer have to match.
-    // the internal formats are implementation defined. This works on all of my
-    // systems, but if it doesn't on yours you'll likely have to write to the
-    // depth buffer in another shader stage (or somehow see to match the default
-    // framebuffer's internal format with the FBO's internal format).
-    glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0,
-                      game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT,
-                      GL_NEAREST);
-    glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager.getGBuffer());
+    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+    // // blit to default framebuffer. Note that this may or may not work as the
+    // // internal formats of both the FBO and default framebuffer have to match.
+    // // the internal formats are implementation defined. This works on all of my
+    // // systems, but if it doesn't on yours you'll likely have to write to the
+    // // depth buffer in another shader stage (or somehow see to match the default
+    // // framebuffer's internal format with the FBO's internal format).
+    // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0,
+    //                   game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT,
+    //                   GL_NEAREST);
+    // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
 
-    shaderLightingPass.use();
-    // shadows
-    // glCullFace(GL_FRONT);
-    // PBR
-    shaderLightingPass.setFloat("metallic", 0.1f);
-    shaderLightingPass.setFloat("roughness", 0.2f);
-    // shaderLightingPass.setFloat("metallic",
-    // static_cast<float>(sin(glfwGetTime() * 1.5) ));
-    // shaderLightingPass.setFloat("roughness",
-    // static_cast<float>(sin(glfwGetTime())));
-    shaderLightingPass.setFloat("ao", 0.5f);
-    ///
-    shaderLightingPass.setMat4("projection", projection);
-    shaderLightingPass.setMat4("view", view);
-    // set lighting uniformss
-    shaderLightingPass.setVec3("viewPos", game.camera.Position);
-    shaderLightingPass.setInt("shadows",
-                              1); // enable/disable shadows by pressing 'SPACE'
-    shaderLightingPass.setFloat("far_plane", far_plane);
-    shaderLightingPass.setFloat("near_plane", near_plane);
-    // NEW: Set the missing uniforms for improved shader
-    shaderLightingPass.setInt("numLights", lightPositions.size());
-    shaderLightingPass.setFloat("ambientStrength", 0.1f);
-    shaderLightingPass.setFloat("shadowBias", 0.05f);
-    // send light relevant uniforms
-    for (unsigned int i = 0; i < lightPositions.size(); i++)
-    {
-      shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Position",
-                                 lightPositions[i]);
-      shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Color",
-                                 lightColors[i]);
-      // update attenuation parameters and calculate radius
-      const float linear = 0.7f;
-      const float quadratic = 1.8f;
-      shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Linear",
-                                  linear);
-      shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Quadratic",
-                                  quadratic);
-      float maxBrightness = std::fmaxf(
-          std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
-      float radius =
-          (-linear + std::sqrt(linear * linear -
-                               4 * quadratic *
-                                   (1.0f - (256.0f / 5.0f) * maxBrightness))) /
-          (2 * quadratic);
-      shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Radius",
-                                  radius);
-    }
+    // shaderLightingPass.use();
+    // // shadows
+    // // glCullFace(GL_FRONT);
+    // // PBR
+    // shaderLightingPass.setFloat("metallic", 0.1f);
+    // shaderLightingPass.setFloat("roughness", 0.2f);
+    // // shaderLightingPass.setFloat("metallic",
+    // // static_cast<float>(sin(glfwGetTime() * 1.5) ));
+    // // shaderLightingPass.setFloat("roughness",
+    // // static_cast<float>(sin(glfwGetTime())));
+    // shaderLightingPass.setFloat("ao", 0.5f);
+    // ///
+    // shaderLightingPass.setMat4("projection", projection);
+    // shaderLightingPass.setMat4("view", view);
+    // // set lighting uniformss
+    // shaderLightingPass.setVec3("viewPos", game.camera.Position);
+    // shaderLightingPass.setInt("shadows",
+    //                           1); // enable/disable shadows by pressing 'SPACE'
+    // shaderLightingPass.setFloat("far_plane", far_plane);
+    // shaderLightingPass.setFloat("near_plane", near_plane);
+    // // NEW: Set the missing uniforms for improved shader
+    // shaderLightingPass.setInt("numLights", lightPositions.size());
+    // shaderLightingPass.setFloat("ambientStrength", 0.1f);
+    // shaderLightingPass.setFloat("shadowBias", 0.05f);
+    // // send light relevant uniforms
+    // for (unsigned int i = 0; i < lightPositions.size(); i++)
+    // {
+    //   shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Position",
+    //                              lightPositions[i]);
+    //   shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Color",
+    //                              lightColors[i]);
+    //   // update attenuation parameters and calculate radius
+    //   const float linear = 0.7f;
+    //   const float quadratic = 1.8f;
+    //   shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Linear",
+    //                               linear);
+    //   shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Quadratic",
+    //                               quadratic);
+    //   float maxBrightness = std::fmaxf(
+    //       std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
+    //   float radius =
+    //       (-linear + std::sqrt(linear * linear -
+    //                            4 * quadratic *
+    //                                (1.0f - (256.0f / 5.0f) * maxBrightness))) /
+    //       (2 * quadratic);
+    //   shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Radius",
+    //                               radius);
+    // }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getDepthTexture());
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getMetallicTexture());
-    glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getRoughnessTexture());
-    glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
+    // glActiveTexture(GL_TEXTURE2);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
+    // glActiveTexture(GL_TEXTURE3);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getDepthTexture());
+    // glActiveTexture(GL_TEXTURE4);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
+    // glActiveTexture(GL_TEXTURE5);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getMetallicTexture());
+    // glActiveTexture(GL_TEXTURE6);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getRoughnessTexture());
+    // glActiveTexture(GL_TEXTURE7);
+    // glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
-    // finally render quad
-    glDisable(GL_DEPTH_TEST);
-    renderManager.renderQuad();
-    glEnable(GL_DEPTH_TEST);
+    // // finally render quad
+    // glDisable(GL_DEPTH_TEST);
+    // renderManager.renderQuad();
+    // glEnable(GL_DEPTH_TEST);
 
-    // //////////////////////////////////////
+    // // //////////////////////////////////////
 
-    glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
+    // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneFramebuffer);
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneFramebuffer);
 
-    // Bind the default framebuffer for drawing
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer
+    // // Bind the default framebuffer for drawing
+    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer
 
-    // Copy color buffer to the screen
-    glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // src rect
-                      0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // dst rect
-                      GL_COLOR_BUFFER_BIT,                   // what to copy
-                      GL_NEAREST                             // filtering
-    );
+    // // Copy color buffer to the screen
+    // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // src rect
+    //                   0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // dst rect
+    //                   GL_COLOR_BUFFER_BIT,                   // what to copy
+    //                   GL_NEAREST                             // filtering
+    // );
 
     // ///////////
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -816,99 +803,99 @@ int main()
 
     // Reflections
 
-    waterShader.use();
-    waterShader.setFloat("time", glfwGetTime());
-    waterShader.setFloat("waveHeight", 1.75f);
-    waterShader.setFloat("waveSpeed", 0.3f);
-    waterShader.setFloat("waveFreq", 0.3f);
+    // waterShader.use();
+    // waterShader.setFloat("time", glfwGetTime());
+    // waterShader.setFloat("waveHeight", 1.75f);
+    // waterShader.setFloat("waveSpeed", 0.3f);
+    // waterShader.setFloat("waveFreq", 0.3f);
 
-    // Set up model matrix (if your water is a simple plane transformed by
-    // 'model') This is typically done per object.
-    model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your
-    // water position
-    waterShader.setMat4("model", model);
-    waterShader.setMat4("view", view);
+    // // Set up model matrix (if your water is a simple plane transformed by
+    // // 'model') This is typically done per object.
+    // model = glm::mat4(1.0f);
+    // // model = glm::translate(model, glm::vec3(5.5f, -2.5f, 0.5f)); // Your
+    // // water position
+    // waterShader.setMat4("model", model);
+    // waterShader.setMat4("view", view);
 
-    // --- Pass all necessary view/projection matrices ---
-    // These are standard for any object rendering, and also needed by the
-    // fragment shader
-    waterShader.setMat4("projection", projection); // 'projection' uniform in FS
-    waterShader.setMat4("viewMatrix",
-                        view); // 'viewMatrix' uniform in FS (was 'view' in VS,
-                               // consistent name for FS)
+    // // --- Pass all necessary view/projection matrices ---
+    // // These are standard for any object rendering, and also needed by the
+    // // fragment shader
+    // waterShader.setMat4("projection", projection); // 'projection' uniform in FS
+    // waterShader.setMat4("viewMatrix",
+    //                     view); // 'viewMatrix' uniform in FS (was 'view' in VS,
+    //                            // consistent name for FS)
 
-    // Calculate and pass the combined and inverse matrices
-    glm::mat4 viewProjectionMatrix = projection * view;
-    waterShader.setMat4("viewProjection",
-                        viewProjectionMatrix); // 'viewProjection' uniform in FS
-    waterShader.setMat4(
-        "inverseViewProjection",
-        glm::inverse(
-            viewProjectionMatrix)); // 'inverseViewProjection' uniform in FS
+    // // Calculate and pass the combined and inverse matrices
+    // glm::mat4 viewProjectionMatrix = projection * view;
+    // waterShader.setMat4("viewProjection",
+    //                     viewProjectionMatrix); // 'viewProjection' uniform in FS
+    // waterShader.setMat4(
+    //     "inverseViewProjection",
+    //     glm::inverse(
+    //         viewProjectionMatrix)); // 'inverseViewProjection' uniform in FS
 
-    // --- CRITICAL ADDITIONS from our corrected fragment shader ---
-    // These two were missing from your latest C++ snippet, but are crucial for
-    // ReconstructWorldPosition:
-    waterShader.setMat4(
-        "inverseProjection",
-        glm::inverse(projection)); // NEW: 'inverseProjection' uniform in FS
-    waterShader.setMat4("inverseView",
-                        glm::inverse(view)); // NEW: 'inverseView' uniform in FS
+    // // --- CRITICAL ADDITIONS from our corrected fragment shader ---
+    // // These two were missing from your latest C++ snippet, but are crucial for
+    // // ReconstructWorldPosition:
+    // waterShader.setMat4(
+    //     "inverseProjection",
+    //     glm::inverse(projection)); // NEW: 'inverseProjection' uniform in FS
+    // waterShader.setMat4("inverseView",
+    //                     glm::inverse(view)); // NEW: 'inverseView' uniform in FS
 
-    // Set camera position
-    waterShader.setVec3("cameraWorldPos", game.camera.Position);
+    // // Set camera position
+    // waterShader.setVec3("cameraWorldPos", game.camera.Position);
 
-    // Set screen size
-    waterShader.setVec2("screenSize",
-                        glm::vec2(game.SCR_WIDTH, game.SCR_HEIGHT));
+    // // Set screen size
+    // waterShader.setVec2("screenSize",
+    //                     glm::vec2(game.SCR_WIDTH, game.SCR_HEIGHT));
 
-    // --- ADDED: Near and Far Plane values ---
-    // These are now uniforms in the fragment shader for LinearizeDepth (even if
-    // not directly used by current ReconstructWorldPosition) Make sure
-    // 'yourCameraNearPlane' and 'yourCameraFarPlane' are actual float values
-    // from your camera setup For example: camera.NearPlane, camera.FarPlane, or
-    // hardcoded floats like 0.1f, 100.0f
-    waterShader.setFloat("nearPlane", near_plane); // e.g., camera.nearPlane
-    waterShader.setFloat("farPlane", far_plane);   // e.g., camera.farPlane
+    // // --- ADDED: Near and Far Plane values ---
+    // // These are now uniforms in the fragment shader for LinearizeDepth (even if
+    // // not directly used by current ReconstructWorldPosition) Make sure
+    // // 'yourCameraNearPlane' and 'yourCameraFarPlane' are actual float values
+    // // from your camera setup For example: camera.NearPlane, camera.FarPlane, or
+    // // hardcoded floats like 0.1f, 100.0f
+    // waterShader.setFloat("nearPlane", near_plane); // e.g., camera.nearPlane
+    // waterShader.setFloat("farPlane", far_plane);   // e.g., camera.farPlane
 
-    // Bind G-buffer textures
-    while (glGetError() != GL_NO_ERROR)
-      ;
+    // // Bind G-buffer textures
+    // while (glGetError() != GL_NO_ERROR)
+    //   ;
 
-    // Bind textures with error checking
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
-    if (glGetError() != GL_NO_ERROR)
-      std::cout << "Error binding gPosition" << std::endl;
+    // // Bind textures with error checking
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
+    // if (glGetError() != GL_NO_ERROR)
+    //   std::cout << "Error binding gPosition" << std::endl;
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
-    if (glGetError() != GL_NO_ERROR)
-      std::cout << "Error binding gNormal" << std::endl;
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
+    // if (glGetError() != GL_NO_ERROR)
+    //   std::cout << "Error binding gNormal" << std::endl;
 
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
-    if (glGetError() != GL_NO_ERROR)
-      std::cout << "Error binding gAlbedoSpec" << std::endl;
+    // glActiveTexture(GL_TEXTURE2);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
+    // if (glGetError() != GL_NO_ERROR)
+    //   std::cout << "Error binding gAlbedoSpec" << std::endl;
 
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
-    if (glGetError() != GL_NO_ERROR)
-      std::cout << "Error binding gLinearDepth" << std::endl;
+    // glActiveTexture(GL_TEXTURE3);
+    // glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
+    // if (glGetError() != GL_NO_ERROR)
+    //   std::cout << "Error binding gLinearDepth" << std::endl;
 
-    // Set uniforms AFTER binding textures
-    waterShader.setInt("gPosition", 0);
-    waterShader.setInt("gNormal", 1);
-    waterShader.setInt("gAlbedoSpec", 2);
-    waterShader.setInt("gLinearDepth", 3);
+    // // Set uniforms AFTER binding textures
+    // waterShader.setInt("gPosition", 0);
+    // waterShader.setInt("gNormal", 1);
+    // waterShader.setInt("gAlbedoSpec", 2);
+    // waterShader.setInt("gLinearDepth", 3);
 
-    // Now render the water
-    // model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your
-    // water position
-    waterShader.setMat4("model", model);
+    // // Now render the water
+    // // model = glm::translate(model, glm::vec3(5.5f, -1.75f, 0.5f)); // Your
+    // // water position
+    // waterShader.setMat4("model", model);
     // waterPlane->model.Draw(waterShader);
-    renderManager.renderGameObject(*waterPlane, waterShader);
+    // renderManager.renderGameObject(*waterPlane, waterShader);
     //
 
     // Light boxes
@@ -935,7 +922,7 @@ int main()
     glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
     ///
-    auto gameObjects = game.getScene()->getGameObjects();
+    gameObjects = game.getScene()->getGameObjects();
     for (auto &i : gameObjects)
     {
       if (i->name == "plane_01")
@@ -943,8 +930,7 @@ int main()
         renderManager.renderGameObjectWithTexture(*i, simpleShader, groundTexture);
         continue;
       }
-      renderManager.renderGameObjectWithColor(*i, simpleColorShader,
-                                              glm::vec4(1, 0, 1, 1));
+      renderManager.renderGameObject(*i);
     }
 
     ////////////////////////////////////////////////////
@@ -1017,7 +1003,7 @@ int main()
     if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && selected == false)
     {
       std::cout << "building" << std::endl;
-      mainScene.addCubeOnTop();
+      mainScene.addCubeOnTop("water_noG");
       selected = true;
     }
     if (glfwGetKey(game.getWindow(), GLFW_KEY_U) == GLFW_PRESS)
@@ -1102,7 +1088,7 @@ int main()
     // glDisable(GL_BLEND);
     // const float GRAVITY_STRENGTH = 1000.0f; // Controls how strong the pull
     // is. const float DAMPING_FACTOR = 0.95;
-    glm::vec3 directionToBall = ball_3->position - game.camera.Position;
+    // glm::vec3 directionToBall = ball_3->position - game.camera.Position;
 
     // // 2. Normalize the direction vector to get a unit vector.
     // // This gives us the direction without a magnitude, which we will apply
