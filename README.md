@@ -14,7 +14,9 @@ Understand text rendering and display stuff I need
 NEXT TO DO:
 
 
-- grass
+- add features to imgui to help me add stuff to the world in a easier way
+(ex buttonws with various models and various shaders etc)
+- improved old stuff for water
 
 
 - try to build a beautiful scene - need ImGuizmo (?)

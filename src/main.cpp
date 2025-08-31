@@ -348,6 +348,8 @@ int main()
   std::vector<glm::vec3> vec = makeThousandVecs();
 
   lastFrame = static_cast<float>(glfwGetTime());
+  renderManager.setRes(game.SCR_WIDTH, game.SCR_HEIGHT);
+  renderManager.initializeDepthFBO();
   while (!glfwWindowShouldClose(game.getWindow()))
   {
 
@@ -359,6 +361,7 @@ int main()
         glm::radians(game.camera.Zoom),
         (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
     glm::mat4 view = game.camera.GetViewMatrix();
+
     renderManager.setViewMatrix(view);
     renderManager.setProjectionMatrix(projection);
     // audioManager.loopAudio();

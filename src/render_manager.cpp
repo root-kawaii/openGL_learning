@@ -1089,21 +1089,27 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader)
         glUniform1f(glGetUniformLocation(shader->ID, "nearPlane"), 0.1f);
         glUniform1f(glGetUniformLocation(shader->ID, "farPlane"), 1000.0f);
 
+        // Set these in your C++ code:
+        glUniform1i(glGetUniformLocation(shader->ID, "depthBands"), 4);
+        glUniform1i(glGetUniformLocation(shader->ID, "foamBands"), 3);
+        glUniform1f(glGetUniformLocation(shader->ID, "cellShadingStrength"), 0.4f);
+        glUniform1f(glGetUniformLocation(shader->ID, "foamStrength"), 1.0f);
+
         // Lighting uniforms
         // glUniform3fv(glGetUniformLocation(shader->ID, "lightDir"), 1, &lightDirection[0]);
         // glUniform3fv(glGetUniformLocation(shader->ID, "lightColor"), 1, &lightColor[0]);
         // glUniformMatrix4fv(glGetUniformLocation(shader->ID, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]);
 
         // Water color properties (based on your reference image)
-        glm::vec3 shallowColor = glm::vec3(0.4f, 0.8f, 0.9f); // Light turquoise
+        glm::vec3 shallowColor = glm::vec3(0.4f, 0.7f, 0.9f); // Light turquoise
         glm::vec3 deepColor = glm::vec3(0.1f, 0.4f, 0.6f);    // Deeper blue
         glUniform3fv(glGetUniformLocation(shader->ID, "waterColorShallow"), 1, &shallowColor[0]);
         glUniform3fv(glGetUniformLocation(shader->ID, "waterColorDeep"), 1, &deepColor[0]);
 
         // Water behavior parameters
-        glUniform1f(glGetUniformLocation(shader->ID, "waterTransparency"), 0.6f);
-        glUniform1f(glGetUniformLocation(shader->ID, "foamThreshold"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader->ID, "foamStrength"), 2.2f);
+        glUniform1f(glGetUniformLocation(shader->ID, "waterTransparency"), 0.25f);
+        glUniform1f(glGetUniformLocation(shader->ID, "foamThreshold"), 1.5f);
+        // glUniform1f(glGetUniformLocation(shader->ID, "foamStrength"), 3.2f);
         glUniform1f(glGetUniformLocation(shader->ID, "time"), glfwGetTime());
 
         // Bind textures

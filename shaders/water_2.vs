@@ -17,7 +17,7 @@ void main()
     WorldPos = vec3(model * vec4(aPos, 1.0));
     
     // Simple wave animation for water surface
-    float wave = sin(WorldPos.x * 0.5 + time) * 0.02 + 
+    float wave = sin(WorldPos.x * 0.5 + time) * 0.05 + 
                 cos(WorldPos.z * 0.3 + time * 1.2) * 0.015;
     WorldPos.y += wave;
     
