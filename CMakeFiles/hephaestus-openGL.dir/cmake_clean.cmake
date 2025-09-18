@@ -52,6 +52,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o.d"
   "hephaestus-openGL"

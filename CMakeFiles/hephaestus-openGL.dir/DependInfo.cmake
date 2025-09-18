@@ -34,6 +34,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/src/stb_image.cpp" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/stb_image.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/texture.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/texture_debugger.cpp" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/ui.cpp" "CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/tracy/public/TracyClient.cpp" "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o.d"
   "" "hephaestus-openGL" "gcc" "CMakeFiles/hephaestus-openGL.dir/link.d"
   )

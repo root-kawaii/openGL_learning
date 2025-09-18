@@ -753,6 +753,30 @@ src/texture_debugger.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/texture_debugger.cpp.s
 .PHONY : src/texture_debugger.cpp.s
 
+src/ui.o: src/ui.cpp.o
+.PHONY : src/ui.o
+
+# target to build an object file
+src/ui.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o
+.PHONY : src/ui.cpp.o
+
+src/ui.i: src/ui.cpp.i
+.PHONY : src/ui.i
+
+# target to preprocess a source file
+src/ui.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.i
+.PHONY : src/ui.cpp.i
+
+src/ui.s: src/ui.cpp.s
+.PHONY : src/ui.s
+
+# target to generate assembly for a file
+src/ui.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.s
+.PHONY : src/ui.cpp.s
+
 tracy/public/TracyClient.o: tracy/public/TracyClient.cpp.o
 .PHONY : tracy/public/TracyClient.o
 
@@ -864,6 +888,9 @@ help:
 	@echo "... src/texture_debugger.o"
 	@echo "... src/texture_debugger.i"
 	@echo "... src/texture_debugger.s"
+	@echo "... src/ui.o"
+	@echo "... src/ui.i"
+	@echo "... src/ui.s"
 	@echo "... tracy/public/TracyClient.o"
 	@echo "... tracy/public/TracyClient.i"
 	@echo "... tracy/public/TracyClient.s"
