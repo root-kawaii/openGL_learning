@@ -12,7 +12,7 @@ Understand text rendering and display stuff I need
 ------------------------------------------------
 
 NEXT TO DO:
-
+- hardcoded res in UI projection matrix
 
 - add features to imgui to help me add stuff to the world in a easier way
 (ex buttonws with various models and various shaders etc)
