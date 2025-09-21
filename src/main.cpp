@@ -48,13 +48,13 @@
 #include "../src/texture.h"
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
+#include "../src/ui.h"
 
 // Note: Uncomment these if needed
 // #include <../src/scene.h>
 // #include "../src/texture_debugger.cpp"
 
 #include <vector>
-#include <glm/glm.hpp>
 #include <random>
 
 std::vector<glm::vec3> makeThousandVecs()
@@ -119,6 +119,8 @@ int main()
   ImGui_ImplGlfw_InitForOpenGL(game.getWindow(), true);
   ImGui_ImplOpenGL3_Init("#version 330");
 
+  UIManager ui(game.SCR_HEIGHT, game.SCR_WIDTH);
+
   Scene mainScene = Scene();
   game.setScene(&mainScene);
   RenderManager renderManager = game.getRenderManager();
@@ -130,6 +132,8 @@ int main()
   renderManager.initializeShaders();
   renderManager.initializeDepthFBO();
   // TracyGpuContext;
+
+  mainScene.setRenderManager(&renderManager);
 
   namespace fs = std::filesystem;
   // unsigned int albedo =
@@ -372,8 +376,10 @@ int main()
     ImGuizmo::BeginFrame();
     ImGuiIO &io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    mainScene.handleInput(view, projection);
+    mainScene.handleInput(view, projection, renderManager);
     mainScene.renderGizmo(view, projection);
+    // Render a white box
+    // ui.setProjectionMatrix(projection); // For 1920x1080
 
     // NOW this is safe:
     ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x,
@@ -936,6 +942,8 @@ int main()
       renderManager.renderGameObject(*i);
     }
 
+    renderManager.renderSceneToIDBuffer(gameObjects);
+
     ////////////////////////////////////////////////////
 
     grassShader.use();
@@ -1006,7 +1014,7 @@ int main()
     if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && selected == false)
     {
       std::cout << "building" << std::endl;
-      mainScene.addCubeOnTop("water_noG");
+      mainScene.addCubeOnTop("simple_color_shader");
       selected = true;
     }
     if (glfwGetKey(game.getWindow(), GLFW_KEY_U) == GLFW_PRESS)
@@ -1024,7 +1032,6 @@ int main()
       renderManager.renderInfiniteGrid(view, game.camera.Position, gridShader2, 1.0f, 500,
                                        0.02f, 1000);
     }
-    ///////////
 
     glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when
                             // values are equal to depth buffer's content
@@ -1042,6 +1049,25 @@ int main()
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 
+    ///////////
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    ui.renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
+
+    // For softer blending
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Or for additive blending (glowing effect)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+    // Render with coordinated colors
+
+    ui.RenderText(std::to_string(game.camera.Position.x), 10.0f, 10.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    ui.RenderText(std::to_string(game.camera.Position.y), 10.0f, 50.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    glDisable(GL_BLEND);
+
+    ///////////
     ////////////////////////////////////
 
     // std::vector<glm::vec3> smokePositions;

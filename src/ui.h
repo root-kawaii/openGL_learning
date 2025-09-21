@@ -5,51 +5,46 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <map>
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "../src/shader_m.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+struct Character
+{
+    unsigned int TextureID; // ID handle of the glyph texture
+    glm::ivec2 Size;        // Size of glyph
+    glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
+    unsigned int Advance;   // Offset to advance to next glyph
+};
 
 class UIManager
 {
 private:
-    unsigned int ciao;
-
     // OpenGL objects
-    unsigned int shaderProgram;
-    unsigned int VAO, VBO, EBO;
+    unsigned int uiShaderProgram;
+    unsigned int textShaderProgram;
+    unsigned int textVAO, textVBO;
+    unsigned int uiVAO, uiVBO, uiEBO;
+
+    std::map<char, Character> characters;
 
     // Shader sources
-    const char *vertexShaderSource = R"(
-        #version 330 core
-        layout (location = 0) in vec2 aPos;
-        
-        uniform mat4 projection;
-        uniform vec2 position;
-        uniform vec2 size;
-        
-        void main() {
-            vec2 scaledPos = aPos * size + position;
-            gl_Position = projection * vec4(scaledPos, 0.0, 1.0);
-        }
-    )";
+    Shader uiShader;
+    Shader textShader;
 
-    const char *fragmentShaderSource = R"(
-        #version 330 core
-        out vec4 FragColor;
-        
-        uniform vec3 color;
-        uniform float alpha;
-        
-        void main() {
-            FragColor = vec4(color, alpha);
-        }
-    )";
+    unsigned int screenWidth;
+    unsigned int screenHeight;
 
-    // Helper functions
-    unsigned int compileShader(unsigned int type, const char *source);
-    unsigned int createShaderProgram();
     void setupQuadGeometry();
+    unsigned int setUpFont();
 
 public:
-    UIManager();
+    UIManager(unsigned int height, unsigned int width);
     ~UIManager();
 
     void renderUIBBox(float width, float height, float x_pos, float y_pos);
@@ -57,6 +52,8 @@ public:
                       float r, float g, float b, float alpha = 1.0f);
 
     // Utility functions
-    void setProjectionMatrix(float left, float right, float bottom, float top);
+    void setProjectionMatrix(const glm::mat4 &matrix);
+
+    void RenderText(std::string text, float x, float y, float scale, glm::vec3 color);
 };
 ;

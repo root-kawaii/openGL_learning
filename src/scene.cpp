@@ -2,37 +2,6 @@
 #include "game_object.h"
 #include <memory>
 
-Scene::Scene()
-{
-  entityCounter = 0;
-  serializer.loadScene("levels/one.json");
-  for (auto i : serializer.getObjects())
-  {
-    addGameObject(std::make_shared<GameObject>(
-        i.id, i.path, i.position, i.rotation, i.scale, i.collisionRadius, i.shader_name));
-  }
-}
-
-Scene::~Scene()
-{
-
-  serializer.saveScene("levels/one.json", gameObjects);
-  // TBD
-}
-
-uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
-{
-  // Better ID generation
-  uint32_t id = generateUniqueId();
-  gameObject->ID = id;
-
-  // Add to both containers
-  objectsById[id] = gameObject;
-  gameObjects.push_back(gameObject);
-
-  return id;
-}
-
 void Scene::destroyGameObject(GameObject *obj) { obj->~GameObject(); }
 
 // linear lookup time, not made for frequent use
@@ -53,35 +22,6 @@ std::shared_ptr<GameObject> Scene::findObjectById(uint32_t id)
 {
   auto it = objectsById.find(id);
   return (it != objectsById.end()) ? it->second : nullptr;
-}
-
-uint32_t Scene::generateUniqueId() { return ++entityCounter; }
-
-void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection)
-{
-  ImGuiIO &io = ImGui::GetIO();
-
-  // Only handle clicks if not over ImGui or ImGuizmo
-  if (!io.WantCaptureMouse && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
-  {
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-    {
-      selectedObject =
-          picker.PickObject(io.MousePos.x, io.MousePos.y, gameObjects, view,
-                            projection, io.DisplaySize.x, io.DisplaySize.y);
-
-      if (selectedObject == nullptr)
-      {
-        std::cout << "grounded" << std::endl;
-        groundSelection = picker.PickGroundPosition(
-            io.MousePos.x, io.MousePos.y, view, projection, io.DisplaySize.x,
-            io.DisplaySize.y, 0.0f);
-        std::cout << groundSelection.x << std::endl;
-        std::cout << groundSelection.y << std::endl;
-        std::cout << groundSelection.z << std::endl;
-      }
-    }
-  }
 }
 
 void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
@@ -124,6 +64,168 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   }
 }
 
+Scene::Scene()
+{
+  entityCounter = 1; // Always start fresh from 1
+  serializer.loadScene("levels/one.json");
+
+  std::cout << "Loading scene objects with generated IDs..." << std::endl;
+
+  for (auto i : serializer.getObjects())
+  {
+    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign new ID
+    auto gameObject = std::make_shared<GameObject>(
+        i.id, // This becomes the name, not the ID
+        i.path,
+        i.position,
+        i.rotation,
+        i.scale,
+        i.collisionRadius,
+        i.shader_name);
+
+    // FIX: Use addGameObject which will assign a fresh generated ID
+    uint32_t newID = addGameObject(gameObject);
+
+    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID << std::endl;
+  }
+
+  std::cout << "Scene loaded with " << gameObjects.size() << " objects" << std::endl;
+  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
+
+  // Validate all IDs are correct
+  validateAllIDs();
+}
+
+uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
+{
+  // Generate fresh ID - always unique, always > 0
+  uint32_t id = generateUniqueId();
+
+  // Assign the generated ID to the object
+  gameObject->ID = id;
+
+  // Add to both containers
+  objectsById[id] = gameObject;
+  gameObjects.push_back(gameObject);
+
+  std::cout << "Added GameObject '" << gameObject->name << "' with ID: " << id << std::endl;
+
+  return id;
+}
+
+uint32_t Scene::generateUniqueId()
+{
+  return entityCounter++; // Returns 1, 2, 3, 4, 5... (never 0)
+}
+
+void Scene::validateAllIDs()
+{
+  std::cout << "\n=== ID VALIDATION ===" << std::endl;
+  std::map<uint32_t, int> idCounts;
+  bool hasErrors = false;
+
+  for (size_t i = 0; i < gameObjects.size(); ++i)
+  {
+    const auto &obj = gameObjects[i];
+    if (!obj)
+    {
+      std::cout << "❌ ERROR: Null object at index " << i << std::endl;
+      hasErrors = true;
+      continue;
+    }
+
+    std::cout << "[" << i << "] '" << obj->name << "' -> ID: " << obj->ID << std::endl;
+
+    if (obj->ID == 0)
+    {
+      std::cout << "  ❌ ERROR: ID 0 is reserved for background!" << std::endl;
+      hasErrors = true;
+    }
+
+    idCounts[obj->ID]++;
+  }
+
+  // Check for duplicates
+  for (const auto &pair : idCounts)
+  {
+    if (pair.second > 1)
+    {
+      std::cout << "❌ ERROR: ID " << pair.first << " appears " << pair.second << " times!" << std::endl;
+      hasErrors = true;
+    }
+  }
+
+  if (!hasErrors)
+  {
+    std::cout << "✅ All " << gameObjects.size() << " objects have valid unique IDs!" << std::endl;
+  }
+
+  std::cout << "ID range: 1 to " << (entityCounter - 1) << std::endl;
+  std::cout << "Next ID will be: " << entityCounter << std::endl;
+  std::cout << "===================" << std::endl;
+}
+
+void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, RenderManager renderManager)
+{
+  ImGuiIO &io = ImGui::GetIO();
+
+  // Only handle clicks if not over ImGui or ImGuizmo
+  if (!io.WantCaptureMouse && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+  {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+
+      unsigned int objID = renderManager.getObjectId(io.MousePos.x, io.MousePos.y);
+      std::cout << "\n=== MOUSE CLICK ===" << std::endl;
+      std::cout << "Mouse position: (" << io.MousePos.x << ", " << io.MousePos.y << ")" << std::endl;
+      std::cout << "ID buffer returned: " << objID << std::endl;
+
+      if (objID == 0)
+      {
+        // Background clicked
+        std::cout << "✓ Background clicked (ID 0)" << std::endl;
+        selectedObject = nullptr;
+
+        // Handle ground selection
+        std::cout << "Calculating ground position..." << std::endl;
+        groundSelection = picker.PickGroundPosition(
+            io.MousePos.x, io.MousePos.y, view, projection,
+            io.DisplaySize.x, io.DisplaySize.y, 0.0f);
+
+        std::cout << "Ground position: (" << groundSelection.x << ", "
+                  << groundSelection.y << ", " << groundSelection.z << ")" << std::endl;
+      }
+      else
+      {
+        // Object clicked - find it safely
+        auto it = objectsById.find(objID);
+        if (it != objectsById.end())
+        {
+          selectedObject = it->second;
+          std::cout << "✓ Selected object: '" << selectedObject->name
+                    << "' (ID: " << objID << ")" << std::endl;
+        }
+        else
+        {
+          std::cout << "❌ ERROR: ID " << objID << " not found in scene!" << std::endl;
+          std::cout << "Valid IDs in scene: ";
+          for (const auto &pair : objectsById)
+          {
+            std::cout << pair.first << " ";
+          }
+          std::cout << std::endl;
+
+          // This indicates a problem with ID buffer rendering
+          std::cout << "⚠️  This suggests the ID buffer contains wrong data!" << std::endl;
+          selectedObject = nullptr;
+        }
+      }
+      std::cout << "===================" << std::endl;
+    }
+  }
+}
+
+// Enhanced cube creation with proper ID handling
 void Scene::addCubeOnTop(std::string shader_name)
 {
   // Helper lambda to round to nearest half integer (0.5 or 1.5)
@@ -141,25 +243,64 @@ void Scene::addCubeOnTop(std::string shader_name)
 
   if (!selectedObject)
   {
-    std::cout << "building flat" << std::endl;
-    std::shared_ptr<GameObject> p = std::make_shared<GameObject>(
+    std::cout << "Building cube on ground..." << std::endl;
+
+    // Create GameObject - addGameObject will assign ID
+    std::shared_ptr<GameObject> newCube = std::make_shared<GameObject>(
         "cube", "assets/cube.obj", roundedGroundSelection,
         glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
-    addGameObject(p);
-    selectedObject = p;
 
-    std::cout << roundedGroundSelection.x << std::endl;
-    std::cout << roundedGroundSelection.y << std::endl;
-    std::cout << roundedGroundSelection.z << std::endl;
+    uint32_t cubeID = addGameObject(newCube); // This assigns the ID
+    selectedObject = newCube;
+
+    std::cout << "Created cube at (" << roundedGroundSelection.x << ", "
+              << roundedGroundSelection.y << ", " << roundedGroundSelection.z
+              << ") with ID: " << cubeID << std::endl;
   }
   else
   {
+    std::cout << "Building cube on top of selected object..." << std::endl;
 
-    std::cout << "building on top" << std::endl;
-    std::shared_ptr<GameObject> pp = std::make_shared<GameObject>(
-        "cube", "assets/cube.obj", selectedObject->position + glm::vec3(0, 1, 0),
+    glm::vec3 newPosition = selectedObject->position + glm::vec3(0, 1, 0);
+
+    std::shared_ptr<GameObject> newCube = std::make_shared<GameObject>(
+        "cube", "assets/cube.obj", newPosition,
         glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
-    addGameObject(pp);
-    selectedObject = pp;
+
+    uint32_t cubeID = addGameObject(newCube); // This assigns the ID
+    selectedObject = newCube;
+
+    std::cout << "Created cube at (" << newPosition.x << ", "
+              << newPosition.y << ", " << newPosition.z
+              << ") with ID: " << cubeID << std::endl;
   }
+}
+
+// Destructor - save scene with current state
+Scene::~Scene()
+{
+  std::cout << "Saving scene with generated IDs..." << std::endl;
+  serializer.saveScene("levels/one.json", gameObjects);
+}
+
+// Debug method to print all objects and their IDs
+void Scene::debugPrintAllObjects()
+{
+  std::cout << "\n=== ALL SCENE OBJECTS ===" << std::endl;
+  std::cout << "Total objects: " << gameObjects.size() << std::endl;
+
+  for (size_t i = 0; i < gameObjects.size(); ++i)
+  {
+    const auto &obj = gameObjects[i];
+    if (obj)
+    {
+      std::cout << "[" << i << "] ID:" << obj->ID << " Name:'" << obj->name
+                << "' Path:'" << obj->modelPath << "'" << std::endl;
+    }
+    else
+    {
+      std::cout << "[" << i << "] ❌ NULL OBJECT" << std::endl;
+    }
+  }
+  std::cout << "=========================" << std::endl;
 }

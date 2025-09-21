@@ -93,6 +93,23 @@ public:
     float ID;
     std::string name;
 
+    glm::mat4 getModelMatrix() const
+    {
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+        // 1. Apply translation
+        modelMatrix = glm::translate(modelMatrix, position);
+
+        // 2. Apply rotation
+        glm::mat4 rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+        modelMatrix *= rotationMatrix;
+
+        // 3. Apply scale
+        modelMatrix = glm::scale(modelMatrix, scale);
+
+        return modelMatrix;
+    }
+
 private:
     unsigned int VAO, VBO;
     unsigned int texture = 0;

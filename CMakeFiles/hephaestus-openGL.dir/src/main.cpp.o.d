@@ -586,15 +586,32 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/game.h \
  /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/render_manager.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
  /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/render_manager.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/shader_m.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/audio_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/ui.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
+ /usr/include/freetype2/ft2build.h \
+ /usr/include/freetype2/freetype/config/ftheader.h \
+ /usr/include/freetype2/freetype/freetype.h \
+ /usr/include/freetype2/freetype/config/ftconfig.h \
+ /usr/include/freetype2/freetype/config/ftoption.h \
+ /usr/include/freetype2/freetype/config/ftstdlib.h /usr/include/setjmp.h \
+ /usr/include/freetype2/freetype/config/integer-types.h \
+ /usr/include/freetype2/freetype/config/public-macros.h \
+ /usr/include/freetype2/freetype/config/mac-support.h \
+ /usr/include/freetype2/freetype/fttypes.h \
+ /usr/include/freetype2/freetype/ftsystem.h \
+ /usr/include/freetype2/freetype/ftimage.h \
+ /usr/include/freetype2/freetype/fterrors.h \
+ /usr/include/freetype2/freetype/ftmoderr.h \
+ /usr/include/freetype2/freetype/fterrdef.h \
  /usr/include/c++/15.2.1/random /usr/include/c++/15.2.1/bits/random.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
  /usr/include/c++/15.2.1/bits/random.tcc

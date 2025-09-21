@@ -1,1 +1,4 @@
 backpack/
+.cache/
+.vs/
+ignore/

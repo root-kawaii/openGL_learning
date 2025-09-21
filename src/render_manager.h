@@ -103,6 +103,13 @@ private:
     unsigned int gridShader = 0;
     bool gridInitialized = false;
 
+    unsigned int IDFrameBuffer = 0;
+    unsigned int idTexture = 0;
+    unsigned int rboDepth = 0;
+    int idBufferWidth = 0;
+    int idBufferHeight = 0;
+    bool useIntegerTexture = true;
+
 public:
     RenderManager();
     ~RenderManager();
@@ -259,6 +266,22 @@ public:
     void initializeShaders();
     void initializeDepthFBO();
 
+    void renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject>> gameObjects);
+    unsigned int getObjectId(int mouseX, int mouseY);
+
+    void onWindowResize(int newWidth, int newHeight)
+    {
+        screenWidth = newWidth;
+        screenHeight = newHeight;
+
+        std::cout << "Window resized to " << newWidth << "x" << newHeight << std::endl;
+
+        // Recreate ID buffer with new dimensions
+        setupIDBuffer();
+
+        std::cout << "ID buffer recreated for new window size" << std::endl;
+    };
+
 private:
     // Internal helper functions
     void bindTextures(const std::vector<Texture *> &textures);
@@ -275,4 +298,7 @@ private:
     void createMSAAGBufferTextures();
 
     void initializeGridBuffers();
+
+    void setupIDBuffer();
+    void debugIDBuffer();
 };

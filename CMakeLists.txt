@@ -40,21 +40,39 @@ endif()
 # Generate compile_commands.json for better IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# --------- Paths to dependencies ---------
-# GLFW
-# set(GLFW_DIR "C:/Users/teore/scoop/apps/glfw/current")
-# set(GLFW_LIB_DIR "${GLFW_DIR}/lib-mingw-w64")
-# set(GLFW_INCLUDE_DIR "${GLFW_DIR}/include")
+# --------- Find packages first (preferred method) ---------
+find_package(OpenGL REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(OpenAL REQUIRED)
 
+# Try to find FreeType using find_package first
+find_package(Freetype QUIET)
+
+# --------- Paths to dependencies ---------
 # ASSIMP
 set(ASSIMP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/assimp")
 set(ASSIMP_LIB_DIR "${ASSIMP_DIR}/lib")
 set(ASSIMP_INCLUDE_DIR "${ASSIMP_DIR}/include")
 
-# FreeType
-set(FREETYPE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/freetype")
-set(FREETYPE_INCLUDE_DIRS "${FREETYPE_DIR}/include/freetype2")
-set(FREETYPE_LIBRARIES "${FREETYPE_DIR}/lib/libfreetype.a") # adjust if it's .lib or .dll.a
+# FreeType fallback if find_package didn't work
+if(NOT Freetype_FOUND)
+    message(STATUS "FreeType not found via find_package, using local build")
+    set(FREETYPE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/freetype")
+    set(FREETYPE_INCLUDE_DIRS "${FREETYPE_DIR}/include/freetype2" "${FREETYPE_DIR}/include")
+    
+    # Try to find the correct library file
+    find_library(FREETYPE_LIBRARY
+        NAMES freetype libfreetype
+        PATHS "${FREETYPE_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    
+    if(NOT FREETYPE_LIBRARY)
+        set(FREETYPE_LIBRARY "${FREETYPE_DIR}/lib/libfreetype.a")
+    endif()
+    
+    set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
+endif()
 
 # ImGui - Set up paths
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/imgui")
@@ -104,9 +122,6 @@ set(IMGUI_BACKENDS
     "${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
     "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
     "${IMGUI_DIR}/backends/imgui_impl_glfw.h"
-    # Add other backends only if you need them:
-    # "${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp"
-    # "${IMGUI_DIR}/backends/imgui_impl_vulkan.h"
 )
 
 # Check if backend files exist before adding them
@@ -119,11 +134,6 @@ endforeach()
 
 # Combine all ImGui files
 set(IMGUI_ALL_FILES ${IMGUI_SOURCES} ${IMGUI_HEADERS} ${IMGUI_EXISTING_BACKENDS})
-
-# --------- Find packages ---------
-find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(OpenAL REQUIRED)
 
 # --------- Main project source files ---------
 set(PROJECT_SOURCES
@@ -174,7 +184,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # --------- Link directories ---------
 link_directories(
-    ${GLFW_LIB_DIR}
     ${ASSIMP_LIB_DIR}
 )
 
@@ -186,11 +195,47 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     IMGUI_DISABLE_OBSOLETE_FUNCTIONS # Sometimes helps with compatibility
 )
 
+# --------- Windows-specific linker flags for FreeType ---------
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Fix for MinGW/GCC on Windows with static libraries
+    target_link_options(${PROJECT_NAME} PRIVATE
+        -Wl,--allow-multiple-definition
+        -Wl,--enable-auto-image-base
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
+
 # --------- Link libraries ---------
 target_link_libraries(${PROJECT_NAME} PRIVATE
     OpenGL::GL
-    glfw # Provided by your local libglfw3.a
+    glfw
     ${FREETYPE_LIBRARIES}
     OpenAL::OpenAL
-    assimp # Must match the lib file (e.g. libassimp.dll.a or assimp.lib)
+    assimp
 )
+
+# Add Windows-specific system libraries for FreeType
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        # These may be needed for FreeType on Windows
+        bz2
+        png
+        z
+        harfbuzz
+        # Windows system libraries
+        ws2_32
+        winmm
+        ole32
+        oleaut32
+        imm32
+        version
+    )
+endif()
+
+# --------- Print debug information ---------
+message(STATUS "FreeType found: ${Freetype_FOUND}")
+message(STATUS "FreeType include dirs: ${FREETYPE_INCLUDE_DIRS}")
+message(STATUS "FreeType libraries: ${FREETYPE_LIBRARIES}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")

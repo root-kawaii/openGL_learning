@@ -477,14 +477,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
- /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
- /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
- /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
- /usr/include/c++/15.2.1/functional \
- /usr/include/c++/15.2.1/bits/std_function.h \
- /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
- /usr/include/c++/15.2.1/iterator \
- /usr/include/c++/15.2.1/bits/stream_iterator.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/render_manager.h \
  /usr/include/c++/15.2.1/memory \
  /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
  /usr/include/c++/15.2.1/bits/align.h \
@@ -493,6 +486,17 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
  /usr/include/c++/15.2.1/backward/auto_ptr.h \
  /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/../src/texture.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
+ /usr/include/c++/15.2.1/functional \
+ /usr/include/c++/15.2.1/bits/std_function.h \
+ /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
+ /usr/include/c++/15.2.1/iterator \
+ /usr/include/c++/15.2.1/bits/stream_iterator.h \
  /usr/include/c++/15.2.1/utility \
  /usr/include/c++/15.2.1/bits/stl_relops.h \
  /usr/include/c++/15.2.1/forward_list \
@@ -522,10 +526,6 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
- /home/monolith/Desktop/openGL_learning/src/../src/render_manager.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/src/../src/sphere_collision.h \

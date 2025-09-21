@@ -5,13 +5,13 @@
 # compile CXX with /usr/bin/c++
 C_DEFINES = -DGLM_ENABLE_EXPERIMENTAL -DIMGUI_DEFINE_MATH_OPERATORS -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS -DTRACY_ENABLE
 
-C_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
+C_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/usr/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
 
 C_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG
 
 CXX_DEFINES = -DGLM_ENABLE_EXPERIMENTAL -DIMGUI_DEFINE_MATH_OPERATORS -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS -DTRACY_ENABLE
 
-CXX_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
+CXX_INCLUDES = -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/usr/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL
 
 CXX_FLAGS =  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17
 

@@ -191,6 +191,7 @@ public:
 
         // Notify render manager about the resize if it needs to update framebuffers
         renderManager.setRes(width, height);
+        renderManager.onWindowResize(width, height);
     }
 
     void mouse_callback_impl(double xposIn, double yposIn)

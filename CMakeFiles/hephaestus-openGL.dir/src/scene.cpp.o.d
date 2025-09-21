@@ -469,16 +469,9 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
- /home/monolith/Desktop/openGL_learning/src/object_picker.h \
- /home/monolith/Desktop/openGL_learning/src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/src/render_manager.h \
  /usr/include/c++/15.2.1/unordered_map \
  /usr/include/c++/15.2.1/bits/unordered_map.h \
- /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
- /usr/include/c++/15.2.1/functional \
- /usr/include/c++/15.2.1/bits/std_function.h \
- /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
- /usr/include/c++/15.2.1/iterator \
- /usr/include/c++/15.2.1/bits/stream_iterator.h \
  /usr/include/c++/15.2.1/memory \
  /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
  /usr/include/c++/15.2.1/bits/align.h \
@@ -487,6 +480,18 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
  /usr/include/c++/15.2.1/backward/auto_ptr.h \
  /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/texture.h \
+ /usr/include/GLFW/glfw3.h \
+ /home/monolith/Desktop/openGL_learning/src/object_picker.h \
+ /home/monolith/Desktop/openGL_learning/src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
+ /usr/include/c++/15.2.1/functional \
+ /usr/include/c++/15.2.1/bits/std_function.h \
+ /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
+ /usr/include/c++/15.2.1/iterator \
+ /usr/include/c++/15.2.1/bits/stream_iterator.h \
  /usr/include/c++/15.2.1/utility \
  /usr/include/c++/15.2.1/bits/stl_relops.h \
  /usr/include/c++/15.2.1/forward_list \

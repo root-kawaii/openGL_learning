@@ -529,7 +529,7 @@ hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/build.make
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
 hephaestus-openGL: /usr/lib/libglfw.so.3.4
-hephaestus-openGL: include/freetype/lib/libfreetype.a
+hephaestus-openGL: /usr/lib/libfreetype.so
 hephaestus-openGL: /usr/lib/libopenal.so
 hephaestus-openGL: /usr/lib/libGLX.so
 hephaestus-openGL: /usr/lib/libOpenGL.so

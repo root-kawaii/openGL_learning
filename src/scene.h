@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_object.h"
+#include "render_manager.h"
 #include "object_picker.h"
 #include "serialization_utilities.h"
 #include <imgui.h>
@@ -30,10 +31,15 @@ private:
   std::shared_ptr<GameObject> selectedObject;
   ObjectPicker picker;
 
+  RenderManager *renderManager;
+
+  void validateAllIDs();
+  void debugPrintAllObjects();
+
 public:
   Scene();
   ~Scene();
-  uint64_t entityCounter;
+  uint32_t entityCounter = 1;
   // Pure data operations
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
   void destroyGameObject(GameObject *obj);
@@ -47,7 +53,7 @@ public:
   };
   // Environment& getEnvironment() { return environment; }
 
-  void handleInput(const glm::mat4 &view, const glm::mat4 &projection);
+  void handleInput(const glm::mat4 &view, const glm::mat4 &projection, RenderManager renderManager);
   void renderGizmo(const glm::mat4 &view, const glm::mat4 &projection);
 
   // Serialization (data persistence)
@@ -59,4 +65,9 @@ public:
   {
     selectedObject = object;
   };
+
+  void setRenderManager(RenderManager *renderManager)
+  {
+    renderManager = renderManager;
+  }
 };

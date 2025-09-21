@@ -31,7 +31,7 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/include/ImGuizmo/ImSequencer.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o \
   /usr/lib/libglfw.so.3.4 \
-  include/freetype/lib/libfreetype.a \
+  /usr/lib/libfreetype.so \
   /usr/lib/libopenal.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libassimp.so \
   /usr/lib/libGLX.so \
@@ -62,13 +62,21 @@ hephaestus-openGL: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/libgcc.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o \
-  /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib32/libz.so.1 \
   /usr/lib/libz.so.1 \
+  /usr/lib32/libbz2.so.1.0 \
+  /usr/lib/libbz2.so.1.0 \
+  /usr/lib32/libpng16.so.16 \
+  /usr/lib/libpng16.so.16 \
+  /usr/lib32/libbrotlidec.so.1 \
+  /usr/lib/libbrotlidec.so.1 \
+  /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib32/libGLdispatch.so.0 \
   /usr/lib/libGLdispatch.so.0 \
   /usr/lib32/libX11.so.6 \
   /usr/lib/libX11.so.6 \
+  /usr/lib32/libbrotlicommon.so.1 \
+  /usr/lib/libbrotlicommon.so.1 \
   /usr/lib32/libxcb.so.1 \
   /usr/lib/libxcb.so.1 \
   /usr/lib32/libXau.so.6 \
@@ -140,7 +148,7 @@ CMakeFiles/hephaestus-openGL.dir/tracy/public/TracyClient.cpp.o:
 
 /usr/lib/libglfw.so.3.4:
 
-include/freetype/lib/libfreetype.a:
+/usr/lib/libfreetype.so:
 
 /usr/lib/libopenal.so:
 
@@ -202,11 +210,23 @@ include/freetype/lib/libfreetype.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o:
 
-/usr/lib/ld-linux-x86-64.so.2:
-
 /usr/lib32/libz.so.1:
 
 /usr/lib/libz.so.1:
+
+/usr/lib32/libbz2.so.1.0:
+
+/usr/lib/libbz2.so.1.0:
+
+/usr/lib32/libpng16.so.16:
+
+/usr/lib/libpng16.so.16:
+
+/usr/lib32/libbrotlidec.so.1:
+
+/usr/lib/libbrotlidec.so.1:
+
+/usr/lib/ld-linux-x86-64.so.2:
 
 /usr/lib32/libGLdispatch.so.0:
 
@@ -215,6 +235,10 @@ include/freetype/lib/libfreetype.a:
 /usr/lib32/libX11.so.6:
 
 /usr/lib/libX11.so.6:
+
+/usr/lib32/libbrotlicommon.so.1:
+
+/usr/lib/libbrotlicommon.so.1:
 
 /usr/lib32/libxcb.so.1:
 

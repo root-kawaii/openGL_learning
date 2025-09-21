@@ -31,19 +31,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 155,
+				"line" : 165,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 190,
+				"line" : 210,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 124,
+				"line" : 44,
 				"parent" : 0
 			},
 			{
@@ -65,13 +65,13 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 182,
+				"line" : 191,
 				"parent" : 0
 			},
 			{
 				"command" : 6,
 				"file" : 0,
-				"line" : 165,
+				"line" : 175,
 				"parent" : 0
 			}
 		]
@@ -128,7 +128,7 @@
 				},
 				{
 					"backtrace" : 8,
-					"path" : "/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2"
+					"path" : "/usr/include/freetype2"
 				},
 				{
 					"backtrace" : 8,
@@ -230,7 +230,7 @@
 				},
 				{
 					"backtrace" : 8,
-					"path" : "/home/monolith/Desktop/openGL_learning/include/freetype/include/freetype2"
+					"path" : "/usr/include/freetype2"
 				},
 				{
 					"backtrace" : 8,
@@ -265,7 +265,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "/home/monolith/Desktop/openGL_learning/include/freetype/lib/libfreetype.a",
+				"fragment" : "/usr/lib/libfreetype.so",
 				"role" : "libraries"
 			},
 			{
