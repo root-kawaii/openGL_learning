@@ -1140,259 +1140,109 @@ void RenderManager::setupIDBuffer()
 
 void RenderManager::renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject>> gameObjects)
 {
-    std::cout << "\n=== ID BUFFER RENDERING DEBUG ===" << std::endl;
+    // CRITICAL: Check if ID buffer needs recreation due to window resize
+    if (idBufferWidth != screenWidth || idBufferHeight != screenHeight)
+    {
+        std::cout << "ID buffer size mismatch! Buffer: " << idBufferWidth << "x" << idBufferHeight
+                  << " Screen: " << screenWidth << "x" << screenHeight << std::endl;
+        setupIDBuffer(); // Recreate with correct size
+    }
 
     if (IDFrameBuffer == 0)
     {
-        std::cerr << "ERROR: ID Framebuffer not initialized!" << std::endl;
+        std::cerr << "ID Framebuffer not initialized!" << std::endl;
         return;
     }
 
-    // 1. VERIFY OBJECT IDs BEFORE RENDERING
-    std::cout << "\n--- OBJECT ID VERIFICATION ---" << std::endl;
-    std::map<unsigned int, int> idCounts;
-    for (const auto &obj : gameObjects)
-    {
-        if (!obj)
-        {
-            std::cout << "WARNING: Null object in gameObjects vector!" << std::endl;
-            continue;
-        }
+    // SAVE OpenGL state that might interfere
+    GLboolean blendWasEnabled = glIsEnabled(GL_BLEND);
+    GLboolean cullFaceWasEnabled = glIsEnabled(GL_CULL_FACE);
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
 
-        std::cout << "Object ID: " << obj->ID;
-        if (obj->ID == 0)
-        {
-            std::cout << " ❌ INVALID (0 is reserved for background)";
-        }
-        std::cout << std::endl;
-
-        idCounts[obj->ID]++;
-    }
-
-    // Check for duplicate IDs
-    for (const auto &pair : idCounts)
-    {
-        if (pair.second > 1)
-        {
-            std::cout << "❌ ERROR: Duplicate ID " << pair.first << " found " << pair.second << " times!" << std::endl;
-        }
-    }
-
-    // 2. SAVE CURRENT OPENGL STATE
-    std::cout << "\n--- OPENGL STATE BEFORE ID RENDERING ---" << std::endl;
-    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
-    GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
-    GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-    GLint currentProgram;
-    GLint currentFramebuffer;
-    GLint viewport[4];
-
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFramebuffer);
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    std::cout << "Current program: " << currentProgram << std::endl;
-    std::cout << "Current framebuffer: " << currentFramebuffer << std::endl;
-    std::cout << "Viewport: " << viewport[0] << "," << viewport[1] << " " << viewport[2] << "x" << viewport[3] << std::endl;
-    std::cout << "Blend enabled: " << (blendEnabled ? "YES ❌" : "NO ✓") << std::endl;
-    std::cout << "Cull enabled: " << (cullEnabled ? "YES" : "NO") << std::endl;
-    std::cout << "Depth enabled: " << (depthEnabled ? "YES" : "NO") << std::endl;
-
-    // 3. BIND ID FRAMEBUFFER AND SET STATE
-    std::cout << "\n--- SETTING UP ID BUFFER ---" << std::endl;
+    // 1. Bind the ID framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, IDFrameBuffer);
 
-    // Verify framebuffer is bound
-    GLint boundFramebuffer;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &boundFramebuffer);
-    std::cout << "ID framebuffer bound: " << (boundFramebuffer == IDFrameBuffer ? "✓" : "❌") << std::endl;
-
-    // Set viewport
+    // 2. Set viewport to EXACT framebuffer size
     glViewport(0, 0, screenWidth, screenHeight);
-    std::cout << "Viewport set to: " << screenWidth << "x" << screenHeight << std::endl;
+    // std::cout << "ID buffer viewport set to: " << screenWidth << "x" << screenHeight << std::endl;
 
-    // CRITICAL: Set proper OpenGL state
-    glDisable(GL_BLEND);     // ❗ CRITICAL: Prevents ID mixing
-    glDisable(GL_CULL_FACE); // Ensure all faces render
+    // 3. DISABLE problematic states
+    glDisable(GL_BLEND);     // CRITICAL: Prevents ID mixing
+    glDisable(GL_CULL_FACE); // Ensures all faces are rendered consistently
+
+    // 4. Enable depth testing
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
 
-    std::cout << "OpenGL state configured for ID rendering ✓" << std::endl;
-
-    // 4. CLEAR BUFFER WITH VERIFICATION
-    std::cout << "\n--- CLEARING ID BUFFER ---" << std::endl;
+    // 5. Clear buffers
     unsigned int clearValue = 0;
     glClearBufferuiv(GL_COLOR, 0, &clearValue);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    // Verify clear worked - read a few pixels
-    unsigned int testPixels[4];
-    glReadPixels(0, 0, 2, 2, GL_RED_INTEGER, GL_UNSIGNED_INT, testPixels);
-    std::cout << "Buffer cleared - test pixels: " << testPixels[0] << ", " << testPixels[1] << ", " << testPixels[2] << ", " << testPixels[3] << std::endl;
-    bool clearSuccess = (testPixels[0] == 0 && testPixels[1] == 0 && testPixels[2] == 0 && testPixels[3] == 0);
-    std::cout << "Clear verification: " << (clearSuccess ? "✓" : "❌") << std::endl;
-
-    // 5. GET AND VERIFY ID SHADER
-    std::cout << "\n--- ID SHADER VERIFICATION ---" << std::endl;
+    // 6. Get and use the ID shader
     Shader *idShader = getShader("id_shader");
     if (!idShader)
     {
-        std::cerr << "❌ CRITICAL ERROR: ID Shader not found!" << std::endl;
+        std::cerr << "ID Shader not found!" << std::endl;
+        // Restore state before returning
+        if (blendWasEnabled)
+            glEnable(GL_BLEND);
+        if (cullFaceWasEnabled)
+            glEnable(GL_CULL_FACE);
+        glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
-
     idShader->use();
-    GLint shaderProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &shaderProgram);
-    std::cout << "ID shader program: " << shaderProgram << std::endl;
 
-    // Verify shader uniforms exist
-    GLint objectIdLocation = glGetUniformLocation(shaderProgram, "objectID");
-    GLint modelLocation = glGetUniformLocation(shaderProgram, "model");
-    GLint viewLocation = glGetUniformLocation(shaderProgram, "view");
-    GLint projectionLocation = glGetUniformLocation(shaderProgram, "projection");
-
-    std::cout << "Uniform locations:" << std::endl;
-    std::cout << "  objectID: " << objectIdLocation << (objectIdLocation >= 0 ? " ✓" : " ❌") << std::endl;
-    std::cout << "  model: " << modelLocation << (modelLocation >= 0 ? " ✓" : " ❌") << std::endl;
-    std::cout << "  view: " << viewLocation << (viewLocation >= 0 ? " ✓" : " ❌") << std::endl;
-    std::cout << "  projection: " << projectionLocation << (projectionLocation >= 0 ? " ✓" : " ❌") << std::endl;
-
-    // 6. SET CAMERA MATRICES
-    std::cout << "\n--- SETTING CAMERA MATRICES ---" << std::endl;
+    // 7. Set camera matrices (MUST be same as main render)
     idShader->setMat4("view", viewMatrix);
     idShader->setMat4("projection", projectionMatrix);
-    std::cout << "View and projection matrices set ✓" << std::endl;
 
-    // 7. RENDER OBJECTS WITH DETAILED LOGGING
-    std::cout << "\n--- RENDERING OBJECTS ---" << std::endl;
+    // 8. Render objects
     int renderedCount = 0;
-    int skippedCount = 0;
-
-    for (size_t i = 0; i < gameObjects.size(); ++i)
+    for (const auto &gameObject : gameObjects)
     {
-        const auto &gameObject = gameObjects[i];
-
-        std::cout << "\nObject " << i << ": ";
-
         if (!gameObject)
-        {
-            std::cout << "❌ NULL - SKIPPED" << std::endl;
-            skippedCount++;
             continue;
-        }
 
+        // Validate object ID
         if (gameObject->ID == 0)
         {
-            std::cout << "❌ ID=0 (invalid) - SKIPPED" << std::endl;
-            skippedCount++;
+            std::cerr << "Warning: GameObject has ID 0 (reserved for background)" << std::endl;
             continue;
         }
-
-        std::cout << "ID=" << gameObject->ID << " - RENDERING";
-
-        // Set uniforms
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject->scale);
+        model = glm::translate(model, gameObject->position) * scaling;
         idShader->setUint("objectID", gameObject->ID);
-        idShader->setMat4("model", gameObject->getModelMatrix());
+        idShader->setMat4("model", model);
 
-        // Verify the uniform was set correctly
-        GLuint setObjectID;
-        glGetUniformuiv(shaderProgram, objectIdLocation, &setObjectID);
-        std::cout << " (verified ID: " << setObjectID << ")";
-
-        if (setObjectID != gameObject->ID)
-        {
-            std::cout << " ❌ MISMATCH!";
-        }
-        else
-        {
-            std::cout << " ✓";
-        }
-
-        // Draw the object
+        // Draw the object's mesh
         gameObject->model.Draw(*idShader);
         renderedCount++;
-
-        // Check for OpenGL errors after each object
-        GLenum error = glGetError();
-        if (error != GL_NO_ERROR)
-        {
-            std::cout << " ❌ GL Error: " << error;
-        }
-
-        std::cout << std::endl;
     }
 
-    std::cout << "\nRendering complete: " << renderedCount << " objects rendered, " << skippedCount << " skipped" << std::endl;
+    // std::cout << "Rendered " << renderedCount << " objects to ID buffer" << std::endl;
 
-    // 8. VERIFY BUFFER CONTENTS AFTER RENDERING
-    std::cout << "\n--- BUFFER VERIFICATION ---" << std::endl;
-
-    // Sample a few pixels to see what was actually rendered
-    std::vector<unsigned int> samplePixels(25); // 5x5 center sample
-    int centerX = screenWidth / 2;
-    int centerY = screenHeight / 2;
-    glReadPixels(centerX - 2, centerY - 2, 5, 5, GL_RED_INTEGER, GL_UNSIGNED_INT, samplePixels.data());
-
-    std::cout << "5x5 sample from center (" << centerX << "," << centerY << "):" << std::endl;
-    for (int y = 4; y >= 0; y--)
-    { // Flip Y for display
-        for (int x = 0; x < 5; x++)
-        {
-            std::cout << samplePixels[y * 5 + x] << "\t";
-        }
-        std::cout << std::endl;
-    }
-
-    // Count unique IDs in buffer
-    std::vector<unsigned int> allPixels(screenWidth * screenHeight);
-    glReadPixels(0, 0, screenWidth, screenHeight, GL_RED_INTEGER, GL_UNSIGNED_INT, allPixels.data());
-
-    std::map<unsigned int, int> bufferIdCounts;
-    for (unsigned int id : allPixels)
-    {
-        bufferIdCounts[id]++;
-    }
-
-    std::cout << "\nIDs found in buffer:" << std::endl;
-    for (const auto &pair : bufferIdCounts)
-    {
-        if (pair.first == 0)
-        {
-            std::cout << "  Background (0): " << pair.second << " pixels" << std::endl;
-        }
-        else
-        {
-            std::cout << "  Object " << pair.first << ": " << pair.second << " pixels" << std::endl;
-
-            // Check if this ID matches any of our objects
-            bool foundMatchingObject = false;
-            for (const auto &obj : gameObjects)
-            {
-                if (obj && obj->ID == pair.first)
-                {
-                    foundMatchingObject = true;
-                    break;
-                }
-            }
-
-            if (!foundMatchingObject)
-            {
-                std::cout << "    ❌ WARNING: ID " << pair.first << " in buffer but not in object list!" << std::endl;
-            }
-        }
-    }
-
-    // 9. RESTORE STATE AND UNBIND
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (blendEnabled)
+    // 9. RESTORE OpenGL state
+    if (blendWasEnabled)
         glEnable(GL_BLEND);
-    if (cullEnabled)
+    if (cullFaceWasEnabled)
         glEnable(GL_CULL_FACE);
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 
-    std::cout << "\n=== ID BUFFER RENDERING DEBUG COMPLETE ===" << std::endl;
+    // 10. Unbind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Check for errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+    }
 }
 
 unsigned int RenderManager::getObjectId(int mouseX, int mouseY)

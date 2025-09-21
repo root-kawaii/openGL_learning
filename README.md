@@ -12,6 +12,11 @@ Understand text rendering and display stuff I need
 ------------------------------------------------
 
 NEXT TO DO:
+
+- imgui editors like sudo love me baby where i can select block and select texture etc...
+- create nice geometry of the level, all blocks in the right place
+
+
 - hardcoded res in UI projection matrix
 
 - add features to imgui to help me add stuff to the world in a easier way

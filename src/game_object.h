@@ -100,8 +100,9 @@ public:
         // 1. Apply translation
         modelMatrix = glm::translate(modelMatrix, position);
 
-        // 2. Apply rotation
-        glm::mat4 rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+        // 2. Convert Euler angles to quaternion, then to matrix
+        glm::quat rotationQuat = glm::quat(rotation); // Creates from Euler angles
+        glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuat);
         modelMatrix *= rotationMatrix;
 
         // 3. Apply scale

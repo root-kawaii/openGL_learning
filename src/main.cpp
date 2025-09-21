@@ -358,7 +358,7 @@ int main()
   {
 
     glm::vec3 lastFrameCameraPos = game.camera.Position;
-    float near_plane = 0.10f;
+    float near_plane = 1.10f;
     float far_plane = 1000.0f;
     glm::mat4 model;
     glm::mat4 projection = glm::perspective(
@@ -384,6 +384,8 @@ int main()
     // NOW this is safe:
     ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x,
                 game.camera.Position.y, game.camera.Position.z);
+    ImGui::Text("Resolution %d   %d", game.SCR_HEIGHT,
+                game.SCR_WIDTH);
 
     if (shadows)
     {
