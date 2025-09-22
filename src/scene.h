@@ -17,6 +17,7 @@ class Scene
 {
 private:
   std::string name;
+  std::string currentLevel;
   std::vector<std::shared_ptr<GameObject>> gameObjects;
   std::unordered_map<uint32_t, std::shared_ptr<GameObject>> objectsById;
   GameObject *rootObject;
@@ -38,9 +39,11 @@ private:
 
 public:
   Scene();
+  Scene(std::string level);
   ~Scene();
   uint32_t entityCounter = 1;
   // Pure data operations
+  void addGameObject(std::string gameObjectPath);
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
   void destroyGameObject(GameObject *obj);
   std::shared_ptr<GameObject> findObjectByName(const std::string &name);

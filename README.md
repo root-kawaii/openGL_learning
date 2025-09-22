@@ -13,6 +13,10 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
+
+
+- apply textures to objects from menu + add render texture to renderManager
+
 - imgui editors like sudo love me baby where i can select block and select texture etc...
 - create nice geometry of the level, all blocks in the right place
 

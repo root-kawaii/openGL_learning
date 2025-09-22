@@ -49,6 +49,7 @@
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
 #include "../src/ui.h"
+#include "../src/level_editor.h"
 
 // Note: Uncomment these if needed
 // #include <../src/scene.h>
@@ -112,60 +113,65 @@ struct SmokeQuad
 int main()
 {
 
-  Game game = Game();
+  std::shared_ptr<Game> game = std::make_shared<Game>();
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui_ImplGlfw_InitForOpenGL(game.getWindow(), true);
+  ImGui_ImplGlfw_InitForOpenGL(game->getWindow(), true);
   ImGui_ImplOpenGL3_Init("#version 330");
 
-  UIManager ui(game.SCR_HEIGHT, game.SCR_WIDTH);
+  auto ui = std::make_shared<UIManager>(game->SCR_HEIGHT, game->SCR_WIDTH);
+  auto mainScene = std::make_shared<Scene>();
+  game->setScene(mainScene);
 
-  Scene mainScene = Scene();
-  game.setScene(&mainScene);
-  RenderManager renderManager = game.getRenderManager();
-  AudioManager audioManager = game.getAudioManager();
-  renderManager.setCamera(&game.camera);
-  renderManager.initialize(game.SCR_WIDTH, game.SCR_HEIGHT);
-  renderManager.setupGBuffer();
-  renderManager.setupMSAAGBuffer();
-  renderManager.initializeShaders();
-  renderManager.initializeDepthFBO();
-  // TracyGpuContext;
+  // Get pointers to managers (assuming they're already heap-allocated in Game)
+  RenderManager *renderManager = &game->getRenderManager();
+  AudioManager *audioManager = &game->getAudioManager();
 
-  mainScene.setRenderManager(&renderManager);
+  auto levelEditor = std::make_shared<LevelEditor>();
+  levelEditor->setRenderManager(renderManager);
+  levelEditor->setGame(game);
+
+  renderManager->setCamera(&game->camera);
+  renderManager->initialize(game->SCR_WIDTH, game->SCR_HEIGHT);
+  renderManager->setupGBuffer();
+  renderManager->setupMSAAGBuffer();
+  renderManager->initializeShaders();
+  renderManager->initializeDepthFBO();
+
+  game->getScene()->setRenderManager(renderManager);
 
   namespace fs = std::filesystem;
   // unsigned int albedo =
   // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
-  unsigned int texture_metallic = renderManager.loadTexture(
+  unsigned int texture_metallic = renderManager->loadTexture(
       "texture_metallic",
       fs::path("assets/cerberus/Textures/metallic.png").c_str());
   // unsigned int normal =
   // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
-  unsigned int texture_roughness = renderManager.loadTexture(
+  unsigned int texture_roughness = renderManager->loadTexture(
       "texture_roughness",
       fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
   unsigned int smoke_texture =
-      renderManager.loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
+      renderManager->loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
 
-  unsigned int wood_texture = renderManager.loadTexture(
+  unsigned int wood_texture = renderManager->loadTexture(
       "wood", fs::path("assets/wooden_texture.png").c_str());
 
-  unsigned int water_normal_texture = renderManager.loadTexture(
+  unsigned int water_normal_texture = renderManager->loadTexture(
       "water_normal", fs::path("assets/water_normal.png").c_str());
 
-  unsigned int foam_texture = renderManager.loadTexture(
+  unsigned int foam_texture = renderManager->loadTexture(
       "foam", fs::path("assets/foam.png").c_str());
 
-  unsigned int groundTexture = renderManager.loadTexture(
+  unsigned int groundTexture = renderManager->loadTexture(
       "groundTexture", fs::path("assets/GroundTexture.png").c_str());
 
-  unsigned int grassMaskTexture = renderManager.loadTexture(
+  unsigned int grassMaskTexture = renderManager->loadTexture(
       "grassMaskTexture", fs::path("assets/GrassMask.png").c_str());
 
-  unsigned int windDistortionTexture = renderManager.loadTexture(
+  unsigned int windDistortionTexture = renderManager->loadTexture(
       "windDistortionTexture", fs::path("assets/CircleDisplacementObject.png").c_str());
 
   // configure global opengl state
@@ -217,10 +223,10 @@ int main()
   Model backpack(fs::path("assets/backpack/backpack.obj"));
   // Model plane(fs::path("assets/planes/plane_2.obj"));
 
-  auto waterPlane = mainScene.findObjectByName("water_plane_01");
-  auto plane = mainScene.findObjectByName("plane_01");
-  auto gun = mainScene.findObjectByName("gun_01");
-  auto bullet = mainScene.findObjectByName("bullet_01");
+  auto waterPlane = game->getScene()->findObjectByName("water_plane_01");
+  auto plane = game->getScene()->findObjectByName("plane_01");
+  auto gun = game->getScene()->findObjectByName("gun_01");
+  auto bullet = game->getScene()->findObjectByName("bullet_01");
 
   Model helmet(fs::path("assets/helmet.glb"));
 
@@ -239,7 +245,7 @@ int main()
   // Create color texture
   glGenTextures(1, &sceneColorTexture);
   glBindTexture(GL_TEXTURE_2D, sceneColorTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game.SCR_WIDTH, game.SCR_HEIGHT, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game->SCR_WIDTH, game->SCR_HEIGHT, 0,
                GL_RGBA, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -251,8 +257,8 @@ int main()
   // Create depth texture (for depth testing during scene rendering)
   glGenTextures(1, &sceneDepthTexture);
   glBindTexture(GL_TEXTURE_2D, sceneDepthTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game.SCR_WIDTH,
-               game.SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game->SCR_WIDTH,
+               game->SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -315,16 +321,16 @@ int main()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  Shader skyboxShader = *renderManager.getShader("skybox_shader");
-  Shader shaderLightingPass = *renderManager.getShader("lighting_pass_shader");
-  Shader waterShader = *renderManager.getShader("water_shader");
-  Shader gridShader2 = *renderManager.getShader("grid_shader_2");
-  Shader simpleShader = *renderManager.getShader("simple_shader");
-  Shader simpleColorShader = *renderManager.getShader("simple_color_shader");
-  Shader grassShader = *renderManager.getShader("grass_shader");
-  Shader shaderLightBox = *renderManager.getShader("light_box_shader");
-  Shader shaderGeometryPass = *renderManager.getShader("geometry_pass_shader");
-  Shader depthPrePass = *renderManager.getShader("depth_pre_pass");
+  Shader skyboxShader = *renderManager->getShader("skybox_shader");
+  Shader shaderLightingPass = *renderManager->getShader("lighting_pass_shader");
+  Shader waterShader = *renderManager->getShader("water_shader");
+  Shader gridShader2 = *renderManager->getShader("grid_shader_2");
+  Shader simpleShader = *renderManager->getShader("simple_shader");
+  Shader simpleColorShader = *renderManager->getShader("simple_color_shader");
+  Shader grassShader = *renderManager->getShader("grass_shader");
+  Shader shaderLightBox = *renderManager->getShader("light_box_shader");
+  Shader shaderGeometryPass = *renderManager->getShader("geometry_pass_shader");
+  Shader depthPrePass = *renderManager->getShader("depth_pre_pass");
 
   shaderLightingPass.use();
   shaderLightingPass.setInt("gPosition", 0);
@@ -346,28 +352,28 @@ int main()
   bool viewFrozen = false;
   bool intersect = false;
 
-  audioManager.playSource();
+  audioManager->playSource();
   bool selected = false;
 
   std::vector<glm::vec3> vec = makeThousandVecs();
 
   lastFrame = static_cast<float>(glfwGetTime());
-  renderManager.setRes(game.SCR_WIDTH, game.SCR_HEIGHT);
-  renderManager.initializeDepthFBO();
-  while (!glfwWindowShouldClose(game.getWindow()))
+  renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
+  renderManager->initializeDepthFBO();
+  while (!glfwWindowShouldClose(game->getWindow()))
   {
 
-    glm::vec3 lastFrameCameraPos = game.camera.Position;
+    glm::vec3 lastFrameCameraPos = game->camera.Position;
     float near_plane = 1.10f;
     float far_plane = 1000.0f;
     glm::mat4 model;
     glm::mat4 projection = glm::perspective(
-        glm::radians(game.camera.Zoom),
-        (float)game.SCR_WIDTH / (float)game.SCR_HEIGHT, near_plane, far_plane);
-    glm::mat4 view = game.camera.GetViewMatrix();
+        glm::radians(game->camera.Zoom),
+        (float)game->SCR_WIDTH / (float)game->SCR_HEIGHT, near_plane, far_plane);
+    glm::mat4 view = game->camera.GetViewMatrix();
 
-    renderManager.setViewMatrix(view);
-    renderManager.setProjectionMatrix(projection);
+    renderManager->setViewMatrix(view);
+    renderManager->setProjectionMatrix(projection);
     // audioManager.loopAudio();
     // Start ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -376,16 +382,17 @@ int main()
     ImGuizmo::BeginFrame();
     ImGuiIO &io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    mainScene.handleInput(view, projection, renderManager);
-    mainScene.renderGizmo(view, projection);
+    game->getScene()->handleInput(view, projection, *renderManager);
+    game->getScene()->renderGizmo(view, projection);
     // Render a white box
     // ui.setProjectionMatrix(projection); // For 1920x1080
 
     // NOW this is safe:
-    ImGui::Text("Camera position %f   %f   %f", game.camera.Position.x,
-                game.camera.Position.y, game.camera.Position.z);
-    ImGui::Text("Resolution %d   %d", game.SCR_HEIGHT,
-                game.SCR_WIDTH);
+    ImGui::Text("Camera position %f   %f   %f", game->camera.Position.x,
+                game->camera.Position.y, game->camera.Position.z);
+    ImGui::Text("Resolution %d   %d", game->SCR_HEIGHT,
+                game->SCR_WIDTH);
+    levelEditor->renderImGuiEditor();
 
     if (shadows)
     {
@@ -411,7 +418,7 @@ int main()
     lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
     // input
     // -----
-    game.processGameInput(game.getWindow(), &game.camera, deltaTime, shadows, game.seed);
+    game->processGameInput(game->getWindow(), &game->camera, deltaTime, shadows, game->seed);
 
     // render
     // ------
@@ -448,20 +455,20 @@ int main()
     //                              lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
     //                              glm::vec3(0.0f, -1.0f, 0.0f)));
 
-    glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderManager.depthFBO);
+    glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glClear(GL_DEPTH_BUFFER_BIT);
     glDrawBuffer(GL_NONE);
-    auto gameObjects = game.getScene()->getGameObjects();
+    auto gameObjects = game->getScene()->getGameObjects();
     for (auto &i : gameObjects)
     {
       if (i->shaderName == "water_noG")
       {
         continue;
       }
-      renderManager.renderGameObjectWithShader(*i, depthPrePass);
+      renderManager->renderGameObjectWithShader(*i, depthPrePass);
     }
     // simpleDepthShader.use();
     // for (unsigned int i = 0; i < 6; ++i)
@@ -476,7 +483,7 @@ int main()
     //   model = glm::translate(model, objectPositions[i]);
     //   model = glm::scale(model, glm::vec3(1.0f));
     //   simpleDepthShader.setMat4("model", model);
-    //   renderManager.renderGameObject(*ball, simpleDepthShader);
+    //   renderManager->renderGameObject(*ball, simpleDepthShader);
     // }
 
     // model = glm::mat4(1.0f);
@@ -493,8 +500,8 @@ int main()
 
     // 1. geometry pass: render scene's geometry/color data into gbuffer
     // -----------------------------------------------------------------
-    glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
-    // glBindFramebuffer(GL_FRAMEBUFFER, renderManager.getGBuffer());
+    glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+    // glBindFramebuffer(GL_FRAMEBUFFER, renderManager->getGBuffer());
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // glEnable(GL_DEPTH_TEST);
     // glDisable(GL_BLEND);
@@ -504,19 +511,19 @@ int main()
     // glm::mat4 frozenView; // outside render loop
     // bool viewFrozen;
 
-    // if (glfwGetKey(game.getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
+    // if (glfwGetKey(game->getWindow(), GLFW_KEY_Q) == GLFW_PRESS)
     // {
     //     // TracyGpuZone("Game cycle");
     //     for (std::shared_ptr<GameObject> obj : mainScene.getGameObjects())
     //     {
     //     }
-    //     ray = screenToWorldRay(glm::vec2(game.SCR_WIDTH / 2.0f,
-    //     game.SCR_HEIGHT / 2.0f),
-    //                            game.camera, game.SCR_WIDTH, game.SCR_HEIGHT,
+    //     ray = screenToWorldRay(glm::vec2(game->SCR_WIDTH / 2.0f,
+    //     game->SCR_HEIGHT / 2.0f),
+    //                            game->camera, game->SCR_WIDTH, game->SCR_HEIGHT,
     //                            projection);
     //     bool intersect = rayIntersectMesh(ray, ball->model.meshes);
     //     selected = true;
-    //     frozenView = game.camera.GetViewMatrix(); //
+    //     frozenView = game->camera.GetViewMatrix(); //
     //     viewFrozen = true;
     //     selectedID = ball->ID;
 
@@ -543,38 +550,38 @@ int main()
     // if (selected && viewFrozen)
     // {
     //     std::cout << "lining" << std::endl;
-    //     renderManager.renderLine(ray.origin, ray.direction, frozenView,
+    //     renderManager->renderLine(ray.origin, ray.direction, frozenView,
     //     0.01f, 1000.0f);
     // }
 
     // if (true)
     // {
     //     // std::cout << "moving" << std::endl;
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS &&
-    //     glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_UP) == GLFW_PRESS &&
+    //     glfwGetKey(game->getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
     //     {
     //         ball->position.x += 1;
     //     }
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS &&
-    //     glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS &&
+    //     glfwGetKey(game->getWindow(), GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
     //     {
     //         ball->position.x -= 1;
     //     }
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_RIGHT) == GLFW_PRESS)
     //     {
     //         ball->position.z += 1;
     //     }
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_LEFT) == GLFW_PRESS)
     //     {
     //         ball->position.z -= 1;
     //     }
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_UP) == GLFW_PRESS &&
-    //     glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_UP) == GLFW_PRESS &&
+    //     glfwGetKey(game->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     //     {
     //         ball->position.y += 1;
     //     }
-    //     if (glfwGetKey(game.getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS &&
-    //     glfwGetKey(game.getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    //     if (glfwGetKey(game->getWindow(), GLFW_KEY_DOWN) == GLFW_PRESS &&
+    //     glfwGetKey(game->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     //     {
     //         ball->position.y -= 1;
     //     }
@@ -614,15 +621,15 @@ int main()
     // // model = glm::translate(model, glm::vec3(0.0, -2.0, 0.0));
     // // shaderGeometryPass.setMat4("model", model);
     // // plane->model.Draw(shaderGeometryPass);
-    // // renderManager.renderGameObject(*plane, shaderGeometryPass);
+    // // renderManager->renderGameObject(*plane, shaderGeometryPass);
 
     // selectedShader.use();
 
     // // std::cout << selectedID << std::endl;
     // // std::cout << ballPtr->ID << std::endl;
 
-    // renderManager.renderGameObject(*ball_3, shaderGeometryPass);
-    // renderManager.renderGameObject(*ball, shaderGeometryPass);
+    // renderManager->renderGameObject(*ball_3, shaderGeometryPass);
+    // renderManager->renderGameObject(*ball, shaderGeometryPass);
 
     // shaderGeometryPass.setFloat("objectID", 0);
     // model = glm::mat4(1.0f);
@@ -636,11 +643,11 @@ int main()
     // if (fired)
     // {
     //     selectedShader.use();
-    //     renderManager.renderCameraAttachedObject(*gun, selectedShader);
+    //     renderManager->renderCameraAttachedObject(*gun, selectedShader);
     // }
     // else
     // {
-    //     renderManager.renderCameraAttachedObject(*gun, shaderGeometryPass);
+    //     renderManager->renderCameraAttachedObject(*gun, shaderGeometryPass);
     // }
 
     // shaderGeometryPass.use();
@@ -652,7 +659,7 @@ int main()
     // helmet.Draw(shaderGeometryPass);
 
     // terrainShader.use();
-    // terrainShader.setFloat("seed", game.seed);
+    // terrainShader.setFloat("seed", game->seed);
     // terrainShader.setMat4("projection", projection);
     // terrainShader.setMat4("view", view);
     // terrainShader.setFloat("near_plane", near_plane); // Add thiss
@@ -664,7 +671,7 @@ int main()
     // terrainShader.setMat4("model", model);
     // // plane->model.Draw(terrainShader);
 
-    // if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired ==
+    // if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS && fired ==
     // false)
     // {
 
@@ -673,26 +680,26 @@ int main()
     //     forwardOffset = 2.0f; float rightOffset = 0.2f; // Slight offset to
     //     the right float upOffset = -0.22f;  // Slight offset downward
 
-    //     newBullet->position = game.camera.Position +
-    //                           (game.camera.Front * forwardOffset) +
-    //                           (game.camera.Right * rightOffset) +
-    //                           (game.camera.Up * upOffset);
-    //     newBullet->speed = game.camera.Front * glm::vec3(10, 10, 10);
+    //     newBullet->position = game->camera.Position +
+    //                           (game->camera.Front * forwardOffset) +
+    //                           (game->camera.Right * rightOffset) +
+    //                           (game->camera.Up * upOffset);
+    //     newBullet->speed = game->camera.Front * glm::vec3(10, 10, 10);
     //     mainScene.addGameObject(newBullet);
     //     fired = true;
     //     std::cout << "fired" << std::endl;
     // }
-    // if (glfwGetKey(game.getWindow(), GLFW_KEY_R) == GLFW_PRESS)
+    // if (glfwGetKey(game->getWindow(), GLFW_KEY_R) == GLFW_PRESS)
     // {
     //     fired = false;
     // }
 
-    // renderManager.renderGameObject(*bullet, shaderGeometryPass);
-    // game.getScene().
-    // auto gameObjects = game.getScene()->getGameObjects();
+    // renderManager->renderGameObject(*bullet, shaderGeometryPass);
+    // game->getScene().
+    // auto gameObjects = game->getScene()->getGameObjects();
     // for (auto &i : gameObjects)
     // {
-    //     renderManager.renderGameObjectWithTexture(*i, shaderGeometryPass,
+    //     renderManager->renderGameObjectWithTexture(*i, shaderGeometryPass,
     //     smoke_texture);
     // }
 
@@ -701,10 +708,10 @@ int main()
     // -----------------------------------------------------------------------------------------------------------------------
 
     // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-    // glViewport(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT);
+    // glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
     // glClear(GL_COLOR_BUFFER_BIT);
 
-    // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager.getGBuffer());
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, renderManager->getGBuffer());
     // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
     // // blit to default framebuffer. Note that this may or may not work as the
     // // internal formats of both the FBO and default framebuffer have to match.
@@ -712,8 +719,8 @@ int main()
     // // systems, but if it doesn't on yours you'll likely have to write to the
     // // depth buffer in another shader stage (or somehow see to match the default
     // // framebuffer's internal format with the FBO's internal format).
-    // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, 0, 0,
-    //                   game.SCR_WIDTH, game.SCR_HEIGHT, GL_DEPTH_BUFFER_BIT,
+    // glBlitFramebuffer(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT, 0, 0,
+    //                   game->SCR_WIDTH, game->SCR_HEIGHT, GL_DEPTH_BUFFER_BIT,
     //                   GL_NEAREST);
     // glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
 
@@ -732,7 +739,7 @@ int main()
     // shaderLightingPass.setMat4("projection", projection);
     // shaderLightingPass.setMat4("view", view);
     // // set lighting uniformss
-    // shaderLightingPass.setVec3("viewPos", game.camera.Position);
+    // shaderLightingPass.setVec3("viewPos", game->camera.Position);
     // shaderLightingPass.setInt("shadows",
     //                           1); // enable/disable shadows by pressing 'SPACE'
     // shaderLightingPass.setFloat("far_plane", far_plane);
@@ -767,25 +774,25 @@ int main()
     // }
 
     // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getPositionTexture());
     // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getNormalTexture());
     // glActiveTexture(GL_TEXTURE2);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getAlbedoSpecTexture());
     // glActiveTexture(GL_TEXTURE3);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getDepthTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getDepthTexture());
     // glActiveTexture(GL_TEXTURE4);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getLinearDepthTexture());
     // glActiveTexture(GL_TEXTURE5);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getMetallicTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getMetallicTexture());
     // glActiveTexture(GL_TEXTURE6);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getRoughnessTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getRoughnessTexture());
     // glActiveTexture(GL_TEXTURE7);
     // glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
     // // finally render quad
     // glDisable(GL_DEPTH_TEST);
-    // renderManager.renderQuad();
+    // renderManager->renderQuad();
     // glEnable(GL_DEPTH_TEST);
 
     // // //////////////////////////////////////
@@ -798,8 +805,8 @@ int main()
     // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer
 
     // // Copy color buffer to the screen
-    // glBlitFramebuffer(0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // src rect
-    //                   0, 0, game.SCR_WIDTH, game.SCR_HEIGHT, // dst rect
+    // glBlitFramebuffer(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT, // src rect
+    //                   0, 0, game->SCR_WIDTH, game->SCR_HEIGHT, // dst rect
     //                   GL_COLOR_BUFFER_BIT,                   // what to copy
     //                   GL_NEAREST                             // filtering
     // );
@@ -855,11 +862,11 @@ int main()
     //                     glm::inverse(view)); // NEW: 'inverseView' uniform in FS
 
     // // Set camera position
-    // waterShader.setVec3("cameraWorldPos", game.camera.Position);
+    // waterShader.setVec3("cameraWorldPos", game->camera.Position);
 
     // // Set screen size
     // waterShader.setVec2("screenSize",
-    //                     glm::vec2(game.SCR_WIDTH, game.SCR_HEIGHT));
+    //                     glm::vec2(game->SCR_WIDTH, game->SCR_HEIGHT));
 
     // // --- ADDED: Near and Far Plane values ---
     // // These are now uniforms in the fragment shader for LinearizeDepth (even if
@@ -876,22 +883,22 @@ int main()
 
     // // Bind textures with error checking
     // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getPositionTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getPositionTexture());
     // if (glGetError() != GL_NO_ERROR)
     //   std::cout << "Error binding gPosition" << std::endl;
 
     // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getNormalTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getNormalTexture());
     // if (glGetError() != GL_NO_ERROR)
     //   std::cout << "Error binding gNormal" << std::endl;
 
     // glActiveTexture(GL_TEXTURE2);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getAlbedoSpecTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getAlbedoSpecTexture());
     // if (glGetError() != GL_NO_ERROR)
     //   std::cout << "Error binding gAlbedoSpec" << std::endl;
 
     // glActiveTexture(GL_TEXTURE3);
-    // glBindTexture(GL_TEXTURE_2D, renderManager.getLinearDepthTexture());
+    // glBindTexture(GL_TEXTURE_2D, renderManager->getLinearDepthTexture());
     // if (glGetError() != GL_NO_ERROR)
     //   std::cout << "Error binding gLinearDepth" << std::endl;
 
@@ -906,7 +913,7 @@ int main()
     // // water position
     // waterShader.setMat4("model", model);
     // waterPlane->model.Draw(waterShader);
-    // renderManager.renderGameObject(*waterPlane, waterShader);
+    // renderManager->renderGameObject(*waterPlane, waterShader);
     //
 
     // Light boxes
@@ -921,30 +928,30 @@ int main()
       model = glm::scale(model, glm::vec3(0.125f));
       shaderLightBox.setMat4("model", model);
       shaderLightBox.setVec3("lightColor", lightColors[i]);
-      renderManager.renderCube();
+      renderManager->renderCube();
     }
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.325f));
     shaderLightBox.setMat4("model", model);
-    renderManager.renderCube();
+    renderManager->renderCube();
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
     ///
-    gameObjects = game.getScene()->getGameObjects();
+    gameObjects = game->getScene()->getGameObjects();
     for (auto &i : gameObjects)
     {
       if (i->name == "plane_01")
       {
-        renderManager.renderGameObjectWithTexture(*i, simpleShader, groundTexture);
+        renderManager->renderGameObjectWithTexture(*i, simpleShader, groundTexture);
         continue;
       }
-      renderManager.renderGameObject(*i);
+      renderManager->renderGameObject(*i);
     }
 
-    renderManager.renderSceneToIDBuffer(gameObjects);
+    renderManager->renderSceneToIDBuffer(gameObjects);
 
     ////////////////////////////////////////////////////
 
@@ -1001,7 +1008,7 @@ int main()
     glDisable(GL_CULL_FACE);
 
     // Render the grass
-    renderManager.renderGrassPoints(vec);
+    renderManager->renderGrassPoints(vec);
 
     // Restore OpenGL state
     glEnable(GL_CULL_FACE);
@@ -1011,35 +1018,35 @@ int main()
 
     // gridShader.use();
     // // model = glm::mat4(1.0f);
-    // renderManager.renderGrid(view, projection);
+    // renderManager->renderGrid(view, projection);
 
-    if (glfwGetKey(game.getWindow(), GLFW_KEY_F) == GLFW_PRESS && selected == false)
+    if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS && selected == false)
     {
       std::cout << "building" << std::endl;
-      mainScene.addCubeOnTop("simple_color_shader");
+      game->getScene()->addCubeOnTop("simple_color_shader");
       selected = true;
     }
-    if (glfwGetKey(game.getWindow(), GLFW_KEY_U) == GLFW_PRESS)
+    if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
     {
       selected = false;
     }
 
-    if (game.getGameMode() == ENGINE)
+    if (game->getGameMode() == ENGINE)
     {
       gridShader2.use();
       gridShader2.setMat4("projection", projection);
       gridShader2.setMat4("view", view);
       model = glm::mat4(1.0f);
       gridShader2.setMat4("model", model);
-      renderManager.renderInfiniteGrid(view, game.camera.Position, gridShader2, 1.0f, 500,
-                                       0.02f, 1000);
+      renderManager->renderInfiniteGrid(view, game->camera.Position, gridShader2, 1.0f, 500,
+                                        0.02f, 1000);
     }
 
     glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when
                             // values are equal to depth buffer's content
     skyboxShader.use();
     view = glm::mat4(glm::mat3(
-        game.camera
+        game->camera
             .GetViewMatrix())); // remove translation from the view matrix
     skyboxShader.setMat4("view", view);
     skyboxShader.setMat4("projection", projection);
@@ -1055,7 +1062,7 @@ int main()
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    ui.renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
+    ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
 
     // For softer blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1065,8 +1072,8 @@ int main()
 
     // Render with coordinated colors
 
-    ui.RenderText(std::to_string(game.camera.Position.x), 10.0f, 10.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
-    ui.RenderText(std::to_string(game.camera.Position.y), 10.0f, 50.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
     glDisable(GL_BLEND);
 
     ///////////
@@ -1112,14 +1119,14 @@ int main()
 
     //     smokeShader.setMat4("model", model);
     //     smokeShader.setFloat("alpha", 0.50f); // You can adjust alpha here
-    //     based on distance if you want renderManager.renderQuadForSmoke();
+    //     based on distance if you want renderManager->renderQuadForSmoke();
     // }
 
     // // 5. Restore OpenGL state
     // glDisable(GL_BLEND);
     // const float GRAVITY_STRENGTH = 1000.0f; // Controls how strong the pull
     // is. const float DAMPING_FACTOR = 0.95;
-    // glm::vec3 directionToBall = ball_3->position - game.camera.Position;
+    // glm::vec3 directionToBall = ball_3->position - game->camera.Position;
 
     // // 2. Normalize the direction vector to get a unit vector.
     // // This gives us the direction without a magnitude, which we will apply
@@ -1132,7 +1139,7 @@ int main()
     // GRAVITY_STRENGTH;
 
     // // 4. Update the camera's velocity using the acceleration over time.
-    // glm::vec3 velocity = (game.camera.Position - lastFrameCameraPos) /
+    // glm::vec3 velocity = (game->camera.Position - lastFrameCameraPos) /
     // deltaTime + acceleration * deltaTime;
 
     // // 5. Apply damping to the velocity to prevent endless oscillations
@@ -1145,21 +1152,21 @@ int main()
     // std::cout << prod.x << std::endl;
     // std::cout << prod.y << std::endl;
     // std::cout << prod.z << std::endl;
-    // game.camera.Position += velocity * deltaTime;
-    // game.camera.updateCameraVectors(directionToBall);
-    game.update(deltaTime);
+    // game->camera.Position += velocity * deltaTime;
+    // game->camera.updateCameraVectors(directionToBall);
+    game->update(deltaTime);
 
     // Render ImGui
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    glfwSwapBuffers(game.getWindow());
+    glfwSwapBuffers(game->getWindow());
     glfwPollEvents();
     FrameMark;
   }
 
   //
-  audioManager.cleanUp();
+  audioManager->cleanUp();
 
   // optional: de-allocate all resources once they've outlived their purpose:
   // ------------------------------------------------------------------------

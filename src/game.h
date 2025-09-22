@@ -62,7 +62,7 @@ private:
 
     // Window/context
     GLFWwindow *window;
-    Scene *scene;
+    std::shared_ptr<Scene> scene;
 
 public:
     bool initialize();
@@ -74,14 +74,16 @@ public:
     Game();
     ~Game();
 
+    void setLevel(std::string levelName);
+
     // System accessors
     // EntityManager& getEntityManager() { return entityManager; }
     RenderManager &getRenderManager() { return renderManager; }
     AudioManager &getAudioManager() { return audioManager; }
     GLFWwindow *getWindow() { return window; }
 
-    void setScene(Scene *newScene) { scene = newScene; };
-    Scene *getScene() { return scene; };
+    void setScene(std::shared_ptr<Scene> newScene) { scene = newScene; };
+    Scene *getScene() { return scene.get(); };
 
     void setGameMode(GameModeEnum modeEnum) { mode = modeEnum; };
     GameModeEnum getGameMode() { return mode; };

@@ -537,6 +537,30 @@ src/input.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/input.cpp.s
 .PHONY : src/input.cpp.s
 
+src/level_editor.o: src/level_editor.cpp.o
+.PHONY : src/level_editor.o
+
+# target to build an object file
+src/level_editor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
+.PHONY : src/level_editor.cpp.o
+
+src/level_editor.i: src/level_editor.cpp.i
+.PHONY : src/level_editor.i
+
+# target to preprocess a source file
+src/level_editor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.i
+.PHONY : src/level_editor.cpp.i
+
+src/level_editor.s: src/level_editor.cpp.s
+.PHONY : src/level_editor.s
+
+# target to generate assembly for a file
+src/level_editor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.s
+.PHONY : src/level_editor.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -861,6 +885,9 @@ help:
 	@echo "... src/input.o"
 	@echo "... src/input.i"
 	@echo "... src/input.s"
+	@echo "... src/level_editor.o"
+	@echo "... src/level_editor.i"
+	@echo "... src/level_editor.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

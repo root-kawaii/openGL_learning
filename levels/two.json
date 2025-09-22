@@ -1,46 +1,119 @@
-[
-    {
-      "name": "Light_Cube",
-      "vertices": [
-        { "position": [1.5, 1.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 1.5,  0.5], "texcoord": [1.0, 0.0] },
-        { "position": [2.5, 2.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 1.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 2.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 2.5,  0.5], "texcoord": [0.0, 1.0] },
-        { "position": [2.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [1.5, 1.5, -0.5], "texcoord": [1.0, 0.0] },
-        { "position": [1.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [2.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [1.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [2.5, 2.5, -0.5], "texcoord": [0.0, 1.0] },
-        { "position": [1.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [1.5, 1.5,  0.5], "texcoord": [1.0, 0.0] },
-        { "position": [1.5, 2.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [1.5, 2.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 2.5, -0.5], "texcoord": [0.0, 1.0] },
-        { "position": [2.5, 1.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 1.5, -0.5], "texcoord": [1.0, 0.0] },
-        { "position": [2.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [2.5, 1.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [2.5, 2.5,  0.5], "texcoord": [0.0, 1.0] },
-        { "position": [1.5, 2.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 2.5,  0.5], "texcoord": [1.0, 0.0] },
-        { "position": [2.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 2.5,  0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 2.5, -0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 2.5, -0.5], "texcoord": [0.0, 1.0] },
-        { "position": [1.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 1.5, -0.5], "texcoord": [1.0, 0.0] },
-        { "position": [2.5, 1.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 1.5, -0.5], "texcoord": [0.0, 0.0] },
-        { "position": [2.5, 1.5,  0.5], "texcoord": [1.0, 1.0] },
-        { "position": [1.5, 1.5,  0.5], "texcoord": [0.0, 1.0] }
-      ],
-      "rotation": [0.0, 0.0, 0.0],
-      "scale": [0.5, 0.5, 0.5]
-    }  
-    
-  ]
+{
+    "objects": [
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "id": "cube_01",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.3381593227386475,
+                "y": 0.314380407333374,
+                "z": 4.296901226043701
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "id": "1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "id": "2",
+            "path": "assets/smoke_2.glb",
+            "position": {
+                "x": 0.0,
+                "y": 8.141576766967773,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "id": "3",
+            "path": "assets/helmet.glb",
+            "position": {
+                "x": 0.0,
+                "y": 7.103165149688721,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "id": "5",
+            "path": "assets/mech_drone.glb",
+            "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
+        }
+    ]
+}

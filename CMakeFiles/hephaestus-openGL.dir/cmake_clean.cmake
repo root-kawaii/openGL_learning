@@ -34,6 +34,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o"

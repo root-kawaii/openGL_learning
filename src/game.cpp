@@ -262,3 +262,8 @@ void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime,
 {
     inputManager.processInput(this, window, camera, deltaTime, shadows, seed);
 }
+
+void Game::setLevel(std::string levelName)
+{
+    scene = std::make_unique<Scene>(levelName);
+}

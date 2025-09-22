@@ -67,7 +67,7 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
 Scene::Scene()
 {
   entityCounter = 1; // Always start fresh from 1
-  serializer.loadScene("levels/one.json");
+  serializer.loadScene("levels/two.json");
 
   std::cout << "Loading scene objects with generated IDs..." << std::endl;
 
@@ -94,6 +94,40 @@ Scene::Scene()
 
   // Validate all IDs are correct
   validateAllIDs();
+  currentLevel = "levels/two.json";
+}
+
+Scene::Scene(std::string level)
+{
+  entityCounter = 1; // Always start fresh from 1
+  serializer.loadScene(level);
+
+  std::cout << "Loading scene objects with generated IDs..." << std::endl;
+
+  for (auto i : serializer.getObjects())
+  {
+    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign new ID
+    auto gameObject = std::make_shared<GameObject>(
+        i.id, // This becomes the name, not the ID
+        i.path,
+        i.position,
+        i.rotation,
+        i.scale,
+        i.collisionRadius,
+        i.shader_name);
+
+    // FIX: Use addGameObject which will assign a fresh generated ID
+    uint32_t newID = addGameObject(gameObject);
+
+    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID << std::endl;
+  }
+
+  std::cout << "Scene loaded with " << gameObjects.size() << " objects" << std::endl;
+  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
+
+  // Validate all IDs are correct
+  validateAllIDs();
+  currentLevel = level;
 }
 
 uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
@@ -111,6 +145,22 @@ uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
   std::cout << "Added GameObject '" << gameObject->name << "' with ID: " << id << std::endl;
 
   return id;
+}
+
+void Scene::addGameObject(std::string gameObjectPath)
+{
+  uint32_t id = generateUniqueId();
+  auto gameObject = std::make_shared<GameObject>(
+      std::to_string(id), // This becomes the name, not the ID
+      gameObjectPath,
+      glm::vec3(0, 0, 0),
+      glm::vec3(0, 0, 0),
+      glm::vec3(1, 1, 1),
+      0,
+      "default");
+
+  // FIX: Use addGameObject which will assign a fresh generated ID
+  uint32_t newID = addGameObject(gameObject);
 }
 
 uint32_t Scene::generateUniqueId()
@@ -280,7 +330,7 @@ void Scene::addCubeOnTop(std::string shader_name)
 Scene::~Scene()
 {
   std::cout << "Saving scene with generated IDs..." << std::endl;
-  serializer.saveScene("levels/one.json", gameObjects);
+  serializer.saveScene(currentLevel, gameObjects);
 }
 
 // Debug method to print all objects and their IDs

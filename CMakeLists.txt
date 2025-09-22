@@ -152,6 +152,7 @@ set(PROJECT_SOURCES
     src/audio_manager.cpp
     src/sphere_collision.cpp
     src/ui.cpp
+    src/level_editor.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------
