@@ -1062,18 +1062,19 @@ int main()
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
+    // ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
 
-    // For softer blending
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // // For softer blending
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Or for additive blending (glowing effect)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    // // Or for additive blending (glowing effect)
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    // Render with coordinated colors
+    // // Render with coordinated colors
 
-    ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
-    ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    // ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f, glm::vec3(1.0, 0.0f, 0.0f));
+    ui->renderGameMenu();
     glDisable(GL_BLEND);
 
     ///////////

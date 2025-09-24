@@ -64,6 +64,9 @@ private:
     GLFWwindow *window;
     std::shared_ptr<Scene> scene;
 
+    glm::vec3 engineCameraPos;
+    glm::vec3 engineCameraFront;
+
 public:
     bool initialize();
     void run();
@@ -85,7 +88,22 @@ public:
     void setScene(std::shared_ptr<Scene> newScene) { scene = newScene; };
     Scene *getScene() { return scene.get(); };
 
-    void setGameMode(GameModeEnum modeEnum) { mode = modeEnum; };
+    void setGameMode(GameModeEnum modeEnum)
+    {
+        mode = modeEnum;
+        if (modeEnum == GAME)
+        {
+            engineCameraPos = camera.Position;
+            engineCameraFront = camera.Front;
+            camera.Position = glm::vec3(0, 10, 0);
+            camera.Front = glm::vec3(0, -1, 0);
+        }
+        if (modeEnum == ENGINE)
+        {
+            camera.Position = engineCameraPos;
+            camera.Front = engineCameraFront;
+        }
+    };
     GameModeEnum getGameMode() { return mode; };
 
     void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed);

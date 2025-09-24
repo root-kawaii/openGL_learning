@@ -55,5 +55,12 @@ public:
     void setProjectionMatrix(const glm::mat4 &matrix);
 
     void RenderText(std::string text, float x, float y, float scale, glm::vec3 color);
+
+    void renderGameMenu();
+
+    void renderMenuDecorations(float menuX, float menuY, float menuWidth, float menuHeight);
+
+    void renderStatusBars();
 };
+
 ;
