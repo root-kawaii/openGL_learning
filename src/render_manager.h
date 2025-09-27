@@ -12,6 +12,8 @@
 #include "../src/texture.h"
 #include "../src/game_object.h"
 
+#include <random>
+
 // Forward declarations
 // class Shader;
 // class Texture;
@@ -43,6 +45,14 @@ struct Light
     glm::vec3 color;
     float intensity;
     // Add more light properties as needed
+};
+
+struct GrassInstance
+{
+    glm::vec3 position;
+    float rotation;
+    float scale;
+    glm::vec3 tint; // Individual grass blade tinting
 };
 
 class RenderManager
@@ -109,6 +119,22 @@ private:
     int idBufferWidth = 0;
     int idBufferHeight = 0;
     bool useIntegerTexture = true;
+
+    unsigned int grassVAO, grassVBO, grassInstanceVBO;
+    std::vector<GrassInstance> grassInstances;
+    bool grassInstancesGenerated = false;
+
+    std::shared_ptr<Model> grassModel;
+    bool grassModelLoaded = false;
+
+    bool grassInstanced = false;
+
+    // Texture cache
+    std::unordered_map<std::string, unsigned int> textureCache;
+
+    unsigned int loadAndCacheTexture(const std::string &name, const std::string &path);
+    void generateGrassInstances(const glm::vec3 &center, float radius, int density);
+    void setupGrassInstancing();
 
 public:
     RenderManager();
@@ -198,7 +224,7 @@ public:
     Mesh *loadMesh(const std::string &name, const std::string &path);
 
     Shader *getShader(const std::string &name);
-    void useShader(GameObject &gameObject, Shader *shader);
+    void useShader(GameObject &gameObject, Shader *shader, glm::vec3 lightPos, glm::mat4 lightSpaceMatrix);
     Texture *getTexture(const std::string &name);
     Mesh *getMesh(const std::string &name);
 
@@ -244,7 +270,7 @@ public:
 
     int getTextureCounter() { return textureCounter; }
 
-    void renderGameObject(GameObject &gameObject);
+    void renderGameObject(GameObject &gameObject, glm::vec3 lightPos, glm::mat4 lightMatrix);
     void renderGameObjectWithShader(GameObject &gameObject, Shader shader);
     void renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID);
     void renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color);
@@ -262,6 +288,8 @@ public:
                             bool drawYAxis, float yAxisHeight);
     void renderGrid(glm::mat4 view, glm::mat4 projection);
     void renderGrassPoints(const std::vector<glm::vec3> &positions);
+
+    void renderGameObjectWithShader(GameObject &gameObject, Shader shader, glm::mat4 newProjectionMatrix, glm::mat4 newViewMatrix, glm::mat4 newModel);
 
     void initializeShaders();
     void initializeDepthFBO();

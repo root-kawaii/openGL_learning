@@ -81,8 +81,6 @@ std::vector<glm::vec3> makeThousandVecs()
 unsigned int loadCubemap(vector<std::string> faces);
 GameObject loadSceneObject(const std::string &path, int stride,
                            unsigned int textureID);
-void shaderUser(Shader &shader, glm::mat4 *projection, glm::mat4 *model,
-                glm::mat4 *view, glm::vec3 *cameraPos);
 
 // settings
 bool shadows = true;
@@ -318,7 +316,7 @@ int main()
 
   // shadowmaps
 
-  const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+  const unsigned int SHADOW_WIDTH = 1440, SHADOW_HEIGHT = 1440;
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -353,7 +351,7 @@ int main()
   bool viewFrozen = false;
   bool intersect = false;
 
-  audioManager->playSource();
+  // audioManager->playSource();
   bool selected = false;
 
   std::vector<glm::vec3> vec = makeThousandVecs();
@@ -361,6 +359,7 @@ int main()
   lastFrame = static_cast<float>(glfwGetTime());
   renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
   renderManager->initializeDepthFBO();
+  glm::vec3 lightPos(-1.0f, 4.0f, 1.0f);
   while (!glfwWindowShouldClose(game->getWindow()))
   {
 
@@ -422,45 +421,63 @@ int main()
     game->processGameInput(game->getWindow(), &game->camera, deltaTime, shadows,
                            game->seed);
 
-    // render
-    // ------
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // 1. render depth of scene to texture (from light's perspective)
+    // --------------------------------------------------------------
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+    near_plane = 1.0f, far_plane = 75.5f;
+    // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+    lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+    lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightSpaceMatrix = lightProjection * lightView;
+    // render scene from light's point of view
+    depthPrePass.use();
+    depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-    glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glDrawBuffer(GL_NONE);
+    glEnable(GL_DEPTH_TEST);
     auto gameObjects = game->getScene()->getGameObjects();
     for (auto &i : gameObjects)
     {
-      if (i->shaderName == "water_noG")
-      {
-        continue;
-      }
-      renderManager->renderGameObjectWithShader(*i, depthPrePass);
+      renderManager->renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // render
+    // ------
+    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+    // glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
+    // glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_LESS);
+    // glClear(GL_DEPTH_BUFFER_BIT);
+    // glDrawBuffer(GL_NONE);
+    // auto gameObjects = game->getScene()->getGameObjects();
+    // for (auto &i : gameObjects)
+    // {
+    //   if (i->shaderName == "water_noG")
+    //   {
+    //     continue;
+    //   }
+    //   renderManager->renderGameObjectWithShader(*i, depthPrePass);
+    // }
+
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // 1. geometry pass: render scene's geometry/color data into gbuffer
     glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
-    shaderGeometryPass.use();
-
-    shaderGeometryPass.setInt("texture_metallic", 6);
-    shaderGeometryPass.setInt("texture_roughness", 7);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // ///////////
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
     // glDisable(GL_DEPTH_TEST); // Disable depth testing for post-processing
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
     ///
@@ -473,13 +490,13 @@ int main()
                                                    groundTexture);
         continue;
       }
-      renderManager->renderGameObject(*i);
+      renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
     }
 
     renderManager->renderSceneToIDBuffer(gameObjects);
     game->getScene()->renderCompactColorPicker();
 
-    renderManager->renderGrass(glm::vec3(0, 2, 0), 1, 10, 1);
+    // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
 
     ////////////////////////////////////////////////////
 
@@ -581,20 +598,6 @@ int main()
 
   glfwTerminate();
   return 0;
-}
-
-void shaderUser(Shader &shader, glm::mat4 *projection, glm::mat4 *model,
-                glm::mat4 *view, glm::vec3 *cameraPos)
-{
-  shader.use();
-  if (model)
-    shader.setMat4("model", *model);
-  if (view)
-    shader.setMat4("view", *view);
-  if (projection)
-    shader.setMat4("projection", *projection);
-  if (cameraPos)
-    shader.setVec3("cameraPos", *cameraPos);
 }
 
 unsigned int loadCubemap(vector<std::string> faces)

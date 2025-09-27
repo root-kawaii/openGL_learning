@@ -1,6 +1,8 @@
 #include "render_manager.h"
 #include "../tracy/public/tracy/Tracy.hpp"
 
+namespace fs = std::filesystem;
+
 RenderManager::RenderManager()
     : currentCamera(nullptr), clearColor(0.2f, 0.3f, 0.3f, 1.0f), wireframeMode(false), depthTestEnabled(true), blendingEnabled(false), screenWidth(800), screenHeight(600), drawCalls(0), verticesRendered(0), ambientLight(0.1f, 0.1f, 0.1f)
 {
@@ -1063,11 +1065,27 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     gameObject.model.Draw(shader);
 }
 
-void RenderManager::renderGameObject(GameObject &gameObject)
+void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader shader, glm::mat4 newProjectionMatrix, glm::mat4 newViewMatrix, glm::mat4 newModel)
+{
+    ZoneScoped;
+    shader.use();
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, gameObject.position) * scaling;
+    shader.setMat4("projection", newProjectionMatrix);
+    shader.setMat4("view", newViewMatrix);
+    shader.setMat4("model", model);
+    shader.setFloat("time", glfwGetTime());
+    gameObject.model.Draw(shader);
+}
+
+void RenderManager::renderGameObject(GameObject &gameObject, glm::vec3 lightPos, glm::mat4 lightMatrix)
 {
     ZoneScoped;
     Shader shader = *getShader(gameObject.shaderName);
-    useShader(gameObject, &shader);
+    useShader(gameObject, &shader, lightPos, lightMatrix);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
     gameObject.model.Draw(shader);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
@@ -1365,7 +1383,7 @@ void RenderManager::debugIDBuffer()
 //     return 0;
 // }
 
-void RenderManager::useShader(GameObject &gameObject, Shader *shader)
+void RenderManager::useShader(GameObject &gameObject, Shader *shader, glm::vec3 lightPos, glm::mat4 lightSpaceMatrix)
 {
     glm::mat4 model = gameObject.GetTransform(); // Just use GetTransform() for consistency
     shader->use();
@@ -1374,6 +1392,12 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader)
     shader->setMat4("model", model);
     shader->setFloat("time", glfwGetTime());
     shader->setVec3("objectColor", gameObject.color);
+    shader->setVec3("viewPos", currentCamera->Position);
+    shader->setVec3("lightPos", lightPos);
+    shader->setVec3("lightColor", glm::vec3(1.0f, 0.0f, 0.0f));
+    shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    shader->setInt("shadowMap", 0);
+
     if (gameObject.shaderName == "water_noG")
     {
         // Camera and view uniforms
@@ -1883,8 +1907,8 @@ void RenderManager::initializeShaders()
                                                               "shaders/simple_depth_shader.fs",
                                                               "shaders/simple_depth_shader.gs");
     shaders["grass_shader"] = std::make_shared<Shader>("shaders/grass.vs",
-                                                       "shaders/grass.fs",
-                                                       "shaders/grass.gs");
+                                                       "shaders/grass.fs");
+    //    "shaders/grass.gs");
 }
 
 void RenderManager::initializeDepthFBO()
@@ -1908,55 +1932,186 @@ void RenderManager::initializeDepthFBO()
     // Attach depth texture to framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
-    // We only need depth, so disable color buffer
+    // Disable color buffer
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
     // Check framebuffer completeness
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "Depth framebuffer not complete!" << std::endl;
+        std::cerr << "Error: Depth framebuffer not complete!" << std::endl;
+        // Cleanup on failure
+        glDeleteFramebuffers(1, &depthFBO);
+        glDeleteTextures(1, &depthTexture);
+        depthFBO = depthTexture = 0;
     }
+
+    // Unbind framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+unsigned int RenderManager::loadAndCacheTexture(const std::string &name, const std::string &path)
+{
+    auto it = textureCache.find(name);
+    if (it != textureCache.end())
+    {
+        return it->second;
+    }
+
+    unsigned int texture = loadTexture(name.c_str(), path.c_str());
+    textureCache[name] = texture;
+    return texture;
+}
+
+void RenderManager::generateGrassInstances(const glm::vec3 &center, float radius, int density)
+{
+    if (grassInstancesGenerated)
+        return;
+
+    grassInstances.clear();
+    grassInstances.reserve(density);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> posDist(-radius, radius);
+    std::uniform_real_distribution<float> rotDist(0.0f, 2.0f * M_PI);
+    std::uniform_real_distribution<float> scaleDist(0.7f, 1.3f);
+    std::uniform_real_distribution<float> tintDist(0.8f, 1.2f);
+
+    for (int i = 0; i < density; ++i)
+    {
+        GrassInstance instance;
+
+        // Generate position in circular distribution
+        float angle = rotDist(gen);
+        float distance = std::sqrt(posDist(gen) * posDist(gen)) * radius;
+
+        instance.position = center + glm::vec3(
+                                         distance * std::cos(angle),
+                                         0.0f,
+                                         distance * std::sin(angle));
+
+        instance.rotation = rotDist(gen);
+        instance.scale = scaleDist(gen);
+
+        // Add some color variation
+        instance.tint = glm::vec3(
+            tintDist(gen) * 0.4f + 0.2f, // Green variation
+            tintDist(gen) * 0.8f + 0.6f, // Main green
+            tintDist(gen) * 0.3f + 0.1f  // Blue tint
+        );
+
+        grassInstances.push_back(instance);
+    }
+
+    grassInstancesGenerated = true;
+}
+
+void RenderManager::setupGrassInstancing()
+{
+    if (grassInstanced || grassInstances.empty() || !grassModel)
+    {
+        return;
+    }
+
+    // Generate instance buffer once
+    glGenBuffers(1, &grassInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, grassInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 grassInstances.size() * sizeof(GrassInstance),
+                 grassInstances.data(),
+                 GL_STATIC_DRAW);
+
+    // Check for buffer creation errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error creating instance buffer: " << error << std::endl;
+        return;
+    }
+
+    // Setup instance attributes for EACH mesh in the model
+    for (auto &mesh : grassModel->meshes)
+    {
+        // CRITICAL: Bind the mesh's VAO before setting up attributes
+        glBindVertexArray(mesh.VAO);
+
+        // Bind instance buffer for this mesh
+        glBindBuffer(GL_ARRAY_BUFFER, grassInstanceVBO);
+
+        // Setup instance attributes
+
+        // Instance position (location 3)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(GrassInstance),
+                              (void *)offsetof(GrassInstance, position));
+        glVertexAttribDivisor(3, 1); // Update once per instance
+
+        // Instance rotation (location 4)
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(GrassInstance),
+                              (void *)offsetof(GrassInstance, rotation));
+        glVertexAttribDivisor(4, 1);
+
+        // Instance scale (location 5)
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(GrassInstance),
+                              (void *)offsetof(GrassInstance, scale));
+        glVertexAttribDivisor(5, 1);
+
+        // Instance tint (location 6)
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, sizeof(GrassInstance),
+                              (void *)offsetof(GrassInstance, tint));
+        glVertexAttribDivisor(6, 1);
+
+        // Check for errors after setting up each mesh
+        error = glGetError();
+        if (error != GL_NO_ERROR)
+        {
+            std::cerr << "OpenGL error setting up instancing for mesh: " << error << std::endl;
+        }
+    }
+
+    // Unbind VAO and buffer
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    std::cout << "Grass instancing setup complete for " << grassInstances.size() << " instances" << std::endl;
+    grassInstanced = true;
 }
 
 void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength)
 {
     ZoneScoped;
 
-    static unsigned int grassVAO = 0;
-    static unsigned int grassVBO = 0;
-    static bool initialized = false;
-
-    // Initialize grass quad geometry (1x1 square at origin)
-    if (!initialized)
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
     {
-        // Create a simple quad vertices for the grass patch base
-        float grassVertices[] = {
-            // Position (x, y, z)
-            -0.5f, 0.0f, -0.5f, // Bottom-left
-            0.5f, 0.0f, -0.5f,  // Bottom-right
-            0.5f, 0.0f, 0.5f,   // Top-right
-            -0.5f, 0.0f, 0.5f   // Top-left
-        };
+        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+    }
+    // Generate instances if not done yet
 
-        glGenVertexArrays(1, &grassVAO);
-        glGenBuffers(1, &grassVBO);
-
-        glBindVertexArray(grassVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), grassVertices, GL_STATIC_DRAW);
-
-        // Position attribute
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-
-        initialized = true;
+    if (!grassModelLoaded)
+    {
+        try
+        {
+            grassModel = std::make_shared<Model>("assets/grass_4.obj");
+            grassModelLoaded = true;
+            std::cout << "Grass model loaded successfully" << std::endl;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Failed to load grass model: " << e.what() << std::endl;
+            grassModelLoaded = false;
+        }
+    }
+    error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error rendering grass: " << error << std::endl;
     }
 
-    // Get grass shader
     Shader *grassShader = getShader("grass_shader");
     if (!grassShader)
     {
@@ -1964,70 +2119,148 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
         return;
     }
 
+    generateGrassInstances(position, 2.0f, 10.0f);
+    setupGrassInstancing();
+
+    error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error RENDERING grass: " << error << std::endl;
+    }
+
     grassShader->use();
 
+    // // Setup OpenGL state for grass rendering
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glDisable(GL_CULL_FACE);
+    // glDepthMask(GL_FALSE); // Disable depth writing for transparent grass
+
+    // Load and bind textures
+    unsigned int windDistortionTexture = loadAndCacheTexture(
+        "windDistortionTexture", "assets/CircleDisplacementObject.png");
+    unsigned int grassMaskTexture = loadAndCacheTexture(
+        "grassMaskTexture", "assets/GrassMask.png");
+    unsigned int groundTexture = loadAndCacheTexture(
+        "groundTexture", "assets/GroundTexture.png");
+
+    // Bind textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, groundTexture);
+    grassShader->setInt("groundTexture", 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, windDistortionTexture);
+    grassShader->setInt("windDistortionMap", 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, grassMaskTexture);
+    grassShader->setInt("grassMask", 2);
+
+    if (textures.find("grass") != textures.end())
+    {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, textures.at("grass")->id);
+        grassShader->setInt("grassTexture", 3);
+    }
+
     // Set transformation matrices
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-    grassShader->setMat4("model", model);
+    // Set the view and projection matrices as before
     grassShader->setMat4("view", viewMatrix);
     grassShader->setMat4("projection", projectionMatrix);
 
-    // Set grass-specific uniforms to match geometry shader
-    grassShader->setFloat("time", glfwGetTime());
+    // 1. Initialize the model matrix to the identity matrix
+    glm::mat4 model = glm::mat4(1.0f);
+
+    // // 2. Apply a rotation
+    // // Rotate the model by 'angle' radians around the Y-axis.
+    // // You'll need to define or calculate 'angle' (e.g., based on time for animation).
+    // float angle = glm::radians(90.0f); // Example: 45 degrees
+    // model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // // 3. Apply a scale
+    // // Scale the model by a factor of 5 in X, Y, and Z
+    // model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+
+    // 4. Send the final model matrix to the shader
+    grassShader->setMat3("model", glm::mat3(model));
+
+    // Wind and animation parameters
+    float currentTime = glfwGetTime();
+    grassShader->setFloat("time", currentTime);
+    grassShader->setFloat("grassWidth", 0.5f);
     grassShader->setFloat("grassHeight", grassHeight);
-    grassShader->setFloat("grassWidth", 0.1f);
     grassShader->setFloat("windSpeed", 1.0f);
     grassShader->setFloat("windStrength", windStrength);
-
-    // Unity-style grass parameters
-    grassShader->setFloat("bladeHeightRandom", 0.3f);
-    grassShader->setFloat("bladeWidthRandom", 0.2f);
-    grassShader->setFloat("bendRotationRandom", 0.4f);
-    grassShader->setFloat("bladeForward", 0.38f);
-    grassShader->setFloat("bladeCurve", 2.0f);
     grassShader->setVec2("windFrequency", glm::vec2(0.04f, 0.04f));
-    grassShader->setFloat("grassMaskThreshold", 0.1f);
-    grassShader->setVec3("cameraPos", currentCamera->Position);
 
-    // Set lighting uniforms (if needed)
-    grassShader->setVec3("lightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
+    // Additional wind parameters for more complex animation
+    grassShader->setVec2("windDirection", glm::vec2(
+                                              std::sin(currentTime * 0.5f),
+                                              std::cos(currentTime * 0.3f)));
+    grassShader->setFloat("windTurbulence", 0.3f);
+    grassShader->setFloat("windGustiness", std::sin(currentTime * 0.7f) * 0.5f + 0.5f);
+
+    // Mask and culling parameters
+    grassShader->setFloat("grassMaskThreshold", 0.1f);
+    grassShader->setFloat("alphaThreshold", 0.05f);
+
+    // Lighting parameters
+    grassShader->setVec3("cameraPos", currentCamera->Position);
+    grassShader->setVec3("lightDir", glm::normalize(glm::vec3(-0.2f, -1.0f, -0.3f)));
     grassShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.9f));
     grassShader->setVec3("ambientColor", ambientLight);
 
-    // Add these texture bindings after the grass texture binding
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, textures.at("wind_noise")->id);
-    // grassShader->setInt("windDistortionMap", 1);
+    // Subsurface scattering parameters
+    grassShader->setFloat("translucentGain", 0.5f);
+    grassShader->setFloat("translucentPower", 2.0f);
+    grassShader->setVec3("subsurfaceColor", glm::vec3(0.4f, 0.8f, 0.2f));
 
-    // glActiveTexture(GL_TEXTURE2);
-    // glBindTexture(GL_TEXTURE_2D, textures.at("grass_mask")->id);
-    // grassShader->setInt("grassMask", 2);
+    // LOD and performance parameters
+    float cameraDistance = glm::length(currentCamera->Position - position);
+    grassShader->setFloat("lodDistance", cameraDistance);
+    grassShader->setFloat("maxRenderDistance", 100.0f);
+    grassShader->setFloat("fadeDistance", 80.0f);
 
-    // Bind grass texture if available
-    if (textures.find("grass") != textures.end())
+    // Seasonal and environmental parameters
+    grassShader->setFloat("seasonalTint", 0.0f); // 0 = summer, 1 = autumn
+    grassShader->setFloat("healthVariation", 0.1f);
+    grassShader->setFloat("dryness", 0.0f);
+
+    error = glGetError();
+    if (error != GL_NO_ERROR)
     {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures.at("grass")->id);
-        grassShader->setInt("grassTexture", 0);
+        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
     }
 
-    // Enable blending for grass transparency
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Render instanced grass
+    if (!grassInstances.empty())
+    {
+        // Use instanced rendering
+        for (auto &mesh : grassModel->meshes)
+        {
+            glBindVertexArray(mesh.VAO);
+            glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(),
+                                    GL_UNSIGNED_INT, 0, grassInstances.size());
+        }
+    }
 
-    // Disable back-face culling for grass blades
-    glDisable(GL_CULL_FACE);
+    error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+    }
 
-    // Render the grass patch
-    glBindVertexArray(grassVAO);
-    glDrawArrays(GL_POINTS, 0, 4); // Use points as input for geometry shader
-    glBindVertexArray(0);
-
+    // grassModel->Draw(*grassShader);
     // Restore OpenGL state
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+    // glDepthMask(GL_TRUE);
+    // glEnable(GL_CULL_FACE);
+    // glDisable(GL_BLEND);
 
-    // Update statistics
-    drawCalls++;
-    verticesRendered += grassDensity * grassDensity; // Approximate vertex count
+    // Unbind textures
+    for (int i = 0; i < 4; ++i)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
