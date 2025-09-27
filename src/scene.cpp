@@ -50,8 +50,16 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   }
   ImGui::End();
 
-  // Get transform matrix
-  glm::mat4 transform = selectedObject->GetTransform();
+  glm::vec3 pos = selectedObject->position;
+  glm::vec3 rot = glm::degrees(selectedObject->rotation); // Convert to degrees
+  glm::vec3 scl = selectedObject->scale;
+
+  // Let ImGuizmo build the matrix
+  glm::mat4 transform;
+  ImGuizmo::RecomposeMatrixFromComponents(glm::value_ptr(pos),
+                                          glm::value_ptr(rot),
+                                          glm::value_ptr(scl),
+                                          glm::value_ptr(transform));
 
   // Manipulate with ImGuizmo
   ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
@@ -60,7 +68,15 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   // Update object if gizmo was used
   if (ImGuizmo::IsUsing())
   {
-    selectedObject->SetTransform(transform);
+    float translation[3], rotation[3], scale[3];
+    ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
+                                          translation, rotation, scale);
+
+    selectedObject->SetPosition(glm::vec3(translation[0], translation[1], translation[2]));
+    selectedObject->SetRotation(glm::vec3(glm::radians(rotation[0]),
+                                          glm::radians(rotation[1]),
+                                          glm::radians(rotation[2])));
+    selectedObject->SetScale(glm::vec3(scale[0], scale[1], scale[2]));
   }
 }
 
@@ -73,23 +89,22 @@ Scene::Scene()
 
   for (auto i : serializer.getObjects())
   {
-    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign new ID
-    auto gameObject = std::make_shared<GameObject>(
-        i.id, // This becomes the name, not the ID
-        i.path,
-        i.position,
-        i.rotation,
-        i.scale,
-        i.collisionRadius,
-        i.shader_name);
+    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
+    // new ID
+    auto gameObject =
+        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
+                                     i.path, i.position, i.rotation, i.scale,
+                                     i.collisionRadius, i.shader_name, i.color);
 
     // FIX: Use addGameObject which will assign a fresh generated ID
     uint32_t newID = addGameObject(gameObject);
 
-    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID << std::endl;
+    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
+              << std::endl;
   }
 
-  std::cout << "Scene loaded with " << gameObjects.size() << " objects" << std::endl;
+  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
+            << std::endl;
   std::cout << "Next new object will get ID: " << entityCounter << std::endl;
 
   // Validate all IDs are correct
@@ -106,23 +121,22 @@ Scene::Scene(std::string level)
 
   for (auto i : serializer.getObjects())
   {
-    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign new ID
-    auto gameObject = std::make_shared<GameObject>(
-        i.id, // This becomes the name, not the ID
-        i.path,
-        i.position,
-        i.rotation,
-        i.scale,
-        i.collisionRadius,
-        i.shader_name);
+    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
+    // new ID
+    auto gameObject =
+        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
+                                     i.path, i.position, i.rotation, i.scale,
+                                     i.collisionRadius, i.shader_name, i.color);
 
     // FIX: Use addGameObject which will assign a fresh generated ID
     uint32_t newID = addGameObject(gameObject);
 
-    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID << std::endl;
+    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
+              << std::endl;
   }
 
-  std::cout << "Scene loaded with " << gameObjects.size() << " objects" << std::endl;
+  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
+            << std::endl;
   std::cout << "Next new object will get ID: " << entityCounter << std::endl;
 
   // Validate all IDs are correct
@@ -142,7 +156,8 @@ uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
   objectsById[id] = gameObject;
   gameObjects.push_back(gameObject);
 
-  std::cout << "Added GameObject '" << gameObject->name << "' with ID: " << id << std::endl;
+  std::cout << "Added GameObject '" << gameObject->name << "' with ID: " << id
+            << std::endl;
 
   return id;
 }
@@ -152,12 +167,8 @@ void Scene::addGameObject(std::string gameObjectPath)
   uint32_t id = generateUniqueId();
   auto gameObject = std::make_shared<GameObject>(
       std::to_string(id), // This becomes the name, not the ID
-      gameObjectPath,
-      glm::vec3(0, 0, 0),
-      glm::vec3(0, 0, 0),
-      glm::vec3(1, 1, 1),
-      0,
-      "default");
+      gameObjectPath, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0),
+      glm::vec3(1, 1, 1), 0, "default", glm::vec3(1, 1, 1));
 
   // FIX: Use addGameObject which will assign a fresh generated ID
   uint32_t newID = addGameObject(gameObject);
@@ -184,7 +195,8 @@ void Scene::validateAllIDs()
       continue;
     }
 
-    std::cout << "[" << i << "] '" << obj->name << "' -> ID: " << obj->ID << std::endl;
+    std::cout << "[" << i << "] '" << obj->name << "' -> ID: " << obj->ID
+              << std::endl;
 
     if (obj->ID == 0)
     {
@@ -200,14 +212,16 @@ void Scene::validateAllIDs()
   {
     if (pair.second > 1)
     {
-      std::cout << "❌ ERROR: ID " << pair.first << " appears " << pair.second << " times!" << std::endl;
+      std::cout << "❌ ERROR: ID " << pair.first << " appears " << pair.second
+                << " times!" << std::endl;
       hasErrors = true;
     }
   }
 
   if (!hasErrors)
   {
-    std::cout << "✅ All " << gameObjects.size() << " objects have valid unique IDs!" << std::endl;
+    std::cout << "✅ All " << gameObjects.size()
+              << " objects have valid unique IDs!" << std::endl;
   }
 
   std::cout << "ID range: 1 to " << (entityCounter - 1) << std::endl;
@@ -215,7 +229,8 @@ void Scene::validateAllIDs()
   std::cout << "===================" << std::endl;
 }
 
-void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, RenderManager renderManager)
+void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
+                        RenderManager renderManager)
 {
   ImGuiIO &io = ImGui::GetIO();
 
@@ -225,9 +240,11 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, Rend
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
     {
 
-      unsigned int objID = renderManager.getObjectId(io.MousePos.x, io.MousePos.y);
+      unsigned int objID =
+          renderManager.getObjectId(io.MousePos.x, io.MousePos.y);
       std::cout << "\n=== MOUSE CLICK ===" << std::endl;
-      std::cout << "Mouse position: (" << io.MousePos.x << ", " << io.MousePos.y << ")" << std::endl;
+      std::cout << "Mouse position: (" << io.MousePos.x << ", " << io.MousePos.y
+                << ")" << std::endl;
       std::cout << "ID buffer returned: " << objID << std::endl;
 
       if (objID == 0)
@@ -239,11 +256,12 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, Rend
         // Handle ground selection
         std::cout << "Calculating ground position..." << std::endl;
         groundSelection = picker.PickGroundPosition(
-            io.MousePos.x, io.MousePos.y, view, projection,
-            io.DisplaySize.x, io.DisplaySize.y, 0.0f);
+            io.MousePos.x, io.MousePos.y, view, projection, io.DisplaySize.x,
+            io.DisplaySize.y, 0.0f);
 
         std::cout << "Ground position: (" << groundSelection.x << ", "
-                  << groundSelection.y << ", " << groundSelection.z << ")" << std::endl;
+                  << groundSelection.y << ", " << groundSelection.z << ")"
+                  << std::endl;
       }
       else
       {
@@ -257,7 +275,8 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, Rend
         }
         else
         {
-          std::cout << "❌ ERROR: ID " << objID << " not found in scene!" << std::endl;
+          std::cout << "❌ ERROR: ID " << objID << " not found in scene!"
+                    << std::endl;
           std::cout << "Valid IDs in scene: ";
           for (const auto &pair : objectsById)
           {
@@ -266,7 +285,8 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection, Rend
           std::cout << std::endl;
 
           // This indicates a problem with ID buffer rendering
-          std::cout << "⚠️  This suggests the ID buffer contains wrong data!" << std::endl;
+          std::cout << "⚠️  This suggests the ID buffer contains wrong data!"
+                    << std::endl;
           selectedObject = nullptr;
         }
       }
@@ -286,10 +306,9 @@ void Scene::addCubeOnTop(std::string shader_name)
   };
 
   // Round groundSelection to nearest half integers
-  glm::vec3 roundedGroundSelection(
-      roundToHalf(groundSelection.x),
-      roundToHalf(groundSelection.y),
-      roundToHalf(groundSelection.z));
+  glm::vec3 roundedGroundSelection(roundToHalf(groundSelection.x),
+                                   roundToHalf(groundSelection.y),
+                                   roundToHalf(groundSelection.z));
 
   if (!selectedObject)
   {
@@ -297,8 +316,8 @@ void Scene::addCubeOnTop(std::string shader_name)
 
     // Create GameObject - addGameObject will assign ID
     std::shared_ptr<GameObject> newCube = std::make_shared<GameObject>(
-        "cube", "assets/cube.obj", roundedGroundSelection,
-        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
+        "cube", "assets/cube.obj", roundedGroundSelection, glm::vec3(0, 0, 0),
+        glm::vec3(1, 1, 1), 0.0f, shader_name, glm::vec3(1, 1, 1));
 
     uint32_t cubeID = addGameObject(newCube); // This assigns the ID
     selectedObject = newCube;
@@ -314,16 +333,50 @@ void Scene::addCubeOnTop(std::string shader_name)
     glm::vec3 newPosition = selectedObject->position + glm::vec3(0, 1, 0);
 
     std::shared_ptr<GameObject> newCube = std::make_shared<GameObject>(
-        "cube", "assets/cube.obj", newPosition,
-        glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 0.0f, shader_name);
+        "cube", "assets/cube.obj", newPosition, glm::vec3(0, 0, 0),
+        glm::vec3(1, 1, 1), 0.0f, shader_name, glm::vec3(1, 1, 1));
 
     uint32_t cubeID = addGameObject(newCube); // This assigns the ID
     selectedObject = newCube;
 
-    std::cout << "Created cube at (" << newPosition.x << ", "
-              << newPosition.y << ", " << newPosition.z
-              << ") with ID: " << cubeID << std::endl;
+    std::cout << "Created cube at (" << newPosition.x << ", " << newPosition.y
+              << ", " << newPosition.z << ") with ID: " << cubeID << std::endl;
   }
+}
+
+void Scene::copyEntity()
+{
+  // Check if there's a selected object to copy
+  if (!selectedObject)
+  {
+    std::cout << "No object selected to copy!" << std::endl;
+    return;
+  }
+
+  std::cout << "Copying entity '" << selectedObject->name << "' (ID: " << selectedObject->ID << ")..." << std::endl;
+
+  // Create a new GameObject with copied properties
+  // Note: Don't pass an ID - let addGameObject() assign a fresh one
+  auto copiedGameObject = std::make_shared<GameObject>(
+      selectedObject->name + std::to_string(selectedObject->ID), // Give it a distinct name
+      selectedObject->modelPath,                                 // Same model
+      selectedObject->position + glm::vec3(1.0f, 0.0f, 0.0f),    // Offset position slightly
+      selectedObject->rotation,                                  // Same rotation
+      selectedObject->scale,                                     // Same scale (not hardcoded 100,100,100!)
+      selectedObject->collisionRadius,                           // Same collision radius
+      selectedObject->shaderName,                                // Same shader
+      selectedObject->color);
+
+  // Add the copied object to the scene - this will assign a fresh ID
+  uint32_t newID = addGameObject(copiedGameObject);
+
+  // Select the newly copied object
+  selectedObject = copiedGameObject;
+
+  std::cout << "Created copy with ID: " << newID << " at position ("
+            << copiedGameObject->position.x << ", "
+            << copiedGameObject->position.y << ", "
+            << copiedGameObject->position.z << ")" << std::endl;
 }
 
 // Destructor - save scene with current state
@@ -353,4 +406,47 @@ void Scene::debugPrintAllObjects()
     }
   }
   std::cout << "=========================" << std::endl;
+}
+
+void Scene::renderCompactColorPicker()
+{
+  if (ImGui::Begin("Color Picker", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    // Main HSV wheel picker - this is the key widget that creates the circular interface
+    ImGuiColorEditFlags flags =
+        ImGuiColorEditFlags_PickerHueWheel | // Creates the wheel
+        ImGuiColorEditFlags_NoSidePreview |  // No side preview
+        ImGuiColorEditFlags_NoSmallPreview | // No small preview
+        ImGuiColorEditFlags_NoInputs |       // No built-in input fields
+        ImGuiColorEditFlags_AlphaBar;        // Separate alpha bar
+
+    ImGui::ColorPicker4("##picker", &selectedColor.r, flags);
+
+    // Bottom info panel (like in your image)
+    ImGui::Separator();
+
+    // Display values in a compact layout
+    ImGui::Columns(4, "ColorInfo", false);
+
+    // RGB
+    ImGui::Text("R: %d", (int)(selectedColor.r * 255));
+    ImGui::NextColumn();
+    ImGui::Text("G: %d", (int)(selectedColor.g * 255));
+    ImGui::NextColumn();
+    ImGui::Text("B: %d", (int)(selectedColor.b * 255));
+    ImGui::NextColumn();
+    ImGui::Text("A: %.2f", selectedColor.a);
+
+    ImGui::Columns(1);
+
+    // Hex display
+    ImGui::Text("HEX: #%s", rgbToHex(glm::vec3(selectedColor)).c_str());
+
+    if (ImGui::Button("Apply", ImVec2(-1, 0)))
+    {
+      // applyColorToSelectedObject();
+      selectedObject->color = glm::vec3(selectedColor.x, selectedColor.y, selectedColor.z);
+    }
+  }
+  ImGui::End();
 }

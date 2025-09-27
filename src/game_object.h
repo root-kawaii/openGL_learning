@@ -62,7 +62,7 @@ class GameObject
 public:
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale);
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius);
-    GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius, std::string shaderName);
+    GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color);
     GameObject(std::shared_ptr<GameObject> gameObject);
     ~GameObject();
 
@@ -71,6 +71,10 @@ public:
     // Transform methods for ImGuizmo integration
     glm::mat4 GetTransform() const;
     void SetTransform(const glm::mat4 &transform);
+
+    void SetPosition(glm::vec3 objPosition) { position = objPosition; };
+    void SetRotation(glm::vec3 objRotation) { rotation = objRotation; };
+    void SetScale(glm::vec3 objScale) { scale = objScale; };
 
     // Helper method to get transform matrix as float array for ImGuizmo
     void GetTransformFloat16(float *matrix) const;
@@ -83,6 +87,7 @@ public:
 
     Model model;
     std::string shaderName;
+    glm::vec3 color;
     std::string modelPath;
     glm::vec3 position;
     glm::vec3 rotation; // Euler angles in radians

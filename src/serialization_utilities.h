@@ -14,6 +14,7 @@ struct SceneObject
     std::string name;
     std::string path;
     std::string shader_name;
+    glm::vec3 color;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
@@ -148,6 +149,14 @@ public:
                     scl.value("y", 1.0f),
                     scl.value("z", 1.0f));
             }
+            if (objData.contains("color"))
+            {
+                const auto &scl = objData["color"];
+                obj.color = glm::vec3(
+                    scl.value("r", 1.0f),
+                    scl.value("g", 1.0f),
+                    scl.value("b", 1.0f));
+            }
             // Extract collision radius
             if (objData.contains("collision_radius"))
             {
@@ -200,6 +209,11 @@ public:
                     {"x", obj.scale.x},
                     {"y", obj.scale.y},
                     {"z", obj.scale.z}};
+
+                objData["color"] = {
+                    {"r", obj.color.x},
+                    {"g", obj.color.y},
+                    {"b", obj.color.z}};
 
                 objData["collision_radius"] = {
                     {"v", obj.collisionRadius}};

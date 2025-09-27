@@ -7,7 +7,7 @@ in vec3 FragPos;
 in vec3 Normal;
 
 // Color uniform
-uniform vec4 objectColor;
+uniform vec3 objectColor;
 // Or use vec4 if you want alpha support:
 // uniform vec4 objectColor;
 
@@ -22,7 +22,7 @@ void main()
     // FragColor = vec4(objectColor, 1.0);
     
     // Option 2: Color with basic lighting
-    vec4 color = objectColor;
+    vec3 color = objectColor;
     
     // Ambient lighting
     vec3 ambient = 0.15 * color.rgb;
@@ -40,8 +40,8 @@ void main()
     vec3 specular = spec * lightColor;
     
     // Combine all lighting
-    vec3 result = (ambient + diffuse + specular) * color.rgb;
-    FragColor = vec4(result, 1.0);
+    vec3 result = color.rgb;
+    FragColor = vec4(color, 1.0);
     
     // For vec4 color uniform with alpha:
     // FragColor = vec4(result, objectColor.a);

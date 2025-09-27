@@ -5654,7 +5654,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/game_object.h \
   src/input.h \
   src/mesh.h \
-  src/model.h \
   src/object_picker.h \
   src/raycast.h \
   src/render_manager.h \
@@ -5911,12 +5910,14 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   include/imgui/imconfig.h \
   include/imgui/imgui.h \
   include/stb_image.h \
-  src/audio_manager.h \
   src/camera.h \
   src/shader_m.h \
   src/sphere_collision.h \
+  src/audio_manager.h \
   src/game.h \
   src/level_editor.h \
+  src/model.h \
+  src/shader_m.h \
   src/ui.h \
   tracy/public/common/TracyApi.h \
   tracy/public/client/tracy_rpmalloc.hpp \

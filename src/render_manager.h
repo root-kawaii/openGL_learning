@@ -269,6 +269,8 @@ public:
     void renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject>> gameObjects);
     unsigned int getObjectId(int mouseX, int mouseY);
 
+    void renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength);
+
     void onWindowResize(int newWidth, int newHeight)
     {
         screenWidth = newWidth;

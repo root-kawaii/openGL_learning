@@ -1367,14 +1367,13 @@ void RenderManager::debugIDBuffer()
 
 void RenderManager::useShader(GameObject &gameObject, Shader *shader)
 {
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
-    model = glm::translate(model, gameObject.position) * scaling;
+    glm::mat4 model = gameObject.GetTransform(); // Just use GetTransform() for consistency
     shader->use();
     shader->setMat4("projection", projectionMatrix);
     shader->setMat4("view", viewMatrix);
     shader->setMat4("model", model);
     shader->setFloat("time", glfwGetTime());
+    shader->setVec3("objectColor", gameObject.color);
     if (gameObject.shaderName == "water_noG")
     {
         // Camera and view uniforms
@@ -1918,4 +1917,117 @@ void RenderManager::initializeDepthFBO()
     {
         std::cout << "Depth framebuffer not complete!" << std::endl;
     }
+}
+
+void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength)
+{
+    ZoneScoped;
+
+    static unsigned int grassVAO = 0;
+    static unsigned int grassVBO = 0;
+    static bool initialized = false;
+
+    // Initialize grass quad geometry (1x1 square at origin)
+    if (!initialized)
+    {
+        // Create a simple quad vertices for the grass patch base
+        float grassVertices[] = {
+            // Position (x, y, z)
+            -0.5f, 0.0f, -0.5f, // Bottom-left
+            0.5f, 0.0f, -0.5f,  // Bottom-right
+            0.5f, 0.0f, 0.5f,   // Top-right
+            -0.5f, 0.0f, 0.5f   // Top-left
+        };
+
+        glGenVertexArrays(1, &grassVAO);
+        glGenBuffers(1, &grassVBO);
+
+        glBindVertexArray(grassVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), grassVertices, GL_STATIC_DRAW);
+
+        // Position attribute
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        initialized = true;
+    }
+
+    // Get grass shader
+    Shader *grassShader = getShader("grass_shader");
+    if (!grassShader)
+    {
+        std::cerr << "Grass shader not found!" << std::endl;
+        return;
+    }
+
+    grassShader->use();
+
+    // Set transformation matrices
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+    grassShader->setMat4("model", model);
+    grassShader->setMat4("view", viewMatrix);
+    grassShader->setMat4("projection", projectionMatrix);
+
+    // Set grass-specific uniforms to match geometry shader
+    grassShader->setFloat("time", glfwGetTime());
+    grassShader->setFloat("grassHeight", grassHeight);
+    grassShader->setFloat("grassWidth", 0.1f);
+    grassShader->setFloat("windSpeed", 1.0f);
+    grassShader->setFloat("windStrength", windStrength);
+
+    // Unity-style grass parameters
+    grassShader->setFloat("bladeHeightRandom", 0.3f);
+    grassShader->setFloat("bladeWidthRandom", 0.2f);
+    grassShader->setFloat("bendRotationRandom", 0.4f);
+    grassShader->setFloat("bladeForward", 0.38f);
+    grassShader->setFloat("bladeCurve", 2.0f);
+    grassShader->setVec2("windFrequency", glm::vec2(0.04f, 0.04f));
+    grassShader->setFloat("grassMaskThreshold", 0.1f);
+    grassShader->setVec3("cameraPos", currentCamera->Position);
+
+    // Set lighting uniforms (if needed)
+    grassShader->setVec3("lightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
+    grassShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.9f));
+    grassShader->setVec3("ambientColor", ambientLight);
+
+    // Add these texture bindings after the grass texture binding
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, textures.at("wind_noise")->id);
+    // grassShader->setInt("windDistortionMap", 1);
+
+    // glActiveTexture(GL_TEXTURE2);
+    // glBindTexture(GL_TEXTURE_2D, textures.at("grass_mask")->id);
+    // grassShader->setInt("grassMask", 2);
+
+    // Bind grass texture if available
+    if (textures.find("grass") != textures.end())
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textures.at("grass")->id);
+        grassShader->setInt("grassTexture", 0);
+    }
+
+    // Enable blending for grass transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Disable back-face culling for grass blades
+    glDisable(GL_CULL_FACE);
+
+    // Render the grass patch
+    glBindVertexArray(grassVAO);
+    glDrawArrays(GL_POINTS, 0, 4); // Use points as input for geometry shader
+    glBindVertexArray(0);
+
+    // Restore OpenGL state
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+
+    // Update statistics
+    drawCalls++;
+    verticesRendered += grassDensity * grassDensity; // Approximate vertex count
 }

@@ -27,7 +27,7 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 {
 }
 
-GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName)
+GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color)
     : model(fs::path(modelPath)), // Initialize Model here!
       modelPath(modelPath),
       name(name),
@@ -36,7 +36,8 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
       scale(scale),
       speed(glm::vec3(0, 0, 0)),
       collisionRadius(collisionRadius),
-      shaderName(shaderName)
+      shaderName(shaderName),
+      color(color)
 {
 }
 
@@ -77,12 +78,14 @@ GameObject::~GameObject()
 
 glm::mat4 GameObject::GetTransform() const
 {
-  // Create transformation matrix: T * R * S (Translate * Rotate * Scale)
+  // Create transformation matrix: T * R * S
   glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
 
-  // Create rotation matrix from Euler angles (assuming rotation is in radians)
-  // Order: Y * X * Z (Yaw * Pitch * Roll)
-  glm::mat4 rotationMatrix = glm::eulerAngleYXZ(rotation.y, rotation.x, rotation.z);
+  // Use XYZ Euler angles (most compatible with ImGuizmo)
+  glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
+  glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), rotation.y, glm::vec3(0, 1, 0));
+  glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), rotation.z, glm::vec3(0, 0, 1));
+  glm::mat4 rotationMatrix = rotationZ * rotationY * rotationX; // ZYX order for XYZ Euler
 
   glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
 
@@ -91,15 +94,30 @@ glm::mat4 GameObject::GetTransform() const
 
 void GameObject::SetTransform(const glm::mat4 &transform)
 {
-  // Decompose the matrix back into position, rotation, and scale
-  glm::vec3 skew;
-  glm::vec4 perspective;
-  glm::quat orientation;
+  // Extract translation (last column)
+  position = glm::vec3(transform[3]);
 
-  glm::decompose(transform, scale, orientation, position, skew, perspective);
+  // Extract scale (length of first three columns)
+  scale.x = glm::length(glm::vec3(transform[0]));
+  scale.y = glm::length(glm::vec3(transform[1]));
+  scale.z = glm::length(glm::vec3(transform[2]));
 
-  // Convert quaternion to Euler angles
-  rotation = glm::eulerAngles(orientation);
+  // Handle negative scales
+  if (glm::determinant(transform) < 0)
+  {
+    scale.x = -scale.x;
+  }
+
+  // Remove scaling from rotation matrix
+  glm::mat3 rotMatrix = glm::mat3(transform);
+  rotMatrix[0] /= scale.x;
+  rotMatrix[1] /= scale.y;
+  rotMatrix[2] /= scale.z;
+
+  // Extract Euler angles from rotation matrix (XYZ order)
+  rotation.x = atan2(-rotMatrix[1][2], rotMatrix[2][2]);
+  rotation.y = atan2(rotMatrix[0][2], sqrt(rotMatrix[1][2] * rotMatrix[1][2] + rotMatrix[2][2] * rotMatrix[2][2]));
+  rotation.z = atan2(-rotMatrix[0][1], rotMatrix[0][0]);
 }
 
 void GameObject::GetTransformFloat16(float *matrix) const

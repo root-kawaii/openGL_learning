@@ -535,8 +535,8 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyCallstack.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyAlign.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyAlloc.hpp \
- /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/include/../src/model.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/model.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/defs.h \
@@ -571,8 +571,12 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/include/stb_image.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/game.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/input.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \
  /home/monolith/Desktop/openGL_learning/include/../src/game_object.h \
@@ -582,9 +586,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/compatibility.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
- /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
- /home/monolith/Desktop/openGL_learning/src/../src/game.h \
- /home/monolith/Desktop/openGL_learning/include/../src/stb_image.h \
  /home/monolith/Desktop/openGL_learning/include/../src/scene.h \
  /home/monolith/Desktop/openGL_learning/include/../src/render_manager.h \
  /home/monolith/Desktop/openGL_learning/include/../src/../src/camera.h \
@@ -592,9 +593,10 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/../src/../src/texture.h \
  /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
  /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
- /home/monolith/Desktop/openGL_learning/src/../src/../src/audio_manager.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/level_editor.h \
  /home/monolith/Desktop/openGL_learning/src/../src/ui.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \
  /usr/include/freetype2/ft2build.h \
@@ -612,7 +614,6 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/freetype2/freetype/fterrors.h \
  /usr/include/freetype2/freetype/ftmoderr.h \
  /usr/include/freetype2/freetype/fterrdef.h \
- /home/monolith/Desktop/openGL_learning/src/../src/level_editor.h \
  /usr/include/c++/15.2.1/random /usr/include/c++/15.2.1/bits/random.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
  /usr/include/c++/15.2.1/bits/random.tcc

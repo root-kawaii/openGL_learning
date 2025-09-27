@@ -93,15 +93,17 @@ public:
         mode = modeEnum;
         if (modeEnum == GAME)
         {
-            engineCameraPos = camera.Position;
-            engineCameraFront = camera.Front;
-            camera.Position = glm::vec3(0, 10, 0);
-            camera.Front = glm::vec3(0, -1, 0);
+            camera.gameMode = true;
+            // engineCameraPos = camera.Position;
+            // engineCameraFront = camera.Front;
+            // camera.Position = glm::vec3(0, 10, 0);
+            // camera.Front = glm::vec3(0, -1, 0);
         }
         if (modeEnum == ENGINE)
         {
-            camera.Position = engineCameraPos;
-            camera.Front = engineCameraFront;
+            camera.gameMode = false;
+            // camera.Position = engineCameraPos;
+            // camera.Front = engineCameraFront;
         }
     };
     GameModeEnum getGameMode() { return mode; };
