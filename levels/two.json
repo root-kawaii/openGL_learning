@@ -461,7 +461,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": 1.5,
-                "y": -1.0,
+                "y": -0.11909759044647217,
                 "z": -2.5
             },
             "rotation": {
@@ -1049,7 +1049,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": 2.5,
-                "y": -1.0,
+                "y": -0.049140557646751404,
                 "z": -0.5
             },
             "rotation": {
@@ -1497,7 +1497,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -1.0,
+                "y": 0.41828015446662903,
                 "z": 1.5
             },
             "rotation": {
@@ -1889,7 +1889,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": 2.5,
-                "y": -1.0,
+                "y": -0.003209441900253296,
                 "z": 2.5
             },
             "rotation": {
@@ -2057,7 +2057,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -1.0,
+                "y": -1.170039176940918,
                 "z": 3.5
             },
             "rotation": {

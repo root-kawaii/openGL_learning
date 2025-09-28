@@ -298,6 +298,7 @@ public:
     unsigned int getObjectId(int mouseX, int mouseY);
 
     void renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength);
+    void renderParabolicTrajectory(glm::vec3 start, glm::vec3 target, int segments);
 
     void onWindowResize(int newWidth, int newHeight)
     {

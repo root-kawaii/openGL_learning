@@ -495,6 +495,8 @@ int main()
 
     renderManager->renderSceneToIDBuffer(gameObjects);
     game->getScene()->renderCompactColorPicker();
+    int seg = 1000;
+    renderManager->renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
 
     // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
 

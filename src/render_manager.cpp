@@ -1901,6 +1901,7 @@ void RenderManager::initializeShaders()
     shaders["grid_shader_2"] = std::make_shared<Shader>("shaders/grid_2.vs", "shaders/grid_2.fs");
     shaders["water_noG"] = std::make_shared<Shader>("shaders/water_2.vs", "shaders/water_2.fs");
     shaders["id_shader"] = std::make_shared<Shader>("shaders/id_shader.vs", "shaders/id_shader.fs");
+    shaders["line_shader"] = std::make_shared<Shader>("shaders/line_shader.vs", "shaders/line_shader.fs", "shaders/line_shader.gs");
 
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
@@ -2262,5 +2263,78 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
     {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
+
+void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
+                                              int segments)
+{
+    float totalTime = 2.0f * 1.0f * sin(45.0f) / 1.0f;
+
+    std::vector<float> vertexIndices;
+    for (int i = 0; i <= segments; ++i)
+    {
+        vertexIndices.push_back(static_cast<float>(i));
+    }
+
+    static unsigned int thickVAO = 0, thickVBO = 0;
+    static int cachedSegments = -1;
+
+    if (thickVAO == 0 || cachedSegments != segments)
+    {
+        if (thickVAO != 0)
+        {
+            glDeleteVertexArrays(1, &thickVAO);
+            glDeleteBuffers(1, &thickVBO);
+        }
+
+        glGenVertexArrays(1, &thickVAO);
+        glGenBuffers(1, &thickVBO);
+
+        glBindVertexArray(thickVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, thickVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertexIndices.size() * sizeof(float),
+                     vertexIndices.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
+
+        cachedSegments = segments;
+    }
+
+    // Use the thick line shader (load this with vertex + geometry + fragment)
+    Shader *thickShader = getShader("line_shader");
+    if (thickShader)
+    {
+        thickShader->use();
+
+        // Your existing uniforms
+        thickShader->setMat4("model", glm::mat4(1.0f));
+        thickShader->setMat4("view", viewMatrix);
+        thickShader->setMat4("projection", projectionMatrix);
+        thickShader->setVec3("startPos", start);
+        thickShader->setVec3("targetPos", target);
+        thickShader->setInt("segments", segments);
+        thickShader->setFloat("gravity", 1.0f);
+        thickShader->setFloat("initialVelocity", 1.0f);
+        thickShader->setFloat("launchAngle", 45.0f);
+        thickShader->setFloat("totalTime", totalTime);
+        thickShader->setVec3("color", glm::vec3(0.0f, 1.0f, 0.0f));
+        thickShader->setFloat("alpha", 1.0f);
+
+        // Thickness uniforms for geometry shader
+        thickShader->setFloat("lineWidth", 200.0f);
+        thickShader->setVec2("screenSize", glm::vec2(screenWidth, screenHeight));
+        thickShader->setBool("antiAlias", false);
+
+        // Enable blending for smooth edges
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glBindVertexArray(thickVAO);
+        glDrawArrays(GL_POINTS, 0, segments + 1);
+        glBindVertexArray(0);
+
+        glDisable(GL_BLEND);
     }
 }
