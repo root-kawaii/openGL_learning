@@ -2317,9 +2317,9 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         thickShader->setInt("segments", segments);
         thickShader->setFloat("gravity", 1.0f);
         thickShader->setFloat("initialVelocity", 1.0f);
-        thickShader->setFloat("launchAngle", 45.0f);
-        thickShader->setFloat("totalTime", totalTime);
-        thickShader->setVec3("color", glm::vec3(0.0f, 1.0f, 0.0f));
+        thickShader->setFloat("pointSize", 1.0f);
+        thickShader->setFloat("arcHeightMultiplier", 1.0f);
+        thickShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
         thickShader->setFloat("alpha", 1.0f);
 
         // Thickness uniforms for geometry shader
