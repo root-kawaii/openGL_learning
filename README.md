@@ -13,7 +13,7 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
-
+- recreate this scene https://www.joosteggermont.nl/projects/project_moss/index.html
 
 - apply textures to objects from menu + add render texture to renderManager
 
