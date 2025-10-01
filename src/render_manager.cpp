@@ -19,6 +19,9 @@ bool RenderManager::initialize(int width, int height)
     // TODO: Initialize OpenGL states, default shaders, etc.
     setRes(height, width);
     setupIDBuffer();
+    arrowModel = std::make_shared<Model>("assets/arrow.obj");
+    lineModel = std::make_shared<Model>("assets/line.obj");
+    elModel = std::make_shared<Model>("assets/el.obj");
     return true;
 }
 
@@ -2183,44 +2186,11 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
     // // Scale the model by a factor of 5 in X, Y, and Z
     // model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
 
-    // 4. Send the final model matrix to the shader
-    grassShader->setMat3("model", glm::mat3(model));
-
-    // Wind and animation parameters
-    float currentTime = glfwGetTime();
-    grassShader->setFloat("time", currentTime);
-    grassShader->setFloat("grassWidth", 0.5f);
-    grassShader->setFloat("grassHeight", grassHeight);
-    grassShader->setFloat("windSpeed", 1.0f);
-    grassShader->setFloat("windStrength", windStrength);
-    grassShader->setVec2("windFrequency", glm::vec2(0.04f, 0.04f));
-
-    // Additional wind parameters for more complex animation
-    grassShader->setVec2("windDirection", glm::vec2(
-                                              std::sin(currentTime * 0.5f),
-                                              std::cos(currentTime * 0.3f)));
-    grassShader->setFloat("windTurbulence", 0.3f);
-    grassShader->setFloat("windGustiness", std::sin(currentTime * 0.7f) * 0.5f + 0.5f);
-
-    // Mask and culling parameters
-    grassShader->setFloat("grassMaskThreshold", 0.1f);
-    grassShader->setFloat("alphaThreshold", 0.05f);
-
-    // Lighting parameters
-    grassShader->setVec3("cameraPos", currentCamera->Position);
-    grassShader->setVec3("lightDir", glm::normalize(glm::vec3(-0.2f, -1.0f, -0.3f)));
-    grassShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.9f));
-    grassShader->setVec3("ambientColor", ambientLight);
-
-    // Subsurface scattering parameters
-    grassShader->setFloat("translucentGain", 0.5f);
-    grassShader->setFloat("translucentPower", 2.0f);
-    grassShader->setVec3("subsurfaceColor", glm::vec3(0.4f, 0.8f, 0.2f));
-
-    // LOD and performance parameters
-    float cameraDistance = glm::length(currentCamera->Position - position);
-    grassShader->setFloat("lodDistance", cameraDistance);
-    grassShader->setFloat("maxRenderDistance", 100.0f);
+    // 4. Send the final model matrix to the shader    // // 2. Apply a rotation
+    // // Rotate the model by 'angle' radians around the Y-axis.
+    // // You'll need to define or calculate 'angle' (e.g., based on time for animation).
+    // float angle = glm::radians(90.0f); // Example: 45 degrees
+    // model = glm::rotate(model, angle, glm::vec3(1.0f, 0.0f, 0.0f));
     grassShader->setFloat("fadeDistance", 80.0f);
 
     // Seasonal and environmental parameters
@@ -2337,4 +2307,39 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
 
         glDisable(GL_BLEND);
     }
+}
+
+void RenderManager::renderArrow(glm::vec3 position)
+{
+    Shader *simpleShader = getShader("simple_color_shader");
+    simpleShader->use();
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    simpleShader->setMat4("model", model);
+    simpleShader->setMat4("view", viewMatrix);
+    simpleShader->setMat4("projection", projectionMatrix);
+    simpleShader->setVec3("objectColor", linesColor);
+    arrowModel->Draw(*simpleShader);
+}
+
+void RenderManager::renderEl(glm::vec3 position)
+{
+    Shader *simpleShader = getShader("simple_color_shader");
+    simpleShader->use();
+    simpleShader->setMat4("model", glm::translate(glm::mat4(1.0f), position));
+    simpleShader->setMat4("view", viewMatrix);
+    simpleShader->setMat4("projection", projectionMatrix);
+    simpleShader->setVec3("objectColor", linesColor);
+    elModel->Draw(*simpleShader);
+}
+
+void RenderManager::renderLine(glm::vec3 position)
+{
+    Shader *simpleShader = getShader("simple_color_shader");
+    simpleShader->use();
+    simpleShader->setMat4("model", glm::translate(glm::mat4(1.0f), position));
+    simpleShader->setMat4("view", viewMatrix);
+    simpleShader->setMat4("projection", projectionMatrix);
+    simpleShader->setVec3("objectColor", linesColor);
+    lineModel->Draw(*simpleShader);
 }

@@ -126,11 +126,15 @@ private:
 
     std::shared_ptr<Model> grassModel;
     bool grassModelLoaded = false;
-
     bool grassInstanced = false;
 
     // Texture cache
     std::unordered_map<std::string, unsigned int> textureCache;
+
+    std::shared_ptr<Model> arrowModel;
+    std::shared_ptr<Model> lineModel;
+    std::shared_ptr<Model> elModel;
+    glm::vec3 linesColor = glm::vec3(1.0f, 1.0f, 0.0f);
 
     unsigned int loadAndCacheTexture(const std::string &name, const std::string &path);
     void generateGrassInstances(const glm::vec3 &center, float radius, int density);
@@ -312,6 +316,10 @@ public:
 
         std::cout << "ID buffer recreated for new window size" << std::endl;
     };
+
+    void renderArrow(glm::vec3 position);
+    void renderEl(glm::vec3 position);
+    void renderLine(glm::vec3 position);
 
 private:
     // Internal helper functions
