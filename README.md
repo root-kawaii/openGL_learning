@@ -13,6 +13,11 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
+- cutescene try by having a for on camera position that changes and goes on
+- pos for x sec
+- pos for y sec
+.....
+
 - recreate this scene https://www.joosteggermont.nl/projects/project_moss/index.html
 
 - apply textures to objects from menu + add render texture to renderManager
