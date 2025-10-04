@@ -518,6 +518,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o: \
  /usr/include/c++/15.2.1/version /usr/include/c++/15.2.1/optional \
  /usr/include/c++/15.2.1/any \
  /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
+ /home/monolith/Desktop/openGL_learning/src/game_entity.h \
  /home/monolith/Desktop/openGL_learning/src/game.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/include/../src/camera.h \

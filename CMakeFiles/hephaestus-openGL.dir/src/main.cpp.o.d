@@ -596,6 +596,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/random.tcc \
  /home/monolith/Desktop/openGL_learning/include/../src/object_picker.h \
  /home/monolith/Desktop/openGL_learning/include/../src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/game_entity.h \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \

@@ -9,12 +9,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "1",
             "id": "grid_cube_0_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": -3.5,
-                "y": -0.5,
+                "x": -4.4806952476501465,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -27,7 +26,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -38,12 +38,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "2",
             "id": "grid_cube_1_0",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -56,7 +55,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -67,12 +67,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "3",
             "id": "grid_cube_2_0",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -85,7 +84,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -96,12 +96,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "4",
             "id": "grid_cube_3_0",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -114,7 +113,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -125,12 +125,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "5",
             "id": "grid_cube_4_0",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -143,7 +142,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -154,12 +154,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "6",
             "id": "grid_cube_5_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
+                "x": 0.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -172,7 +171,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -183,12 +183,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "7",
             "id": "grid_cube_6_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
+                "x": 1.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -201,7 +200,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -212,12 +212,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "8",
             "id": "grid_cube_7_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
+                "x": 2.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -230,7 +229,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -241,12 +241,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "9",
             "id": "grid_cube_8_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
+                "x": 3.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -259,7 +258,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -270,12 +270,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "10",
             "id": "grid_cube_9_0",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
+                "x": 4.5,
+                "y": -1.0,
                 "z": -3.5
             },
             "rotation": {
@@ -288,7 +287,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -299,12 +299,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "11",
             "id": "grid_cube_0_1",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -317,7 +316,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -328,12 +328,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "12",
             "id": "grid_cube_1_1",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -346,7 +345,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -357,12 +357,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "13",
             "id": "grid_cube_2_1",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -375,7 +374,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -386,13 +386,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "14",
             "id": "grid_cube_3_1",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
-                "z": 1.5
+                "y": -1.0,
+                "z": 0.9052048921585083
             },
             "rotation": {
                 "x": 0.0,
@@ -404,7 +403,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -415,12 +415,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "15",
             "id": "grid_cube_4_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
+                "x": 0.6554241180419922,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -433,7 +432,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -444,12 +444,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "16",
             "id": "grid_cube_5_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 0.5,
-                "y": -0.5,
+                "x": -0.11405342072248459,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -462,7 +461,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -473,12 +473,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "17",
             "id": "grid_cube_6_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": 0.5,
+                "x": 1.5,
+                "y": -0.11909759044647217,
                 "z": -2.5
             },
             "rotation": {
@@ -491,7 +490,8 @@
                 "y": 0.9999799132347107,
                 "z": 0.99998539686203
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -502,12 +502,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "18",
             "id": "grid_cube_7_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
+                "x": 2.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -520,7 +519,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -531,12 +531,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "19",
             "id": "grid_cube_8_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
+                "x": 3.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -549,7 +548,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -560,12 +560,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "20",
             "id": "grid_cube_9_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
+                "x": 4.5,
+                "y": -1.0,
                 "z": -2.5
             },
             "rotation": {
@@ -578,7 +577,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -589,12 +589,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "21",
             "id": "grid_cube_0_2",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -607,7 +606,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -618,12 +618,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "22",
             "id": "grid_cube_1_2",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -636,7 +635,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -647,12 +647,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "23",
             "id": "grid_cube_2_2",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": 0.5,
+                "y": -0.14203816652297974,
                 "z": -1.5
             },
             "rotation": {
@@ -665,7 +664,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -676,12 +676,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "24",
             "id": "grid_cube_3_2",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -694,7 +693,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -705,12 +705,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "25",
             "id": "grid_cube_4_2",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -723,7 +722,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -734,12 +734,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "26",
             "id": "grid_cube_5_2",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
+                "x": 0.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -752,7 +751,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -763,12 +763,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "27",
             "id": "grid_cube_6_2",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
+                "x": 1.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -781,7 +780,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -792,12 +792,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "28",
             "id": "grid_cube_7_2",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
+                "x": 2.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -810,7 +809,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -821,12 +821,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "29",
             "id": "grid_cube_8_2",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
+                "x": 3.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -839,7 +838,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -850,12 +850,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "30",
             "id": "grid_cube_9_2",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
+                "x": 4.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -868,7 +867,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -879,12 +879,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "31",
             "id": "grid_cube_0_3",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -0.5
             },
             "rotation": {
@@ -897,7 +896,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -908,12 +908,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "32",
             "id": "grid_cube_1_3",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -0.5
             },
             "rotation": {
@@ -926,7 +925,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -937,12 +937,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "33",
             "id": "grid_cube_2_3",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -0.5
             },
             "rotation": {
@@ -955,7 +954,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -966,12 +966,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "34",
             "id": "grid_cube_3_3",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
+                "y": -1.0,
                 "z": -0.5
             },
             "rotation": {
@@ -984,7 +983,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -995,12 +995,214 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "35",
             "id": "grid_cube_4_3",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": 0.5,
+                "y": -0.2162211537361145,
+                "z": 0.24981336295604706
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -1.7881133556365967,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -15.474994659423828,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.049140557646751404,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -1.0,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_9_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 4.5,
+                "y": -1.0,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_0_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -4.5,
+                "y": -1.0,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0047597503289580345,
+                "z": 3.1105575561523438
+            },
+            "scale": {
+                "x": 0.9999681711196899,
+                "y": 0.9999834895133972,
+                "z": 0.9998033046722412
+            },
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -1.0,
                 "z": 0.5
             },
             "rotation": {
@@ -1013,7 +1215,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1024,216 +1227,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "36",
-            "id": "grid_cube_5_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -1.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "37",
-            "id": "grid_cube_6_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -14.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "38",
-            "id": "grid_cube_7_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": 0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "39",
-            "id": "grid_cube_8_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 4.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "40",
-            "id": "grid_cube_9_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 5.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "41",
-            "id": "grid_cube_0_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -4.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0047597503289580345,
-                "z": 3.1105575561523438
-            },
-            "scale": {
-                "x": 0.9999681711196899,
-                "y": 0.9999834895133972,
-                "z": 0.9998033046722412
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "42",
-            "id": "grid_cube_1_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "entity": "43",
             "id": "grid_cube_2_4",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
-                "z": 1.5
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1245,7 +1244,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1256,13 +1256,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "44",
             "id": "grid_cube_3_4",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
-                "z": 1.5
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1274,7 +1273,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1285,13 +1285,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "45",
             "id": "grid_cube_4_4",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
-                "z": 1.5
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1303,7 +1302,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1314,13 +1314,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "46",
             "id": "grid_cube_5_4",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": 1.5
+                "x": 0.5,
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1332,7 +1331,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1343,13 +1343,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "47",
             "id": "grid_cube_6_4",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 1.5
+                "x": 1.5,
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1361,7 +1360,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1372,13 +1372,12 @@
                 "g": 0.27997463941574097,
                 "r": 0.9724584817886353
             },
-            "entity": "48",
             "id": "grid_cube_7_4",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": 0.5,
-                "z": 1.5
+                "x": 2.5,
+                "y": 0.14412036538124084,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1390,7 +1389,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1401,13 +1401,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "49",
             "id": "grid_cube_8_4",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
-                "z": 1.5
+                "x": 3.5,
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1419,7 +1418,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1430,13 +1430,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "50",
             "id": "grid_cube_9_4",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
-                "z": 1.5
+                "x": 4.5,
+                "y": -1.0,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1448,7 +1447,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1459,13 +1459,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "51",
             "id": "grid_cube_0_5",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
-                "z": 2.5
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1477,7 +1476,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1488,13 +1488,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "52",
             "id": "grid_cube_1_5",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
-                "z": 2.5
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1506,7 +1505,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1517,13 +1517,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "53",
             "id": "grid_cube_2_5",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
-                "z": 2.5
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1535,7 +1534,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1546,13 +1546,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "54",
             "id": "grid_cube_3_5",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": 0.5,
-                "z": 2.5
+                "y": 0.41828015446662903,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1564,7 +1563,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1575,13 +1575,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "55",
             "id": "grid_cube_4_5",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
-                "z": 2.5
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1593,7 +1592,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1604,13 +1604,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "56",
             "id": "grid_cube_5_5",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": 2.5
+                "x": 0.5,
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1622,7 +1621,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1633,13 +1633,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "57",
             "id": "grid_cube_6_5",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 2.5
+                "x": 1.5,
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1651,7 +1650,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1662,13 +1662,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "58",
             "id": "grid_cube_7_5",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": 2.5
+                "x": 2.5,
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1680,7 +1679,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1691,13 +1691,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "59",
             "id": "grid_cube_8_5",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
-                "z": 2.5
+                "x": 3.5,
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1709,7 +1708,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1720,13 +1720,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "60",
             "id": "grid_cube_9_5",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
-                "z": 2.5
+                "x": 4.5,
+                "y": -1.0,
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1738,7 +1737,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1749,13 +1749,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "61",
             "id": "grid_cube_0_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
-                "z": 3.5
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1767,7 +1766,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1778,13 +1778,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "62",
             "id": "grid_cube_1_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
-                "z": 3.5
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1796,7 +1795,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1807,13 +1807,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "63",
             "id": "grid_cube_2_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
-                "z": 3.5
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1825,7 +1824,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1836,13 +1836,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "64",
             "id": "grid_cube_3_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
-                "z": 3.5
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1854,7 +1853,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1865,13 +1865,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "65",
             "id": "grid_cube_4_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
-                "z": 3.5
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1883,7 +1882,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1894,13 +1894,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "66",
             "id": "grid_cube_5_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": 0.5,
-                "z": 3.5
+                "x": 0.5,
+                "y": -0.06653499603271484,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1912,7 +1911,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1923,13 +1923,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "67",
             "id": "grid_cube_6_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 3.5
+                "x": 1.5,
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1941,7 +1940,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1952,13 +1952,12 @@
                 "g": 0.0916023775935173,
                 "r": 0.9999999403953552
             },
-            "entity": "68",
             "id": "grid_cube_7_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": 0.5,
-                "z": 3.5
+                "x": 2.8364264965057373,
+                "y": -0.003209434449672699,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1970,7 +1969,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -1981,13 +1981,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "69",
             "id": "grid_cube_8_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
-                "z": 3.5
+                "x": 3.5,
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1999,7 +1998,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2010,13 +2010,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "70",
             "id": "grid_cube_9_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
-                "z": 3.5
+                "x": 4.5,
+                "y": -1.0,
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2028,7 +2027,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2039,13 +2039,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "71",
             "id": "grid_cube_0_7",
             "path": "assets/cube.obj",
             "position": {
                 "x": -4.5,
-                "y": -0.5,
-                "z": 4.5
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2057,7 +2056,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2068,13 +2068,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "72",
             "id": "grid_cube_1_7",
             "path": "assets/cube.obj",
             "position": {
                 "x": -3.5,
-                "y": -0.5,
-                "z": 4.5
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2086,7 +2085,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2097,13 +2097,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "73",
             "id": "grid_cube_2_7",
             "path": "assets/cube.obj",
             "position": {
                 "x": -2.5,
-                "y": -0.5,
-                "z": 4.5
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2115,7 +2114,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2126,13 +2126,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "74",
             "id": "grid_cube_3_7",
             "path": "assets/cube.obj",
             "position": {
                 "x": -1.5,
-                "y": -0.5,
-                "z": 4.5
+                "y": -1.170039176940918,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2144,7 +2143,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2155,13 +2155,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "75",
             "id": "grid_cube_4_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": -0.447090744972229,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": -0.0,
@@ -2173,7 +2172,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2184,13 +2184,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "76",
             "id": "grid_cube_5_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": 0.5,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2202,7 +2201,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2213,13 +2213,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "77",
             "id": "grid_cube_6_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": 1.5,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2231,7 +2230,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2242,13 +2242,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "78",
             "id": "grid_cube_7_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": 2.5,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2260,7 +2259,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2271,13 +2271,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "79",
             "id": "grid_cube_8_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 4.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": 3.5,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2289,7 +2288,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2300,13 +2300,12 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "80",
             "id": "grid_cube_9_7",
             "path": "assets/cube.obj",
             "position": {
-                "x": 5.5,
-                "y": -0.5,
-                "z": 4.5
+                "x": 4.5,
+                "y": -1.0,
+                "z": 3.5
             },
             "rotation": {
                 "x": -0.0,
@@ -2318,7 +2317,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2357,13 +2357,12 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "82",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": 7.5,
-                "y": 0.5,
-                "z": -6.5
+                "x": 7.4410200119018555,
+                "y": -0.46509021520614624,
+                "z": -7.433642387390137
             },
             "rotation": {
                 "x": 0.12704017758369446,
@@ -2375,7 +2374,8 @@
                 "y": 0.9999986290931702,
                 "z": 0.9999939203262329
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2386,12 +2386,11 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "83",
             "id": "grid_cube_6_227.000000",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
-                "y": -0.5,
+                "x": 2.5,
+                "y": -1.0,
                 "z": -1.5
             },
             "rotation": {
@@ -2404,7 +2403,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2415,13 +2415,12 @@
                 "g": 1.0,
                 "r": 0.0
             },
-            "entity": "84",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 0.5
+                "x": 1.5,
+                "y": -1.0124409198760986,
+                "z": -0.4682237207889557
             },
             "rotation": {
                 "x": 0.0,
@@ -2433,7 +2432,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2444,13 +2444,12 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "85",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": -1.5
+                "x": -1.5896259546279907,
+                "y": -1.029578447341919,
+                "z": -2.412324905395508
             },
             "rotation": {
                 "x": 0.0,
@@ -2462,7 +2461,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2501,13 +2501,12 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "87",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": 1.5,
-                "z": 1.5
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2519,7 +2518,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2534,9 +2534,9 @@
             "id": "cube",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 3.5,
-                "y": 0.5,
-                "z": 13.5
+                "x": 0.956505298614502,
+                "y": 0.14249281585216522,
+                "z": 0.889129638671875
             },
             "rotation": {
                 "x": 0.0,
@@ -2544,7 +2544,7 @@
                 "z": 0.0
             },
             "scale": {
-                "x": 0.46171611547470093,
+                "x": 0.4617161154747009,
                 "y": 0.536937952041626,
                 "z": 0.3681555390357971
             },
@@ -2559,13 +2559,12 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "89",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": 6.5,
-                "y": 1.5,
-                "z": 4.5
+                "x": 6.424219131469727,
+                "y": 0.5,
+                "z": 3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2577,7 +2576,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2616,13 +2616,12 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "91",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
-                "y": 1.5,
-                "z": 1.5
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2634,7 +2633,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
         },
         {
             "collision_radius": {
@@ -2645,13 +2645,12 @@
                 "g": 0.8704010248184204,
                 "r": 1.0
             },
-            "entity": "92",
             "id": "92",
             "path": "assets/cube.obj",
             "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": 0.5
+                "x": -0.32563459873199463,
+                "y": -1.3627140522003174,
+                "z": -0.06415104866027832
             },
             "rotation": {
                 "x": 0.0,
@@ -2663,7 +2662,36 @@
                 "y": 0.8644171953201294,
                 "z": 9.633193016052246
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "simple_color_shader",
+            "entity": "88"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "93",
+            "path": "assets/Survival Guitar Backpack.glb",
+            "position": {
+                "x": 0.0,
+                "y": 1.2388761043548584,
+                "z": -4.371923923492432
+            },
+            "rotation": {
+                "x": 1.4673024415969849,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.9999811053276062,
+                "y": 0.9999798536300659,
+                "z": 0.9999798536300659
+            },
+            "shader_name": "default"
         },
         {
             "collision_radius": {
@@ -2677,21 +2705,21 @@
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": -1.6568928956985474,
-                "y": 1.1300699710845947,
+                "x": -2.382356643676758,
+                "y": 0.343802809715271,
                 "z": 0.06501299142837524
             },
             "rotation": {
-                "x": 2.3916567442938685e-05,
-                "y": 1.0623738765716553,
-                "z": -6.111203219916206e-06
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
             },
             "scale": {
-                "x": 0.009962520562112331,
+                "x": 0.009962518699467182,
                 "y": 0.008057373575866222,
-                "z": 0.007270227652043104
+                "z": 0.007270227186381817
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "default"
         }
     ]
 }

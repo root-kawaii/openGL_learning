@@ -2,6 +2,13 @@
 #include "game_object.h"
 #include <memory>
 
+void discretizePosition(glm::vec3 &position)
+{
+  position.x = std::floor(position.x) + 0.5f;
+  position.y = std::floor(position.y) + 0.5f;
+  position.z = std::floor(position.z) + 0.5f;
+}
+
 void Scene::destroyGameObject(GameObject *obj) { obj->~GameObject(); }
 
 // linear lookup time, not made for frequent use
@@ -96,6 +103,13 @@ Scene::Scene()
                                      i.path, i.position, i.rotation, i.scale,
                                      i.collisionRadius, i.shader_name, i.color);
 
+    if (i.gameEntity)
+    {
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      discretizePosition(gameEntity->object->position);
+      gameEntities.push_back(gameEntity);
+    }
+
     // FIX: Use addGameObject which will assign a fresh generated ID
     uint32_t newID = addGameObject(gameObject);
 
@@ -127,6 +141,13 @@ Scene::Scene(std::string level)
         std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
                                      i.path, i.position, i.rotation, i.scale,
                                      i.collisionRadius, i.shader_name, i.color);
+
+    if (i.gameEntity)
+    {
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      discretizePosition(gameEntity->object->position);
+      gameEntities.push_back(gameEntity);
+    }
 
     // FIX: Use addGameObject which will assign a fresh generated ID
     uint32_t newID = addGameObject(gameObject);
@@ -446,6 +467,20 @@ void Scene::renderCompactColorPicker()
     {
       // applyColorToSelectedObject();
       selectedObject->color = glm::vec3(selectedColor.x, selectedColor.y, selectedColor.z);
+    }
+    if (ImGui::Button("Move", ImVec2(-2, 0)))
+    {
+      gameEntities.back().get()->isMoving = true;
+      gameEntities.back()
+          .get()
+          ->targetDestination = glm::vec3(0, 0, 0);
+    }
+    if (ImGui::Button("Discretize", ImVec2(-3, 0)))
+    {
+      for (auto &k : gameEntities)
+      {
+        discretizePosition(k->object->position);
+      }
     }
   }
   ImGui::End();

@@ -53,6 +53,12 @@ void Game::update(float deltaTime)
         obj->position += obj->speed * deltaTime;
     }
 
+    auto gameEntities = scene->getGameEntities();
+    for (auto &entites : gameEntities)
+    {
+        entites->move(deltaTime);
+    }
+
     // --- Phase 2: Collision Detection and Correction Calculation ---
     // Check all collisions and sum up the required corrections.
     for (size_t m = 0; m < gameObjects.size(); ++m)

@@ -526,6 +526,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.h \
  /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.h \
  /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/game_entity.h \
  /usr/include/c++/15.2.1/thread /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \

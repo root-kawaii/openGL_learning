@@ -12,6 +12,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <unordered_map>
+#include "game_entity.h"
 
 class Scene
 {
@@ -20,6 +21,7 @@ private:
   std::string currentLevel;
   std::vector<std::shared_ptr<GameObject>> gameObjects;
   std::unordered_map<uint32_t, std::shared_ptr<GameObject>> objectsById;
+  std::vector<std::shared_ptr<GameEntity>> gameEntities;
   GameObject *rootObject;
 
   glm::vec4 selectedColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // Start with red
@@ -56,6 +58,10 @@ public:
   std::vector<std::shared_ptr<GameObject>> getGameObjects()
   {
     return gameObjects;
+  };
+  std::vector<std::shared_ptr<GameEntity>> getGameEntities()
+  {
+    return gameEntities;
   };
   // Environment& getEnvironment() { return environment; }
 

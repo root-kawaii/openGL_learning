@@ -97,6 +97,7 @@ public:
     float collisionRadius = 0;
     float ID;
     std::string name;
+    std::string gameEntity;
 
     glm::mat4 getModelMatrix() const
     {

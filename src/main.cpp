@@ -207,9 +207,9 @@ int main()
 
   // cubemap
   vector<std::string> faces = {
-      "assets/skybox/right.jpg", "assets/skybox/left.jpg",
-      "assets/skybox/top.jpg", "assets/skybox/bottom.jpg",
-      "assets/skybox/front.jpg", "assets/skybox/back.jpg"};
+      "assets/blue.png", "assets/blue.png",
+      "assets/blue.png", "assets/blue.png",
+      "assets/blue.png", "assets/blue.png"};
   unsigned int cubemapTexture = loadCubemap(faces);
 
   // Shader selectedShader("shaders/selected_shader.vs",

@@ -18,6 +18,7 @@ hephaestus-openGL: \
   CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o \
@@ -122,6 +123,8 @@ CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o:
 CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o:
+
+CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o:
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o:
 

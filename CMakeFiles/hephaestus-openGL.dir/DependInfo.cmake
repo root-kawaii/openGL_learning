@@ -23,6 +23,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/monolith/Desktop/openGL_learning/include/imgui/imgui_widgets.cpp" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/audio_manager.cpp" "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/game.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o.d"
+  "/home/monolith/Desktop/openGL_learning/src/game_entity.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/game_object.cpp" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/input.cpp" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o.d"
   "/home/monolith/Desktop/openGL_learning/src/level_editor.cpp" "CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o" "gcc" "CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o.d"

@@ -153,6 +153,7 @@ set(PROJECT_SOURCES
     src/sphere_collision.cpp
     src/ui.cpp
     src/level_editor.cpp
+    src/game_entity.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------

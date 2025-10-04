@@ -19,6 +19,7 @@ struct SceneObject
     glm::vec3 rotation;
     glm::vec3 scale;
     float collisionRadius;
+    bool gameEntity;
 };
 
 class SerializationUtilities
@@ -99,6 +100,7 @@ public:
         SceneObject obj;
         obj.collisionRadius = 0;
         obj.shader_name = "default";
+        obj.gameEntity = false;
 
         try
         {
@@ -157,6 +159,10 @@ public:
                     scl.value("g", 1.0f),
                     scl.value("b", 1.0f));
             }
+            if (objData.contains("entity"))
+            {
+                obj.gameEntity = true;
+            }
             // Extract collision radius
             if (objData.contains("collision_radius"))
             {
@@ -194,6 +200,10 @@ public:
                 // objData["name"] = std::to_string(obj.ID);
                 objData["path"] = obj.modelPath;
                 objData["shader_name"] = obj.shaderName;
+                if (obj.gameEntity != "")
+                {
+                    objData["entity"] = obj.gameEntity;
+                }
 
                 objData["position"] = {
                     {"x", obj.position.x},

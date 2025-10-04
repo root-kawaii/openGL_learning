@@ -31,13 +31,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 166,
+				"line" : 167,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 211,
+				"line" : 212,
 				"parent" : 0
 			},
 			{
@@ -65,13 +65,13 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 192,
+				"line" : 193,
 				"parent" : 0
 			},
 			{
 				"command" : 6,
 				"file" : 0,
-				"line" : 176,
+				"line" : 177,
 				"parent" : 0
 			}
 		]
@@ -171,14 +171,15 @@
 				18,
 				19,
 				20,
-				27,
+				21,
 				28,
 				29,
 				30,
 				31,
 				32,
 				33,
-				34
+				34,
+				35
 			]
 		},
 		{
@@ -326,26 +327,27 @@
 				18,
 				19,
 				20,
-				27,
+				21,
 				28,
 				29,
 				30,
 				31,
 				32,
 				33,
-				34
+				34,
+				35
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				21,
 				22,
 				23,
 				24,
 				25,
-				26
+				26,
+				27
 			]
 		}
 	],
@@ -445,6 +447,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/level_editor.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/game_entity.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{

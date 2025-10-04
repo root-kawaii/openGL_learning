@@ -1,8 +1,7 @@
-CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
- /home/monolith/Desktop/openGL_learning/src/scene.cpp \
+CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o: \
+ /home/monolith/Desktop/openGL_learning/src/game_entity.cpp \
  /usr/include/stdc-predef.h \
- /home/monolith/Desktop/openGL_learning/src/scene.h \
- /home/monolith/Desktop/openGL_learning/src/game_object.h \
+ /home/monolith/Desktop/openGL_learning/src/game_entity.h \
  /home/monolith/Desktop/openGL_learning/include/glad/glad.h \
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
@@ -254,6 +253,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/type_half.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/integer.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/detail/func_integer.inl \
+ /home/monolith/Desktop/openGL_learning/src/../src/game_object.h \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/matrix_projection.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../ext/../gtc/constants.hpp \
@@ -311,7 +311,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /usr/include/c++/15.2.1/cstring /usr/include/string.h \
  /usr/include/strings.h \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/type_ptr.inl \
- /home/monolith/Desktop/openGL_learning/src/model.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/model.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/Importer.hpp \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/types.h \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/defs.h \
@@ -438,7 +438,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/sstream \
  /usr/include/c++/15.2.1/bits/sstream.tcc \
  /usr/include/c++/15.2.1/iostream \
- /home/monolith/Desktop/openGL_learning/src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
  /usr/include/c++/15.2.1/map /usr/include/c++/15.2.1/bits/stl_tree.h \
  /usr/include/c++/15.2.1/bits/stl_map.h \
  /usr/include/c++/15.2.1/bits/stl_multimap.h \
@@ -469,54 +469,6 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
- /home/monolith/Desktop/openGL_learning/src/render_manager.h \
- /usr/include/c++/15.2.1/unordered_map \
- /usr/include/c++/15.2.1/bits/unordered_map.h \
- /usr/include/c++/15.2.1/memory \
- /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h \
- /usr/include/c++/15.2.1/bits/align.h \
- /usr/include/c++/15.2.1/bits/shared_ptr_atomic.h \
- /usr/include/c++/15.2.1/bits/atomic_base.h \
- /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
- /usr/include/c++/15.2.1/backward/auto_ptr.h \
- /usr/include/c++/15.2.1/pstl/glue_memory_defs.h \
- /home/monolith/Desktop/openGL_learning/src/../src/camera.h \
- /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
- /home/monolith/Desktop/openGL_learning/src/../src/texture.h \
- /usr/include/GLFW/glfw3.h /usr/include/c++/15.2.1/random \
- /usr/include/c++/15.2.1/bits/random.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
- /usr/include/c++/15.2.1/bits/random.tcc /usr/include/c++/15.2.1/numeric \
- /usr/include/c++/15.2.1/bits/stl_numeric.h \
- /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
- /home/monolith/Desktop/openGL_learning/src/object_picker.h \
- /home/monolith/Desktop/openGL_learning/src/serialization_utilities.h \
- /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
- /usr/include/c++/15.2.1/functional \
- /usr/include/c++/15.2.1/bits/std_function.h \
- /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
- /usr/include/c++/15.2.1/iterator \
- /usr/include/c++/15.2.1/bits/stream_iterator.h \
- /usr/include/c++/15.2.1/utility \
- /usr/include/c++/15.2.1/bits/stl_relops.h \
- /usr/include/c++/15.2.1/forward_list \
- /usr/include/c++/15.2.1/bits/forward_list.h \
- /usr/include/c++/15.2.1/bits/forward_list.tcc \
- /usr/include/c++/15.2.1/valarray \
- /usr/include/c++/15.2.1/bits/valarray_array.h \
- /usr/include/c++/15.2.1/bits/valarray_array.tcc \
- /usr/include/c++/15.2.1/bits/valarray_before.h \
- /usr/include/c++/15.2.1/bits/slice_array.h \
- /usr/include/c++/15.2.1/bits/valarray_after.h \
- /usr/include/c++/15.2.1/bits/gslice.h \
- /usr/include/c++/15.2.1/bits/gslice_array.h \
- /usr/include/c++/15.2.1/bits/mask_array.h \
- /usr/include/c++/15.2.1/bits/indirect_array.h \
- /usr/include/c++/15.2.1/version /usr/include/c++/15.2.1/optional \
- /usr/include/c++/15.2.1/any \
- /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.h \
- /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.h \
- /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
- /home/monolith/Desktop/openGL_learning/src/game_entity.h
+ /usr/include/c++/15.2.1/thread /usr/include/c++/15.2.1/bits/std_thread.h \
+ /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
+ /usr/include/c++/15.2.1/chrono
