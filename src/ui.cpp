@@ -100,20 +100,6 @@ unsigned int UIManager::setUpFont()
 
 void UIManager::setupQuadGeometry()
 {
-    // Quad vertices (normalized coordinates from 0 to 1)
-    float vertices[] = {
-        // positions
-        0.0f, 1.0f, // top left
-        1.0f, 1.0f, // top right
-        1.0f, 0.0f, // bottom right
-        0.0f, 0.0f  // bottom left
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0  // second triangle
-    };
-
     glGenVertexArrays(1, &uiVAO);
     glGenBuffers(1, &uiVBO);
     glGenBuffers(1, &uiEBO);
@@ -121,19 +107,24 @@ void UIManager::setupQuadGeometry()
     glBindVertexArray(uiVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // Allocate buffer for dynamic data
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
 
+    unsigned int indices[] = {
+        0, 1, 2, // first triangle
+        2, 3, 0  // second triangle
+    };
+
+    glGenBuffers(1, &uiEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uiEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Position attribute
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+    // Vertex attribute: vec4 (pos.x, pos.y, tex.x, tex.y)
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
 }
-
 void UIManager::renderUIBBox(float width, float height, float x_pos,
                              float y_pos)
 {
@@ -144,6 +135,22 @@ void UIManager::renderUIBBox(float width, float height, float x_pos,
 void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos,
                              float r, float g, float b, float alpha)
 {
+
+    // Save state
+    GLboolean depthTest, blend, cullFace;
+    glGetBooleanv(GL_DEPTH_TEST, &depthTest);
+    glGetBooleanv(GL_BLEND, &blend);
+    glGetBooleanv(GL_CULL_FACE, &cullFace);
+    GLint blendSrc, blendDst;
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
+
+    // Set up state for text rendering
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glUseProgram(uiShaderProgram);
 
     // Calculate resolution-independent scale
@@ -158,24 +165,52 @@ void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos
     float scaledX = x_pos * scaleX;
     float scaledY = y_pos * scaleY;
 
-    // Convert from bottom-left origin to top-left origin for the shader
-    float converted_y = screenHeight - scaledY - scaledHeight;
+    // Calculate actual vertex positions (like RenderText does)
+    float xpos = scaledX;
+    float ypos = scaledY;
+    float w = scaledWidth;
+    float h = scaledHeight;
+
+    // Create vertices with actual screen coordinates
+    float vertices[4][4] = {
+        {xpos, ypos + h, 0.0f, 1.0f},     // top left
+        {xpos + w, ypos + h, 1.0f, 1.0f}, // top right
+        {xpos + w, ypos, 1.0f, 0.0f},     // bottom right
+        {xpos, ypos, 0.0f, 0.0f}          // bottom left
+    };
+
+    // Create projection matrix (bottom-left origin)
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screenWidth),
+                                      0.0f, static_cast<float>(screenHeight));
 
     // Set uniforms
-    int positionLoc = glGetUniformLocation(uiShaderProgram, "position");
-    int sizeLoc = glGetUniformLocation(uiShaderProgram, "size");
-    int screenSizeLoc = glGetUniformLocation(uiShaderProgram, "screenSize");
+    int projectionLoc = glGetUniformLocation(uiShaderProgram, "projection");
     int colorLoc = glGetUniformLocation(uiShaderProgram, "color");
+    int useTextureLoc = glGetUniformLocation(uiShaderProgram, "useTexture");
 
-    glUniform2f(positionLoc, scaledX, converted_y);
-    glUniform2f(sizeLoc, scaledWidth, scaledHeight);
-    glUniform2f(screenSizeLoc, screenWidth, screenHeight);
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
     glUniform4f(colorLoc, r, g, b, alpha);
+    glUniform1i(useTextureLoc, 0); // Not using texture
+
+    // Update vertex buffer with calculated positions
+    glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Render the quad
     glBindVertexArray(uiVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+
+    // Restore previous state
+    if (depthTest)
+        glEnable(GL_DEPTH_TEST);
+    if (cullFace)
+        glEnable(GL_CULL_FACE);
+    if (!blend)
+        glDisable(GL_BLEND);
+    else
+        glBlendFunc(blendSrc, blendDst);
 }
 
 void UIManager::setProjectionMatrix(const glm::mat4 &projectionMatrix)
@@ -262,12 +297,179 @@ void UIManager::renderGameMenu()
 {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    float selectedHeight = 100.0f;
-    renderUIBBox(400, 400, 0.0f, 0.0f, 1.0f, 1.0f, 0.02f, 1.0f);
-    // renderUIBBox(500, 50, 250.0f, 740.0f, 1.0f, 0.0f, 0.00f, 1.0f);
-    RenderText("HP", 50, 50, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    RenderText("HP", 50, 100, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    RenderText("HP", 50, 150, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Reference dimensions (assuming 1440x1440 reference)
+    const float screenH = 1440.0f;
+
+    // Colors
+    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    glm::vec3 accent(0.9f, 0.8f, 0.3f); // Yellow accent
+    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+
+    // === TOP LEFT: Power Grid Panel ===
+    float powerPanelX = 20.0f;
+    float powerPanelY = screenH - 120.0f; // 20px from top
+    float powerPanelW = 500.0f;
+    float powerPanelH = 100.0f;
+
+    // Background
+    renderUIBBox(powerPanelW, powerPanelH, powerPanelX, powerPanelY,
+                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+
+    // Border
+    float borderThick = 2.0f;
+    renderUIBBox(powerPanelW, borderThick, powerPanelX, powerPanelY + powerPanelH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
+    // "POWER GRID" label
+    RenderText("POWER GRID", powerPanelX + 20, powerPanelY + powerPanelH - 30,
+               0.5f, textWhite);
+
+    // Power bars (7 bars like in the image)
+    float barStartX = powerPanelX + 150;
+    float barY = powerPanelY + 40;
+    float barW = 30.0f;
+    float barH = 40.0f;
+    float barSpacing = 10.0f;
+
+    for (int i = 0; i < 7; i++)
+    {
+        float barX = barStartX + i * (barW + barSpacing);
+        renderUIBBox(barW, barH, barX, barY,
+                     0.9f, 0.5f, 0.2f, 1.0f); // Orange bars
+    }
+
+    // "GRID DEFENSE 15%" text
+    RenderText("CLOCK ATB", powerPanelX + 340, powerPanelY + 50,
+               0.4f, textGray);
+    RenderText("15%", powerPanelX + 440, powerPanelY + 25,
+               0.6f, accent);
+
+    // === TOP RIGHT: Victory Timer ===
+    float victoryPanelW = 280.0f;
+    float victoryPanelH = 70.0f;
+    float victoryPanelX = 1440.0f - victoryPanelW - 20.0f;
+    float victoryPanelY = screenH - 90.0f;
+
+    renderUIBBox(victoryPanelW, victoryPanelH, victoryPanelX, victoryPanelY,
+                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(victoryPanelW, borderThick, victoryPanelX, victoryPanelY + victoryPanelH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
+    RenderText("Victory in", victoryPanelX + 20, victoryPanelY + 40,
+               0.5f, textGray);
+    RenderText("7", victoryPanelX + 180, victoryPanelY + 30,
+               1.2f, textWhite);
+    RenderText("turns", victoryPanelX + 230, victoryPanelY + 40,
+               0.5f, textGray);
+
+    // === LEFT SIDE: Unit Selection Panel ===
+    float unitPanelX = 20.0f;
+    float unitPanelY = screenH - 340.0f;
+    float unitPanelW = 150.0f;
+    float unitPanelH = 200.0f;
+
+    renderUIBBox(unitPanelW, unitPanelH, unitPanelX, unitPanelY,
+                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(unitPanelW, borderThick, unitPanelX, unitPanelY + unitPanelH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
+    // Unit icons (2 units shown)
+    float iconSize = 60.0f;
+    float iconSpacing = 10.0f;
+
+    // Unit 1
+    renderUIBBox(iconSize, iconSize, unitPanelX + 10, unitPanelY + unitPanelH - 70,
+                 0.2f, 0.3f, 0.4f, 1.0f);
+    renderUIBBox(iconSize - 4, 4, unitPanelX + 12, unitPanelY + unitPanelH - 74,
+                 0.3f, 0.8f, 0.3f, 1.0f); // Green HP bar
+
+    // Unit 2
+    renderUIBBox(iconSize, iconSize, unitPanelX + 80, unitPanelY + unitPanelH - 70,
+                 0.2f, 0.4f, 0.3f, 1.0f);
+    renderUIBBox(iconSize - 4, 4, unitPanelX + 82, unitPanelY + unitPanelH - 74,
+                 0.3f, 0.8f, 0.3f, 1.0f); // Green HP bar
+
+    // "Cycle Unit" button
+    float cycleButtonY = unitPanelY + 20;
+    renderUIBBox(unitPanelW - 20, 40, unitPanelX + 10, cycleButtonY,
+                 bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    RenderText("Cycle Unit", unitPanelX + 25, cycleButtonY + 12,
+               0.4f, textWhite);
+
+    // === BOTTOM LEFT: Combat Mech Panel ===
+    float mechPanelX = 20.0f;
+    float mechPanelY = 20.0f; // Bottom of screen
+    float mechPanelW = 380.0f;
+    float mechPanelH = 220.0f;
+
+    renderUIBBox(mechPanelW, mechPanelH, mechPanelX, mechPanelY,
+                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(mechPanelW, borderThick, mechPanelX, mechPanelY + mechPanelH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
+    // "Combat Mech" title
+    RenderText("Combat Mech", mechPanelX + 80, mechPanelY + mechPanelH - 30,
+               0.6f, textWhite);
+
+    // Mech icon
+    float mechIconSize = 140.0f;
+    renderUIBBox(mechIconSize, mechIconSize, mechPanelX + 10, mechPanelY + 10,
+                 0.15f, 0.2f, 0.25f, 1.0f);
+
+    // Weapon slots (3 weapons)
+    float weaponSlotX = mechPanelX + 170;
+    float weaponSlotSize = 60.0f;
+    float weaponSpacing = 8.0f;
+
+    for (int i = 0; i < 3; i++)
+    {
+        float slotX = weaponSlotX + i * (weaponSlotSize + weaponSpacing);
+        renderUIBBox(weaponSlotSize, weaponSlotSize, slotX, mechPanelY + 20,
+                     0.2f, 0.25f, 0.3f, 1.0f);
+
+        // Weapon icon placeholder
+        if (i == 0) // First weapon with ammo indicator
+        {
+            renderUIBBox(weaponSlotSize - 10, 6, slotX + 5, mechPanelY + 25,
+                         0.3f, 0.7f, 0.9f, 1.0f); // Blue ammo bar
+        }
+    }
+
+    // Stats
+    RenderText("3", mechPanelX + 240, mechPanelY + mechPanelH - 60,
+               0.8f, glm::vec3(0.3f, 0.8f, 0.3f)); // Move stat
+
+    // === BOTTOM RIGHT: Ground Tile Info ===
+    float tilePanelW = 260.0f;
+    float tilePanelH = 120.0f;
+    float tilePanelX = 1440.0f - tilePanelW - 20.0f;
+    float tilePanelY = 20.0f;
+
+    renderUIBBox(tilePanelW, tilePanelH, tilePanelX, tilePanelY,
+                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(tilePanelW, borderThick, tilePanelX, tilePanelY + tilePanelH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
+    // Tile icon
+    float tileIconSize = 50.0f;
+    renderUIBBox(tileIconSize, tileIconSize, tilePanelX + 20, tilePanelY + 50,
+                 0.4f, 0.5f, 0.3f, 1.0f); // Green tile
+
+    // === CENTER BOTTOM: Action Button ===
+    float actionButtonW = 150.0f;
+    float actionButtonH = 45.0f;
+    float actionButtonX = (1440.0f - actionButtonW) / 2.0f;
+    float actionButtonY = 30.0f;
+
+    renderUIBBox(actionButtonW, actionButtonH, actionButtonX, actionButtonY,
+                 bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    renderUIBBox(actionButtonW, borderThick, actionButtonX, actionButtonY + actionButtonH,
+                 accent.r, accent.g, accent.b, 1.0f);
+
     glDisable(GL_BLEND);
 }
 
@@ -343,4 +545,246 @@ void UIManager::renderPauseMenu()
     RenderText("HP", 720, 780, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     RenderText("HP", 720, 840, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     glDisable(GL_BLEND);
+}
+
+void UIManager::clearUIElements()
+{
+    uiElements.clear();
+}
+
+void UIManager::renderAllUIElements(float mouseX, float mouseY)
+{
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (const auto &element : uiElements)
+    {
+        if (element.elementType == BOX)
+        {
+            if (isMouseOver(mouseX, mouseY, element.width, element.height,
+                            element.x_pos, element.y_pos))
+            {
+                float selectedColor_R = 1.0;
+                float selectedColor_G = 0.6f;
+                float selectedColor_B = 0.0f;
+                renderUIBBox(element.width, element.height,
+                             element.x_pos, element.y_pos,
+                             selectedColor_R, selectedColor_G, selectedColor_B, element.a);
+            }
+            else
+            {
+                renderUIBBox(element.width, element.height,
+                             element.x_pos, element.y_pos,
+                             element.r, element.g, element.b, element.a);
+            }
+        }
+        else if (element.elementType == TEXT)
+        {
+            RenderText(element.text, element.x_pos, element.y_pos,
+                       element.scale, glm::vec3(element.r, element.g, element.b));
+        }
+    }
+
+    glDisable(GL_BLEND);
+}
+
+// Refactored buildGameMenu - creates elements instead of rendering
+void UIManager::buildGameMenu()
+{
+    clearUIElements();
+
+    const float screenH = 1440.0f;
+
+    // Colors
+    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+
+    // === TOP LEFT: Power Grid Panel ===
+    float powerPanelX = 20.0f;
+    float powerPanelY = screenH - 120.0f;
+    float powerPanelW = 500.0f;
+    float powerPanelH = 100.0f;
+
+    addBox(powerPanelW, powerPanelH, powerPanelX, powerPanelY,
+           bgDark.r, bgDark.g, bgDark.b, 0.9f);
+
+    float borderThick = 2.0f;
+    addBox(powerPanelW, borderThick, powerPanelX, powerPanelY + powerPanelH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    addText("POWER GRID", powerPanelX + 20, powerPanelY + powerPanelH - 30,
+            0.5f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Power bars
+    float barStartX = powerPanelX + 150;
+    float barY = powerPanelY + 40;
+    float barW = 30.0f;
+    float barH = 40.0f;
+    float barSpacing = 10.0f;
+
+    for (int i = 0; i < 7; i++)
+    {
+        float barX = barStartX + i * (barW + barSpacing);
+        addBox(barW, barH, barX, barY, 0.9f, 0.5f, 0.2f, 1.0f);
+    }
+
+    addText("CLOCK ATB", powerPanelX + 340, powerPanelY + 50,
+            0.4f, textGray.r, textGray.g, textGray.b);
+    addText("15%", powerPanelX + 440, powerPanelY + 25,
+            0.6f, accent.r, accent.g, accent.b);
+
+    // === TOP RIGHT: Victory Timer ===
+    float victoryPanelW = 280.0f;
+    float victoryPanelH = 70.0f;
+    float victoryPanelX = 1440.0f - victoryPanelW - 20.0f;
+    float victoryPanelY = screenH - 90.0f;
+
+    addBox(victoryPanelW, victoryPanelH, victoryPanelX, victoryPanelY,
+           bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(victoryPanelW, borderThick, victoryPanelX, victoryPanelY + victoryPanelH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    addText("Victory in", victoryPanelX + 20, victoryPanelY + 40,
+            0.5f, textGray.r, textGray.g, textGray.b);
+    addText("7", victoryPanelX + 180, victoryPanelY + 30,
+            1.2f, textWhite.r, textWhite.g, textWhite.b);
+    addText("turns", victoryPanelX + 230, victoryPanelY + 40,
+            0.5f, textGray.r, textGray.g, textGray.b);
+
+    // === LEFT SIDE: Unit Selection Panel ===
+    float unitPanelX = 20.0f;
+    float unitPanelY = screenH - 340.0f;
+    float unitPanelW = 150.0f;
+    float unitPanelH = 200.0f;
+
+    addBox(unitPanelW, unitPanelH, unitPanelX, unitPanelY,
+           bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(unitPanelW, borderThick, unitPanelX, unitPanelY + unitPanelH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    float iconSize = 60.0f;
+
+    // Unit 1
+    addBox(iconSize, iconSize, unitPanelX + 10, unitPanelY + unitPanelH - 70,
+           0.2f, 0.3f, 0.4f, 1.0f);
+    addBox(iconSize - 4, 4, unitPanelX + 12, unitPanelY + unitPanelH - 74,
+           0.3f, 0.8f, 0.3f, 1.0f);
+
+    // Unit 2
+    addBox(iconSize, iconSize, unitPanelX + 80, unitPanelY + unitPanelH - 70,
+           0.2f, 0.4f, 0.3f, 1.0f);
+    addBox(iconSize - 4, 4, unitPanelX + 82, unitPanelY + unitPanelH - 74,
+           0.3f, 0.8f, 0.3f, 1.0f);
+
+    // "Cycle Unit" button
+    float cycleButtonY = unitPanelY + 20;
+    addBox(unitPanelW - 20, 40, unitPanelX + 10, cycleButtonY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    addText("Cycle Unit", unitPanelX + 25, cycleButtonY + 12,
+            0.4f, textWhite.r, textWhite.g, textWhite.b);
+
+    // === BOTTOM LEFT: Combat Mech Panel ===
+    float mechPanelX = 20.0f;
+    float mechPanelY = 20.0f;
+    float mechPanelW = 380.0f;
+    float mechPanelH = 220.0f;
+
+    addBox(mechPanelW, mechPanelH, mechPanelX, mechPanelY,
+           bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(mechPanelW, borderThick, mechPanelX, mechPanelY + mechPanelH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    addText("Combat Mech", mechPanelX + 80, mechPanelY + mechPanelH - 30,
+            0.6f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Mech icon
+    float mechIconSize = 140.0f;
+    addBox(mechIconSize, mechIconSize, mechPanelX + 10, mechPanelY + 10,
+           0.15f, 0.2f, 0.25f, 1.0f);
+
+    // Weapon slots
+    float weaponSlotX = mechPanelX + 170;
+    float weaponSlotSize = 60.0f;
+    float weaponSpacing = 8.0f;
+
+    for (int i = 0; i < 3; i++)
+    {
+        float slotX = weaponSlotX + i * (weaponSlotSize + weaponSpacing);
+        addBox(weaponSlotSize, weaponSlotSize, slotX, mechPanelY + 20,
+               0.2f, 0.25f, 0.3f, 1.0f);
+
+        if (i == 0)
+        {
+            addBox(weaponSlotSize - 10, 6, slotX + 5, mechPanelY + 25,
+                   0.3f, 0.7f, 0.9f, 1.0f);
+        }
+    }
+
+    addText("3", mechPanelX + 240, mechPanelY + mechPanelH - 60,
+            0.8f, 0.3f, 0.8f, 0.3f);
+
+    // === BOTTOM RIGHT: Ground Tile Info ===
+    float tilePanelW = 260.0f;
+    float tilePanelH = 120.0f;
+    float tilePanelX = 1440.0f - tilePanelW - 20.0f;
+    float tilePanelY = 20.0f;
+
+    addBox(tilePanelW, tilePanelH, tilePanelX, tilePanelY,
+           bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(tilePanelW, borderThick, tilePanelX, tilePanelY + tilePanelH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    float tileIconSize = 50.0f;
+    addBox(tileIconSize, tileIconSize, tilePanelX + 20, tilePanelY + 50,
+           0.4f, 0.5f, 0.3f, 1.0f);
+
+    addText("Ground Tile", tilePanelX + 85, tilePanelY + 80,
+            0.5f, textWhite.r, textWhite.g, textWhite.b);
+    addText("No special effect.", tilePanelX + 85, tilePanelY + 50,
+            0.35f, textGray.r, textGray.g, textGray.b);
+
+    // === CENTER BOTTOM: Action Button ===
+    float actionButtonW = 150.0f;
+    float actionButtonH = 45.0f;
+    float actionButtonX = (1440.0f - actionButtonW) / 2.0f;
+    float actionButtonY = 30.0f;
+
+    addBox(actionButtonW, actionButtonH, actionButtonX, actionButtonY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    addBox(actionButtonW, borderThick, actionButtonX, actionButtonY + actionButtonH,
+           accent.r, accent.g, accent.b, 1.0f);
+
+    addText("(A) Move Unit", actionButtonX + 15, actionButtonY + 15,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
+}
+
+bool UIManager::isMouseOver(float mouseX, float mouseY, float element_width, float element_height,
+                            float element_x_pos, float element_y_pos)
+{
+    // Flip mouseY to match OpenGL's bottom-left coordinate system
+    mouseY = screenHeight - mouseY;
+
+    // Apply the same scaling used in renderUIBBox
+    const float REFERENCE_WIDTH = 1440.0f;
+    const float REFERENCE_HEIGHT = 1440.0f;
+    float scaleX = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
+    float scaleY = static_cast<float>(screenHeight) / REFERENCE_HEIGHT;
+
+    // Scale dimensions and position (matching renderUIBBox logic)
+    float scaledWidth = element_width * scaleX;
+    float scaledHeight = element_height * scaleY;
+    float scaledX = element_x_pos * scaleX;
+    float scaledY = element_y_pos * scaleY;
+
+    // Check if mouse is within the scaled bounds
+    if (mouseX > scaledX && mouseX < scaledX + scaledWidth &&
+        mouseY > scaledY && mouseY < scaledY + scaledHeight)
+    {
+        return true;
+    }
+    return false;
 }

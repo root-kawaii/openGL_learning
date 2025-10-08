@@ -546,7 +546,8 @@ int main()
       glBindVertexArray(0);
       glDepthFunc(GL_LESS);
 
-      ui->renderGameMenu();
+      ui->buildGameMenu();
+      ui->renderAllUIElements(game->lastX, game->lastY);
     }
     else if (game->getGameMode() == PAUSE)
     {

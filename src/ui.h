@@ -22,6 +22,27 @@ struct Character
     unsigned int Advance;   // Offset to advance to next glyph
 };
 
+enum UIElementEnum
+{
+    BOX,
+    TEXT
+};
+
+struct UIElement
+{
+    std::string text;
+    float width;
+    float height;
+    float x_pos;
+    float y_pos;
+    float r;
+    float g;
+    float b;
+    float a;
+    float scale;
+    UIElementEnum elementType;
+};
+
 class UIManager
 {
 private:
@@ -32,6 +53,7 @@ private:
     unsigned int uiVAO, uiVBO, uiEBO;
 
     std::map<char, Character> characters;
+    std::vector<UIElement> uiElements;
 
     // Shader sources
     Shader uiShader;
@@ -63,6 +85,47 @@ public:
     void renderStatusBars();
 
     void renderPauseMenu();
+
+    void buildGameMenu();
+
+    void renderAllUIElements(float mouseX, float mouseY);
+
+    void clearUIElements();
+
+    bool isMouseOver(float mouseX, float mouseY, float element_width, float element_height,
+                     float element_x_pos, float element_y_pos);
+
+    void addBox(float width, float height, float x, float y,
+                float r, float g, float b, float a)
+    {
+        UIElement element;
+        element.width = width;
+        element.height = height;
+        element.x_pos = x;
+        element.y_pos = y;
+        element.r = r;
+        element.g = g;
+        element.b = b;
+        element.a = a;
+        element.elementType = BOX;
+        uiElements.push_back(element);
+    }
+
+    void addText(const std::string &text, float x, float y, float scale,
+                 float r, float g, float b)
+    {
+        UIElement element;
+        element.text = text;
+        element.x_pos = x;
+        element.y_pos = y;
+        element.scale = scale;
+        element.r = r;
+        element.g = g;
+        element.b = b;
+        element.a = 1.0f;
+        element.elementType = TEXT;
+        uiElements.push_back(element);
+    }
 };
 
 ;
