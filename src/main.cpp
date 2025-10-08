@@ -142,36 +142,36 @@ int main()
   namespace fs = std::filesystem;
   // unsigned int albedo =
   // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
-  unsigned int texture_metallic = renderManager->loadTexture(
-      "texture_metallic",
-      fs::path("assets/cerberus/Textures/metallic.png").c_str());
-  // unsigned int normal =
-  // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
-  unsigned int texture_roughness = renderManager->loadTexture(
-      "texture_roughness",
-      fs::path("assets/cerberus/Textures/roughness.png").c_str());
+  // unsigned int texture_metallic = renderManager->loadTexture(
+  //     "texture_metallic",
+  //     fs::path("assets/cerberus/Textures/metallic.png").c_str());
+  // // unsigned int normal =
+  // // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
+  // unsigned int texture_roughness = renderManager->loadTexture(
+  //     "texture_roughness",
+  //     fs::path("assets/cerberus/Textures/roughness.png").c_str());
 
-  unsigned int smoke_texture =
-      renderManager->loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
+  // unsigned int smoke_texture =
+  //     renderManager->loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
 
-  unsigned int wood_texture = renderManager->loadTexture(
-      "wood", fs::path("assets/wooden_texture.png").c_str());
+  // unsigned int wood_texture = renderManager->loadTexture(
+  //     "wood", fs::path("assets/wooden_texture.png").c_str());
 
-  unsigned int water_normal_texture = renderManager->loadTexture(
-      "water_normal", fs::path("assets/water_normal.png").c_str());
+  // unsigned int water_normal_texture = renderManager->loadTexture(
+  //     "water_normal", fs::path("assets/water_normal.png").c_str());
 
-  unsigned int foam_texture =
-      renderManager->loadTexture("foam", fs::path("assets/foam.png").c_str());
+  // unsigned int foam_texture =
+  //     renderManager->loadTexture("foam", fs::path("assets/foam.png").c_str());
 
   unsigned int groundTexture = renderManager->loadTexture(
       "groundTexture", fs::path("assets/GroundTexture.png").c_str());
 
-  unsigned int grassMaskTexture = renderManager->loadTexture(
-      "grassMaskTexture", fs::path("assets/GrassMask.png").c_str());
+  // unsigned int grassMaskTexture = renderManager->loadTexture(
+  //     "grassMaskTexture", fs::path("assets/GrassMask.png").c_str());
 
-  unsigned int windDistortionTexture = renderManager->loadTexture(
-      "windDistortionTexture",
-      fs::path("assets/CircleDisplacementObject.png").c_str());
+  // unsigned int windDistortionTexture = renderManager->loadTexture(
+  //     "windDistortionTexture",
+  //     fs::path("assets/CircleDisplacementObject.png").c_str());
 
   // configure global opengl state
   // -----------------------------
@@ -211,23 +211,6 @@ int main()
       "assets/blue.png", "assets/blue.png",
       "assets/blue.png", "assets/blue.png"};
   unsigned int cubemapTexture = loadCubemap(faces);
-
-  // Shader selectedShader("shaders/selected_shader.vs",
-  // "shaders/selected_shader.fs");
-
-  // for(auto i : serializer.getObjects()){
-
-  // }
-
-  Model backpack(fs::path("assets/backpack/backpack.obj"));
-  // Model plane(fs::path("assets/planes/plane_2.obj"));
-
-  auto waterPlane = game->getScene()->findObjectByName("water_plane_01");
-  auto plane = game->getScene()->findObjectByName("plane_01");
-  auto gun = game->getScene()->findObjectByName("gun_01");
-  auto bullet = game->getScene()->findObjectByName("bullet_01");
-
-  Model helmet(fs::path("assets/helmet.glb"));
 
   std::vector<glm::vec3> objectPositions;
   objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
@@ -331,15 +314,15 @@ int main()
   Shader shaderGeometryPass = *renderManager->getShader("geometry_pass_shader");
   Shader depthPrePass = *renderManager->getShader("depth_pre_pass");
 
-  shaderLightingPass.use();
-  shaderLightingPass.setInt("gPosition", 0);
-  shaderLightingPass.setInt("gNormal", 1);
-  shaderLightingPass.setInt("gAlbedoSpec", 2);
-  shaderLightingPass.setInt("gDepth", 3);
-  shaderLightingPass.setInt("gLinearDepth", 4);
-  shaderLightingPass.setInt("gMetallic", 5);
-  shaderLightingPass.setInt("gRoughness", 6);
-  shaderLightingPass.setInt("depthMap", 7);
+  // shaderLightingPass.use();
+  // shaderLightingPass.setInt("gPosition", 0);
+  // shaderLightingPass.setInt("gNormal", 1);
+  // shaderLightingPass.setInt("gAlbedoSpec", 2);
+  // shaderLightingPass.setInt("gDepth", 3);
+  // shaderLightingPass.setInt("gLinearDepth", 4);
+  // shaderLightingPass.setInt("gMetallic", 5);
+  // shaderLightingPass.setInt("gRoughness", 6);
+  // shaderLightingPass.setInt("depthMap", 7);
 
   skyboxShader.use();
   skyboxShader.setInt("skybox", 5);
@@ -385,6 +368,8 @@ int main()
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     game->getScene()->handleInput(view, projection, *renderManager);
     game->getScene()->renderGizmo(view, projection);
+    ui->screenHeight = game->SCR_HEIGHT;
+    ui->screenWidth = game->SCR_WIDTH;
     // Render a white box
     // ui.setProjectionMatrix(projection); // For 1920x1080
 
@@ -421,166 +406,173 @@ int main()
     game->processGameInput(game->getWindow(), &game->camera, deltaTime, shadows,
                            game->seed);
 
-    // 1. render depth of scene to texture (from light's perspective)
-    // --------------------------------------------------------------
-    glm::mat4 lightProjection, lightView;
-    glm::mat4 lightSpaceMatrix;
-    near_plane = 1.0f, far_plane = 75.5f;
-    // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-    lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-    lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    lightSpaceMatrix = lightProjection * lightView;
-    // render scene from light's point of view
-    depthPrePass.use();
-    depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    auto gameObjects = game->getScene()->getGameObjects();
-    for (auto &i : gameObjects)
+    if (game->getGameMode() != PAUSE)
     {
-      renderManager->renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // render
-    // ------
-    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      // 1. render depth of scene to texture (from light's perspective)
+      // --------------------------------------------------------------
+      glm::mat4 lightProjection, lightView;
+      glm::mat4 lightSpaceMatrix;
+      near_plane = 1.0f, far_plane = 75.5f;
+      // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+      lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+      lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+      lightSpaceMatrix = lightProjection * lightView;
+      // render scene from light's point of view
+      depthPrePass.use();
+      depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-    // glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
-    // glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LESS);
-    // glClear(GL_DEPTH_BUFFER_BIT);
-    // glDrawBuffer(GL_NONE);
-    // auto gameObjects = game->getScene()->getGameObjects();
-    // for (auto &i : gameObjects)
-    // {
-    //   if (i->shaderName == "water_noG")
-    //   {
-    //     continue;
-    //   }
-    //   renderManager->renderGameObjectWithShader(*i, depthPrePass);
-    // }
-
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // 1. geometry pass: render scene's geometry/color data into gbuffer
-    glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // ///////////
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-    // glDisable(GL_DEPTH_TEST); // Disable depth testing for post-processing
-    glEnable(GL_DEPTH_TEST); // Re-enable depth testing
-
-    ///
-    gameObjects = game->getScene()->getGameObjects();
-    for (auto &i : gameObjects)
-    {
-      if (i->name == "plane_01")
+      glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+      glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      glEnable(GL_DEPTH_TEST);
+      auto gameObjects = game->getScene()->getGameObjects();
+      for (auto &i : gameObjects)
       {
-        renderManager->renderGameObjectWithTexture(*i, simpleShader,
-                                                   groundTexture);
-        continue;
+        renderManager->renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
       }
-      renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      // render
+      // ------
+      // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      // glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+      // glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
+      // glEnable(GL_DEPTH_TEST);
+      // glDepthFunc(GL_LESS);
+      // glClear(GL_DEPTH_BUFFER_BIT);
+      // glDrawBuffer(GL_NONE);
+      // auto gameObjects = game->getScene()->getGameObjects();
+      // for (auto &i : gameObjects)
+      // {
+      //   if (i->shaderName == "water_noG")
+      //   {
+      //     continue;
+      //   }
+      //   renderManager->renderGameObjectWithShader(*i, depthPrePass);
+      // }
+
+      // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      // 1. geometry pass: render scene's geometry/color data into gbuffer
+      glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      // ///////////
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+      // glDisable(GL_DEPTH_TEST); // Disable depth testing for post-processing
+      glEnable(GL_DEPTH_TEST); // Re-enable depth testing
+
+      ///
+      gameObjects = game->getScene()->getGameObjects();
+      for (auto &i : gameObjects)
+      {
+        if (i->name == "plane_01")
+        {
+          renderManager->renderGameObjectWithTexture(*i, simpleShader,
+                                                     groundTexture);
+          continue;
+        }
+        renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
+      }
+
+      renderManager->renderSceneToIDBuffer(gameObjects);
+      game->getScene()->renderCompactColorPicker();
+      int seg = 1000;
+      renderManager->renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
+      renderManager->renderArrow(glm::vec3(3, 1, 1));
+      renderManager->renderEl(glm::vec3(1, 1, 1));
+      renderManager->renderLine(glm::vec3(2, 1, 1));
+
+      // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
+
+      ////////////////////////////////////////////////////
+
+      // Engine Grid
+
+      // gridShader.use();
+      // // model = glm::mat4(1.0f);
+      // renderManager->renderGrid(view, projection);
+
+      if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS &&
+          selected == false)
+      {
+        std::cout << "building" << std::endl;
+        game->getScene()->addCubeOnTop("simple_color_shader");
+        selected = true;
+      }
+      if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
+      {
+        selected = false;
+      }
+
+      if (glfwGetKey(game->getWindow(), GLFW_KEY_C) == GLFW_PRESS &&
+          selected == false)
+      {
+        std::cout << "building" << std::endl;
+        game->getScene()->copyEntity();
+        selected = true;
+      }
+
+      if (game->getGameMode() == ENGINE)
+      {
+        gridShader2.use();
+        gridShader2.setMat4("projection", projection);
+        gridShader2.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        gridShader2.setMat4("model", model);
+        renderManager->renderInfiniteGrid(view, game->camera.Position,
+                                          gridShader2, 1.0f, 500, 0.02f, 1000);
+      }
+
+      glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when
+                              // values are equal to depth buffer's content
+      skyboxShader.use();
+      view = glm::mat4(glm::mat3(
+          game->camera
+              .GetViewMatrix())); // remove translation from the view matrix
+      skyboxShader.setMat4("view", view);
+      skyboxShader.setMat4("projection", projection);
+      // skybox cube
+      glBindVertexArray(skyboxVAO);
+      glActiveTexture(GL_TEXTURE5);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+      glBindVertexArray(0);
+      glDepthFunc(GL_LESS);
     }
-
-    renderManager->renderSceneToIDBuffer(gameObjects);
-    game->getScene()->renderCompactColorPicker();
-    int seg = 1000;
-    renderManager->renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
-    renderManager->renderArrow(glm::vec3(3, 1, 1));
-    renderManager->renderEl(glm::vec3(1, 1, 1));
-    renderManager->renderLine(glm::vec3(2, 1, 1));
-
-    // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
-
-    ////////////////////////////////////////////////////
-
-    // Engine Grid
-
-    // gridShader.use();
-    // // model = glm::mat4(1.0f);
-    // renderManager->renderGrid(view, projection);
-
-    if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS &&
-        selected == false)
+    else if (game->getGameMode() == PAUSE)
     {
-      std::cout << "building" << std::endl;
-      game->getScene()->addCubeOnTop("simple_color_shader");
-      selected = true;
-    }
-    if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
-    {
-      selected = false;
-    }
+      ///////////
 
-    if (glfwGetKey(game->getWindow(), GLFW_KEY_C) == GLFW_PRESS &&
-        selected == false)
-    {
-      std::cout << "building" << std::endl;
-      game->getScene()->copyEntity();
-      selected = true;
-    }
+      glDisable(GL_DEPTH_TEST);
+      glEnable(GL_BLEND);
+      // ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
 
-    if (game->getGameMode() == ENGINE)
-    {
-      gridShader2.use();
-      gridShader2.setMat4("projection", projection);
-      gridShader2.setMat4("view", view);
-      model = glm::mat4(1.0f);
-      gridShader2.setMat4("model", model);
-      renderManager->renderInfiniteGrid(view, game->camera.Position,
-                                        gridShader2, 1.0f, 500, 0.02f, 1000);
+      // // For softer blending
+      // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      // // Or for additive blending (glowing effect)
+      // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+      // // Render with coordinated colors
+
+      // ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f,
+      // glm::vec3(1.0, 0.0f, 0.0f));
+      // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f,
+      // glm::vec3(1.0, 0.0f, 0.0f));
+      ui->renderPauseMenu();
+      glDisable(GL_BLEND);
+
+      ///////////
     }
 
-    glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when
-                            // values are equal to depth buffer's content
-    skyboxShader.use();
-    view = glm::mat4(glm::mat3(
-        game->camera
-            .GetViewMatrix())); // remove translation from the view matrix
-    skyboxShader.setMat4("view", view);
-    skyboxShader.setMat4("projection", projection);
-    // skybox cube
-    glBindVertexArray(skyboxVAO);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-    glDepthFunc(GL_LESS);
-
-    ///////////
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    // ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
-
-    // // For softer blending
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // // Or for additive blending (glowing effect)
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    // // Render with coordinated colors
-
-    // ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f,
-    // glm::vec3(1.0, 0.0f, 0.0f));
-    // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f,
-    // glm::vec3(1.0, 0.0f, 0.0f));
-    // ui->renderGameMenu();
-    glDisable(GL_BLEND);
-
-    ///////////
-
+    ///////////////////////////////////////////////////
     game->update(deltaTime);
 
     // Render ImGui

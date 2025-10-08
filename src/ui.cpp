@@ -141,14 +141,25 @@ void UIManager::renderUIBBox(float width, float height, float x_pos,
     renderUIBBox(width, height, x_pos, y_pos, 1.0f, 1.0f, 0.5f, 0.5f);
 }
 
-void UIManager::renderUIBBox(float width, float height, float x_pos,
-                             float y_pos, float r, float g, float b,
-                             float alpha)
+void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos,
+                             float r, float g, float b, float alpha)
 {
     glUseProgram(uiShaderProgram);
 
+    // Calculate resolution-independent scale
+    const float REFERENCE_WIDTH = 1440.0f;
+    const float REFERENCE_HEIGHT = 1440.0f;
+    float scaleX = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
+    float scaleY = static_cast<float>(screenHeight) / REFERENCE_HEIGHT;
+
+    // Scale dimensions and position
+    float scaledWidth = width * scaleX;
+    float scaledHeight = height * scaleY;
+    float scaledX = x_pos * scaleX;
+    float scaledY = y_pos * scaleY;
+
     // Convert from bottom-left origin to top-left origin for the shader
-    float converted_y = screenHeight - y_pos - height;
+    float converted_y = screenHeight - scaledY - scaledHeight;
 
     // Set uniforms
     int positionLoc = glGetUniformLocation(uiShaderProgram, "position");
@@ -156,8 +167,8 @@ void UIManager::renderUIBBox(float width, float height, float x_pos,
     int screenSizeLoc = glGetUniformLocation(uiShaderProgram, "screenSize");
     int colorLoc = glGetUniformLocation(uiShaderProgram, "color");
 
-    glUniform2f(positionLoc, x_pos, converted_y);
-    glUniform2f(sizeLoc, width, height);
+    glUniform2f(positionLoc, scaledX, converted_y);
+    glUniform2f(sizeLoc, scaledWidth, scaledHeight);
     glUniform2f(screenSizeLoc, screenWidth, screenHeight);
     glUniform4f(colorLoc, r, g, b, alpha);
 
@@ -177,48 +188,74 @@ void UIManager::setProjectionMatrix(const glm::mat4 &projectionMatrix)
 
 void UIManager::RenderText(std::string text, float x, float y, float scale, glm::vec3 color)
 {
-    // activate corresponding render state
+    // Save state
+    GLboolean depthTest, blend, cullFace;
+    glGetBooleanv(GL_DEPTH_TEST, &depthTest);
+    glGetBooleanv(GL_BLEND, &blend);
+    glGetBooleanv(GL_CULL_FACE, &cullFace);
+    GLint blendSrc, blendDst;
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
+
+    // Set up state for text rendering
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     textShader.use();
-    // Use bottom-left origin projection matrix to match our coordinate system
+    glUniform1i(glGetUniformLocation(textShader.ID, "text"), 0);
+
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screenWidth), 0.0f, static_cast<float>(screenHeight));
     glUniformMatrix4fv(glGetUniformLocation(textShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform3f(glGetUniformLocation(textShader.ID, "textColor"), color.x, color.y, color.z);
+
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(textVAO);
 
-    // iterate through all characters
-    std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++)
+    const float REFERENCE_WIDTH = 1440.0f;
+    float resolutionScale = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
+    float finalScale = scale * resolutionScale;
+
+    for (std::string::const_iterator c = text.begin(); c != text.end(); c++)
     {
         Character ch = characters[*c];
+        float xpos = x + ch.Bearing.x * finalScale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * finalScale;
+        float w = ch.Size.x * finalScale;
+        float h = ch.Size.y * finalScale;
 
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
-        // update VBO for each character
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},
             {xpos, ypos, 0.0f, 1.0f},
             {xpos + w, ypos, 1.0f, 1.0f},
-
             {xpos, ypos + h, 0.0f, 0.0f},
             {xpos + w, ypos, 1.0f, 1.0f},
             {xpos + w, ypos + h, 1.0f, 0.0f}};
-        // render glyph texture over quad
+
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        // update content of VBO memory
+
         glBindBuffer(GL_ARRAY_BUFFER, textVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // render quad
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+
+        x += (ch.Advance >> 6) * finalScale;
     }
+
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Restore previous state
+    if (depthTest)
+        glEnable(GL_DEPTH_TEST);
+    if (cullFace)
+        glEnable(GL_CULL_FACE);
+    if (!blend)
+        glDisable(GL_BLEND);
+    else
+        glBlendFunc(blendSrc, blendDst);
 }
 
 void UIManager::renderGameMenu()
@@ -419,4 +456,14 @@ void UIManager::renderMenuDecorations(float menuCenterX, float menuCenterY, floa
     // Bottom-right corner L
     renderUIBBox(decorSize, decorThickness, rightX - decorSize / 2, bottomY, 0.9f, 0.8f, 0.3f, 1.0f);
     renderUIBBox(decorThickness, decorSize, rightX, bottomY + decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
+}
+
+void UIManager::renderPauseMenu()
+{
+    float selectedHeight = 100.0f;
+    renderUIBBox(1440, 1440, -720.0f, 720.0f, 1.0f, 1.0f, 0.02f, 1.0f);
+    renderUIBBox(500, 50, 250.0f, 740.0f, 1.0f, 0.0f, 0.00f, 1.0f);
+    RenderText("HP", 720, 720, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    RenderText("HP", 720, 780, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    RenderText("HP", 720, 840, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 }

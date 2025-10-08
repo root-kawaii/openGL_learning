@@ -37,7 +37,8 @@ class InputManager;
 enum GameModeEnum
 {
     GAME,
-    ENGINE
+    ENGINE,
+    PAUSE,
 };
 
 class Game

@@ -37,13 +37,13 @@ private:
     Shader uiShader;
     Shader textShader;
 
-    unsigned int screenWidth;
-    unsigned int screenHeight;
-
     void setupQuadGeometry();
     unsigned int setUpFont();
 
 public:
+    unsigned int screenWidth;
+    unsigned int screenHeight;
+
     UIManager(unsigned int height, unsigned int width);
     ~UIManager();
 
@@ -61,6 +61,8 @@ public:
     void renderMenuDecorations(float menuX, float menuY, float menuWidth, float menuHeight);
 
     void renderStatusBars();
+
+    void renderPauseMenu();
 };
 
 ;

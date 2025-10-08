@@ -13,6 +13,11 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
+
+- we have to do game ui unfortunately, very basic but i need it to play the game
+- let us start with the action menu and the arrow rendering so I CAN ACTUALLY PLAY
+
+
 - cutescene try by having a for on camera position that changes and goes on
 - pos for x sec
 - pos for y sec

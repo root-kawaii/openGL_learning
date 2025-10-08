@@ -85,6 +85,17 @@ void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, 
             }
             game->setGameMode(ENGINE);
         }
+        if (wasKeyJustPressed(GLFW_KEY_P, window) == GLFW_PRESS)
+        {
+            if (game->getGameMode() != PAUSE)
+            {
+                game->setGameMode(PAUSE);
+            }
+            else
+            {
+                game->setGameMode(GAME);
+            }
+        }
     }
     else
     {
