@@ -260,141 +260,15 @@ void UIManager::RenderText(std::string text, float x, float y, float scale, glm:
 
 void UIManager::renderGameMenu()
 {
-    // Menu configuration - position at the very bottom of screen
-    float menuHeight = screenHeight * 0.25f; // Bottom 25% of screen
-    float menuWidth = screenWidth * 0.9f;    // 90% of screen width
-    float menuCenterX = screenWidth * 0.5f;  // Center X of screen
-    float menuCenterY = menuHeight * 0.5f;   // Center Y at bottom (half menu height from bottom)
-
-    // Main menu background with semi-transparent dark blue
-    renderUIBBox(menuWidth, menuHeight, menuCenterX, menuCenterY, 0.1f, 0.1f, 0.3f, 0.85f);
-
-    // Decorative border
-    float borderWidth = 4.0f;
-    // Top border
-    renderUIBBox(menuWidth, borderWidth, menuCenterX, menuCenterY + menuHeight / 2 - borderWidth / 2, 0.8f, 0.7f, 0.2f, 1.0f);
-    // Bottom border
-    renderUIBBox(menuWidth, borderWidth, menuCenterX, menuCenterY - menuHeight / 2 + borderWidth / 2, 0.8f, 0.7f, 0.2f, 1.0f);
-    // Left border
-    renderUIBBox(borderWidth, menuHeight, menuCenterX - menuWidth / 2 + borderWidth / 2, menuCenterY, 0.8f, 0.7f, 0.2f, 1.0f);
-    // Right border
-    renderUIBBox(borderWidth, menuHeight, menuCenterX + menuWidth / 2 - borderWidth / 2, menuCenterY, 0.8f, 0.7f, 0.2f, 1.0f);
-
-    // Action buttons configuration
-    struct MenuOption
-    {
-        std::string text;
-        float centerX, centerY, width, height;
-        bool isSelected;
-    };
-
-    // Define menu options
-    std::vector<MenuOption> menuOptions = {
-        {"ATTACK", 0, 0, 0, 0, false},
-        {"MAGIC", 0, 0, 0, 0, false},
-        {"ITEMS", 0, 0, 0, 0, false},
-        {"DEFEND", 0, 0, 0, 0, true}, // Example: Defend is selected
-        {"SPECIAL", 0, 0, 0, 0, false},
-        {"RUN", 0, 0, 0, 0, false}};
-
-    // Calculate button dimensions and positions
-    float buttonWidth = (menuWidth - 1.0f) / 3.0f;    // 3 columns with more padding
-    float buttonHeight = (menuHeight - 60.0f) / 2.0f; // 2 rows with padding
-    float buttonSpacingX = 20.0f;
-    float buttonSpacingY = 15.0f;
-
-    // Calculate the grid starting position
-    float totalGridWidth = 3 * buttonWidth + 2 * buttonSpacingX;
-    float totalGridHeight = 2 * buttonHeight + buttonSpacingY;
-
-    // Center the grid within the menu
-    float gridStartX = menuCenterX - totalGridWidth / 2 + buttonWidth / 2;
-    float gridStartY = menuCenterY + totalGridHeight / 2 - buttonHeight / 2;
-
-    // Position buttons in a 3x2 grid
-    for (size_t i = 0; i < menuOptions.size() && i < 6; ++i)
-    {
-        int col = i % 3;
-        int row = i / 3;
-
-        menuOptions[i].centerX = gridStartX + col * (buttonWidth + buttonSpacingX);
-        menuOptions[i].centerY = gridStartY - row * (buttonHeight + buttonSpacingY);
-        menuOptions[i].width = buttonWidth;
-        menuOptions[i].height = buttonHeight;
-    }
-
-    // Render each menu option
-    for (const auto &option : menuOptions)
-    {
-        if (option.text.empty())
-            continue;
-
-        // Button background colors
-        float r, g, b, alpha;
-        if (option.isSelected)
-        {
-            // Selected button - bright blue with glow effect
-            r = 0.2f;
-            g = 0.5f;
-            b = 1.0f;
-            alpha = 0.9f;
-
-            // Glow effect - render a slightly larger box behind
-            float glowExpansion = 8.0f;
-            renderUIBBox(option.width + glowExpansion, option.height + glowExpansion,
-                         option.centerX + 1, option.centerY + 1,
-                         0.4f, 0.7f, 1.0f, 0.4f);
-        }
-        else
-        {
-            // Unselected button - darker blue
-            r = 0.15f;
-            g = 0.25f;
-            b = 0.4f;
-            alpha = 0.8f;
-        }
-
-        // Render button background
-        renderUIBBox(option.width, option.height, option.centerX + 1, option.centerY + 1, r, g, b, alpha);
-
-        // Button border
-        float btnBorderWidth = 2.0f;
-        float borderR = option.isSelected ? 1.0f : 0.6f;
-        float borderG = option.isSelected ? 0.8f : 0.6f;
-        float borderB = option.isSelected ? 0.2f : 0.6f;
-
-        // Render borders
-        renderUIBBox(option.width, btnBorderWidth, option.centerX + 1, +1 + option.centerY + option.height / 2 - btnBorderWidth / 2,
-                     borderR, borderG, borderB, 1.0f);
-        renderUIBBox(option.width, btnBorderWidth, option.centerX + 1, option.centerY - option.height / 2 + btnBorderWidth / 2,
-                     borderR, borderG, borderB, 1.0f);
-        renderUIBBox(btnBorderWidth, option.height, +1 + option.centerX - option.width / 2 + btnBorderWidth / 2, +1 + option.centerY,
-                     borderR, borderG, borderB, 1.0f);
-        renderUIBBox(btnBorderWidth, option.height, +1 + option.centerX + option.width / 2 - btnBorderWidth / 2, +1 + option.centerY,
-                     borderR, borderG, borderB, 1.0f);
-
-        // Calculate text position (RenderText uses bottom-left coordinates)
-        float textScale = 0.6f;                       // Smaller scale for better fit
-        float estimatedCharWidth = 20.0f * textScale; // More accurate character width estimation
-        float textWidth = option.text.length() * estimatedCharWidth;
-        float textHeight = 48.0f * textScale; // Font height
-
-        // Center the text in the button
-        float textX = option.centerX - textWidth / 2;
-        float textY = option.centerY - textHeight / 4; // Adjust for better vertical centering with baseline
-
-        // Text color
-        glm::vec3 textColor = option.isSelected ? glm::vec3(1.0f, 1.0f, 0.9f) : glm::vec3(0.9f, 0.9f, 0.9f);
-
-        // Render button text
-        RenderText(option.text, textX, textY, textScale, textColor);
-    }
-
-    // // Add HP/MP status bars in top-right corner
-    // renderStatusBars();
-
-    // // Add decorative elements
-    // renderMenuDecorations(menuCenterX, menuCenterY, menuWidth, menuHeight);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    float selectedHeight = 100.0f;
+    renderUIBBox(400, 400, 0.0f, 0.0f, 1.0f, 1.0f, 0.02f, 1.0f);
+    // renderUIBBox(500, 50, 250.0f, 740.0f, 1.0f, 0.0f, 0.00f, 1.0f);
+    RenderText("HP", 50, 50, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    RenderText("HP", 50, 100, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    RenderText("HP", 50, 150, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glDisable(GL_BLEND);
 }
 
 void UIManager::renderStatusBars()
@@ -460,10 +334,13 @@ void UIManager::renderMenuDecorations(float menuCenterX, float menuCenterY, floa
 
 void UIManager::renderPauseMenu()
 {
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
     float selectedHeight = 100.0f;
     renderUIBBox(1440, 1440, -720.0f, 720.0f, 1.0f, 1.0f, 0.02f, 1.0f);
     renderUIBBox(500, 50, 250.0f, 740.0f, 1.0f, 0.0f, 0.00f, 1.0f);
     RenderText("HP", 720, 720, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     RenderText("HP", 720, 780, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     RenderText("HP", 720, 840, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glDisable(GL_BLEND);
 }

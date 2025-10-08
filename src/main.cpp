@@ -545,13 +545,13 @@ int main()
       glDrawArrays(GL_TRIANGLES, 0, 36);
       glBindVertexArray(0);
       glDepthFunc(GL_LESS);
+
+      ui->renderGameMenu();
     }
     else if (game->getGameMode() == PAUSE)
     {
       ///////////
 
-      glDisable(GL_DEPTH_TEST);
-      glEnable(GL_BLEND);
       // ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
 
       // // For softer blending
@@ -567,7 +567,6 @@ int main()
       // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f,
       // glm::vec3(1.0, 0.0f, 0.0f));
       ui->renderPauseMenu();
-      glDisable(GL_BLEND);
 
       ///////////
     }
