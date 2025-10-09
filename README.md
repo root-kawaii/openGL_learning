@@ -18,6 +18,8 @@ NEXT TO DO:
 - let us start with the action menu and the arrow rendering so I CAN ACTUALLY PLAY
 
 
+- instancing of cubes and tiles
+
 - cutescene try by having a for on camera position that changes and goes on
 - pos for x sec
 - pos for y sec

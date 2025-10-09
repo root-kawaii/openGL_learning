@@ -284,6 +284,8 @@ public:
     void renderQuadForSmoke();
     void renderQuad();
     void renderCube();
+    void renderCube(glm::vec3 position);
+    void renderSelectedTile(glm::vec3 position, glm::vec3 color, float tileHeight, float heightFromCube);
     void renderLine(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::mat4 view, float thickness, float length);
     void renderInfiniteGrid(glm::mat4 view, glm::vec3 cameraPosition, Shader shader, float spacing, float fadeDistance,
                             float lineThickness, int visibleRange);

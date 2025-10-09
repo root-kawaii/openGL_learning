@@ -479,6 +479,8 @@ int main()
           continue;
         }
         renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
+        if (i->name.find("cube") != std::string::npos)
+          renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
       }
 
       renderManager->renderSceneToIDBuffer(gameObjects);
