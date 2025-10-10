@@ -320,6 +320,7 @@ public:
     };
 
     void renderArrow(glm::vec3 position);
+    void renderVerticalArrow(glm::vec3 position);
     void renderEl(glm::vec3 position);
     void renderLine(glm::vec3 position);
 

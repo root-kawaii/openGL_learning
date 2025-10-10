@@ -343,6 +343,13 @@ int main()
   renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
   renderManager->initializeDepthFBO();
   glm::vec3 lightPos(-1.0f, 4.0f, 1.0f);
+  GameEntity activeGameEntity;
+  for (auto &j : game->getScene()->getGameEntities())
+  {
+    if (j->object->gameEntity == "88")
+      activeGameEntity = *j;
+  }
+
   while (!glfwWindowShouldClose(game->getWindow()))
   {
 
@@ -472,14 +479,9 @@ int main()
       gameObjects = game->getScene()->getGameObjects();
       for (auto &i : gameObjects)
       {
-        if (i->name == "plane_01")
-        {
-          renderManager->renderGameObjectWithTexture(*i, simpleShader,
-                                                     groundTexture);
-          continue;
-        }
         renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
-        if (i->name.find("cube") != std::string::npos)
+
+        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position))
           renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
       }
 
@@ -530,6 +532,14 @@ int main()
         gridShader2.setMat4("model", model);
         renderManager->renderInfiniteGrid(view, game->camera.Position,
                                           gridShader2, 1.0f, 500, 0.02f, 1000);
+      }
+      else
+      {
+        auto object = game->getScene()->getSelectedGameObject();
+        if (object != nullptr)
+        {
+          renderManager->renderVerticalArrow(object->position + glm::vec3(0, 1.15, 0));
+        }
       }
 
       glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when

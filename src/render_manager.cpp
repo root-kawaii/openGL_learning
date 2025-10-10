@@ -857,6 +857,14 @@ void RenderManager::renderSelectedTile(glm::vec3 position, glm::vec3 color, floa
     position = position + glm::vec3(0, heightFromCube, 0);
     Shader *simpleShader = getShader("tile_shader");
     simpleShader->use();
+
+    // Enable blending for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Optional: disable depth writing so objects behind show through
+    glDepthMask(GL_FALSE);
+
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);
     model = glm::scale(model, glm::vec3(0.5f, selectionHeight, 0.5f));
@@ -864,8 +872,14 @@ void RenderManager::renderSelectedTile(glm::vec3 position, glm::vec3 color, floa
     simpleShader->setMat4("view", viewMatrix);
     simpleShader->setMat4("projection", projectionMatrix);
     simpleShader->setVec3("baseColor", color);
+    simpleShader->setFloat("alpha", 0.5f); // Add alpha uniform (50% transparent)
     simpleShader->setFloat("time", glfwGetTime());
+
     renderCube(position);
+
+    // Restore OpenGL state
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void RenderManager::renderCube(glm::vec3 position)
@@ -2415,6 +2429,21 @@ void RenderManager::renderArrow(glm::vec3 position)
     simpleShader->use();
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);
+    simpleShader->setMat4("model", model);
+    simpleShader->setMat4("view", viewMatrix);
+    simpleShader->setMat4("projection", projectionMatrix);
+    simpleShader->setVec3("objectColor", linesColor);
+    arrowModel->Draw(*simpleShader);
+}
+
+void RenderManager::renderVerticalArrow(glm::vec3 position)
+{
+    Shader *simpleShader = getShader("simple_color_shader");
+    simpleShader->use();
+    glm::mat4 model = glm::mat4(1.0f); // Start with identity matrix
+    model = glm::translate(model, position);
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    model = glm::scale(model, glm::vec3(0.45f)); // Shrink to 20% of original size
     simpleShader->setMat4("model", model);
     simpleShader->setMat4("view", viewMatrix);
     simpleShader->setMat4("projection", projectionMatrix);

@@ -15,5 +15,5 @@ void main()
     // Apply glow to the base color
     vec3 glowColor = baseColor * intensity;
     
-    FragColor = vec4(glowColor, 1.0);
+    FragColor = vec4(glowColor, 0.75);
 }

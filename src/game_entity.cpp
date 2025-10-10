@@ -76,3 +76,21 @@ bool GameEntity::isGroundLower(glm::vec3 position)
 {
     return false;
 }
+
+float GameEntity::distanceFromGameEntity(glm::vec3 position)
+{
+    float obj_x = std::floor(object->position.x) + 0.5f;
+    float obj_y = std::floor(object->position.y) + 0.5f;
+    float obj_z = std::floor(object->position.z) + 0.5f;
+    float x_distance = std::fabs(obj_x - position.x); // Changed
+    float y_distance = std::fabs(obj_y - position.y); // Changed
+    float z_distance = std::fabs(obj_z - position.z); // Changed
+    return x_distance + y_distance + z_distance;
+}
+
+bool GameEntity::isReachable(glm::vec3 position)
+{
+    if (distanceFromGameEntity(position) <= speed)
+        return true;
+    return false;
+}

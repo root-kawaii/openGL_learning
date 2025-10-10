@@ -65,6 +65,8 @@ public:
   };
   // Environment& getEnvironment() { return environment; }
 
+  std::shared_ptr<GameObject> getSelectedGameObject() { return selectedObject; };
+
   void handleInput(const glm::mat4 &view, const glm::mat4 &projection,
                    RenderManager renderManager);
   void renderGizmo(const glm::mat4 &view, const glm::mat4 &projection);
