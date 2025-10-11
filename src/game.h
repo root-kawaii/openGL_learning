@@ -31,6 +31,7 @@
 #include "imgui.h"
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
+#include "game_manager.h"
 
 class InputManager;
 
@@ -54,10 +55,10 @@ private:
     // ResourceManager resourceManager;
     SphereCollision sphereCollision;
     InputManager inputManager;
+    GameManager gameManager;
 
     // Game state
     // GameState currentState;
-    float deltaTime;
     bool isRunning;
     GameModeEnum mode;
 
@@ -68,10 +69,16 @@ private:
     glm::vec3 engineCameraPos;
     glm::vec3 engineCameraFront;
 
+    // timing
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+
+    bool MULTISAMPLE = true;
+
 public:
     bool initialize();
     void run();
-    void update(float deltaTime);
+    void update();
     void render();
     void cleanup();
 
@@ -79,6 +86,9 @@ public:
     ~Game();
 
     void setLevel(std::string levelName);
+
+    InputManager *getInputManager() { return &inputManager; };
+    GameManager *getGameManager() { return &gameManager; };
 
     // System accessors
     // EntityManager& getEntityManager() { return entityManager; }

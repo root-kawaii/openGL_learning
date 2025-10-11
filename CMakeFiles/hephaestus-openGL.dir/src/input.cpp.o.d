@@ -532,4 +532,5 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../src/audio_manager.h \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/src/../src/sphere_collision.h \
- /home/monolith/Desktop/openGL_learning/src/../src/camera.h
+ /home/monolith/Desktop/openGL_learning/src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/game_manager.h

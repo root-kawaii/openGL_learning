@@ -103,6 +103,12 @@
 },
 {
   "directory": "/home/monolith/Desktop/openGL_learning",
+  "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DIMGUI_DEFINE_MATH_OPERATORS -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/usr/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/game_manager.cpp",
+  "file": "/home/monolith/Desktop/openGL_learning/src/game_manager.cpp",
+  "output": "CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o"
+},
+{
+  "directory": "/home/monolith/Desktop/openGL_learning",
   "command": "/usr/bin/c++ -DGLM_ENABLE_EXPERIMENTAL -DIMGUI_DEFINE_MATH_OPERATORS -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS -DTRACY_ENABLE -I/home/monolith/Desktop/openGL_learning/include/imgui -I/home/monolith/Desktop/openGL_learning/include/imgui/backends -I/home/monolith/Desktop/openGL_learning/include/ImGuizmo -I/home/monolith/Desktop/openGL_learning/include -I/home/monolith/Desktop/openGL_learning/include/assimp/include -I/usr/include/freetype2 -I/home/monolith/Desktop/openGL_learning/tracy/public -isystem /usr/include/AL  -g -g -O0 -Wall -Wextra -DDEBUG -std=gnu++17 -o CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o -c /home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "file": "/home/monolith/Desktop/openGL_learning/include/imgui/imgui.cpp",
   "output": "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o"

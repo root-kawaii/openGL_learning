@@ -30,6 +30,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o.d"
+  "CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o"
+  "CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o"
   "CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o.d"
   "CMakeFiles/hephaestus-openGL.dir/src/glad.c.o"

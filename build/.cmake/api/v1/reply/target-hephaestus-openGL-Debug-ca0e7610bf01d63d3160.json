@@ -31,13 +31,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 167,
+				"line" : 168,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 212,
+				"line" : 213,
 				"parent" : 0
 			},
 			{
@@ -65,13 +65,13 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 193,
+				"line" : 194,
 				"parent" : 0
 			},
 			{
 				"command" : 6,
 				"file" : 0,
-				"line" : 177,
+				"line" : 178,
 				"parent" : 0
 			}
 		]
@@ -172,14 +172,15 @@
 				19,
 				20,
 				21,
-				28,
+				22,
 				29,
 				30,
 				31,
 				32,
 				33,
 				34,
-				35
+				35,
+				36
 			]
 		},
 		{
@@ -328,26 +329,27 @@
 				19,
 				20,
 				21,
-				28,
+				22,
 				29,
 				30,
 				31,
 				32,
 				33,
 				34,
-				35
+				35,
+				36
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				22,
 				23,
 				24,
 				25,
 				26,
-				27
+				27,
+				28
 			]
 		}
 	],
@@ -453,6 +455,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/game_entity.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/game_manager.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{

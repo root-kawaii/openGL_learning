@@ -3421,6 +3421,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   tracy/public/common/TracySystem.hpp \
   tracy/public/tracy/Tracy.hpp \
   src/game.h \
+  src/game_manager.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/GLFW/glfw3.h \
@@ -4365,6 +4366,9 @@ CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o: src/game_entity.cpp \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/syslimits.h
 
+CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o: src/game_manager.cpp \
+  /usr/include/stdc-predef.h
+
 CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o: src/game_object.cpp \
   src/mesh.h \
   src/shader_m.h \
@@ -5236,6 +5240,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   src/sphere_collision.h \
   src/camera.h \
   src/game.h \
+  src/game_manager.h \
   src/input.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
@@ -5845,6 +5850,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o: src/level_editor.cpp \
   src/texture.h \
   src/game.h \
   src/game_entity.h \
+  src/game_manager.h \
   src/level_editor.h \
   src/object_picker.h \
   src/render_manager.h \
@@ -6476,6 +6482,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: src/main.cpp \
   src/sphere_collision.h \
   src/audio_manager.h \
   src/game.h \
+  src/game_manager.h \
   src/level_editor.h \
   src/model.h \
   src/shader_m.h \
@@ -10542,6 +10549,8 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   include/glm/vec3.hpp \
   include/glm/vec4.hpp \
   src/shader_m.h \
+  src/camera.h \
+  src/input.h \
   src/ui.h \
   /usr/include/GLFW/glfw3.h \
   /usr/include/alloca.h \
@@ -10633,6 +10642,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/bits/wctype-wchar.h \
   /usr/include/bits/wordsize.h \
   /usr/include/bits/xopen_lim.h \
+  /usr/include/c++/15.2.1/array \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
   /usr/include/c++/15.2.1/bits/alloc_traits.h \
@@ -10650,6 +10660,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
   /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
   /usr/include/c++/15.2.1/bits/cxxabi_init_exception.h \
+  /usr/include/c++/15.2.1/bits/enable_special_members.h \
   /usr/include/c++/15.2.1/bits/erase_if.h \
   /usr/include/c++/15.2.1/bits/exception.h \
   /usr/include/c++/15.2.1/bits/exception_defines.h \
@@ -10662,6 +10673,8 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/bits/functexcept.h \
   /usr/include/c++/15.2.1/bits/functional_hash.h \
   /usr/include/c++/15.2.1/bits/hash_bytes.h \
+  /usr/include/c++/15.2.1/bits/hashtable.h \
+  /usr/include/c++/15.2.1/bits/hashtable_policy.h \
   /usr/include/c++/15.2.1/bits/invoke.h \
   /usr/include/c++/15.2.1/bits/ios_base.h \
   /usr/include/c++/15.2.1/bits/istream.tcc \
@@ -10695,6 +10708,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
   /usr/include/c++/15.2.1/bits/stl_construct.h \
@@ -10713,6 +10727,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/bits/string_view.tcc \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
   /usr/include/c++/15.2.1/bits/unique_ptr.h \
+  /usr/include/c++/15.2.1/bits/unordered_map.h \
   /usr/include/c++/15.2.1/bits/uses_allocator.h \
   /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
   /usr/include/c++/15.2.1/bits/utility.h \
@@ -10726,6 +10741,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/clocale \
   /usr/include/c++/15.2.1/cmath \
   /usr/include/c++/15.2.1/codecvt \
+  /usr/include/c++/15.2.1/compare \
   /usr/include/c++/15.2.1/concepts \
   /usr/include/c++/15.2.1/cstddef \
   /usr/include/c++/15.2.1/cstdint \
@@ -10747,6 +10763,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/filesystem \
   /usr/include/c++/15.2.1/fstream \
+  /usr/include/c++/15.2.1/functional \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
@@ -10782,6 +10799,7 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: src/ui.cpp \
   /usr/include/c++/15.2.1/tuple \
   /usr/include/c++/15.2.1/type_traits \
   /usr/include/c++/15.2.1/typeinfo \
+  /usr/include/c++/15.2.1/unordered_map \
   /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
@@ -11329,6 +11347,7 @@ hephaestus-openGL: /usr/lib/Scrt1.o \
   CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o \
+  CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o \
   CMakeFiles/hephaestus-openGL.dir/src/glad.c.o \
   CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o \
@@ -11661,6 +11680,8 @@ tracy/public/common/TracyWinFamily.hpp:
 /usr/include/c++/15.2.1/bits/forward_list.tcc:
 
 /usr/include/asm-generic/param.h:
+
+src/game_manager.h:
 
 tracy/public/tracy/Tracy.hpp:
 
@@ -11997,6 +12018,8 @@ include/glm/ext/quaternion_common.inl:
 /usr/include/bits/types/FILE.h:
 
 /usr/include/c++/15.2.1/bits/utility.h:
+
+CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o:
 
 /usr/include/asm-generic/int-ll64.h:
 
@@ -13307,6 +13330,8 @@ src/game_object.cpp:
 include/glm/ext/matrix_double4x3_precision.hpp:
 
 include/glm/ext/matrix_float2x3_precision.hpp:
+
+src/game_manager.cpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/avx10_2-512convertintrin.h:
 

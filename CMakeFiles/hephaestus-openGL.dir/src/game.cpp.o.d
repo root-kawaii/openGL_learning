@@ -533,6 +533,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: \
  /usr/include/AL/al.h /usr/include/AL/alc.h \
  /home/monolith/Desktop/openGL_learning/src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/game_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyColor.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracySystem.hpp \

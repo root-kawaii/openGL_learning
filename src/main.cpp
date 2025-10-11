@@ -58,41 +58,9 @@
 #include <random>
 #include <vector>
 
-std::vector<glm::vec3> makeThousandVecs()
-{
-  std::vector<glm::vec3> vecs;
-  vecs.reserve(10000);
-
-  // Random engine for variation
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<float> dist(-1.75f, 1.75f); // ±0.05 variation
-
-  for (int i = 0; i < 10000; ++i)
-  {
-    glm::vec3 base(0.0f, 0.5f, 0.0f);
-    glm::vec3 variation(dist(gen), 0, dist(gen));
-    vecs.push_back(base + variation);
-  }
-
-  return vecs;
-}
+namespace fs = std::filesystem;
 
 unsigned int loadCubemap(vector<std::string> faces);
-GameObject loadSceneObject(const std::string &path, int stride,
-                           unsigned int textureID);
-
-// settings
-bool shadows = true;
-
-bool selected = false;
-int selectedID = 0;
-
-int entityCounter = 0;
-
-// timing
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
 
 // meshes
 unsigned int planeVAO;
@@ -101,12 +69,6 @@ unsigned int planeVAO;
 bool fired = false;
 
 glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
-
-struct SmokeQuad
-{
-  glm::vec3 position;
-  float distanceToCamera;
-};
 
 int main()
 {
@@ -119,6 +81,8 @@ int main()
   ImGui_ImplOpenGL3_Init("#version 330");
 
   auto ui = std::make_shared<UIManager>(game->SCR_HEIGHT, game->SCR_WIDTH);
+  ui->setWindow(game->getWindow());
+  ui->setInputManager(game->getInputManager());
   auto mainScene = std::make_shared<Scene>();
   game->setScene(mainScene);
 
@@ -139,64 +103,13 @@ int main()
 
   game->getScene()->setRenderManager(renderManager);
 
-  namespace fs = std::filesystem;
-  // unsigned int albedo =
-  // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_A.tga").c_str());
-  // unsigned int texture_metallic = renderManager->loadTexture(
-  //     "texture_metallic",
-  //     fs::path("assets/cerberus/Textures/metallic.png").c_str());
-  // // unsigned int normal =
-  // // loadTexture(fs::path("assets/cerberus/Textures/rusted_iron/Cerberus_N.tga").c_str());
-  // unsigned int texture_roughness = renderManager->loadTexture(
-  //     "texture_roughness",
-  //     fs::path("assets/cerberus/Textures/roughness.png").c_str());
-
-  // unsigned int smoke_texture =
-  //     renderManager->loadTexture("smoke", fs::path("assets/smoke.jpg").c_str());
-
-  // unsigned int wood_texture = renderManager->loadTexture(
-  //     "wood", fs::path("assets/wooden_texture.png").c_str());
-
-  // unsigned int water_normal_texture = renderManager->loadTexture(
-  //     "water_normal", fs::path("assets/water_normal.png").c_str());
-
-  // unsigned int foam_texture =
-  //     renderManager->loadTexture("foam", fs::path("assets/foam.png").c_str());
-
-  unsigned int groundTexture = renderManager->loadTexture(
-      "groundTexture", fs::path("assets/GroundTexture.png").c_str());
-
-  // unsigned int grassMaskTexture = renderManager->loadTexture(
-  //     "grassMaskTexture", fs::path("assets/GrassMask.png").c_str());
-
-  // unsigned int windDistortionTexture = renderManager->loadTexture(
-  //     "windDistortionTexture",
-  //     fs::path("assets/CircleDisplacementObject.png").c_str());
+  renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
+  renderManager->initializeDepthFBO();
 
   // configure global opengl state
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-
-  float skyboxVertices[] = {
-      // positions
-      -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-      1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
-
-      -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
-      -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
-
-      1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-
-      -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
-
-      -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
-
-      -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f,
-      1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
 
   // build and compile shaders
   // -------------------------
@@ -206,17 +119,6 @@ int main()
   // ------------------------------------------------------------------
 
   // cubemap
-  vector<std::string> faces = {
-      "assets/blue.png", "assets/blue.png",
-      "assets/blue.png", "assets/blue.png",
-      "assets/blue.png", "assets/blue.png"};
-  unsigned int cubemapTexture = loadCubemap(faces);
-
-  std::vector<glm::vec3> objectPositions;
-  objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
-  objectPositions.push_back(glm::vec3(3.0, -0.5, 3.0));
-  objectPositions.push_back(glm::vec3(-0.5, -0.5, 0.0));
-  objectPositions.push_back(glm::vec3(8.0, 0.5, 3.0));
 
   unsigned int sceneFramebuffer;
   unsigned int sceneColorTexture;
@@ -256,42 +158,16 @@ int main()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  // Unbind framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  // lighting info
-  // -------------
-  const unsigned int NR_LIGHTS = 32;
-  std::vector<glm::vec3> lightPositions;
-  std::vector<glm::vec3> lightColors;
-  srand(13);
-  for (unsigned int i = 0; i < NR_LIGHTS; i++)
-  {
-    // calculate slightly random offsets
-    float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
-    float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
-    float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
-    lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
-    // also calculate random color
-    float rColor = static_cast<float>(((rand() % 100) / 200.0f) +
-                                      0.5); // between 0.5 and 1.0
-    float gColor = static_cast<float>(((rand() % 100) / 200.0f) +
-                                      0.5); // between 0.5 and 1.0
-    float bColor = static_cast<float>(((rand() % 100) / 200.0f) +
-                                      0.5); // between 0.5 and 1.0
-    lightColors.push_back(glm::vec3(rColor, gColor, bColor));
-  }
-
   // cubemaps VAO
-  unsigned int skyboxVAO, skyboxVBO;
-  glGenVertexArrays(1, &skyboxVAO);
-  glGenBuffers(1, &skyboxVBO);
-  glBindVertexArray(skyboxVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
-               GL_STATIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  // unsigned int skyboxVAO, skyboxVBO;
+  // glGenVertexArrays(1, &skyboxVAO);
+  // glGenBuffers(1, &skyboxVBO);
+  // glBindVertexArray(skyboxVAO);
+  // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
+  //              GL_STATIC_DRAW);
+  // glEnableVertexAttribArray(0);
+  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
   unsigned int framebuffer;
   glGenFramebuffers(1, &framebuffer);
@@ -303,45 +179,13 @@ int main()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  Shader skyboxShader = *renderManager->getShader("skybox_shader");
-  Shader shaderLightingPass = *renderManager->getShader("lighting_pass_shader");
-  Shader waterShader = *renderManager->getShader("water_shader");
+  // Shader skyboxShader = *renderManager->getShader("skybox_shader");
   Shader gridShader2 = *renderManager->getShader("grid_shader_2");
-  Shader simpleShader = *renderManager->getShader("simple_shader");
-  Shader simpleColorShader = *renderManager->getShader("simple_color_shader");
-  Shader grassShader = *renderManager->getShader("grass_shader");
-  Shader shaderLightBox = *renderManager->getShader("light_box_shader");
-  Shader shaderGeometryPass = *renderManager->getShader("geometry_pass_shader");
   Shader depthPrePass = *renderManager->getShader("depth_pre_pass");
-
-  // shaderLightingPass.use();
-  // shaderLightingPass.setInt("gPosition", 0);
-  // shaderLightingPass.setInt("gNormal", 1);
-  // shaderLightingPass.setInt("gAlbedoSpec", 2);
-  // shaderLightingPass.setInt("gDepth", 3);
-  // shaderLightingPass.setInt("gLinearDepth", 4);
-  // shaderLightingPass.setInt("gMetallic", 5);
-  // shaderLightingPass.setInt("gRoughness", 6);
-  // shaderLightingPass.setInt("depthMap", 7);
-
-  skyboxShader.use();
-  skyboxShader.setInt("skybox", 5);
-
-  // render loop
-  // -----------
-  Ray ray;
-  glm::mat4 viewCopy;
-  bool viewFrozen = false;
-  bool intersect = false;
 
   // audioManager->playSource();
   bool selected = false;
 
-  std::vector<glm::vec3> vec = makeThousandVecs();
-
-  lastFrame = static_cast<float>(glfwGetTime());
-  renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
-  renderManager->initializeDepthFBO();
   glm::vec3 lightPos(-1.0f, 4.0f, 1.0f);
   GameEntity activeGameEntity;
   for (auto &j : game->getScene()->getGameEntities())
@@ -386,7 +230,7 @@ int main()
     ImGui::Text("Resolution %d   %d", game->SCR_HEIGHT, game->SCR_WIDTH);
     levelEditor->renderImGuiEditor();
 
-    if (shadows)
+    if (true)
     {
       // std::cout << "msaa enabled" << std::endl;
       glEnable(GL_MULTISAMPLE);
@@ -399,19 +243,12 @@ int main()
 
     // per-frame time logic
     // --------------------
-    float currentFrame = static_cast<float>(glfwGetTime());
-    deltaTime = currentFrame - lastFrame;
-    ImGui::Text("Frametime %f", deltaTime);
-    ImGui::Text("FPS %f", 1 / deltaTime);
 
     // std::cout << deltaTime << std::endl;
-    lastFrame = currentFrame;
 
     lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
     // input
     // -----
-    game->processGameInput(game->getWindow(), &game->camera, deltaTime, shadows,
-                           game->seed);
 
     if (game->getGameMode() != PAUSE)
     {
@@ -440,29 +277,6 @@ int main()
       }
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-      // render
-      // ------
-      // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-      // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      // glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
-      // glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
-      // glEnable(GL_DEPTH_TEST);
-      // glDepthFunc(GL_LESS);
-      // glClear(GL_DEPTH_BUFFER_BIT);
-      // glDrawBuffer(GL_NONE);
-      // auto gameObjects = game->getScene()->getGameObjects();
-      // for (auto &i : gameObjects)
-      // {
-      //   if (i->shaderName == "water_noG")
-      //   {
-      //     continue;
-      //   }
-      //   renderManager->renderGameObjectWithShader(*i, depthPrePass);
-      // }
-
-      // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
       // 1. geometry pass: render scene's geometry/color data into gbuffer
       glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -481,7 +295,7 @@ int main()
       {
         renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
 
-        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position))
+        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && ui->isCharacterMoving)
           renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
       }
 
@@ -489,9 +303,6 @@ int main()
       game->getScene()->renderCompactColorPicker();
       int seg = 1000;
       renderManager->renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
-      renderManager->renderArrow(glm::vec3(3, 1, 1));
-      renderManager->renderEl(glm::vec3(1, 1, 1));
-      renderManager->renderLine(glm::vec3(2, 1, 1));
 
       // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
 
@@ -542,23 +353,10 @@ int main()
         }
       }
 
-      glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when
-                              // values are equal to depth buffer's content
-      skyboxShader.use();
-      view = glm::mat4(glm::mat3(
-          game->camera
-              .GetViewMatrix())); // remove translation from the view matrix
-      skyboxShader.setMat4("view", view);
-      skyboxShader.setMat4("projection", projection);
-      // skybox cube
-      glBindVertexArray(skyboxVAO);
-      glActiveTexture(GL_TEXTURE5);
-      glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-      glBindVertexArray(0);
-      glDepthFunc(GL_LESS);
+      renderManager->renderMainPass(); // work on this
 
       ui->buildGameMenu();
+      ui->buildBottomCenterMenu();
       ui->renderAllUIElements(game->lastX, game->lastY);
     }
     else if (game->getGameMode() == PAUSE)
@@ -585,7 +383,7 @@ int main()
     }
 
     ///////////////////////////////////////////////////
-    game->update(deltaTime);
+    game->update();
 
     // Render ImGui
     ImGui::Render();

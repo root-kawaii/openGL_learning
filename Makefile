@@ -489,6 +489,30 @@ src/game_entity.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.s
 .PHONY : src/game_entity.cpp.s
 
+src/game_manager.o: src/game_manager.cpp.o
+.PHONY : src/game_manager.o
+
+# target to build an object file
+src/game_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o
+.PHONY : src/game_manager.cpp.o
+
+src/game_manager.i: src/game_manager.cpp.i
+.PHONY : src/game_manager.i
+
+# target to preprocess a source file
+src/game_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.i
+.PHONY : src/game_manager.cpp.i
+
+src/game_manager.s: src/game_manager.cpp.s
+.PHONY : src/game_manager.s
+
+# target to generate assembly for a file
+src/game_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.s
+.PHONY : src/game_manager.cpp.s
+
 src/game_object.o: src/game_object.cpp.o
 .PHONY : src/game_object.o
 
@@ -903,6 +927,9 @@ help:
 	@echo "... src/game_entity.o"
 	@echo "... src/game_entity.i"
 	@echo "... src/game_entity.s"
+	@echo "... src/game_manager.o"
+	@echo "... src/game_manager.i"
+	@echo "... src/game_manager.s"
 	@echo "... src/game_object.o"
 	@echo "... src/game_object.i"
 	@echo "... src/game_object.s"

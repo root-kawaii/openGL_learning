@@ -34,9 +34,16 @@ void Game::run()
     // }
 }
 
-void Game::update(float deltaTime)
+void Game::update()
 {
     ZoneScoped;
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    ImGui::Text("Frametime %f", deltaTime);
+    ImGui::Text("FPS %f", 1 / deltaTime);
+    lastFrame = currentFrame;
+
+    inputManager.processInput(this, window, &camera, deltaTime, MULTISAMPLE, seed);
     // A temporary place to store all corrections for the frame.
     // This is the key change to prevent cumulative errors.
     glm::vec3 cameraCorrection = glm::vec3(0.0f);

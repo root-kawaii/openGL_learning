@@ -600,6 +600,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/../src/raycast.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/sphere_collision.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/camera.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/game_manager.h \
  /home/monolith/Desktop/openGL_learning/src/../src/level_editor.h \
  /home/monolith/Desktop/openGL_learning/src/../src/ui.h \
  /home/monolith/Desktop/openGL_learning/src/../src/../src/shader_m.h \

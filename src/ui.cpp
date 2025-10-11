@@ -1,5 +1,35 @@
 #include "ui.h"
 
+void UIManager::onMovePressed(std::string value)
+{
+    std::cout << "Move button pressed" << std::endl;
+    isCharacterMoving = true;
+}
+
+void UIManager::onActPressed(std::string value)
+{
+    std::cout << "Act button pressed" << std::endl;
+    // Add your act logic here
+}
+
+void UIManager::onWaitPressed(std::string value)
+{
+    std::cout << "Wait button pressed" << std::endl;
+    // Add your wait logic here
+}
+
+void UIManager::onStatusPressed(std::string value)
+{
+    std::cout << "Status button pressed" << std::endl;
+    // Add your status logic here
+}
+
+void UIManager::onAutoBattlePressed(std::string value)
+{
+    std::cout << "Auto-battle button pressed" << std::endl;
+    // Add your auto-battle logic here
+}
+
 UIManager::UIManager(unsigned int height, unsigned int width) : uiShader("shaders/ui_box_shader.vs", "shaders/ui_box_shader.fs"),
                                                                 textShader("shaders/text.vs", "shaders/text.fs")
 {
@@ -558,13 +588,17 @@ void UIManager::renderAllUIElements(float mouseX, float mouseY)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (const auto &element : uiElements)
+    for (auto &element : uiElements)
     {
         if (element.elementType == BOX)
         {
             if (isMouseOver(mouseX, mouseY, element.width, element.height,
                             element.x_pos, element.y_pos))
             {
+                if (isPressed(element))
+                {
+                    executeUI(element);
+                }
                 float selectedColor_R = 1.0;
                 float selectedColor_G = 0.6f;
                 float selectedColor_B = 0.0f;
@@ -787,4 +821,110 @@ bool UIManager::isMouseOver(float mouseX, float mouseY, float element_width, flo
         return true;
     }
     return false;
+}
+
+bool UIManager::isPressed(UIElement element)
+{
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        // std::cout << element.elementType + " pressed" + std::to_string(glfwGetTime()) << std::endl;
+        return true;
+    }
+    return element.pressed;
+}
+
+bool UIManager::executeUI(UIElement element)
+{
+    if (element.functionPtr != nullptr)
+    {
+        element.functionPtr("ciao");
+    }
+    return true;
+}
+
+void UIManager::buildBottomCenterMenu()
+{
+    const float screenH = 1440.0f;
+    const float screenW = 1440.0f;
+
+    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+
+    float menuWidth = 200.0f;
+    float menuHeight = 280.0f;
+    float menuX = (screenW - menuWidth) / 2.0f;
+    float menuY = 80.0f;
+
+    // Background panel
+    addBox(menuWidth, menuHeight, menuX, menuY,
+           bgDark.r, bgDark.g, bgDark.b, 0.95f);
+
+    // Borders
+    float borderThick = 2.0f;
+    addBox(menuWidth, borderThick, menuX, menuY + menuHeight,
+           accent.r, accent.g, accent.b, 1.0f); // Top
+    addBox(menuWidth, borderThick, menuX, menuY,
+           accent.r, accent.g, accent.b, 1.0f); // Bottom
+    addBox(borderThick, menuHeight, menuX, menuY,
+           accent.r, accent.g, accent.b, 1.0f); // Left
+    addBox(borderThick, menuHeight, menuX + menuWidth, menuY,
+           accent.r, accent.g, accent.b, 1.0f); // Right
+
+    // Menu title
+    addText("Menu", menuX + 20, menuY + menuHeight - 30,
+            0.5f, textGray.r, textGray.g, textGray.b);
+
+    // Button dimensions
+    float buttonWidth = menuWidth - 40.0f;
+    float buttonHeight = 38.0f;
+    float buttonX = menuX + 20.0f;
+    float buttonSpacing = 8.0f;
+    float startY = menuY + menuHeight - 70.0f;
+
+    // Move button
+    auto moveCallback = [this](std::string value)
+    { this->onMovePressed(value); };
+    addBox(buttonWidth, buttonHeight, buttonX, startY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f, moveCallback);
+    addText("Move", buttonX + 15, startY + 10,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Act button
+    float actY = startY - (buttonHeight + buttonSpacing);
+    auto actCallback = [this](std::string value)
+    { this->onActPressed(value); };
+    addBox(buttonWidth, buttonHeight, buttonX, actY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f, actCallback);
+    addText("Act", buttonX + 15, actY + 10,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Wait button
+    float waitY = actY - (buttonHeight + buttonSpacing);
+    auto waitCallback = [this](std::string value)
+    { this->onWaitPressed(value); };
+    addBox(buttonWidth, buttonHeight, buttonX, waitY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f, waitCallback);
+    addText("Wait", buttonX + 15, waitY + 10,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Status button
+    float statusY = waitY - (buttonHeight + buttonSpacing);
+    auto statusCallback = [this](std::string value)
+    { this->onStatusPressed(value); };
+    addBox(buttonWidth, buttonHeight, buttonX, statusY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f, statusCallback);
+    addText("Status", buttonX + 15, statusY + 10,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Auto-battle button
+    float autoY = statusY - (buttonHeight + buttonSpacing);
+    auto autoCallback = [this](std::string value)
+    { this->onAutoBattlePressed(value); };
+    addBox(buttonWidth, buttonHeight, buttonX, autoY,
+           bgLight.r, bgLight.g, bgLight.b, 1.0f, autoCallback);
+    addText("Auto-battle", buttonX + 15, autoY + 10,
+            0.45f, textWhite.r, textWhite.g, textWhite.b);
 }

@@ -101,12 +101,6 @@ private:
     bool msaaGBufferInitialized;
     int msaaSamples;
 
-    // Skybox members
-    unsigned int skyboxVAO, skyboxVBO;
-    unsigned int skyboxTexture;
-    bool skyboxInitialized;
-    Shader *skyboxShader;
-
     unsigned int gridVAO = 0;
     unsigned int gridVBO = 0;         // Base line geometry
     unsigned int gridInstanceVBO = 0; // Instance data
@@ -139,6 +133,9 @@ private:
     unsigned int loadAndCacheTexture(const std::string &name, const std::string &path);
     void generateGrassInstances(const glm::vec3 &center, float radius, int density);
     void setupGrassInstancing();
+
+    unsigned int skyboxVAO, skyboxVBO;
+    unsigned int cubemapTexture;
 
 public:
     RenderManager();
@@ -323,6 +320,12 @@ public:
     void renderVerticalArrow(glm::vec3 position);
     void renderEl(glm::vec3 position);
     void renderLine(glm::vec3 position);
+
+    void renderSkyBox();
+    void setUpSkyBox();
+
+    void renderShadowPass();
+    void renderMainPass();
 
 private:
     // Internal helper functions
