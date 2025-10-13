@@ -2,3 +2,6 @@ backpack/
 .cache/
 .vs/
 ignore/
+CMakeFiles/
+.vscode/
+build/
