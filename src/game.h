@@ -32,6 +32,7 @@
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
 #include "game_manager.h"
+#include "ui.h"
 
 class InputManager;
 
@@ -56,6 +57,7 @@ private:
     SphereCollision sphereCollision;
     InputManager inputManager;
     GameManager gameManager;
+    std::shared_ptr<UIManager> uiManager;
 
     // Game state
     // GameState currentState;
@@ -89,6 +91,7 @@ public:
 
     InputManager *getInputManager() { return &inputManager; };
     GameManager *getGameManager() { return &gameManager; };
+    std::shared_ptr<UIManager> getUIManager() { return uiManager; };
 
     // System accessors
     // EntityManager& getEntityManager() { return entityManager; }
@@ -141,6 +144,7 @@ public:
 
     bool initWindow()
     {
+
         camera = Camera(glm::vec3(0.0f, 10.0f, 3.0f));
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -179,10 +183,16 @@ public:
             return -1;
         }
         glfwSwapInterval(0); // 0 = disable V-Sync, 1 = enable
-        // TODO: Initialize GLFW, create window, setup OpenGL context
-        // TODO: Initialize all managers (render, input, audio, etc.)
-        // TODO: Load initial resources
-        // TODO: Setup initial game state
+                             // TODO: Initialize GLFW, create window, setup OpenGL context
+                             // TODO: Initialize all managers (render, input, audio, etc.)
+                             // TODO: Load initial resources
+                             // TODO: Setup initial game state
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+
         return true;
     }
 

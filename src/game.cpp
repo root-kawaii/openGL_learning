@@ -9,6 +9,7 @@ Game::Game()
     : deltaTime(0.0f), isRunning(true), window(nullptr)
 {
     this->initWindow();
+    initialize();
     mode = ENGINE;
 }
 
@@ -19,7 +20,12 @@ Game::~Game()
 
 bool Game::initialize()
 {
-    // this->initWindow();
+    uiManager = std::make_shared<UIManager>(SCR_HEIGHT, SCR_WIDTH);
+    uiManager->setWindow(window);
+    uiManager->setInputManager(&inputManager);
+    auto mainScene = std::make_shared<Scene>();
+    this->setScene(mainScene);
+    return true;
 }
 
 void Game::run()

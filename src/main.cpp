@@ -75,18 +75,8 @@ int main()
 
   std::shared_ptr<Game> game = std::make_shared<Game>();
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGui_ImplGlfw_InitForOpenGL(game->getWindow(), true);
-  ImGui_ImplOpenGL3_Init("#version 330");
-
-  auto ui = std::make_shared<UIManager>(game->SCR_HEIGHT, game->SCR_WIDTH);
-  ui->setWindow(game->getWindow());
-  ui->setInputManager(game->getInputManager());
-  auto mainScene = std::make_shared<Scene>();
-  game->setScene(mainScene);
-
   // Get pointers to managers (assuming they're already heap-allocated in Game)
+  std::shared_ptr<UIManager> uiManager = game->getUIManager();
   RenderManager *renderManager = &game->getRenderManager();
   AudioManager *audioManager = &game->getAudioManager();
 
@@ -158,17 +148,6 @@ int main()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  // cubemaps VAO
-  // unsigned int skyboxVAO, skyboxVBO;
-  // glGenVertexArrays(1, &skyboxVAO);
-  // glGenBuffers(1, &skyboxVBO);
-  // glBindVertexArray(skyboxVAO);
-  // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-  // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
-  //              GL_STATIC_DRAW);
-  // glEnableVertexAttribArray(0);
-  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-
   unsigned int framebuffer;
   glGenFramebuffers(1, &framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -197,6 +176,8 @@ int main()
   while (!glfwWindowShouldClose(game->getWindow()))
   {
 
+    uiManager->screenHeight = game->SCR_HEIGHT;
+    uiManager->screenWidth = game->SCR_WIDTH;
     glm::vec3 lastFrameCameraPos = game->camera.Position;
     float near_plane = 1.10f;
     float far_plane = 1000.0f;
@@ -219,8 +200,6 @@ int main()
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     game->getScene()->handleInput(view, projection, *renderManager);
     game->getScene()->renderGizmo(view, projection);
-    ui->screenHeight = game->SCR_HEIGHT;
-    ui->screenWidth = game->SCR_WIDTH;
     // Render a white box
     // ui.setProjectionMatrix(projection); // For 1920x1080
 
@@ -295,7 +274,7 @@ int main()
       {
         renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
 
-        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && ui->isCharacterMoving)
+        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && uiManager->isCharacterMoving)
           renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
       }
 
@@ -355,9 +334,9 @@ int main()
 
       renderManager->renderMainPass(); // work on this
 
-      ui->buildGameMenu();
-      ui->buildBottomCenterMenu();
-      ui->renderAllUIElements(game->lastX, game->lastY);
+      uiManager->buildGameMenu();
+      uiManager->buildBottomCenterMenu();
+      uiManager->renderAllUIElements(game->lastX, game->lastY);
     }
     else if (game->getGameMode() == PAUSE)
     {
@@ -377,7 +356,7 @@ int main()
       // glm::vec3(1.0, 0.0f, 0.0f));
       // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f,
       // glm::vec3(1.0, 0.0f, 0.0f));
-      ui->renderPauseMenu();
+      uiManager->renderPauseMenu();
 
       ///////////
     }

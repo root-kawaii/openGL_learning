@@ -3408,6 +3408,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
  /home/monolith/Desktop/openGL_learning/include/stb_image.h
  /home/monolith/Desktop/openGL_learning/src/audio_manager.h
  /home/monolith/Desktop/openGL_learning/src/camera.h
+ /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/src/sphere_collision.h
  /home/monolith/Desktop/openGL_learning/tracy/public/common/TracyApi.h
  /home/monolith/Desktop/openGL_learning/tracy/public/client/tracy_rpmalloc.hpp
@@ -3436,6 +3437,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
  /home/monolith/Desktop/openGL_learning/tracy/public/tracy/Tracy.hpp
  /home/monolith/Desktop/openGL_learning/src/game.h
  /home/monolith/Desktop/openGL_learning/src/game_manager.h
+ /home/monolith/Desktop/openGL_learning/src/ui.h
  /usr/include/AL/al.h
  /usr/include/AL/alc.h
  /usr/include/GLFW/glfw3.h
@@ -3791,6 +3793,21 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
  /usr/include/execinfo.h
  /usr/include/features-time64.h
  /usr/include/features.h
+ /usr/include/freetype2/freetype/config/ftconfig.h
+ /usr/include/freetype2/freetype/config/ftheader.h
+ /usr/include/freetype2/freetype/config/ftoption.h
+ /usr/include/freetype2/freetype/config/ftstdlib.h
+ /usr/include/freetype2/freetype/config/integer-types.h
+ /usr/include/freetype2/freetype/config/mac-support.h
+ /usr/include/freetype2/freetype/config/public-macros.h
+ /usr/include/freetype2/freetype/freetype.h
+ /usr/include/freetype2/freetype/fterrdef.h
+ /usr/include/freetype2/freetype/fterrors.h
+ /usr/include/freetype2/freetype/ftimage.h
+ /usr/include/freetype2/freetype/ftmoderr.h
+ /usr/include/freetype2/freetype/ftsystem.h
+ /usr/include/freetype2/freetype/fttypes.h
+ /usr/include/freetype2/ft2build.h
  /usr/include/gnu/stubs-64.h
  /usr/include/gnu/stubs.h
  /usr/include/libintl.h
@@ -3807,6 +3824,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
  /usr/include/math.h
  /usr/include/pthread.h
  /usr/include/sched.h
+ /usr/include/setjmp.h
  /usr/include/signal.h
  /usr/include/stdc-predef.h
  /usr/include/stdint.h
@@ -5256,11 +5274,13 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o
  /home/monolith/Desktop/openGL_learning/include/stb_image.h
  /home/monolith/Desktop/openGL_learning/src/audio_manager.h
  /home/monolith/Desktop/openGL_learning/src/camera.h
+ /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/src/sphere_collision.h
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game.h
  /home/monolith/Desktop/openGL_learning/src/game_manager.h
  /home/monolith/Desktop/openGL_learning/src/input.h
+ /home/monolith/Desktop/openGL_learning/src/ui.h
  /usr/include/AL/al.h
  /usr/include/AL/alc.h
  /usr/include/GLFW/glfw3.h
@@ -5582,6 +5602,21 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o
  /usr/include/errno.h
  /usr/include/features-time64.h
  /usr/include/features.h
+ /usr/include/freetype2/freetype/config/ftconfig.h
+ /usr/include/freetype2/freetype/config/ftheader.h
+ /usr/include/freetype2/freetype/config/ftoption.h
+ /usr/include/freetype2/freetype/config/ftstdlib.h
+ /usr/include/freetype2/freetype/config/integer-types.h
+ /usr/include/freetype2/freetype/config/mac-support.h
+ /usr/include/freetype2/freetype/config/public-macros.h
+ /usr/include/freetype2/freetype/freetype.h
+ /usr/include/freetype2/freetype/fterrdef.h
+ /usr/include/freetype2/freetype/fterrors.h
+ /usr/include/freetype2/freetype/ftimage.h
+ /usr/include/freetype2/freetype/ftmoderr.h
+ /usr/include/freetype2/freetype/ftsystem.h
+ /usr/include/freetype2/freetype/fttypes.h
+ /usr/include/freetype2/ft2build.h
  /usr/include/gnu/stubs-64.h
  /usr/include/gnu/stubs.h
  /usr/include/libintl.h
@@ -5596,6 +5631,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o
  /usr/include/math.h
  /usr/include/pthread.h
  /usr/include/sched.h
+ /usr/include/setjmp.h
  /usr/include/stdc-predef.h
  /usr/include/stdint.h
  /usr/include/stdio.h
@@ -5876,6 +5912,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
  /home/monolith/Desktop/openGL_learning/src/render_manager.h
  /home/monolith/Desktop/openGL_learning/src/scene.h
  /home/monolith/Desktop/openGL_learning/src/serialization_utilities.h
+ /home/monolith/Desktop/openGL_learning/src/ui.h
  /usr/include/AL/al.h
  /usr/include/AL/alc.h
  /usr/include/GLFW/glfw3.h
@@ -6197,6 +6234,21 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
  /usr/include/errno.h
  /usr/include/features-time64.h
  /usr/include/features.h
+ /usr/include/freetype2/freetype/config/ftconfig.h
+ /usr/include/freetype2/freetype/config/ftheader.h
+ /usr/include/freetype2/freetype/config/ftoption.h
+ /usr/include/freetype2/freetype/config/ftstdlib.h
+ /usr/include/freetype2/freetype/config/integer-types.h
+ /usr/include/freetype2/freetype/config/mac-support.h
+ /usr/include/freetype2/freetype/config/public-macros.h
+ /usr/include/freetype2/freetype/freetype.h
+ /usr/include/freetype2/freetype/fterrdef.h
+ /usr/include/freetype2/freetype/fterrors.h
+ /usr/include/freetype2/freetype/ftimage.h
+ /usr/include/freetype2/freetype/ftmoderr.h
+ /usr/include/freetype2/freetype/ftsystem.h
+ /usr/include/freetype2/freetype/fttypes.h
+ /usr/include/freetype2/ft2build.h
  /usr/include/gnu/stubs-64.h
  /usr/include/gnu/stubs.h
  /usr/include/libintl.h
@@ -6211,6 +6263,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
  /usr/include/math.h
  /usr/include/pthread.h
  /usr/include/sched.h
+ /usr/include/setjmp.h
  /usr/include/stdc-predef.h
  /usr/include/stdint.h
  /usr/include/stdio.h

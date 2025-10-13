@@ -3394,6 +3394,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   include/stb_image.h \
   src/audio_manager.h \
   src/camera.h \
+  src/shader_m.h \
   src/sphere_collision.h \
   tracy/public/common/TracyApi.h \
   tracy/public/client/tracy_rpmalloc.hpp \
@@ -3422,6 +3423,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   tracy/public/tracy/Tracy.hpp \
   src/game.h \
   src/game_manager.h \
+  src/ui.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/GLFW/glfw3.h \
@@ -3777,6 +3779,21 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/execinfo.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/freetype2/freetype/config/ftconfig.h \
+  /usr/include/freetype2/freetype/config/ftheader.h \
+  /usr/include/freetype2/freetype/config/ftoption.h \
+  /usr/include/freetype2/freetype/config/ftstdlib.h \
+  /usr/include/freetype2/freetype/config/integer-types.h \
+  /usr/include/freetype2/freetype/config/mac-support.h \
+  /usr/include/freetype2/freetype/config/public-macros.h \
+  /usr/include/freetype2/freetype/freetype.h \
+  /usr/include/freetype2/freetype/fterrdef.h \
+  /usr/include/freetype2/freetype/fterrors.h \
+  /usr/include/freetype2/freetype/ftimage.h \
+  /usr/include/freetype2/freetype/ftmoderr.h \
+  /usr/include/freetype2/freetype/ftsystem.h \
+  /usr/include/freetype2/freetype/fttypes.h \
+  /usr/include/freetype2/ft2build.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
@@ -3793,6 +3810,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o: src/game.cpp \
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/setjmp.h \
   /usr/include/signal.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
@@ -5237,11 +5255,13 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   include/stb_image.h \
   src/audio_manager.h \
   src/camera.h \
+  src/shader_m.h \
   src/sphere_collision.h \
   src/camera.h \
   src/game.h \
   src/game_manager.h \
   src/input.h \
+  src/ui.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/GLFW/glfw3.h \
@@ -5563,6 +5583,21 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/freetype2/freetype/config/ftconfig.h \
+  /usr/include/freetype2/freetype/config/ftheader.h \
+  /usr/include/freetype2/freetype/config/ftoption.h \
+  /usr/include/freetype2/freetype/config/ftstdlib.h \
+  /usr/include/freetype2/freetype/config/integer-types.h \
+  /usr/include/freetype2/freetype/config/mac-support.h \
+  /usr/include/freetype2/freetype/config/public-macros.h \
+  /usr/include/freetype2/freetype/freetype.h \
+  /usr/include/freetype2/freetype/fterrdef.h \
+  /usr/include/freetype2/freetype/fterrors.h \
+  /usr/include/freetype2/freetype/ftimage.h \
+  /usr/include/freetype2/freetype/ftmoderr.h \
+  /usr/include/freetype2/freetype/ftsystem.h \
+  /usr/include/freetype2/freetype/fttypes.h \
+  /usr/include/freetype2/ft2build.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
@@ -5577,6 +5612,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o: src/input.cpp \
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/setjmp.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -5856,6 +5892,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o: src/level_editor.cpp \
   src/render_manager.h \
   src/scene.h \
   src/serialization_utilities.h \
+  src/ui.h \
   /usr/include/AL/al.h \
   /usr/include/AL/alc.h \
   /usr/include/GLFW/glfw3.h \
@@ -6177,6 +6214,21 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o: src/level_editor.cpp \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/freetype2/freetype/config/ftconfig.h \
+  /usr/include/freetype2/freetype/config/ftheader.h \
+  /usr/include/freetype2/freetype/config/ftoption.h \
+  /usr/include/freetype2/freetype/config/ftstdlib.h \
+  /usr/include/freetype2/freetype/config/integer-types.h \
+  /usr/include/freetype2/freetype/config/mac-support.h \
+  /usr/include/freetype2/freetype/config/public-macros.h \
+  /usr/include/freetype2/freetype/freetype.h \
+  /usr/include/freetype2/freetype/fterrdef.h \
+  /usr/include/freetype2/freetype/fterrors.h \
+  /usr/include/freetype2/freetype/ftimage.h \
+  /usr/include/freetype2/freetype/ftmoderr.h \
+  /usr/include/freetype2/freetype/ftsystem.h \
+  /usr/include/freetype2/freetype/fttypes.h \
+  /usr/include/freetype2/ft2build.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/libintl.h \
@@ -6191,6 +6243,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o: src/level_editor.cpp \
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/setjmp.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -11571,26 +11624,6 @@ src/render_manager.cpp:
 
 src/model.cpp:
 
-/usr/include/freetype2/freetype/fttypes.h:
-
-/usr/include/asm/swab.h:
-
-/usr/include/freetype2/freetype/ftmoderr.h:
-
-/usr/include/freetype2/freetype/ftimage.h:
-
-/usr/include/freetype2/freetype/fterrors.h:
-
-/usr/include/freetype2/freetype/fterrdef.h:
-
-/usr/include/freetype2/freetype/config/public-macros.h:
-
-/usr/lib/Scrt1.o:
-
-/usr/include/freetype2/freetype/config/integer-types.h:
-
-/usr/include/freetype2/freetype/config/ftoption.h:
-
 include/glm/gtx/rotate_vector.inl:
 
 include/glm/gtx/norm.inl:
@@ -11616,6 +11649,26 @@ src/level_editor.cpp:
 src/input.cpp:
 
 src/glad.c:
+
+/usr/include/freetype2/freetype/fttypes.h:
+
+/usr/include/asm/swab.h:
+
+/usr/include/freetype2/freetype/ftmoderr.h:
+
+/usr/include/freetype2/freetype/ftimage.h:
+
+/usr/include/freetype2/freetype/fterrors.h:
+
+/usr/include/freetype2/freetype/fterrdef.h:
+
+/usr/include/freetype2/freetype/config/public-macros.h:
+
+/usr/lib/Scrt1.o:
+
+/usr/include/freetype2/freetype/config/integer-types.h:
+
+/usr/include/freetype2/freetype/config/ftoption.h:
 
 /usr/include/execinfo.h:
 
