@@ -1086,7 +1086,7 @@
             "id": "grid_cube_7_3",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
+                "x": 2.5,
                 "y": 0.5,
                 "z": -0.5
             },
@@ -1898,9 +1898,9 @@
             "id": "grid_cube_5_6",
             "path": "assets/cube.obj",
             "position": {
-                "x": 1.5,
+                "x": 2.5,
                 "y": 0.5,
-                "z": 3.5
+                "z": 2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1957,7 +1957,7 @@
             "path": "assets/cube.obj",
             "position": {
                 "x": 4.5,
-                "y": 0.5,
+                "y": 1.5,
                 "z": 3.5
             },
             "rotation": {

@@ -481,11 +481,44 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/matrix_decompose.inl \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtx/../gtx/transform.inl \
- /usr/include/c++/15.2.1/random /usr/include/c++/15.2.1/bits/random.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
- /usr/include/c++/15.2.1/bits/random.tcc /usr/include/c++/15.2.1/numeric \
+ /home/monolith/Desktop/openGL_learning/src/../src/scene.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/object_picker.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/serialization_utilities.h \
+ /home/monolith/Desktop/openGL_learning/include/../json/single_include/nlohmann/json.hpp \
+ /usr/include/c++/15.2.1/functional \
+ /usr/include/c++/15.2.1/bits/std_function.h \
+ /usr/include/c++/15.2.1/array /usr/include/c++/15.2.1/compare \
+ /usr/include/c++/15.2.1/iterator \
+ /usr/include/c++/15.2.1/bits/stream_iterator.h \
+ /usr/include/c++/15.2.1/utility \
+ /usr/include/c++/15.2.1/bits/stl_relops.h \
+ /usr/include/c++/15.2.1/forward_list \
+ /usr/include/c++/15.2.1/bits/forward_list.h \
+ /usr/include/c++/15.2.1/bits/forward_list.tcc \
+ /usr/include/c++/15.2.1/valarray \
+ /usr/include/c++/15.2.1/bits/valarray_array.h \
+ /usr/include/c++/15.2.1/bits/valarray_array.tcc \
+ /usr/include/c++/15.2.1/bits/valarray_before.h \
+ /usr/include/c++/15.2.1/bits/slice_array.h \
+ /usr/include/c++/15.2.1/bits/valarray_after.h \
+ /usr/include/c++/15.2.1/bits/gslice.h \
+ /usr/include/c++/15.2.1/bits/gslice_array.h \
+ /usr/include/c++/15.2.1/bits/mask_array.h \
+ /usr/include/c++/15.2.1/bits/indirect_array.h \
+ /usr/include/c++/15.2.1/version /usr/include/c++/15.2.1/optional \
+ /usr/include/c++/15.2.1/numeric \
  /usr/include/c++/15.2.1/bits/stl_numeric.h \
  /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
+ /usr/include/c++/15.2.1/any \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imgui.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/imconfig.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_glfw.h \
+ /home/monolith/Desktop/openGL_learning/include/imgui/backends/imgui_impl_opengl3.h \
+ /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h \
+ /home/monolith/Desktop/openGL_learning/src/../src/game_entity.h \
+ /usr/include/c++/15.2.1/random /usr/include/c++/15.2.1/bits/random.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
+ /usr/include/c++/15.2.1/bits/random.tcc \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyColor.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracySystem.hpp \
@@ -502,10 +535,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/../client/tracy_rpmalloc.hpp \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/../client/../common/TracyApi.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyForceInline.hpp \
- /usr/include/c++/15.2.1/utility \
- /usr/include/c++/15.2.1/bits/stl_relops.h /usr/include/c++/15.2.1/array \
- /usr/include/c++/15.2.1/compare /usr/include/c++/15.2.1/thread \
- /usr/include/c++/15.2.1/bits/std_thread.h \
+ /usr/include/c++/15.2.1/thread /usr/include/c++/15.2.1/bits/std_thread.h \
  /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/tracy_SPSCQueue.h \
  /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyCallstack.hpp \

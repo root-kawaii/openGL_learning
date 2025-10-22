@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include "game_entity.h"
 
+class RenderManager;
+
 class Scene
 {
 private:

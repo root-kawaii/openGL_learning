@@ -68,8 +68,6 @@ unsigned int planeVAO;
 // fired
 bool fired = false;
 
-glm::vec3 lightPos(-1.0f, 1.0f, 10.0f);
-
 int main()
 {
 
@@ -94,6 +92,7 @@ int main()
   game->getScene()->setRenderManager(renderManager);
 
   renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
+  renderManager->setScene(game->getScene());
   renderManager->initializeDepthFBO();
 
   // configure global opengl state
@@ -101,62 +100,15 @@ int main()
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  // build and compile shaders
-  // -------------------------
-  // Shader shader("3.2.blending.vs", "3.2.blending.fs");
-
-  // set up vertex data (and buffer(s)) and configure vertex attributes
-  // ------------------------------------------------------------------
-
-  // cubemap
-
-  unsigned int sceneFramebuffer;
-  unsigned int sceneColorTexture;
-  unsigned int sceneDepthTexture;
-  glGenFramebuffers(1, &sceneFramebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-
-  // Create color texture
-  glGenTextures(1, &sceneColorTexture);
-  glBindTexture(GL_TEXTURE_2D, sceneColorTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, game->SCR_WIDTH, game->SCR_HEIGHT,
-               0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         sceneColorTexture, 0);
-
-  // Create depth texture (for depth testing during scene rendering)
-  glGenTextures(1, &sceneDepthTexture);
-  glBindTexture(GL_TEXTURE_2D, sceneDepthTexture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, game->SCR_WIDTH,
-               game->SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                         sceneDepthTexture, 0);
-
-  // Check framebuffer completeness
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    std::cout << "ERROR: Scene framebuffer not complete!" << std::endl;
-  }
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
   unsigned int framebuffer;
   glGenFramebuffers(1, &framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   // shadowmaps
 
   const unsigned int SHADOW_WIDTH = 1440, SHADOW_HEIGHT = 1440;
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Shader skyboxShader = *renderManager->getShader("skybox_shader");
   Shader gridShader2 = *renderManager->getShader("grid_shader_2");
@@ -225,63 +177,27 @@ int main()
 
     // std::cout << deltaTime << std::endl;
 
-    lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
     // input
     // -----
 
     if (game->getGameMode() != PAUSE)
     {
 
-      // 1. render depth of scene to texture (from light's perspective)
-      // --------------------------------------------------------------
-      glm::mat4 lightProjection, lightView;
-      glm::mat4 lightSpaceMatrix;
-      near_plane = 1.0f, far_plane = 75.5f;
-      // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-      lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-      lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-      lightSpaceMatrix = lightProjection * lightView;
-      // render scene from light's point of view
-      depthPrePass.use();
-      depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-      glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-      glBindFramebuffer(GL_FRAMEBUFFER, renderManager->depthFBO);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      glEnable(GL_DEPTH_TEST);
-      auto gameObjects = game->getScene()->getGameObjects();
-      for (auto &i : gameObjects)
-      {
-        renderManager->renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
-      }
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+      renderManager->renderShadowPass();
       // 1. geometry pass: render scene's geometry/color data into gbuffer
       glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      glEnable(GL_DEPTH_TEST); // Re-enable depth testing
+
+      renderManager->renderMainPass(); // work on this
       // ///////////
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
       // glDisable(GL_DEPTH_TEST); // Disable depth testing for post-processing
-      glEnable(GL_DEPTH_TEST); // Re-enable depth testing
-
       ///
-      gameObjects = game->getScene()->getGameObjects();
-      for (auto &i : gameObjects)
-      {
-        renderManager->renderGameObject(*i, lightPos, lightSpaceMatrix);
-
-        if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && uiManager->isCharacterMoving)
-          renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
-      }
-
-      renderManager->renderSceneToIDBuffer(gameObjects);
-      game->getScene()->renderCompactColorPicker();
-      int seg = 1000;
-      renderManager->renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
 
       // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
 
@@ -293,25 +209,25 @@ int main()
       // // model = glm::mat4(1.0f);
       // renderManager->renderGrid(view, projection);
 
-      if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS &&
-          selected == false)
-      {
-        std::cout << "building" << std::endl;
-        game->getScene()->addCubeOnTop("simple_color_shader");
-        selected = true;
-      }
-      if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
-      {
-        selected = false;
-      }
+      // if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS &&
+      //     selected == false)
+      // {
+      //   std::cout << "building" << std::endl;
+      //   game->getScene()->addCubeOnTop("simple_color_shader");
+      //   selected = true;
+      // }
+      // if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
+      // {
+      //   selected = false;
+      // }
 
-      if (glfwGetKey(game->getWindow(), GLFW_KEY_C) == GLFW_PRESS &&
-          selected == false)
-      {
-        std::cout << "building" << std::endl;
-        game->getScene()->copyEntity();
-        selected = true;
-      }
+      // if (glfwGetKey(game->getWindow(), GLFW_KEY_C) == GLFW_PRESS &&
+      //     selected == false)
+      // {
+      //   std::cout << "building" << std::endl;
+      //   game->getScene()->copyEntity();
+      //   selected = true;
+      // }
 
       if (game->getGameMode() == ENGINE)
       {
@@ -332,33 +248,12 @@ int main()
         }
       }
 
-      renderManager->renderMainPass(); // work on this
-
-      uiManager->buildGameMenu();
-      uiManager->buildBottomCenterMenu();
-      uiManager->renderAllUIElements(game->lastX, game->lastY);
+      uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ?????
     }
     else if (game->getGameMode() == PAUSE)
     {
-      ///////////
 
-      // ui->renderUIBBox(1300.0f, 250.0f, -700.0f, 1100.0f);
-
-      // // For softer blending
-      // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      // // Or for additive blending (glowing effect)
-      // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-      // // Render with coordinated colors
-
-      // ui->RenderText(std::to_string(game->camera.Position.x), 10.0f, 10.0f, 1.0f,
-      // glm::vec3(1.0, 0.0f, 0.0f));
-      // ui->RenderText(std::to_string(game->camera.Position.y), 10.0f, 50.0f, 1.0f,
-      // glm::vec3(1.0, 0.0f, 0.0f));
       uiManager->renderPauseMenu();
-
-      ///////////
     }
 
     ///////////////////////////////////////////////////

@@ -2446,10 +2446,94 @@ void RenderManager::renderSkyBox()
 
 void RenderManager::renderShadowPass()
 {
+    // 1. render depth of scene to texture (from light's perspective)
+    // --------------------------------------------------------------
+    static glm::mat4 lightProjection, lightView;
+
+    for (auto lightPos : lightPositions)
+    {
+        lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
+        // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+        lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
+        // render scene from light's point of view
+        Shader depthPrePass = *getShader("depth_pre_pass");
+        depthPrePass.use();
+        depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        auto gameObjects = currentScene->getGameObjects();
+        for (auto &i : gameObjects)
+        {
+            renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderManager::renderMainPass()
 {
 
+    auto gameObjects = currentScene->getGameObjects();
+    gameObjects = currentScene->getGameObjects();
+    for (auto &i : gameObjects)
+    {
+        // for (const auto lightPos : lightPositions)
+        // {
+        renderGameObject(*i, glm::vec3(static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0), static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0), static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0)), lightSpaceMatrix);
+        //}
+
+        // if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && uiManager->isCharacterMoving)
+        //     renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
+    }
+
+    renderSceneToIDBuffer(gameObjects);
+    currentScene->renderCompactColorPicker();
+    int seg = 1000;
+    renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
+
     renderSkyBox();
+}
+
+void RenderManager::sceneBuffersSetup()
+{
+    unsigned int sceneFramebuffer;
+    unsigned int sceneColorTexture;
+    unsigned int sceneDepthTexture;
+    glGenFramebuffers(1, &sceneFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
+
+    // Create color texture
+    glGenTextures(1, &sceneColorTexture);
+    glBindTexture(GL_TEXTURE_2D, sceneColorTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenWidth, screenHeight,
+                 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           sceneColorTexture, 0);
+
+    // Create depth texture (for depth testing during scene rendering)
+    glGenTextures(1, &sceneDepthTexture);
+    glBindTexture(GL_TEXTURE_2D, sceneDepthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, screenWidth,
+                 screenHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           sceneDepthTexture, 0);
+
+    // Check framebuffer completeness
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR: Scene framebuffer not complete!" << std::endl;
+    }
 }

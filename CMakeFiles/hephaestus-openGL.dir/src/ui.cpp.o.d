@@ -436,4 +436,73 @@ CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o: \
  /usr/include/freetype2/freetype/ftimage.h \
  /usr/include/freetype2/freetype/fterrors.h \
  /usr/include/freetype2/freetype/ftmoderr.h \
- /usr/include/freetype2/freetype/fterrdef.h
+ /usr/include/freetype2/freetype/fterrdef.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyColor.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracySystem.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyApi.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyLock.hpp \
+ /usr/include/c++/15.2.1/atomic \
+ /usr/include/c++/15.2.1/bits/atomic_base.h \
+ /usr/include/c++/15.2.1/bits/atomic_lockfree_defines.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracySystem.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyAlign.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyForceInline.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyProfiler.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/tracy_concurrentqueue.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyAlloc.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyApi.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/../client/tracy_rpmalloc.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/../client/../common/TracyApi.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyForceInline.hpp \
+ /usr/include/c++/15.2.1/algorithm \
+ /usr/include/c++/15.2.1/bits/stl_algo.h \
+ /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+ /usr/include/c++/15.2.1/bits/stl_heap.h \
+ /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+ /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+ /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/15.2.1/pstl/execution_defs.h \
+ /usr/include/c++/15.2.1/utility \
+ /usr/include/c++/15.2.1/bits/stl_relops.h /usr/include/c++/15.2.1/thread \
+ /usr/include/c++/15.2.1/bits/std_thread.h \
+ /usr/include/c++/15.2.1/bits/this_thread_sleep.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/tracy_SPSCQueue.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyCallstack.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyApi.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyCallstack.h \
+ /usr/include/sys/param.h /usr/include/signal.h \
+ /usr/include/bits/signum-generic.h /usr/include/bits/signum-arch.h \
+ /usr/include/bits/types/sig_atomic_t.h \
+ /usr/include/bits/types/siginfo_t.h /usr/include/bits/types/__sigval_t.h \
+ /usr/include/bits/siginfo-arch.h /usr/include/bits/siginfo-consts.h \
+ /usr/include/bits/siginfo-consts-arch.h \
+ /usr/include/bits/types/sigval_t.h /usr/include/bits/types/sigevent_t.h \
+ /usr/include/bits/sigevent-consts.h /usr/include/bits/sigaction.h \
+ /usr/include/bits/sigcontext.h /usr/include/bits/types/stack_t.h \
+ /usr/include/sys/ucontext.h /usr/include/bits/sigstack.h \
+ /usr/include/bits/sigstksz.h /usr/include/unistd.h \
+ /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
+ /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
+ /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
+ /usr/include/linux/close_range.h /usr/include/bits/ss_flags.h \
+ /usr/include/bits/types/struct_sigstack.h /usr/include/bits/sigthread.h \
+ /usr/include/bits/signal_ext.h /usr/include/bits/param.h \
+ /usr/include/linux/param.h /usr/include/asm/param.h \
+ /usr/include/asm-generic/param.h /usr/include/execinfo.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyKCore.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyFastVector.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracySysPower.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracySysTime.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyQueue.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyMutex.hpp \
+ /usr/include/c++/15.2.1/mutex /usr/include/c++/15.2.1/bits/std_mutex.h \
+ /usr/include/c++/15.2.1/bits/unique_lock.h \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/../common/TracyProtocol.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyProfiler.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyScoped.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/TracyOpenGL.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/Tracy.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../client/TracyCallstack.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyAlign.hpp \
+ /home/monolith/Desktop/openGL_learning/src/../tracy/public/tracy/../common/TracyAlloc.hpp

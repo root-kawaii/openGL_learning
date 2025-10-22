@@ -1,4 +1,7 @@
 #include "ui.h"
+// Tracy profiler
+#include "../tracy/public/tracy/Tracy.hpp"
+#include "../tracy/public/tracy/TracyOpenGL.hpp"
 
 void UIManager::onMovePressed(std::string value)
 {
@@ -584,6 +587,10 @@ void UIManager::clearUIElements()
 
 void UIManager::renderAllUIElements(float mouseX, float mouseY)
 {
+    ZoneScoped;
+    buildGameMenu();         // Ensure UI elements are built before rendering
+    buildBottomCenterMenu(); // Ensure bottom center menu is built before rendering
+
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

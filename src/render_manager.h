@@ -11,6 +11,7 @@
 #include "../src/shader_m.h"
 #include "../src/texture.h"
 #include "../src/game_object.h"
+#include "../src/scene.h"
 
 #include <random>
 
@@ -19,6 +20,8 @@
 // class Texture;
 // class Mesh;
 // class Camera;
+
+class Scene;
 
 struct GridLineInstance
 {
@@ -58,6 +61,29 @@ struct GrassInstance
 class RenderManager
 {
 private:
+    Scene *currentScene;
+
+    // Internal helper functions
+    void bindTextures(const std::vector<Texture *> &textures);
+    void unbindTextures();
+    void setupShaderUniforms(Shader *shader, const glm::mat4 &modelMatrix);
+    float calculateDistance(const glm::vec3 &position);
+
+    // G-Buffer helper functions
+    bool checkGBufferStatus();
+    void createGBufferTextures();
+
+    // MSAA G-Buffer helper functions
+    bool checkMSAAGBufferStatus();
+    void createMSAAGBufferTextures();
+
+    void initializeGridBuffers();
+
+    void setupIDBuffer();
+    void debugIDBuffer();
+
+    void sceneBuffersSetup();
+
     // Rendering queues
     std::vector<RenderCommand> opaqueQueue;
     std::vector<RenderCommand> transparentQueue;
@@ -75,6 +101,15 @@ private:
     // Camera and matrices
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+    glm::mat4 lightSpaceMatrix;
+    std::vector<glm::vec3> lightPositions = {
+        // glm::vec3(-1.0f, 1.0f, 1.0f),
+        glm::vec3(-1.0f, 1.0f, 10.0f),
+        // glm::vec3(-1.0f, -1.0f, 1.0f),
+        // glm::vec3(10.0f, -10.0f, 10.0f),
+    };
+    float near_plane = 1.0f, far_plane = 75.5f;
+    float SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
     // Render settings
     glm::vec4 clearColor;
@@ -155,6 +190,8 @@ public:
         screenWidth = width;
         screenHeight = height;
     };
+
+    void setScene(Scene *scene) { currentScene = scene; }
 
     // Frame management
     void beginFrame();
@@ -326,24 +363,4 @@ public:
 
     void renderShadowPass();
     void renderMainPass();
-
-private:
-    // Internal helper functions
-    void bindTextures(const std::vector<Texture *> &textures);
-    void unbindTextures();
-    void setupShaderUniforms(Shader *shader, const glm::mat4 &modelMatrix);
-    float calculateDistance(const glm::vec3 &position);
-
-    // G-Buffer helper functions
-    bool checkGBufferStatus();
-    void createGBufferTextures();
-
-    // MSAA G-Buffer helper functions
-    bool checkMSAAGBufferStatus();
-    void createMSAAGBufferTextures();
-
-    void initializeGridBuffers();
-
-    void setupIDBuffer();
-    void debugIDBuffer();
 };
