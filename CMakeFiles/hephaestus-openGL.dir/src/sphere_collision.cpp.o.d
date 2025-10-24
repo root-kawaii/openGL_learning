@@ -395,6 +395,7 @@ CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o: \
  /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/sstream \
  /usr/include/c++/15.2.1/bits/sstream.tcc \
  /usr/include/c++/15.2.1/iostream \
+ /home/monolith/Desktop/openGL_learning/include/../src/globals.h \
  /home/monolith/Desktop/openGL_learning/src/shader_m.h \
  /usr/include/c++/15.2.1/map /usr/include/c++/15.2.1/bits/stl_tree.h \
  /usr/include/c++/15.2.1/bits/stl_map.h \

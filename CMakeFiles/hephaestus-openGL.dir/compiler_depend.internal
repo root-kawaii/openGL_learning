@@ -2652,6 +2652,7 @@ CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.o
 
 CMakeFiles/hephaestus-openGL.dir/src/audio_manager.cpp.o
  /home/monolith/Desktop/openGL_learning/src/audio_manager.cpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h
@@ -3160,6 +3161,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game_entity.h
  /home/monolith/Desktop/openGL_learning/src/game_object.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/input.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/model.h
@@ -3851,6 +3853,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game.cpp.o
 
 CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o
  /home/monolith/Desktop/openGL_learning/src/game_entity.cpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h
@@ -4405,6 +4408,7 @@ CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o
 
 CMakeFiles/hephaestus-openGL.dir/src/game_object.cpp.o
  /home/monolith/Desktop/openGL_learning/src/game_object.cpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h
@@ -5027,6 +5031,7 @@ CMakeFiles/hephaestus-openGL.dir/src/input.cpp.o
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game_entity.h
  /home/monolith/Desktop/openGL_learning/src/game_object.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/model.h
  /home/monolith/Desktop/openGL_learning/src/object_picker.h
@@ -5900,6 +5905,7 @@ CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game_entity.h
  /home/monolith/Desktop/openGL_learning/src/game_object.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/model.h
  /home/monolith/Desktop/openGL_learning/src/object_picker.h
@@ -6293,6 +6299,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game_entity.h
  /home/monolith/Desktop/openGL_learning/src/game_object.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/input.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/object_picker.h
@@ -7003,6 +7010,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o
 
 CMakeFiles/hephaestus-openGL.dir/src/model.cpp.o
  /home/monolith/Desktop/openGL_learning/src/model.cpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h
@@ -7636,6 +7644,7 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o
  /home/monolith/Desktop/openGL_learning/include/glm/vec3.hpp
  /home/monolith/Desktop/openGL_learning/include/glm/vec4.hpp
  /home/monolith/Desktop/openGL_learning/src/camera.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/raycast.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
@@ -8139,6 +8148,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o
  /home/monolith/Desktop/openGL_learning/src/camera.h
  /home/monolith/Desktop/openGL_learning/src/game_entity.h
  /home/monolith/Desktop/openGL_learning/src/game_object.h
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/model.h
  /home/monolith/Desktop/openGL_learning/src/object_picker.h
@@ -8567,6 +8577,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o
 CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o
  /home/monolith/Desktop/openGL_learning/src/scene.cpp
  /home/monolith/Desktop/openGL_learning/json/single_include/nlohmann/json.hpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/ImGuizmo/ImGuizmo.h
@@ -9167,6 +9178,7 @@ CMakeFiles/hephaestus-openGL.dir/src/scene.cpp.o
 
 CMakeFiles/hephaestus-openGL.dir/src/sphere_collision.cpp.o
  /home/monolith/Desktop/openGL_learning/src/sphere_collision.cpp
+ /home/monolith/Desktop/openGL_learning/src/globals.h
  /home/monolith/Desktop/openGL_learning/src/mesh.h
  /home/monolith/Desktop/openGL_learning/src/shader_m.h
  /home/monolith/Desktop/openGL_learning/include/KHR/khrplatform.h

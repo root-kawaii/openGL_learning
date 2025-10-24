@@ -77,6 +77,8 @@ private:
 
     bool MULTISAMPLE = true;
 
+    void handleInput();
+
 public:
     bool initialize();
     void run();

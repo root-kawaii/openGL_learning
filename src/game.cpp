@@ -108,7 +108,22 @@ void Game::update()
 
     // --- Phase 3: Apply All Final Corrections ---
     // This is the single, final application of the camera correction for the frame.
+    handleInput();
     camera.Position += cameraCorrection;
+
+    // --- FPS Limiting to 180 FPS ---
+    const float targetFPS = 250.0f;
+    const float targetFrameTime = 1.0f / targetFPS;
+
+    float frameEndTime = static_cast<float>(glfwGetTime());
+    float frameElapsed = frameEndTime - currentFrame;
+    float sleepTime = targetFrameTime - frameElapsed;
+
+    if (sleepTime > 0.0f)
+    {
+        // Convert to microseconds for more precise sleep
+        std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(sleepTime * 1000000.0f)));
+    }
 }
 
 void Game::render()
@@ -285,4 +300,28 @@ void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime,
 void Game::setLevel(std::string levelName)
 {
     scene = std::make_unique<Scene>(levelName);
+}
+
+std::unordered_map<int, bool> previousKeyStates;
+
+bool wasKeyJustPressed(int key, GLFWwindow *window)
+{
+    bool currentlyPressed = (glfwGetKey(window, key) == GLFW_PRESS);
+    bool wasPressed = previousKeyStates[key];
+
+    previousKeyStates[key] = currentlyPressed;
+
+    return currentlyPressed && !wasPressed;
+}
+
+void Game::handleInput()
+{
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && wasKeyJustPressed(GLFW_KEY_C, window))
+    {
+        if (scene->getSelectedGameObject() == nullptr)
+        {
+            return;
+        }
+        scene->duplicateGameObject(scene->getSelectedGameObject()->ID);
+    }
 }

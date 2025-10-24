@@ -52,6 +52,7 @@ public:
   // Pure data operations
   void addGameObject(std::string gameObjectPath);
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
+  uint32_t duplicateGameObject(uint32_t originalId);
   void destroyGameObject(GameObject *obj);
   std::shared_ptr<GameObject> findObjectByName(const std::string &name);
   std::shared_ptr<GameObject> findObjectById(uint32_t id);

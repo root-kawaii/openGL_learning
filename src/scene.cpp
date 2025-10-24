@@ -183,6 +183,37 @@ uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)
   return id;
 }
 
+uint32_t Scene::duplicateGameObject(uint32_t originalId)
+{
+  auto it = objectsById.find(originalId);
+  if (it == objectsById.end())
+  {
+    std::cerr << "Cannot duplicate: GameObject with ID " << originalId
+              << " not found" << std::endl;
+    return 0; // Invalid ID
+  }
+
+  // Get the original object
+  std::shared_ptr<GameObject> original = it->second;
+
+  // Create a new copy (deep copy via constructor or clone)
+  auto duplicate = std::make_shared<GameObject>(*original);
+
+  // Generate new ID for duplicate
+  uint32_t newId = generateUniqueId();
+  duplicate->ID = newId;
+
+  // Add to both containers
+  objectsById[newId] = duplicate;
+  gameObjects.push_back(duplicate);
+
+  std::cout << "Duplicated GameObject '" << original->name
+            << "' as '" << duplicate->name << "' with ID: " << newId
+            << std::endl;
+
+  return newId;
+}
+
 void Scene::addGameObject(std::string gameObjectPath)
 {
   uint32_t id = generateUniqueId();

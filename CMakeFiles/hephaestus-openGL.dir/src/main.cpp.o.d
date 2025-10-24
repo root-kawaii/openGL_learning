@@ -571,6 +571,7 @@ CMakeFiles/hephaestus-openGL.dir/src/main.cpp.o: \
  /home/monolith/Desktop/openGL_learning/include/assimp/include/assimp/postprocess.h \
  /home/monolith/Desktop/openGL_learning/include/../src/mesh.h \
  /home/monolith/Desktop/openGL_learning/include/../src/shader_m.h \
+ /home/monolith/Desktop/openGL_learning/include/../src/globals.h \
  /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/include/stb_image.h \
  /home/monolith/Desktop/openGL_learning/src/../src/game.h \

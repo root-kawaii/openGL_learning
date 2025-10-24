@@ -348,6 +348,7 @@ CMakeFiles/hephaestus-openGL.dir/src/raycast.cpp.o: \
  /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/sstream \
  /usr/include/c++/15.2.1/bits/sstream.tcc \
  /usr/include/c++/15.2.1/iostream \
+ /home/monolith/Desktop/openGL_learning/src/globals.h \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_inverse.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/../detail/setup.hpp \
  /home/monolith/Desktop/openGL_learning/include/glm/gtc/matrix_inverse.inl

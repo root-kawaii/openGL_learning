@@ -3,6 +3,39 @@
 
 namespace fs = std::filesystem;
 
+bool isInFrustum(const glm::vec3 &position, float radius,
+                 const glm::mat4 &viewProjection)
+{
+    // Transform object position to clip space
+    glm::vec4 clipSpacePos = viewProjection * glm::vec4(position, 1.0f);
+
+    // Perspective divide
+    if (clipSpacePos.w != 0.0f)
+    {
+        clipSpacePos /= clipSpacePos.w;
+    }
+
+    // Add radius in clip space (approximate)
+    float radiusInClipSpace = radius / clipSpacePos.w;
+
+    // Check if within normalized device coordinates [-1, 1] with radius
+    if (clipSpacePos.x < -1.0f - radiusInClipSpace || clipSpacePos.x > 1.0f + radiusInClipSpace)
+        return false;
+    if (clipSpacePos.y < -1.0f - radiusInClipSpace || clipSpacePos.y > 1.0f + radiusInClipSpace)
+        return false;
+    if (clipSpacePos.z < -1.0f - radiusInClipSpace || clipSpacePos.z > 1.0f + radiusInClipSpace)
+        return false;
+
+    return true;
+}
+
+bool isInViewDistance(const glm::vec3 &objectPos, const glm::vec3 &cameraPos, float maxDistance)
+{
+    float distSq = glm::length(objectPos - cameraPos);
+    distSq = distSq * distSq;
+    return distSq < (maxDistance * maxDistance);
+}
+
 float skyboxVertices[] = {
     // positions
     -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
@@ -1101,6 +1134,17 @@ void RenderManager::renderQuadForSmoke()
 void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader shader)
 {
     ZoneScoped;
+    // Fast distance check first
+    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    // Then frustum check
+    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
     shader.use();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
@@ -1115,6 +1159,17 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
 void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader shader, glm::mat4 newProjectionMatrix, glm::mat4 newViewMatrix, glm::mat4 newModel)
 {
     ZoneScoped;
+    // Fast distance check first
+    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    // Then frustum check
+    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
     shader.use();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
@@ -1129,6 +1184,17 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
 void RenderManager::renderGameObject(GameObject &gameObject, glm::vec3 lightPos, glm::mat4 lightMatrix)
 {
     ZoneScoped;
+    // Fast distance check first
+    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    // Then frustum check
+    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
     Shader shader = *getShader(gameObject.shaderName);
     useShader(gameObject, &shader, lightPos, lightMatrix);
     glActiveTexture(GL_TEXTURE0);
@@ -1205,6 +1271,7 @@ void RenderManager::setupIDBuffer()
 
 void RenderManager::renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject>> gameObjects)
 {
+    ZoneScoped;
     // CRITICAL: Check if ID buffer needs recreation due to window resize
     if (idBufferWidth != screenWidth || idBufferHeight != screenHeight)
     {
@@ -1286,6 +1353,16 @@ void RenderManager::renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject
         idShader->setMat4("model", model);
 
         // Draw the object's mesh
+        if (!isInViewDistance(gameObject->position, currentCamera->Position, 1000.0f))
+        {
+            continue;
+        }
+
+        // Then frustum check
+        if (!isInFrustum(gameObject->position, 1.0f, projectionMatrix * viewMatrix))
+        {
+            continue;
+        }
         gameObject->model.Draw(*idShader);
         renderedCount++;
     }
@@ -1502,6 +1579,16 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, glm::vec3 
 void RenderManager::renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color)
 {
     ZoneScoped;
+    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    // Then frustum check
+    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
     shader.use();
 
     shader.setVec4("objectColor", color);
@@ -1539,6 +1626,16 @@ void RenderManager::renderGameObjectWithColor(GameObject &gameObject, Shader sha
 void RenderManager::renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID)
 {
     ZoneScoped;
+    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    // Then frustum check
+    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
     shader.use();
     // Check if texture actually bound
     glm::mat4 model = glm::mat4(1.0f);
@@ -2446,6 +2543,7 @@ void RenderManager::renderSkyBox()
 
 void RenderManager::renderShadowPass()
 {
+    ZoneScoped;
     // 1. render depth of scene to texture (from light's perspective)
     // --------------------------------------------------------------
     static glm::mat4 lightProjection, lightView;
@@ -2477,6 +2575,7 @@ void RenderManager::renderShadowPass()
 
 void RenderManager::renderMainPass()
 {
+    ZoneScoped;
 
     auto gameObjects = currentScene->getGameObjects();
     gameObjects = currentScene->getGameObjects();
@@ -2495,7 +2594,6 @@ void RenderManager::renderMainPass()
     currentScene->renderCompactColorPicker();
     int seg = 1000;
     renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
-
     renderSkyBox();
 }
 

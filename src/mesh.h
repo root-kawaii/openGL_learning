@@ -7,6 +7,8 @@
 
 #include "shader_m.h"
 
+#include "globals.h"
+
 #include <string>
 #include <vector>
 using namespace std;
@@ -98,6 +100,9 @@ public:
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+        verticesDrawn += indices.size();
+        trianglesDrawn += indices.size() / 3;
+        drawCalls++;
 
         // always good practice to set everything back to defaults once configured.
         glActiveTexture(GL_TEXTURE0);

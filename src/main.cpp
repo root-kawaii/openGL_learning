@@ -51,6 +51,8 @@
 #include <../src/raycast.h>
 #include <../src/shader_m.h>
 
+#include "globals.h"
+
 // Note: Uncomment these if needed
 // #include <../src/scene.h>
 // #include "../src/texture_debugger.cpp"
@@ -59,8 +61,6 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-
-unsigned int loadCubemap(vector<std::string> faces);
 
 // meshes
 unsigned int planeVAO;
@@ -159,6 +159,13 @@ int main()
     ImGui::Text("Camera position %f   %f   %f", game->camera.Position.x,
                 game->camera.Position.y, game->camera.Position.z);
     ImGui::Text("Resolution %d   %d", game->SCR_HEIGHT, game->SCR_WIDTH);
+    ImGui::Text("Vertices drawn %d", verticesDrawn);
+    ImGui::Text("Triangles drawn %d", trianglesDrawn);
+    ImGui::Text("Draw calls %d ", drawCalls);
+    verticesDrawn = 0;
+    trianglesDrawn = 0;
+    drawCalls = 0;
+
     levelEditor->renderImGuiEditor();
 
     if (true)
@@ -171,14 +178,6 @@ int main()
       // std::cout << "msaa disabled" <<std::endl;
       glDisable(GL_MULTISAMPLE);
     }
-
-    // per-frame time logic
-    // --------------------
-
-    // std::cout << deltaTime << std::endl;
-
-    // input
-    // -----
 
     if (game->getGameMode() != PAUSE)
     {
@@ -194,40 +193,6 @@ int main()
       renderManager->renderMainPass(); // work on this
       // ///////////
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-      // glDisable(GL_DEPTH_TEST); // Disable depth testing for post-processing
-      ///
-
-      // renderManager->renderGrass(glm::vec3(0.0f, 1.0f, 0.0f), 0.6, 10, 0.6);
-
-      ////////////////////////////////////////////////////
-
-      // Engine Grid
-
-      // gridShader.use();
-      // // model = glm::mat4(1.0f);
-      // renderManager->renderGrid(view, projection);
-
-      // if (glfwGetKey(game->getWindow(), GLFW_KEY_F) == GLFW_PRESS &&
-      //     selected == false)
-      // {
-      //   std::cout << "building" << std::endl;
-      //   game->getScene()->addCubeOnTop("simple_color_shader");
-      //   selected = true;
-      // }
-      // if (glfwGetKey(game->getWindow(), GLFW_KEY_U) == GLFW_PRESS)
-      // {
-      //   selected = false;
-      // }
-
-      // if (glfwGetKey(game->getWindow(), GLFW_KEY_C) == GLFW_PRESS &&
-      //     selected == false)
-      // {
-      //   std::cout << "building" << std::endl;
-      //   game->getScene()->copyEntity();
-      //   selected = true;
-      // }
 
       if (game->getGameMode() == ENGINE)
       {
@@ -248,7 +213,7 @@ int main()
         }
       }
 
-      uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ?????
+      uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ????? seems ok actually
     }
     else if (game->getGameMode() == PAUSE)
     {
@@ -279,37 +244,4 @@ int main()
 
   glfwTerminate();
   return 0;
-}
-
-unsigned int loadCubemap(vector<std::string> faces)
-{
-  unsigned int textureID;
-  glGenTextures(1, &textureID);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-  int width, height, nrChannels;
-  for (unsigned int i = 0; i < faces.size(); i++)
-  {
-    unsigned char *data =
-        stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-    if (data)
-    {
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height,
-                   0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      stbi_image_free(data);
-    }
-    else
-    {
-      std::cout << "Cubemap tex failed to load at path: " << faces[i]
-                << std::endl;
-      stbi_image_free(data);
-    }
-  }
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-  return textureID;
 }

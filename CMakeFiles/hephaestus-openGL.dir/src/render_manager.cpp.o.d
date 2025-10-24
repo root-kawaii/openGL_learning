@@ -410,6 +410,7 @@ CMakeFiles/hephaestus-openGL.dir/src/render_manager.cpp.o: \
  /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/sstream \
  /usr/include/c++/15.2.1/bits/sstream.tcc \
  /usr/include/c++/15.2.1/iostream \
+ /home/monolith/Desktop/openGL_learning/src/../src/globals.h \
  /home/monolith/Desktop/openGL_learning/src/../src/shader_m.h \
  /home/monolith/Desktop/openGL_learning/src/../src/texture.h \
  /usr/include/GLFW/glfw3.h \
