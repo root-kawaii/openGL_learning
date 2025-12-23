@@ -1,5 +1,5 @@
 #include "texture.h"
-#include <../src/stb_image.h>
+#include <../include/stb_image.h>
 
 
 Texture::Texture()

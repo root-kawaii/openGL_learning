@@ -11,7 +11,7 @@
 #include <../src/camera.h>
 #include <../src/model.h>
 
-#include <../src/stb_image.h>
+#include <../include/stb_image.h>
 #include <../src/input.h>
 
 #include <../src/game_object.h>

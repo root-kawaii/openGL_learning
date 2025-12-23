@@ -1,7 +1,61 @@
-backpack/
-.cache/
-.vs/
-ignore/
-CMakeFiles/
-.vscode/
+# Build directories
 build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+*.o
+*.exe
+*.out
+
+# Executables
+hephaestus-openGL
+hephaestus-openGL.exe
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.sln
+
+# VS Code (user-specific settings)
+.vscode/settings.json
+.vscode/launch.json
+
+# Tags
+.tags
+tags
+TAGS
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# ImGui runtime config
+imgui.ini
+
+# Temporary files
+*.tmp
+*.log
+output.json
+*.py
+
+# Third-party library builds
+include/ImGuizmo/bin/
+include/ImGuizmo/*.o
+include/imgui/examples/
+
+# Cache and temporary directories
+.cache/
+ignore/
