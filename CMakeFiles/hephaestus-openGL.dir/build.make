@@ -324,19 +324,19 @@ CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/src/game_manager.cpp -o CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.s
 
-CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
-CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o: src/animation_manager.cpp
-CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o -c /home/monolith/Desktop/openGL_learning/src/animation_manager.cpp
+CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
+CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o: src/animation_controller.cpp
+CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o: CMakeFiles/hephaestus-openGL.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/monolith/Desktop/openGL_learning/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o -MF CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o.d -o CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o -c /home/monolith/Desktop/openGL_learning/src/animation_controller.cpp
 
-CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/monolith/Desktop/openGL_learning/src/animation_manager.cpp > CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.i
+CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/monolith/Desktop/openGL_learning/src/animation_controller.cpp > CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.i
 
-CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/src/animation_manager.cpp -o CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.s
+CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/monolith/Desktop/openGL_learning/src/animation_controller.cpp -o CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.s
 
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: CMakeFiles/hephaestus-openGL.dir/flags.make
 CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o: include/imgui/imgui.cpp
@@ -540,7 +540,7 @@ hephaestus__openGL_OBJECTS = \
 "CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o" \
-"CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o" \
+"CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o" \
 "CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o" \
@@ -576,7 +576,7 @@ hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/ui.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/level_editor.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/game_entity.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/game_manager.cpp.o
-hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o
+hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_demo.cpp.o
 hephaestus-openGL: CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_draw.cpp.o

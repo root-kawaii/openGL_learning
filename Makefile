@@ -417,29 +417,29 @@ include/imgui/imgui_widgets.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/include/imgui/imgui_widgets.cpp.s
 .PHONY : include/imgui/imgui_widgets.cpp.s
 
-src/animation_manager.o: src/animation_manager.cpp.o
-.PHONY : src/animation_manager.o
+src/animation_controller.o: src/animation_controller.cpp.o
+.PHONY : src/animation_controller.o
 
 # target to build an object file
-src/animation_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.o
-.PHONY : src/animation_manager.cpp.o
+src/animation_controller.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.o
+.PHONY : src/animation_controller.cpp.o
 
-src/animation_manager.i: src/animation_manager.cpp.i
-.PHONY : src/animation_manager.i
+src/animation_controller.i: src/animation_controller.cpp.i
+.PHONY : src/animation_controller.i
 
 # target to preprocess a source file
-src/animation_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.i
-.PHONY : src/animation_manager.cpp.i
+src/animation_controller.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.i
+.PHONY : src/animation_controller.cpp.i
 
-src/animation_manager.s: src/animation_manager.cpp.s
-.PHONY : src/animation_manager.s
+src/animation_controller.s: src/animation_controller.cpp.s
+.PHONY : src/animation_controller.s
 
 # target to generate assembly for a file
-src/animation_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_manager.cpp.s
-.PHONY : src/animation_manager.cpp.s
+src/animation_controller.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hephaestus-openGL.dir/build.make CMakeFiles/hephaestus-openGL.dir/src/animation_controller.cpp.s
+.PHONY : src/animation_controller.cpp.s
 
 src/audio_manager.o: src/audio_manager.cpp.o
 .PHONY : src/audio_manager.o
@@ -942,9 +942,9 @@ help:
 	@echo "... include/imgui/imgui_widgets.o"
 	@echo "... include/imgui/imgui_widgets.i"
 	@echo "... include/imgui/imgui_widgets.s"
-	@echo "... src/animation_manager.o"
-	@echo "... src/animation_manager.i"
-	@echo "... src/animation_manager.s"
+	@echo "... src/animation_controller.o"
+	@echo "... src/animation_controller.i"
+	@echo "... src/animation_controller.s"
 	@echo "... src/audio_manager.o"
 	@echo "... src/audio_manager.i"
 	@echo "... src/audio_manager.s"
