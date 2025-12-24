@@ -141,6 +141,62 @@ void RenderManager::present()
     // TODO: Swap buffers or present frame
 }
 
+void RenderManager::checkAndReloadShaders()
+{
+    if (lastTimeSinceShaderReload < 1.0f)
+        return;
+
+    // Reset timer
+    lastTimeSinceShaderReload = 0.0f;
+
+    // std::cout << "Checking shaders for modifications..." << std::endl;
+
+    // Check each shader for file modifications
+    for (auto &[shaderName, shader] : shaders)
+    {
+        if (!shader)
+            continue;
+
+        try
+        {
+            auto vertexPath = shader->getVertexPath();
+            auto fragmentPath = shader->getFragmentPath();
+
+            // Check if shader files exist
+            if (!fs::exists(vertexPath) || !fs::exists(fragmentPath))
+                continue;
+
+            // Get file modification times
+            auto vertexTime = fs::last_write_time(vertexPath);
+            auto fragmentTime = fs::last_write_time(fragmentPath);
+            auto now = fs::file_time_type::clock::now();
+
+            // Check if modified in last 2 seconds
+            bool vertexModified = (now - vertexTime) < std::chrono::seconds(2);
+            bool fragmentModified = (now - fragmentTime) < std::chrono::seconds(2);
+
+            if (vertexModified || fragmentModified)
+            {
+                std::cout << "Reloading shader: " << shaderName << std::endl;
+
+                // Reload the shader
+                shaders[shaderName] = std::make_shared<Shader>(
+                    vertexPath.c_str(),
+                    fragmentPath.c_str(),
+                    shader->hasGeometryShader() ? shader->getGeometryPath().c_str() : nullptr);
+            }
+        }
+        catch (const std::filesystem::filesystem_error &e)
+        {
+            // Silently ignore filesystem errors
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error reloading shader " << shaderName << ": " << e.what() << std::endl;
+        }
+    }
+}
+
 void RenderManager::submit(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, const std::vector<Texture *> &textures)
 {
     // TODO: Add to opaque queue
@@ -1195,11 +1251,12 @@ void RenderManager::renderGameObject(GameObject &gameObject, glm::vec3 lightPos,
     {
         return;
     }
-    Shader shader = *getShader(gameObject.shaderName);
-    useShader(gameObject, &shader, lightPos, lightMatrix);
+    // Use pointer instead of copying the entire shader object
+    Shader *shader = getShader(gameObject.shaderName);
+    useShader(gameObject, shader, lightPos, lightMatrix);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    gameObject.model.Draw(shader);
+    gameObject.model.Draw(*shader);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
@@ -2578,12 +2635,16 @@ void RenderManager::renderMainPass()
     ZoneScoped;
 
     auto gameObjects = currentScene->getGameObjects();
-    gameObjects = currentScene->getGameObjects();
+
+    // Cache the animated light position calculation (was being calculated 3 times per object!)
+    float animatedLightOffset = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
+    glm::vec3 lightPos = glm::vec3(animatedLightOffset, animatedLightOffset, animatedLightOffset);
+
     for (auto &i : gameObjects)
     {
         // for (const auto lightPos : lightPositions)
         // {
-        renderGameObject(*i, glm::vec3(static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0), static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0), static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0)), lightSpaceMatrix);
+        renderGameObject(*i, lightPos, lightSpaceMatrix);
         //}
 
         // if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && uiManager->isCharacterMoving)

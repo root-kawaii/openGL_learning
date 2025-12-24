@@ -159,6 +159,20 @@ public:
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+        // Get primary monitor and its video mode to detect resolution
+        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+        // Use monitor resolution for window size
+        SCR_WIDTH = mode->width;
+        SCR_HEIGHT = mode->height;
+
+        std::cout << "Detected monitor resolution: " << SCR_WIDTH << "x" << SCR_HEIGHT << std::endl;
+
+        // Update mouse position defaults
+        lastX = SCR_WIDTH / 2.0f;
+        lastY = SCR_HEIGHT / 2.0f;
+
         // glfw window creation
         // --------------------
         window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Dreaming...", NULL, NULL);

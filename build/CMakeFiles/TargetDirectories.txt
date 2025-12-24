@@ -1,3 +1,0 @@
-/home/monolith/Desktop/openGL_learning/build/CMakeFiles/hephaestus-openGL.dir
-/home/monolith/Desktop/openGL_learning/build/CMakeFiles/edit_cache.dir
-/home/monolith/Desktop/openGL_learning/build/CMakeFiles/rebuild_cache.dir

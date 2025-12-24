@@ -13,10 +13,15 @@ class Shader
 {
 public:
     unsigned int ID;
+
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader(const char *vertexPath, const char *fragmentPath, const char *geometryPath = nullptr)
+        : vertexPath(vertexPath), fragmentPath(fragmentPath)
     {
+        if (geometryPath != nullptr)
+            this->geometryPath = geometryPath;
+
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
@@ -95,6 +100,14 @@ public:
         if (geometryPath != nullptr)
             glDeleteShader(geometry);
     }
+
+    // Getters for shader paths
+    // ------------------------------------------------------------------------
+    const std::string &getVertexPath() const { return vertexPath; }
+    const std::string &getFragmentPath() const { return fragmentPath; }
+    const std::string &getGeometryPath() const { return geometryPath; }
+    bool hasGeometryShader() const { return !geometryPath.empty(); }
+
     // activate the shader
     // ------------------------------------------------------------------------
     void use()
@@ -165,6 +178,11 @@ public:
     }
 
 private:
+    // Store shader file paths
+    std::string vertexPath;
+    std::string fragmentPath;
+    std::string geometryPath;
+
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
     void checkCompileErrors(GLuint shader, std::string type)

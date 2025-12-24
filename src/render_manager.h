@@ -63,6 +63,8 @@ class RenderManager
 private:
     Scene *currentScene;
 
+    float lastTimeSinceShaderReload = 0.0f;
+
     // Internal helper functions
     void bindTextures(const std::vector<Texture *> &textures);
     void unbindTextures();
@@ -190,6 +192,10 @@ public:
         screenWidth = width;
         screenHeight = height;
     };
+
+    void setTimeSinceLastShaderReload(float time) { lastTimeSinceShaderReload = time; };
+    float getTimeSinceLastShaderReload() const { return lastTimeSinceShaderReload; };
+    void checkAndReloadShaders();
 
     void setScene(Scene *scene) { currentScene = scene; }
 

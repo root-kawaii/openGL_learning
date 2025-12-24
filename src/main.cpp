@@ -125,6 +125,8 @@ int main()
       activeGameEntity = *j;
   }
 
+  float deltaTime = 0.0f;
+  float lastFrame = 0.0f;
   while (!glfwWindowShouldClose(game->getWindow()))
   {
 
@@ -223,6 +225,13 @@ int main()
 
     ///////////////////////////////////////////////////
     game->update();
+
+    // Shader hot-reload: update timer and check for shader changes
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    renderManager->setTimeSinceLastShaderReload(renderManager->getTimeSinceLastShaderReload() + deltaTime);
+    renderManager->checkAndReloadShaders();
 
     // Render ImGui
     ImGui::Render();

@@ -571,12 +571,36 @@ void UIManager::renderPauseMenu()
 {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    float selectedHeight = 100.0f;
-    renderUIBBox(1440, 1440, -720.0f, 720.0f, 1.0f, 1.0f, 0.02f, 1.0f);
-    renderUIBBox(500, 50, 250.0f, 740.0f, 1.0f, 0.0f, 0.00f, 1.0f);
-    RenderText("HP", 720, 720, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    RenderText("HP", 720, 780, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    RenderText("HP", 720, 840, 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Full screen overlay with semi-transparent dark background
+    renderUIBBox(screenWidth, screenHeight, 0.0f, 0.0f, 0.1f, 0.1f, 0.15f, 0.95f);
+
+    // Center panel for pause menu
+    float panelWidth = screenWidth * 0.4f;  // 40% of screen width
+    float panelHeight = screenHeight * 0.6f; // 60% of screen height
+    float panelX = (screenWidth - panelWidth) / 2.0f;
+    float panelY = (screenHeight - panelHeight) / 2.0f;
+
+    // Panel background
+    renderUIBBox(panelWidth, panelHeight, panelX, panelY, 0.2f, 0.2f, 0.25f, 1.0f);
+
+    // Panel border/accent
+    float borderThickness = 3.0f;
+    renderUIBBox(panelWidth, borderThickness, panelX, panelY + panelHeight, 0.9f, 0.8f, 0.3f, 1.0f);
+
+    // Title
+    float titleScale = screenHeight / 1440.0f; // Scale relative to reference resolution
+    RenderText("PAUSED", panelX + panelWidth * 0.35f, panelY + panelHeight - 60.0f * titleScale,
+               1.5f * titleScale, glm::vec3(0.9f, 0.8f, 0.3f));
+
+    // Menu items (centered)
+    float itemY = panelY + panelHeight - 150.0f * titleScale;
+    float itemSpacing = 60.0f * titleScale;
+
+    RenderText("Resume", panelX + panelWidth * 0.4f, itemY, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
+    RenderText("Settings", panelX + panelWidth * 0.4f, itemY - itemSpacing, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
+    RenderText("Exit", panelX + panelWidth * 0.4f, itemY - itemSpacing * 2, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
+
     glDisable(GL_BLEND);
 }
 
@@ -635,7 +659,14 @@ void UIManager::buildGameMenu()
 {
     clearUIElements();
 
-    const float screenH = 1440.0f;
+    // Use actual screen dimensions instead of hardcoded values
+    const float screenH = static_cast<float>(screenHeight);
+    const float screenW = static_cast<float>(screenWidth);
+
+    // Reference resolution is 1440x1440 (original design)
+    // Scale based on screen dimensions
+    const float scaleX = screenW / 1440.0f;
+    const float scaleY = screenH / 1440.0f;
 
     // Colors
     glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
@@ -645,27 +676,27 @@ void UIManager::buildGameMenu()
     glm::vec3 textGray(0.7f, 0.7f, 0.7f);
 
     // === TOP LEFT: Power Grid Panel ===
-    float powerPanelX = 20.0f;
-    float powerPanelY = screenH - 120.0f;
-    float powerPanelW = 500.0f;
-    float powerPanelH = 100.0f;
+    float powerPanelX = 20.0f * scaleX;
+    float powerPanelY = screenH - 120.0f * scaleY;
+    float powerPanelW = 500.0f * scaleX;
+    float powerPanelH = 100.0f * scaleY;
 
     addBox(powerPanelW, powerPanelH, powerPanelX, powerPanelY,
            bgDark.r, bgDark.g, bgDark.b, 0.9f);
 
-    float borderThick = 2.0f;
+    float borderThick = 2.0f * scaleY;
     addBox(powerPanelW, borderThick, powerPanelX, powerPanelY + powerPanelH,
            accent.r, accent.g, accent.b, 1.0f);
 
-    addText("POWER GRID", powerPanelX + 20, powerPanelY + powerPanelH - 30,
-            0.5f, textWhite.r, textWhite.g, textWhite.b);
+    addText("POWER GRID", powerPanelX + 20 * scaleX, powerPanelY + powerPanelH - 30 * scaleY,
+            0.5f * scaleY, textWhite.r, textWhite.g, textWhite.b);
 
     // Power bars
-    float barStartX = powerPanelX + 150;
-    float barY = powerPanelY + 40;
-    float barW = 30.0f;
-    float barH = 40.0f;
-    float barSpacing = 10.0f;
+    float barStartX = powerPanelX + 150 * scaleX;
+    float barY = powerPanelY + 40 * scaleY;
+    float barW = 30.0f * scaleX;
+    float barH = 40.0f * scaleY;
+    float barSpacing = 10.0f * scaleX;
 
     for (int i = 0; i < 7; i++)
     {
@@ -673,66 +704,66 @@ void UIManager::buildGameMenu()
         addBox(barW, barH, barX, barY, 0.9f, 0.5f, 0.2f, 1.0f);
     }
 
-    addText("CLOCK ATB", powerPanelX + 340, powerPanelY + 50,
-            0.4f, textGray.r, textGray.g, textGray.b);
-    addText("15%", powerPanelX + 440, powerPanelY + 25,
-            0.6f, accent.r, accent.g, accent.b);
+    addText("CLOCK ATB", powerPanelX + 340 * scaleX, powerPanelY + 50 * scaleY,
+            0.4f * scaleY, textGray.r, textGray.g, textGray.b);
+    addText("15%", powerPanelX + 440 * scaleX, powerPanelY + 25 * scaleY,
+            0.6f * scaleY, accent.r, accent.g, accent.b);
 
     // === TOP RIGHT: Victory Timer ===
-    float victoryPanelW = 280.0f;
-    float victoryPanelH = 70.0f;
-    float victoryPanelX = 1440.0f - victoryPanelW - 20.0f;
-    float victoryPanelY = screenH - 90.0f;
+    float victoryPanelW = 280.0f * scaleX;
+    float victoryPanelH = 70.0f * scaleY;
+    float victoryPanelX = screenW - victoryPanelW - 20.0f * scaleX;
+    float victoryPanelY = screenH - 90.0f * scaleY;
 
     addBox(victoryPanelW, victoryPanelH, victoryPanelX, victoryPanelY,
            bgDark.r, bgDark.g, bgDark.b, 0.9f);
     addBox(victoryPanelW, borderThick, victoryPanelX, victoryPanelY + victoryPanelH,
            accent.r, accent.g, accent.b, 1.0f);
 
-    addText("Victory in", victoryPanelX + 20, victoryPanelY + 40,
-            0.5f, textGray.r, textGray.g, textGray.b);
-    addText("7", victoryPanelX + 180, victoryPanelY + 30,
-            1.2f, textWhite.r, textWhite.g, textWhite.b);
-    addText("turns", victoryPanelX + 230, victoryPanelY + 40,
-            0.5f, textGray.r, textGray.g, textGray.b);
+    addText("Victory in", victoryPanelX + 20 * scaleX, victoryPanelY + 40 * scaleY,
+            0.5f * scaleY, textGray.r, textGray.g, textGray.b);
+    addText("7", victoryPanelX + 180 * scaleX, victoryPanelY + 30 * scaleY,
+            1.2f * scaleY, textWhite.r, textWhite.g, textWhite.b);
+    addText("turns", victoryPanelX + 230 * scaleX, victoryPanelY + 40 * scaleY,
+            0.5f * scaleY, textGray.r, textGray.g, textGray.b);
 
     // === LEFT SIDE: Unit Selection Panel ===
-    float unitPanelX = 20.0f;
-    float unitPanelY = screenH - 340.0f;
-    float unitPanelW = 150.0f;
-    float unitPanelH = 200.0f;
+    float unitPanelX = 20.0f * scaleX;
+    float unitPanelY = screenH - 340.0f * scaleY;
+    float unitPanelW = 150.0f * scaleX;
+    float unitPanelH = 200.0f * scaleY;
 
     addBox(unitPanelW, unitPanelH, unitPanelX, unitPanelY,
            bgDark.r, bgDark.g, bgDark.b, 0.9f);
     addBox(unitPanelW, borderThick, unitPanelX, unitPanelY + unitPanelH,
            accent.r, accent.g, accent.b, 1.0f);
 
-    float iconSize = 60.0f;
+    float iconSize = 60.0f * scaleX;
 
     // Unit 1
-    addBox(iconSize, iconSize, unitPanelX + 10, unitPanelY + unitPanelH - 70,
+    addBox(iconSize, iconSize, unitPanelX + 10 * scaleX, unitPanelY + unitPanelH - 70 * scaleY,
            0.2f, 0.3f, 0.4f, 1.0f);
-    addBox(iconSize - 4, 4, unitPanelX + 12, unitPanelY + unitPanelH - 74,
+    addBox(iconSize - 4 * scaleX, 4 * scaleY, unitPanelX + 12 * scaleX, unitPanelY + unitPanelH - 74 * scaleY,
            0.3f, 0.8f, 0.3f, 1.0f);
 
     // Unit 2
-    addBox(iconSize, iconSize, unitPanelX + 80, unitPanelY + unitPanelH - 70,
+    addBox(iconSize, iconSize, unitPanelX + 80 * scaleX, unitPanelY + unitPanelH - 70 * scaleY,
            0.2f, 0.4f, 0.3f, 1.0f);
-    addBox(iconSize - 4, 4, unitPanelX + 82, unitPanelY + unitPanelH - 74,
+    addBox(iconSize - 4 * scaleX, 4 * scaleY, unitPanelX + 82 * scaleX, unitPanelY + unitPanelH - 74 * scaleY,
            0.3f, 0.8f, 0.3f, 1.0f);
 
     // "Cycle Unit" button
-    float cycleButtonY = unitPanelY + 20;
-    addBox(unitPanelW - 20, 40, unitPanelX + 10, cycleButtonY,
+    float cycleButtonY = unitPanelY + 20 * scaleY;
+    addBox(unitPanelW - 20 * scaleX, 40 * scaleY, unitPanelX + 10 * scaleX, cycleButtonY,
            bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    addText("Cycle Unit", unitPanelX + 25, cycleButtonY + 12,
-            0.4f, textWhite.r, textWhite.g, textWhite.b);
+    addText("Cycle Unit", unitPanelX + 25 * scaleX, cycleButtonY + 12 * scaleY,
+            0.4f * scaleY, textWhite.r, textWhite.g, textWhite.b);
 
     // === BOTTOM LEFT: Combat Mech Panel ===
-    float mechPanelX = 20.0f;
-    float mechPanelY = 20.0f;
-    float mechPanelW = 380.0f;
-    float mechPanelH = 220.0f;
+    float mechPanelX = 20.0f * scaleX;
+    float mechPanelY = 20.0f * scaleY;
+    float mechPanelW = 380.0f * scaleX;
+    float mechPanelH = 220.0f * scaleY;
 
     addBox(mechPanelW, mechPanelH, mechPanelX, mechPanelY,
            bgDark.r, bgDark.g, bgDark.b, 0.9f);
@@ -851,8 +882,13 @@ bool UIManager::executeUI(UIElement element)
 
 void UIManager::buildBottomCenterMenu()
 {
-    const float screenH = 1440.0f;
-    const float screenW = 1440.0f;
+    const float screenH = static_cast<float>(screenHeight);
+    const float screenW = static_cast<float>(screenWidth);
+
+    // Reference resolution is 1440x1440 (original design)
+    // Scale based on screen dimensions
+    const float scaleX = screenW / 1440.0f;
+    const float scaleY = screenH / 1440.0f;
 
     glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
     glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
@@ -860,17 +896,17 @@ void UIManager::buildBottomCenterMenu()
     glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
     glm::vec3 textGray(0.7f, 0.7f, 0.7f);
 
-    float menuWidth = 200.0f;
-    float menuHeight = 280.0f;
+    float menuWidth = 200.0f * scaleX;
+    float menuHeight = 280.0f * scaleY;
     float menuX = (screenW - menuWidth) / 2.0f;
-    float menuY = 80.0f;
+    float menuY = 80.0f * scaleY;
 
     // Background panel
     addBox(menuWidth, menuHeight, menuX, menuY,
            bgDark.r, bgDark.g, bgDark.b, 0.95f);
 
     // Borders
-    float borderThick = 2.0f;
+    float borderThick = 2.0f * scaleY;
     addBox(menuWidth, borderThick, menuX, menuY + menuHeight,
            accent.r, accent.g, accent.b, 1.0f); // Top
     addBox(menuWidth, borderThick, menuX, menuY,
