@@ -127,6 +127,9 @@ private:
     int verticesRendered;
     int textureCounter;
 
+    // Bone debug mode: 0=normal, 1=bone colors, 2=weight heatmap, 3=dominant bone
+    int boneDebugMode;
+
     // G-Buffer members
     unsigned int gBuffer;
     unsigned int gPosition, gNormal, gAlbedoSpec, gDepth, gLinearDepth, gMetallic, gRoughness;
@@ -196,6 +199,9 @@ public:
     void setTimeSinceLastShaderReload(float time) { lastTimeSinceShaderReload = time; };
     float getTimeSinceLastShaderReload() const { return lastTimeSinceShaderReload; };
     void checkAndReloadShaders();
+
+    void setBoneDebugMode(int mode) { boneDebugMode = mode; };
+    int getBoneDebugMode() const { return boneDebugMode; };
 
     void setScene(Scene *scene) { currentScene = scene; }
 

@@ -31,6 +31,17 @@ struct Vertex
     int m_BoneIDs[MAX_BONE_INFLUENCE];
     // weights from each bone
     float m_Weights[MAX_BONE_INFLUENCE];
+
+    // Constructor to initialize all fields to zero
+    Vertex() : Position(0.0f), Normal(0.0f), TexCoords(0.0f),
+               Tangent(0.0f), Bitangent(0.0f)
+    {
+        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        {
+            m_BoneIDs[i] = 0;
+            m_Weights[i] = 0.0f;
+        }
+    }
 };
 
 struct Mesh_Texture
@@ -40,6 +51,18 @@ struct Mesh_Texture
     string path;
 };
 
+struct BoneInfo
+{
+    glm::mat4 OffsetMatrix;
+    glm::mat4 FinalTransformation;
+
+    BoneInfo(const glm::mat4 &offset)
+    {
+        OffsetMatrix = offset;
+        FinalTransformation = glm::mat4(0.0f);
+    }
+};
+
 class Mesh
 {
 public:
@@ -47,6 +70,7 @@ public:
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Mesh_Texture> textures;
+    vector<BoneInfo> boneInfo;
     unsigned int VAO;
 
     // constructor
@@ -115,6 +139,17 @@ private:
     // initializes all the buffer objects/arrays
     void setupMesh()
     {
+        std::cout << "Setting up mesh with " << vertices.size() << " vertices" << std::endl;
+        std::cout << "Vertex struct size: " << sizeof(Vertex) << " bytes" << std::endl;
+        std::cout << "Offsets:" << std::endl;
+        std::cout << "  Position: " << offsetof(Vertex, Position) << std::endl;
+        std::cout << "  Normal: " << offsetof(Vertex, Normal) << std::endl;
+        std::cout << "  TexCoords: " << offsetof(Vertex, TexCoords) << std::endl;
+        std::cout << "  Tangent: " << offsetof(Vertex, Tangent) << std::endl;
+        std::cout << "  Bitangent: " << offsetof(Vertex, Bitangent) << std::endl;
+        std::cout << "  m_BoneIDs: " << offsetof(Vertex, m_BoneIDs) << std::endl;
+        std::cout << "  m_Weights: " << offsetof(Vertex, m_Weights) << std::endl;
+
         // create buffers/arrays
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);

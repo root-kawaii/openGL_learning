@@ -6,6 +6,8 @@ in VS_OUT {
     vec3 Normal;
     vec2 TexCoords;
     vec4 FragPosLightSpace;
+    flat ivec4 boneIDs;
+    vec4 weights;
 } fs_in;
 
 struct PointLight {

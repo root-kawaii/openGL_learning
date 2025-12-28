@@ -145,7 +145,7 @@ public:
     };
     GameModeEnum getGameMode() { return mode; };
 
-    void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed);
+    void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager);
 
     // Game settings
     GameSettings settings;

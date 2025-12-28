@@ -90,7 +90,7 @@ unsigned int loadCubemapForSkyBox(vector<std::string> faces)
 }
 
 RenderManager::RenderManager()
-    : currentCamera(nullptr), clearColor(0.2f, 0.3f, 0.3f, 1.0f), wireframeMode(false), depthTestEnabled(true), blendingEnabled(false), screenWidth(800), screenHeight(600), drawCalls(0), verticesRendered(0), ambientLight(0.1f, 0.1f, 0.1f)
+    : currentCamera(nullptr), clearColor(0.2f, 0.3f, 0.3f, 1.0f), wireframeMode(false), depthTestEnabled(true), blendingEnabled(false), screenWidth(800), screenHeight(600), drawCalls(0), verticesRendered(0), ambientLight(0.1f, 0.1f, 0.1f), boneDebugMode(0)
 {
     textureCounter = 0;
 }
@@ -1578,6 +1578,7 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, glm::vec3 
     shader->setVec3("lightColor", glm::vec3(1.0f, 0.0f, 0.0f));
     shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     shader->setInt("shadowMap", 0);
+    shader->setInt("debugMode", boneDebugMode);
 
     if (gameObject.shaderName == "water_noG")
     {
@@ -2291,7 +2292,7 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+        std::cerr << "OpenGL error in render grass: " << error << std::endl;
     }
     // Generate instances if not done yet
 
@@ -2400,7 +2401,7 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
     error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+        std::cerr << "OpenGL error in rendergrass: " << error << std::endl;
     }
 
     // Render instanced grass
@@ -2418,7 +2419,7 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
     error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cerr << "OpenGL error in renderSceneToIDBuffer: " << error << std::endl;
+        std::cerr << "OpenGL error in rendergrass: " << error << std::endl;
     }
 
     // grassModel->Draw(*grassShader);

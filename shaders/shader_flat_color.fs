@@ -5,12 +5,26 @@ in VS_OUT {
     vec3 Normal;
     vec2 TexCoords;
     vec4 FragPosLightSpace;
+    flat ivec4 boneIDs;
+    vec4 weights;
 } fs_in;
 
 uniform sampler2D shadowMap;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
+
+// Debug mode: 0 = normal, 1 = bone visualization, 2 = weight heatmap, 3 = dominant bone
+uniform int debugMode;
+
+// Generate distinct color for each bone ID
+vec3 getBoneColor(int boneID) {
+    // Use hash-like function to generate distinct colors
+    float r = fract(sin(float(boneID) * 12.9898) * 43758.5453);
+    float g = fract(sin(float(boneID) * 78.233) * 43758.5453);
+    float b = fract(sin(float(boneID) * 45.164) * 43758.5453);
+    return vec3(r, g, b);
+}
 
 // Enhanced cell shading parameters
 const int levels = 3; // Fewer bands for stronger toon effect
@@ -48,6 +62,69 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main()
 {
+    // Bone visualization mode
+    if (debugMode == 1) {
+        // Visualize bone influences
+        vec3 boneColor = vec3(0.0);
+
+        // Mix colors based on bone weights
+        for (int i = 0; i < 4; i++) {
+            if (fs_in.weights[i] > 0.0) {
+                vec3 influenceColor = getBoneColor(fs_in.boneIDs[i]);
+                boneColor += influenceColor * fs_in.weights[i];
+            }
+        }
+
+        // If no bones influence this vertex, show it in gray
+        float totalWeight = fs_in.weights.x + fs_in.weights.y + fs_in.weights.z + fs_in.weights.w;
+        if (totalWeight < 0.01) {
+            boneColor = vec3(0.5); // Gray for non-rigged vertices
+        }
+
+        FragColor = vec4(boneColor, 1.0);
+        return;
+    }
+
+    // Bone weight heatmap mode
+    if (debugMode == 2) {
+        // Show weight distribution as heatmap
+        float totalWeight = fs_in.weights.x + fs_in.weights.y + fs_in.weights.z + fs_in.weights.w;
+
+        // Heatmap: blue (0) -> green (0.5) -> red (1)
+        vec3 heatmap;
+        if (totalWeight < 0.5) {
+            heatmap = mix(vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0), totalWeight * 2.0);
+        } else {
+            heatmap = mix(vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), (totalWeight - 0.5) * 2.0);
+        }
+
+        FragColor = vec4(heatmap, 1.0);
+        return;
+    }
+
+    // Dominant bone visualization mode
+    if (debugMode == 3) {
+        // Show only the most influential bone
+        int dominantBone = fs_in.boneIDs[0];
+        float maxWeight = fs_in.weights[0];
+
+        for (int i = 1; i < 4; i++) {
+            if (fs_in.weights[i] > maxWeight) {
+                maxWeight = fs_in.weights[i];
+                dominantBone = fs_in.boneIDs[i];
+            }
+        }
+
+        vec3 dominantColor = getBoneColor(dominantBone);
+        if (maxWeight < 0.01) {
+            dominantColor = vec3(0.5); // Gray for non-rigged
+        }
+
+        FragColor = vec4(dominantColor, 1.0);
+        return;
+    }
+
+    // Normal rendering mode (debugMode == 0)
     vec3 color = objectColor.rgb;
     vec3 normal = normalize(fs_in.Normal);
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);

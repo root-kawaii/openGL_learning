@@ -1,8 +1,10 @@
 #include "model.h"
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <stb_image.h>
 #include <iostream>
 #include <string>
+#include <set>
 
 // Constructor definition
 Model::Model(const string &path, bool gamma) : gammaCorrection(gamma)
@@ -13,22 +15,90 @@ Model::Model(const string &path, bool gamma) : gammaCorrection(gamma)
 // Draw method definition
 void Model::Draw(Shader &shader)
 {
+    static vector<glm::mat4> transforms;
+    static glm::mat4 identities[4] = {
+        glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
+    float timeSeconds = glfwGetTime(); // Get time directly from GLFW
+
+    // Calculate bone transforms once for the entire model (shared across all meshes)
+    transforms.clear();
+    if (enableDebugAnimation)
+    {
+
+        GetBoneTransformsWithDebugAnim(transforms, timeSeconds);
+    }
+    else
+    {
+        GetBoneTransforms(transforms, timeSeconds);
+    }
+
+    // Upload bone matrices once (applies to all meshes)
+    GLint location = glGetUniformLocation(shader.ID, "gBones");
+    if (location >= 0)
+    {
+        if (!transforms.empty())
+        {
+            glUniformMatrix4fv(location, transforms.size(), GL_FALSE, &transforms[0][0][0]);
+        }
+        else
+        {
+            // No bones - upload identity matrices
+            glUniformMatrix4fv(location, 4, GL_FALSE, &identities[0][0][0]);
+        }
+    }
+
+    // Draw all meshes (they all use the same global bone array)
     for (unsigned int i = 0; i < meshes.size(); i++)
+    {
         meshes[i].Draw(shader);
+    }
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void Model::loadModel(string const &path)
 {
-    // read file via ASSIMP
-    Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+    // read file via ASSIMP (using shared_ptr to keep scene valid)
+    importer = std::make_shared<Assimp::Importer>();
+    scene = importer->ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
     // check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
-        cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+        cout << "ERROR::ASSIMP:: " << importer->GetErrorString() << endl;
         return;
     }
+
+    // Debug: Print scene information
+    std::cout << "=== Loading Model: " << path << " ===" << std::endl;
+    std::cout << "Number of meshes: " << scene->mNumMeshes << std::endl;
+    std::cout << "Number of animations: " << scene->mNumAnimations << std::endl;
+    std::cout << "Number of materials: " << scene->mNumMaterials << std::endl;
+
+    // Print mesh information
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+        std::cout << "Mesh " << i << ": " << scene->mMeshes[i]->mName.C_Str()
+                  << " - Bones: " << scene->mMeshes[i]->mNumBones
+                  << " - Vertices: " << scene->mMeshes[i]->mNumVertices << std::endl;
+    }
+
+    // Convert and cache the global inverse transform
+    aiMatrix4x4 aiRootTransform = scene->mRootNode->mTransformation;
+
+    // Debug: print root transformation
+    std::cout << "Root node transformation matrix:" << std::endl;
+    std::cout << "  [" << aiRootTransform.a1 << " " << aiRootTransform.a2 << " " << aiRootTransform.a3 << " " << aiRootTransform.a4 << "]" << std::endl;
+    std::cout << "  [" << aiRootTransform.b1 << " " << aiRootTransform.b2 << " " << aiRootTransform.b3 << " " << aiRootTransform.b4 << "]" << std::endl;
+    std::cout << "  [" << aiRootTransform.c1 << " " << aiRootTransform.c2 << " " << aiRootTransform.c3 << " " << aiRootTransform.c4 << "]" << std::endl;
+    std::cout << "  [" << aiRootTransform.d1 << " " << aiRootTransform.d2 << " " << aiRootTransform.d3 << " " << aiRootTransform.d4 << "]" << std::endl;
+
+    // Standard approach: invert the root transformation
+    aiMatrix4x4 aiGlobalInverse = aiRootTransform;
+    aiGlobalInverse.Inverse();
+    m_globalInverseTransform = glm::transpose(glm::mat4(
+        aiGlobalInverse.a1, aiGlobalInverse.a2, aiGlobalInverse.a3, aiGlobalInverse.a4,
+        aiGlobalInverse.b1, aiGlobalInverse.b2, aiGlobalInverse.b3, aiGlobalInverse.b4,
+        aiGlobalInverse.c1, aiGlobalInverse.c2, aiGlobalInverse.c3, aiGlobalInverse.c4,
+        aiGlobalInverse.d1, aiGlobalInverse.d2, aiGlobalInverse.d3, aiGlobalInverse.d4));
+
     // retrieve the directory path of the filepath
     directory = path.substr(0, path.find_last_of('/'));
 
@@ -60,6 +130,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Mesh_Texture> textures;
+    vector<BoneInfo> boneInfo;
 
     // walk through each of the mesh's vertices
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -89,18 +160,37 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.TexCoords = vec;
             // tangent
-            vector.x = mesh->mTangents[i].x;
-            vector.y = mesh->mTangents[i].y;
-            vector.z = mesh->mTangents[i].z;
-            vertex.Tangent = vector;
+            if (mesh->mTangents)
+            {
+                vector.x = mesh->mTangents[i].x;
+                vector.y = mesh->mTangents[i].y;
+                vector.z = mesh->mTangents[i].z;
+                vertex.Tangent = vector;
+            }
             // bitangent
-            vector.x = mesh->mBitangents[i].x;
-            vector.y = mesh->mBitangents[i].y;
-            vector.z = mesh->mBitangents[i].z;
-            vertex.Bitangent = vector;
+            if (mesh->mBitangents)
+            {
+                vector.x = mesh->mBitangents[i].x;
+                vector.y = mesh->mBitangents[i].y;
+                vector.z = mesh->mBitangents[i].z;
+                vertex.Bitangent = vector;
+            }
         }
         else
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+
+        // Debug logging for first vertex
+        if (i == 0)
+        {
+            std::cout << "First vertex data:" << std::endl;
+            std::cout << "  Position: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")" << std::endl;
+            std::cout << "  Normal: (" << vertex.Normal.x << ", " << vertex.Normal.y << ", " << vertex.Normal.z << ")" << std::endl;
+            std::cout << "  TexCoords: (" << vertex.TexCoords.x << ", " << vertex.TexCoords.y << ")" << std::endl;
+            std::cout << "  Tangent: (" << vertex.Tangent.x << ", " << vertex.Tangent.y << ", " << vertex.Tangent.z << ")" << std::endl;
+            std::cout << "  Bitangent: (" << vertex.Bitangent.x << ", " << vertex.Bitangent.y << ", " << vertex.Bitangent.z << ")" << std::endl;
+            std::cout << "  BoneIDs: [" << vertex.m_BoneIDs[0] << ", " << vertex.m_BoneIDs[1] << ", " << vertex.m_BoneIDs[2] << ", " << vertex.m_BoneIDs[3] << "]" << std::endl;
+            std::cout << "  Weights: [" << vertex.m_Weights[0] << ", " << vertex.m_Weights[1] << ", " << vertex.m_Weights[2] << ", " << vertex.m_Weights[3] << "]" << std::endl;
+        }
 
         vertices.push_back(vertex);
     }
@@ -112,6 +202,17 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         for (unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);
     }
+
+    // bones
+    parseBones(mesh, vertices, boneInfo);
+
+    // Debug: Print first vertex after bone parsing
+    if (!vertices.empty() && mesh->mNumBones > 0) {
+        std::cout << "After bone parsing - First vertex:" << std::endl;
+        std::cout << "  BoneIDs: [" << vertices[0].m_BoneIDs[0] << ", " << vertices[0].m_BoneIDs[1] << ", " << vertices[0].m_BoneIDs[2] << ", " << vertices[0].m_BoneIDs[3] << "]" << std::endl;
+        std::cout << "  Weights: [" << vertices[0].m_Weights[0] << ", " << vertices[0].m_Weights[1] << ", " << vertices[0].m_Weights[2] << ", " << vertices[0].m_Weights[3] << "]" << std::endl;
+    }
+
     // process materials
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
     // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
@@ -430,5 +531,336 @@ void Model::SetDiffuseTexture(unsigned int textureID)
         newTexture.type = "texture_diffuse";
         newTexture.path = ""; // Custom texture
         mesh.textures.push_back(newTexture);
+    }
+}
+
+void Model::parseBones(aiMesh *mesh, vector<Vertex> &vertices, vector<BoneInfo> &boneInfo)
+{
+    if (mesh->mNumBones > 0) {
+        std::cout << "Parsing bones for mesh '" << mesh->mName.C_Str() << "': " << mesh->mNumBones << " bones found" << std::endl;
+    }
+
+    for (unsigned int i = 0; i < mesh->mNumBones; i++)
+    {
+        parseSingleBone(i, mesh->mBones[i], vertices, boneInfo);
+    }
+
+    if (mesh->mNumBones == 0) {
+        std::cout << "WARNING: Mesh '" << mesh->mName.C_Str() << "' has NO bones!" << std::endl;
+    }
+}
+
+int Model::GetBoneId(const aiBone *pBone, vector<BoneInfo> &boneInfo)
+{
+    int BoneIndex = 0;
+    string BoneName(pBone->mName.C_Str());
+
+    if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end())
+    {
+        // Allocate an index for a new bone in the GLOBAL bone array
+        BoneIndex = (int)m_BoneNameToIndexMap.size();
+        m_BoneNameToIndexMap[BoneName] = BoneIndex;
+    }
+    else
+    {
+        BoneIndex = m_BoneNameToIndexMap[BoneName];
+    }
+
+    return BoneIndex;
+}
+
+void Model::parseSingleBone(unsigned int i, aiBone *bone, vector<Vertex> &vertices, vector<BoneInfo> &boneInfo)
+{
+    int BoneId = GetBoneId(bone, boneInfo);
+
+    std::cout << "  Bone " << i << ": '" << bone->mName.C_Str() << "' - GlobalID: " << BoneId << " - Weights: " << bone->mNumWeights << std::endl;
+
+    // Add to global bone array if this is a new bone
+    if (BoneId == m_BoneInfo.size())
+    {
+        // Convert aiMatrix4x4 to glm::mat4 (transpose for row-major to column-major)
+        aiMatrix4x4 aiOffset = bone->mOffsetMatrix;
+        glm::mat4 offsetMatrix = glm::transpose(glm::mat4(
+            aiOffset.a1, aiOffset.a2, aiOffset.a3, aiOffset.a4,
+            aiOffset.b1, aiOffset.b2, aiOffset.b3, aiOffset.b4,
+            aiOffset.c1, aiOffset.c2, aiOffset.c3, aiOffset.c4,
+            aiOffset.d1, aiOffset.d2, aiOffset.d3, aiOffset.d4));
+
+        BoneInfo newBone(offsetMatrix);
+        m_BoneInfo.push_back(newBone);
+        std::cout << "    Added new bone to global array (total: " << m_BoneInfo.size() << ")" << std::endl;
+    }
+
+    // Assign bone weights to vertices
+    int weightsAssigned = 0;
+    for (unsigned int j = 0; j < bone->mNumWeights; j++)
+    {
+        unsigned int vertexID = bone->mWeights[j].mVertexId;
+        float weight = bone->mWeights[j].mWeight;
+
+        Vertex &vertex = vertices[vertexID];
+
+        for (int k = 0; k < MAX_BONE_INFLUENCE; k++)
+        {
+            if (vertex.m_Weights[k] == 0.0f)
+            {
+                vertex.m_BoneIDs[k] = BoneId; // This is now a global bone index
+                vertex.m_Weights[k] = weight;
+                weightsAssigned++;
+                break;
+            }
+        }
+    }
+    std::cout << "    Assigned " << weightsAssigned << " weights to vertices" << std::endl;
+}
+
+void Model::GetBoneTransforms(vector<glm::mat4> &transforms, float timeSeconds) const
+{
+    transforms.clear();
+
+    if (!scene || !scene->mAnimations || scene->mNumAnimations == 0)
+    {
+        static bool printed = false;
+        if (!printed) {
+            std::cout << "No animations found in scene" << std::endl;
+            printed = true;
+        }
+        return;
+    }
+
+    static bool printedAnimInfo = false;
+    if (!printedAnimInfo) {
+        std::cout << "Animation found: " << scene->mAnimations[0]->mName.C_Str() << std::endl;
+        std::cout << "  Duration: " << scene->mAnimations[0]->mDuration << " ticks" << std::endl;
+        std::cout << "  Ticks per second: " << scene->mAnimations[0]->mTicksPerSecond << std::endl;
+        std::cout << "  Number of channels: " << scene->mAnimations[0]->mNumChannels << std::endl;
+        printedAnimInfo = true;
+    }
+
+    float ticksPerSecond = (float)(scene->mAnimations[0]->mTicksPerSecond != 0 ? scene->mAnimations[0]->mTicksPerSecond : 25.0);
+    float timeInTicks = timeSeconds * ticksPerSecond;
+    float animationTime = fmod(timeInTicks, (float)scene->mAnimations[0]->mDuration);
+
+    if (!scene || !scene->mRootNode || m_BoneInfo.empty())
+    {
+        return;
+    }
+
+    // Traverse the entire skeleton hierarchy using cached global inverse transform
+    ReadNodeHierarchy(animationTime, m_BoneInfo, scene->mRootNode, m_globalInverseTransform);
+
+    // Collect all bone transforms
+    for (const auto &bone : m_BoneInfo)
+    {
+        transforms.push_back(bone.FinalTransformation);
+    }
+}
+
+void Model::GetBoneTransformsWithDebugAnim(vector<glm::mat4> &transforms, float time) const
+{
+    transforms.clear();
+
+    static bool printedDebugInfo = false;
+    if (!printedDebugInfo) {
+        std::cout << "Debug Animation Active - Animating specific bones procedurally" << std::endl;
+        std::cout << "  Bones being animated: Arms (L1, L2, R1, R2) and Flaps (1, 2, 3)" << std::endl;
+        printedDebugInfo = true;
+    }
+
+    if (m_BoneInfo.empty())
+        return;
+
+    if (!scene || !scene->mRootNode)
+        return;
+
+    // First calculate normal bone transforms using cached global inverse transform
+    // For debug animation, we use time=0 to get bind pose, then apply procedural animations
+    ReadNodeHierarchy(0.0f, m_BoneInfo, scene->mRootNode, m_globalInverseTransform);
+
+    // Build a map of bone names we want to animate
+    static std::set<std::string> animatedBones = {
+        "ArmL1_01", "ArmL2_02",            // Left arm
+        "ArmR1_07", "ArmR2_08",            // Right arm
+        "Flap1_06", "Flap2_05", "Flap3_04" // Flaps for extra movement
+    };
+
+    // Then apply exaggerated animation on top
+    for (size_t i = 0; i < m_BoneInfo.size(); i++)
+    {
+        glm::mat4 finalTransform = m_BoneInfo[i].FinalTransformation;
+
+        // Find bone name for this index
+        std::string boneName;
+        for (const auto &bone_pair : m_BoneNameToIndexMap)
+        {
+            if (bone_pair.second == i)
+            {
+                boneName = bone_pair.first;
+                break;
+            }
+        }
+
+        // Only animate specific bones
+        if (animatedBones.find(boneName) != animatedBones.end())
+        {
+            // Create exaggerated rotation animations
+            float angle = sin(time * 2.0f + i * 0.5f) * 1.0f; // Exaggerated angle
+
+            // Different rotation axes for different bones
+            glm::vec3 rotationAxis;
+            if (boneName.find("Arm") != std::string::npos)
+            {
+                // Arms rotate around Z axis (side to side)
+                rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+                angle *= 1.5f; // Extra exaggeration for arms
+            }
+            else if (boneName.find("Flap") != std::string::npos)
+            {
+                // Flaps rotate around Y axis
+                rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+            }
+            else
+            {
+                rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+            }
+
+            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, rotationAxis);
+
+            // Apply rotation AFTER the bone transform (in bone space)
+            finalTransform = finalTransform * rotation;
+        }
+
+        transforms.push_back(finalTransform);
+    }
+}
+
+void Model::ReadNodeHierarchy(float animationTime, vector<BoneInfo> &boneInfo, const aiNode *pNode, const glm::mat4 &ParentTransform) const
+{
+    string NodeName(pNode->mName.data);
+
+    const aiAnimation *pAnimation = scene->mAnimations[0];
+
+    // Start with the static node transformation
+    aiMatrix4x4 aiNodeTransform = pNode->mTransformation;
+    glm::mat4 NodeTransformation = glm::transpose(glm::mat4(
+        aiNodeTransform.a1, aiNodeTransform.a2, aiNodeTransform.a3, aiNodeTransform.a4,
+        aiNodeTransform.b1, aiNodeTransform.b2, aiNodeTransform.b3, aiNodeTransform.b4,
+        aiNodeTransform.c1, aiNodeTransform.c2, aiNodeTransform.c3, aiNodeTransform.c4,
+        aiNodeTransform.d1, aiNodeTransform.d2, aiNodeTransform.d3, aiNodeTransform.d4));
+
+    // Check if this node has an animation channel
+    const aiNodeAnim *pNodeAnim = nullptr;
+    for (uint i = 0; i < pAnimation->mNumChannels; i++)
+    {
+        if (string(pAnimation->mChannels[i]->mNodeName.data) == NodeName)
+        {
+            pNodeAnim = pAnimation->mChannels[i];
+            break;
+        }
+    }
+
+    // If this node is animated, interpolate between keyframes
+    if (pNodeAnim)
+    {
+        // Interpolate position
+        aiVector3D position(0.0f, 0.0f, 0.0f);
+        if (pNodeAnim->mNumPositionKeys > 0)
+        {
+            // For simplicity, just use the first key (you should interpolate based on animationTime)
+            position = pNodeAnim->mPositionKeys[0].mValue;
+
+            // Find the keyframes to interpolate between
+            for (uint i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
+            {
+                if (animationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime)
+                {
+                    uint nextKey = i + 1;
+                    float deltaTime = (float)(pNodeAnim->mPositionKeys[nextKey].mTime - pNodeAnim->mPositionKeys[i].mTime);
+                    float factor = (animationTime - (float)pNodeAnim->mPositionKeys[i].mTime) / deltaTime;
+
+                    const aiVector3D &start = pNodeAnim->mPositionKeys[i].mValue;
+                    const aiVector3D &end = pNodeAnim->mPositionKeys[nextKey].mValue;
+                    position = start + (end - start) * factor;
+                    break;
+                }
+            }
+        }
+
+        // Interpolate rotation
+        aiQuaternion rotation(1.0f, 0.0f, 0.0f, 0.0f);
+        if (pNodeAnim->mNumRotationKeys > 0)
+        {
+            rotation = pNodeAnim->mRotationKeys[0].mValue;
+
+            for (uint i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++)
+            {
+                if (animationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime)
+                {
+                    uint nextKey = i + 1;
+                    float deltaTime = (float)(pNodeAnim->mRotationKeys[nextKey].mTime - pNodeAnim->mRotationKeys[i].mTime);
+                    float factor = (animationTime - (float)pNodeAnim->mRotationKeys[i].mTime) / deltaTime;
+
+                    const aiQuaternion &start = pNodeAnim->mRotationKeys[i].mValue;
+                    const aiQuaternion &end = pNodeAnim->mRotationKeys[nextKey].mValue;
+                    aiQuaternion::Interpolate(rotation, start, end, factor);
+                    rotation.Normalize();
+                    break;
+                }
+            }
+        }
+
+        // Interpolate scaling
+        aiVector3D scaling(1.0f, 1.0f, 1.0f);
+        if (pNodeAnim->mNumScalingKeys > 0)
+        {
+            scaling = pNodeAnim->mScalingKeys[0].mValue;
+
+            for (uint i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
+            {
+                if (animationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime)
+                {
+                    uint nextKey = i + 1;
+                    float deltaTime = (float)(pNodeAnim->mScalingKeys[nextKey].mTime - pNodeAnim->mScalingKeys[i].mTime);
+                    float factor = (animationTime - (float)pNodeAnim->mScalingKeys[i].mTime) / deltaTime;
+
+                    const aiVector3D &start = pNodeAnim->mScalingKeys[i].mValue;
+                    const aiVector3D &end = pNodeAnim->mScalingKeys[nextKey].mValue;
+                    scaling = start + (end - start) * factor;
+                    break;
+                }
+            }
+        }
+
+        // Combine into transformation matrix
+        aiMatrix4x4 matTranslation, matRotation, matScaling;
+        aiMatrix4x4::Translation(position, matTranslation);
+        matRotation = aiMatrix4x4(rotation.GetMatrix());
+        aiMatrix4x4::Scaling(scaling, matScaling);
+
+        aiNodeTransform = matTranslation * matRotation * matScaling;
+
+        NodeTransformation = glm::transpose(glm::mat4(
+            aiNodeTransform.a1, aiNodeTransform.a2, aiNodeTransform.a3, aiNodeTransform.a4,
+            aiNodeTransform.b1, aiNodeTransform.b2, aiNodeTransform.b3, aiNodeTransform.b4,
+            aiNodeTransform.c1, aiNodeTransform.c2, aiNodeTransform.c3, aiNodeTransform.c4,
+            aiNodeTransform.d1, aiNodeTransform.d2, aiNodeTransform.d3, aiNodeTransform.d4));
+    }
+
+    glm::mat4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+    auto it = m_BoneNameToIndexMap.find(NodeName);
+    if (it != m_BoneNameToIndexMap.end())
+    {
+        uint BoneIndex = it->second;
+        // Check if this bone index is valid for this mesh
+        if (BoneIndex < boneInfo.size())
+        {
+            boneInfo[BoneIndex].FinalTransformation = m_globalInverseTransform * GlobalTransformation * boneInfo[BoneIndex].OffsetMatrix;
+        }
+    }
+
+    for (uint i = 0; i < pNode->mNumChildren; i++)
+    {
+        ReadNodeHierarchy(animationTime, boneInfo, pNode->mChildren[i], GlobalTransformation);
     }
 }

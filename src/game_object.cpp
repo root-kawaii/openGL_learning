@@ -42,7 +42,7 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 }
 
 GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
-    : model(gameObject->model) // Copy the model
+    : model(gameObject->modelPath) // Load model from path instead of copying
       ,
       modelPath(gameObject->modelPath) // Copy model path
       ,

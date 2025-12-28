@@ -61,7 +61,7 @@ void Game::update()
     ImGui::Text("FPS %f", 1 / deltaTime);
     lastFrame = currentFrame;
 
-    inputManager.processInput(this, window, &camera, deltaTime, MULTISAMPLE, seed);
+    inputManager.processInput(this, window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
     // A temporary place to store all corrections for the frame.
     // This is the key change to prevent cumulative errors.
     glm::vec3 cameraCorrection = glm::vec3(0.0f);
@@ -382,9 +382,9 @@ void Game::cleanup()
 //     // TODO: Save current game progress
 // }
 
-void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
+void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager)
 {
-    inputManager.processInput(this, window, camera, deltaTime, shadows, seed);
+    inputManager.processInput(this, window, camera, deltaTime, shadows, seed, renderManager);
 }
 
 void Game::setLevel(std::string levelName)

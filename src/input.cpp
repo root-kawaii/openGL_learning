@@ -22,7 +22,7 @@
 bool gameMode = false;
 bool shadowsKeyPressed = false;
 
-void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed)
+void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager)
 {
     if (!gameMode)
     {
@@ -36,6 +36,12 @@ void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, 
             camera->ProcessKeyboard(LEFT, deltaTime);
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             camera->ProcessKeyboard(RIGHT, deltaTime);
+        if (wasKeyJustPressed(GLFW_KEY_B, window))
+        {
+            int currentMode = renderManager->getBoneDebugMode();
+            renderManager->setBoneDebugMode((currentMode + 1) % 4);
+            std::cout << "Bone debug mode: " << renderManager->getBoneDebugMode() << std::endl;
+        }
         // if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
         //     for(int indexone = 0; indexone < 5; indexone++){
         //         if(indexone == 3) {return;}
