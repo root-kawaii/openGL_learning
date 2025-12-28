@@ -16,12 +16,21 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+static const float REFERENCE_WIDTH = 1440.0f;
+static const float REFERENCE_HEIGHT = 1440.0f;
+
+// =============================================================================
+// STRUCTS
+// =============================================================================
 struct Character
 {
-    unsigned int TextureID; // ID handle of the glyph texture
-    glm::ivec2 Size;        // Size of glyph
-    glm::ivec2 Bearing;     // Offset from baseline to left/top of glyph
-    unsigned int Advance;   // Offset to advance to next glyph
+    unsigned int TextureID;
+    glm::ivec2 Size;
+    glm::ivec2 Bearing;
+    unsigned int Advance;
 };
 
 enum UIElementEnum
@@ -35,18 +44,21 @@ struct UIElement
     std::string text;
     float width;
     float height;
-    float x_pos;
-    float y_pos;
+    float x_pos; // Stored in SCREEN coordinates
+    float y_pos; // Stored in SCREEN coordinates
     float r;
     float g;
     float b;
     float a;
-    float scale;
+    float scale; // Stored in SCREEN scale
     UIElementEnum elementType;
     bool pressed = false;
-    std::function<void(std::string)> functionPtr; // Changed from function pointer to std::function
+    std::function<void(std::string)> functionPtr;
 };
 
+// =============================================================================
+// UI MANAGER CLASS
+// =============================================================================
 class UIManager
 {
 private:
@@ -62,67 +74,91 @@ private:
     std::map<char, Character> characters;
     std::vector<UIElement> uiElements;
 
-    // Shader sources
     Shader uiShader;
     Shader textShader;
 
+    // Setup
     void setupQuadGeometry();
     unsigned int setUpFont();
+
+    // Coordinate scaling helpers (reference -> screen)
+    float scaleX(float value) const
+    {
+        return value * (static_cast<float>(screenWidth) / REFERENCE_WIDTH);
+    }
+
+    float scaleY(float value) const
+    {
+        return value * (static_cast<float>(screenHeight) / REFERENCE_HEIGHT);
+    }
+
+    // Low-level rendering (works in SCREEN coordinates)
+    void renderBoxScreen(float x, float y, float w, float h,
+                         float r, float g, float b, float a);
+    void renderTextScreen(const std::string &text, float x, float y,
+                          float scale, glm::vec3 color);
 
 public:
     unsigned int screenWidth;
     unsigned int screenHeight;
-
     bool isCharacterMoving = false;
 
     UIManager(unsigned int height, unsigned int width);
     ~UIManager();
 
-    // Callback member functions
+    // Callbacks
     void onMovePressed(std::string value);
     void onActPressed(std::string value);
     void onWaitPressed(std::string value);
     void onStatusPressed(std::string value);
     void onAutoBattlePressed(std::string value);
 
-    void setWindow(GLFWwindow *gameWindow) { window = gameWindow; };
-    void setInputManager(InputManager *inputsManager) { inputManager = inputsManager; };
+    // Setters
+    void setWindow(GLFWwindow *gameWindow) { window = gameWindow; }
+    void setInputManager(InputManager *inputsManager) { inputManager = inputsManager; }
 
+    // Input handling
     bool isPressed(UIElement element);
     bool executeUI(UIElement element);
+    bool isMouseOver(float mouseX, float mouseY, float width, float height,
+                     float x_pos, float y_pos);
 
+    // =========================================================================
+    // PUBLIC RENDERING API (accepts REFERENCE coordinates - 1440x1440)
+    // =========================================================================
     void renderUIBBox(float width, float height, float x_pos, float y_pos);
     void renderUIBBox(float width, float height, float x_pos, float y_pos,
                       float r, float g, float b, float alpha = 1.0f);
-
-    // Utility functions
+    void RenderText(std::string text, float x, float y, float scale, glm::vec3 color);
     void setProjectionMatrix(const glm::mat4 &matrix);
 
-    void RenderText(std::string text, float x, float y, float scale, glm::vec3 color);
+    // =========================================================================
+    // UI BUILDING & RENDERING
+    // =========================================================================
+    void buildGameMenu();
+    void buildBottomCenterMenu();
+    void renderAllUIElements(float mouseX, float mouseY);
+    void clearUIElements();
 
+    // Legacy standalone render functions
     void renderGameMenu();
     void renderMenuDecorations(float menuX, float menuY, float menuWidth, float menuHeight);
     void renderStatusBars();
     void renderPauseMenu();
 
-    void buildGameMenu();
-    void buildBottomCenterMenu(); // Changed name from buildBottomCenterMenuWithCallbacks
+    // =========================================================================
+    // ELEMENT MANAGEMENT (accepts REFERENCE coordinates, stores SCREEN coords)
+    // =========================================================================
 
-    void renderAllUIElements(float mouseX, float mouseY);
-    void clearUIElements();
-
-    bool isMouseOver(float mouseX, float mouseY, float element_width, float element_height,
-                     float element_x_pos, float element_y_pos);
-
-    // addBox without callback
+    // Add box without callback (REFERENCE coordinates)
     void addBox(float width, float height, float x, float y,
                 float r, float g, float b, float a)
     {
         UIElement element;
-        element.width = width;
-        element.height = height;
-        element.x_pos = x;
-        element.y_pos = y;
+        element.width = scaleX(width);
+        element.height = scaleY(height);
+        element.x_pos = scaleX(x);
+        element.y_pos = scaleY(y);
         element.r = r;
         element.g = g;
         element.b = b;
@@ -132,16 +168,16 @@ public:
         uiElements.push_back(element);
     }
 
-    // addBox with callback - now accepts std::function (including lambdas)
+    // Add box with callback (REFERENCE coordinates)
     void addBox(float width, float height, float x, float y,
                 float r, float g, float b, float a,
                 std::function<void(std::string)> functionPointer)
     {
         UIElement element;
-        element.width = width;
-        element.height = height;
-        element.x_pos = x;
-        element.y_pos = y;
+        element.width = scaleX(width);
+        element.height = scaleY(height);
+        element.x_pos = scaleX(x);
+        element.y_pos = scaleY(y);
         element.r = r;
         element.g = g;
         element.b = b;
@@ -151,14 +187,15 @@ public:
         uiElements.push_back(element);
     }
 
+    // Add text (REFERENCE coordinates)
     void addText(const std::string &text, float x, float y, float scale,
                  float r, float g, float b)
     {
         UIElement element;
         element.text = text;
-        element.x_pos = x;
-        element.y_pos = y;
-        element.scale = scale;
+        element.x_pos = scaleX(x);
+        element.y_pos = scaleY(y);
+        element.scale = scale * (static_cast<float>(screenWidth) / REFERENCE_WIDTH);
         element.r = r;
         element.g = g;
         element.b = b;

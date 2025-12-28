@@ -36,6 +36,26 @@
 
 class InputManager;
 
+// Settings structure for game configuration
+struct GameSettings
+{
+    // Graphics
+    unsigned int resolutionWidth = 1920;
+    unsigned int resolutionHeight = 1080;
+    bool fullscreen = false;
+
+    // Audio
+    float masterVolume = 0.8f;
+
+    // Gameplay
+    std::string difficulty = "normal";
+    bool autosave = true;
+    int autosaveInterval = 300;
+
+    // Controls
+    bool invertY = false;
+};
+
 enum GameModeEnum
 {
     GAME,
@@ -78,6 +98,7 @@ private:
     bool MULTISAMPLE = true;
 
     void handleInput();
+    void loadSettings();
 
 public:
     bool initialize();
@@ -126,6 +147,9 @@ public:
 
     void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed);
 
+    // Game settings
+    GameSettings settings;
+
     unsigned int SCR_WIDTH = 1440;
     unsigned int SCR_HEIGHT = 1440;
 
@@ -160,8 +184,8 @@ public:
 #endif
 
         // Get primary monitor and its video mode to detect resolution
-        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+        GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(primaryMonitor);
 
         // Use monitor resolution for window size
         SCR_WIDTH = mode->width;

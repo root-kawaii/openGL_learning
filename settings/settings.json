@@ -1,0 +1,20 @@
+{
+  "graphics": {
+    "resolution": {
+      "width": 777,
+      "height": 777,
+      "fullscreen": false
+    }
+  },
+  "audio": {
+    "masterVolume": 0.8
+  },
+  "gameplay": {
+    "difficulty": "normal",
+    "autosave": true,
+    "autosaveInterval": 300
+  },
+  "controls": {
+    "invertY": false
+  }
+}

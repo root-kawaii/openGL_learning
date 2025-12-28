@@ -13,9 +13,16 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
+- need a playable version asap so in order:
+- - need to select game entity and click on target tile if it is a tile on which we can move
+- - clean up board
+- - create the TURN
+- - test 2 vs 2 or something like that
+- - add ball interaction and pass and shoot maybe
+- - add actions such as push or jump
+- - add actions such block
+- - test with more vertical arenas
 
-- we have to do game ui unfortunately, very basic but i need it to play the game
-- let us start with the action menu and the arrow rendering so I CAN ACTUALLY PLAY
 
 
 - instancing of cubes and tiles

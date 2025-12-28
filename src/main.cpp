@@ -129,7 +129,6 @@ int main()
   float lastFrame = 0.0f;
   while (!glfwWindowShouldClose(game->getWindow()))
   {
-
     uiManager->screenHeight = game->SCR_HEIGHT;
     uiManager->screenWidth = game->SCR_WIDTH;
     glm::vec3 lastFrameCameraPos = game->camera.Position;

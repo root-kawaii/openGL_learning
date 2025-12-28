@@ -3,6 +3,9 @@
 #include "../tracy/public/tracy/Tracy.hpp"
 #include "../tracy/public/tracy/TracyOpenGL.hpp"
 
+// =============================================================================
+// CALLBACKS
+// =============================================================================
 void UIManager::onMovePressed(std::string value)
 {
     std::cout << "Move button pressed" << std::endl;
@@ -12,31 +15,30 @@ void UIManager::onMovePressed(std::string value)
 void UIManager::onActPressed(std::string value)
 {
     std::cout << "Act button pressed" << std::endl;
-    // Add your act logic here
 }
 
 void UIManager::onWaitPressed(std::string value)
 {
     std::cout << "Wait button pressed" << std::endl;
-    // Add your wait logic here
 }
 
 void UIManager::onStatusPressed(std::string value)
 {
     std::cout << "Status button pressed" << std::endl;
-    // Add your status logic here
 }
 
 void UIManager::onAutoBattlePressed(std::string value)
 {
     std::cout << "Auto-battle button pressed" << std::endl;
-    // Add your auto-battle logic here
 }
 
-UIManager::UIManager(unsigned int height, unsigned int width) : uiShader("shaders/ui_box_shader.vs", "shaders/ui_box_shader.fs"),
-                                                                textShader("shaders/text.vs", "shaders/text.fs")
+// =============================================================================
+// CONSTRUCTOR / DESTRUCTOR
+// =============================================================================
+UIManager::UIManager(unsigned int height, unsigned int width)
+    : uiShader("shaders/ui_box_shader.vs", "shaders/ui_box_shader.fs"),
+      textShader("shaders/text.vs", "shaders/text.fs")
 {
-    // Initialize OpenGL objects
     screenHeight = height;
     screenWidth = width;
     textShaderProgram = textShader.ID;
@@ -47,13 +49,12 @@ UIManager::UIManager(unsigned int height, unsigned int width) : uiShader("shader
 
 UIManager::~UIManager()
 {
-    // Clean up OpenGL resources
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
-    // glDeleteBuffers(1, &EBO);
     glDeleteProgram(uiShaderProgram);
 }
 
+// =============================================================================
+// OPENGL SETUP
+// =============================================================================
 unsigned int UIManager::setUpFont()
 {
     FT_Library ft;
@@ -72,39 +73,28 @@ unsigned int UIManager::setUpFont()
     }
 
     FT_Set_Pixel_Sizes(face, 0, 48);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     for (unsigned char c = 0; c < 128; c++)
     {
-        // load character glyph
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
         {
             std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
             continue;
         }
 
-        // generate texture
         unsigned int texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED,
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+                     face->glyph->bitmap.width, face->glyph->bitmap.rows,
+                     0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 
-        // set texture options
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        // now store character for later use
         Character character = {
             texture,
             glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
@@ -113,8 +103,7 @@ unsigned int UIManager::setUpFont()
         characters.insert(std::pair<char, Character>(c, character));
     }
 
-    // Clean up resources after processing all characters
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // restore default alignment
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
@@ -128,7 +117,7 @@ unsigned int UIManager::setUpFont()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    return 0; // success
+    return 0;
 }
 
 void UIManager::setupQuadGeometry()
@@ -138,38 +127,26 @@ void UIManager::setupQuadGeometry()
     glGenBuffers(1, &uiEBO);
 
     glBindVertexArray(uiVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-    // Allocate buffer for dynamic data
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, NULL, GL_DYNAMIC_DRAW);
 
-    unsigned int indices[] = {
-        0, 1, 2, // first triangle
-        2, 3, 0  // second triangle
-    };
+    unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 
-    glGenBuffers(1, &uiEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uiEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Vertex attribute: vec4 (pos.x, pos.y, tex.x, tex.y)
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
 }
-void UIManager::renderUIBBox(float width, float height, float x_pos,
-                             float y_pos)
-{
-    // Default white color
-    renderUIBBox(width, height, x_pos, y_pos, 1.0f, 1.0f, 0.5f, 0.5f);
-}
 
-void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos,
-                             float r, float g, float b, float alpha)
+// =============================================================================
+// LOW-LEVEL RENDERING (SCREEN coordinates - already scaled)
+// =============================================================================
+void UIManager::renderBoxScreen(float x, float y, float w, float h,
+                                float r, float g, float b, float a)
 {
-
-    // Save state
     GLboolean depthTest, blend, cullFace;
     glGetBooleanv(GL_DEPTH_TEST, &depthTest);
     glGetBooleanv(GL_BLEND, &blend);
@@ -178,7 +155,6 @@ void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos
     glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
     glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
 
-    // Set up state for text rendering
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -186,56 +162,27 @@ void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos
 
     glUseProgram(uiShaderProgram);
 
-    // Calculate resolution-independent scale
-    const float REFERENCE_WIDTH = 1440.0f;
-    const float REFERENCE_HEIGHT = 1440.0f;
-    float scaleX = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
-    float scaleY = static_cast<float>(screenHeight) / REFERENCE_HEIGHT;
-
-    // Scale dimensions and position
-    float scaledWidth = width * scaleX;
-    float scaledHeight = height * scaleY;
-    float scaledX = x_pos * scaleX;
-    float scaledY = y_pos * scaleY;
-
-    // Calculate actual vertex positions (like RenderText does)
-    float xpos = scaledX;
-    float ypos = scaledY;
-    float w = scaledWidth;
-    float h = scaledHeight;
-
-    // Create vertices with actual screen coordinates
     float vertices[4][4] = {
-        {xpos, ypos + h, 0.0f, 1.0f},     // top left
-        {xpos + w, ypos + h, 1.0f, 1.0f}, // top right
-        {xpos + w, ypos, 1.0f, 0.0f},     // bottom right
-        {xpos, ypos, 0.0f, 0.0f}          // bottom left
-    };
+        {x, y + h, 0.0f, 1.0f},
+        {x + w, y + h, 1.0f, 1.0f},
+        {x + w, y, 1.0f, 0.0f},
+        {x, y, 0.0f, 0.0f}};
 
-    // Create projection matrix (bottom-left origin)
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screenWidth),
                                       0.0f, static_cast<float>(screenHeight));
 
-    // Set uniforms
-    int projectionLoc = glGetUniformLocation(uiShaderProgram, "projection");
-    int colorLoc = glGetUniformLocation(uiShaderProgram, "color");
-    int useTextureLoc = glGetUniformLocation(uiShaderProgram, "useTexture");
+    glUniformMatrix4fv(glGetUniformLocation(uiShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform4f(glGetUniformLocation(uiShaderProgram, "color"), r, g, b, a);
+    glUniform1i(glGetUniformLocation(uiShaderProgram, "useTexture"), 0);
 
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform4f(colorLoc, r, g, b, alpha);
-    glUniform1i(useTextureLoc, 0); // Not using texture
-
-    // Update vertex buffer with calculated positions
     glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Render the quad
     glBindVertexArray(uiVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
-    // Restore previous state
     if (depthTest)
         glEnable(GL_DEPTH_TEST);
     if (cullFace)
@@ -246,17 +193,9 @@ void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos
         glBlendFunc(blendSrc, blendDst);
 }
 
-void UIManager::setProjectionMatrix(const glm::mat4 &projectionMatrix)
+void UIManager::renderTextScreen(const std::string &text, float x, float y,
+                                 float scale, glm::vec3 color)
 {
-    glUseProgram(uiShaderProgram);
-
-    int projectionLoc = glGetUniformLocation(uiShaderProgram, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-}
-
-void UIManager::RenderText(std::string text, float x, float y, float scale, glm::vec3 color)
-{
-    // Save state
     GLboolean depthTest, blend, cullFace;
     glGetBooleanv(GL_DEPTH_TEST, &depthTest);
     glGetBooleanv(GL_BLEND, &blend);
@@ -265,7 +204,6 @@ void UIManager::RenderText(std::string text, float x, float y, float scale, glm:
     glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
     glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
 
-    // Set up state for text rendering
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -274,24 +212,22 @@ void UIManager::RenderText(std::string text, float x, float y, float scale, glm:
     textShader.use();
     glUniform1i(glGetUniformLocation(textShader.ID, "text"), 0);
 
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screenWidth), 0.0f, static_cast<float>(screenHeight));
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screenWidth),
+                                      0.0f, static_cast<float>(screenHeight));
     glUniformMatrix4fv(glGetUniformLocation(textShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform3f(glGetUniformLocation(textShader.ID, "textColor"), color.x, color.y, color.z);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(textVAO);
 
-    const float REFERENCE_WIDTH = 1440.0f;
-    float resolutionScale = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
-    float finalScale = scale * resolutionScale;
-
-    for (std::string::const_iterator c = text.begin(); c != text.end(); c++)
+    float currentX = x;
+    for (char c : text)
     {
-        Character ch = characters[*c];
-        float xpos = x + ch.Bearing.x * finalScale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * finalScale;
-        float w = ch.Size.x * finalScale;
-        float h = ch.Size.y * finalScale;
+        Character ch = characters[c];
+        float xpos = currentX + ch.Bearing.x * scale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
 
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},
@@ -302,20 +238,17 @@ void UIManager::RenderText(std::string text, float x, float y, float scale, glm:
             {xpos + w, ypos + h, 1.0f, 0.0f}};
 
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-
         glBindBuffer(GL_ARRAY_BUFFER, textVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        x += (ch.Advance >> 6) * finalScale;
+        currentX += (ch.Advance >> 6) * scale;
     }
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Restore previous state
     if (depthTest)
         glEnable(GL_DEPTH_TEST);
     if (cullFace)
@@ -326,294 +259,240 @@ void UIManager::RenderText(std::string text, float x, float y, float scale, glm:
         glBlendFunc(blendSrc, blendDst);
 }
 
-void UIManager::renderGameMenu()
+// =============================================================================
+// PUBLIC RENDERING API (REFERENCE coordinates - 1440x1440)
+// =============================================================================
+void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos)
 {
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    renderUIBBox(width, height, x_pos, y_pos, 1.0f, 1.0f, 0.5f, 0.5f);
+}
 
-    // Reference dimensions (assuming 1440x1440 reference)
-    const float screenH = 1440.0f;
+void UIManager::renderUIBBox(float width, float height, float x_pos, float y_pos,
+                             float r, float g, float b, float alpha)
+{
+    // Convert from reference coordinates to screen coordinates
+    renderBoxScreen(scaleX(x_pos), scaleY(y_pos), scaleX(width), scaleY(height), r, g, b, alpha);
+}
 
-    // Colors
-    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
-    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
-    glm::vec3 accent(0.9f, 0.8f, 0.3f); // Yellow accent
-    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
-    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+void UIManager::RenderText(std::string text, float x, float y, float scale, glm::vec3 color)
+{
+    // Convert from reference coordinates to screen coordinates
+    float screenX = scaleX(x);
+    float screenY = scaleY(y);
+    float screenScale = scale * (static_cast<float>(screenWidth) / REFERENCE_WIDTH);
+    renderTextScreen(text, screenX, screenY, screenScale, color);
+}
 
-    // === TOP LEFT: Power Grid Panel ===
-    float powerPanelX = 20.0f;
-    float powerPanelY = screenH - 120.0f; // 20px from top
-    float powerPanelW = 500.0f;
-    float powerPanelH = 100.0f;
+void UIManager::setProjectionMatrix(const glm::mat4 &projectionMatrix)
+{
+    glUseProgram(uiShaderProgram);
+    glUniformMatrix4fv(glGetUniformLocation(uiShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+}
 
-    // Background
-    renderUIBBox(powerPanelW, powerPanelH, powerPanelX, powerPanelY,
-                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
+// =============================================================================
+// INPUT HANDLING (works with SCREEN coordinates)
+// =============================================================================
+bool UIManager::isMouseOver(float mouseX, float mouseY, float width, float height,
+                            float x_pos, float y_pos)
+{
+    // Convert mouse Y from top-left origin (GLFW) to bottom-left origin (OpenGL)
+    float flippedMouseY = static_cast<float>(screenHeight) - mouseY;
 
-    // Border
-    float borderThick = 2.0f;
-    renderUIBBox(powerPanelW, borderThick, powerPanelX, powerPanelY + powerPanelH,
-                 accent.r, accent.g, accent.b, 1.0f);
+    // UIElements store SCREEN coordinates, so compare directly
+    return (mouseX >= x_pos && mouseX <= x_pos + width &&
+            flippedMouseY >= y_pos && flippedMouseY <= y_pos + height);
+}
 
-    // "POWER GRID" label
-    RenderText("POWER GRID", powerPanelX + 20, powerPanelY + powerPanelH - 30,
-               0.5f, textWhite);
+bool UIManager::isPressed(UIElement element)
+{
+    return glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+}
 
-    // Power bars (7 bars like in the image)
-    float barStartX = powerPanelX + 150;
-    float barY = powerPanelY + 40;
-    float barW = 30.0f;
-    float barH = 40.0f;
-    float barSpacing = 10.0f;
-
-    for (int i = 0; i < 7; i++)
+bool UIManager::executeUI(UIElement element)
+{
+    if (element.functionPtr != nullptr)
     {
-        float barX = barStartX + i * (barW + barSpacing);
-        renderUIBBox(barW, barH, barX, barY,
-                     0.9f, 0.5f, 0.2f, 1.0f); // Orange bars
+        element.functionPtr("clicked");
     }
-
-    // "GRID DEFENSE 15%" text
-    RenderText("CLOCK ATB", powerPanelX + 340, powerPanelY + 50,
-               0.4f, textGray);
-    RenderText("15%", powerPanelX + 440, powerPanelY + 25,
-               0.6f, accent);
-
-    // === TOP RIGHT: Victory Timer ===
-    float victoryPanelW = 280.0f;
-    float victoryPanelH = 70.0f;
-    float victoryPanelX = 1440.0f - victoryPanelW - 20.0f;
-    float victoryPanelY = screenH - 90.0f;
-
-    renderUIBBox(victoryPanelW, victoryPanelH, victoryPanelX, victoryPanelY,
-                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    renderUIBBox(victoryPanelW, borderThick, victoryPanelX, victoryPanelY + victoryPanelH,
-                 accent.r, accent.g, accent.b, 1.0f);
-
-    RenderText("Victory in", victoryPanelX + 20, victoryPanelY + 40,
-               0.5f, textGray);
-    RenderText("7", victoryPanelX + 180, victoryPanelY + 30,
-               1.2f, textWhite);
-    RenderText("turns", victoryPanelX + 230, victoryPanelY + 40,
-               0.5f, textGray);
-
-    // === LEFT SIDE: Unit Selection Panel ===
-    float unitPanelX = 20.0f;
-    float unitPanelY = screenH - 340.0f;
-    float unitPanelW = 150.0f;
-    float unitPanelH = 200.0f;
-
-    renderUIBBox(unitPanelW, unitPanelH, unitPanelX, unitPanelY,
-                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    renderUIBBox(unitPanelW, borderThick, unitPanelX, unitPanelY + unitPanelH,
-                 accent.r, accent.g, accent.b, 1.0f);
-
-    // Unit icons (2 units shown)
-    float iconSize = 60.0f;
-    float iconSpacing = 10.0f;
-
-    // Unit 1
-    renderUIBBox(iconSize, iconSize, unitPanelX + 10, unitPanelY + unitPanelH - 70,
-                 0.2f, 0.3f, 0.4f, 1.0f);
-    renderUIBBox(iconSize - 4, 4, unitPanelX + 12, unitPanelY + unitPanelH - 74,
-                 0.3f, 0.8f, 0.3f, 1.0f); // Green HP bar
-
-    // Unit 2
-    renderUIBBox(iconSize, iconSize, unitPanelX + 80, unitPanelY + unitPanelH - 70,
-                 0.2f, 0.4f, 0.3f, 1.0f);
-    renderUIBBox(iconSize - 4, 4, unitPanelX + 82, unitPanelY + unitPanelH - 74,
-                 0.3f, 0.8f, 0.3f, 1.0f); // Green HP bar
-
-    // "Cycle Unit" button
-    float cycleButtonY = unitPanelY + 20;
-    renderUIBBox(unitPanelW - 20, 40, unitPanelX + 10, cycleButtonY,
-                 bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    RenderText("Cycle Unit", unitPanelX + 25, cycleButtonY + 12,
-               0.4f, textWhite);
-
-    // === BOTTOM LEFT: Combat Mech Panel ===
-    float mechPanelX = 20.0f;
-    float mechPanelY = 20.0f; // Bottom of screen
-    float mechPanelW = 380.0f;
-    float mechPanelH = 220.0f;
-
-    renderUIBBox(mechPanelW, mechPanelH, mechPanelX, mechPanelY,
-                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    renderUIBBox(mechPanelW, borderThick, mechPanelX, mechPanelY + mechPanelH,
-                 accent.r, accent.g, accent.b, 1.0f);
-
-    // "Combat Mech" title
-    RenderText("Combat Mech", mechPanelX + 80, mechPanelY + mechPanelH - 30,
-               0.6f, textWhite);
-
-    // Mech icon
-    float mechIconSize = 140.0f;
-    renderUIBBox(mechIconSize, mechIconSize, mechPanelX + 10, mechPanelY + 10,
-                 0.15f, 0.2f, 0.25f, 1.0f);
-
-    // Weapon slots (3 weapons)
-    float weaponSlotX = mechPanelX + 170;
-    float weaponSlotSize = 60.0f;
-    float weaponSpacing = 8.0f;
-
-    for (int i = 0; i < 3; i++)
-    {
-        float slotX = weaponSlotX + i * (weaponSlotSize + weaponSpacing);
-        renderUIBBox(weaponSlotSize, weaponSlotSize, slotX, mechPanelY + 20,
-                     0.2f, 0.25f, 0.3f, 1.0f);
-
-        // Weapon icon placeholder
-        if (i == 0) // First weapon with ammo indicator
-        {
-            renderUIBBox(weaponSlotSize - 10, 6, slotX + 5, mechPanelY + 25,
-                         0.3f, 0.7f, 0.9f, 1.0f); // Blue ammo bar
-        }
-    }
-
-    // Stats
-    RenderText("3", mechPanelX + 240, mechPanelY + mechPanelH - 60,
-               0.8f, glm::vec3(0.3f, 0.8f, 0.3f)); // Move stat
-
-    // === BOTTOM RIGHT: Ground Tile Info ===
-    float tilePanelW = 260.0f;
-    float tilePanelH = 120.0f;
-    float tilePanelX = 1440.0f - tilePanelW - 20.0f;
-    float tilePanelY = 20.0f;
-
-    renderUIBBox(tilePanelW, tilePanelH, tilePanelX, tilePanelY,
-                 bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    renderUIBBox(tilePanelW, borderThick, tilePanelX, tilePanelY + tilePanelH,
-                 accent.r, accent.g, accent.b, 1.0f);
-
-    // Tile icon
-    float tileIconSize = 50.0f;
-    renderUIBBox(tileIconSize, tileIconSize, tilePanelX + 20, tilePanelY + 50,
-                 0.4f, 0.5f, 0.3f, 1.0f); // Green tile
-
-    // === CENTER BOTTOM: Action Button ===
-    float actionButtonW = 150.0f;
-    float actionButtonH = 45.0f;
-    float actionButtonX = (1440.0f - actionButtonW) / 2.0f;
-    float actionButtonY = 30.0f;
-
-    renderUIBBox(actionButtonW, actionButtonH, actionButtonX, actionButtonY,
-                 bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    renderUIBBox(actionButtonW, borderThick, actionButtonX, actionButtonY + actionButtonH,
-                 accent.r, accent.g, accent.b, 1.0f);
-
-    glDisable(GL_BLEND);
+    return true;
 }
 
-void UIManager::renderStatusBars()
-{
-    float barWidth = 200.0f;
-    float barHeight = 16.0f;
-    float barCenterX = screenWidth - barWidth / 2 - 30.0f;
-    float hpBarCenterY = screenHeight - 30.0f;
-    float mpBarCenterY = screenHeight - 55.0f;
-
-    // HP Bar background and fill
-    renderUIBBox(barWidth, barHeight, barCenterX, hpBarCenterY, 0.2f, 0.2f, 0.2f, 0.9f);
-    float hpFillWidth = barWidth * 0.75f;
-    float hpFillCenterX = barCenterX - (barWidth - hpFillWidth) / 2;
-    renderUIBBox(hpFillWidth, barHeight - 4.0f, hpFillCenterX, hpBarCenterY, 0.8f, 0.2f, 0.2f, 1.0f);
-
-    // HP text (bottom-left coordinates) - position to the left of the bar
-    float hpTextX = barCenterX - barWidth / 2 - 40.0f;
-    float hpTextY = hpBarCenterY - 8.0f;
-    RenderText("HP", hpTextX, hpTextY, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    // MP Bar background and fill
-    renderUIBBox(barWidth, barHeight, barCenterX, mpBarCenterY, 0.2f, 0.2f, 0.2f, 0.9f);
-    float mpFillWidth = barWidth * 0.5f;
-    float mpFillCenterX = barCenterX - (barWidth - mpFillWidth) / 2;
-    renderUIBBox(mpFillWidth, barHeight - 4.0f, mpFillCenterX, mpBarCenterY, 0.2f, 0.2f, 0.8f, 1.0f);
-
-    // MP text (bottom-left coordinates) - position to the left of the bar
-    float mpTextX = barCenterX - barWidth / 2 - 40.0f;
-    float mpTextY = mpBarCenterY - 8.0f;
-    RenderText("MP", mpTextX, mpTextY, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f));
-}
-
-void UIManager::renderMenuDecorations(float menuCenterX, float menuCenterY, float menuWidth, float menuHeight)
-{
-    // Corner decorations - simple L-shaped brackets
-    float decorSize = 25.0f;
-    float decorThickness = 3.0f;
-    float decorOffset = 15.0f; // Distance from corners
-
-    // Calculate corner positions
-    float leftX = menuCenterX - menuWidth / 2 + decorOffset;
-    float rightX = menuCenterX + menuWidth / 2 - decorOffset;
-    float topY = menuCenterY + menuHeight / 2 - decorOffset;
-    float bottomY = menuCenterY - menuHeight / 2 + decorOffset;
-
-    // Top-left corner L
-    renderUIBBox(decorSize, decorThickness, leftX + decorSize / 2, topY, 0.9f, 0.8f, 0.3f, 1.0f);
-    renderUIBBox(decorThickness, decorSize, leftX, topY - decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
-
-    // Top-right corner L
-    renderUIBBox(decorSize, decorThickness, rightX - decorSize / 2, topY, 0.9f, 0.8f, 0.3f, 1.0f);
-    renderUIBBox(decorThickness, decorSize, rightX, topY - decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
-
-    // Bottom-left corner L
-    renderUIBBox(decorSize, decorThickness, leftX + decorSize / 2, bottomY, 0.9f, 0.8f, 0.3f, 1.0f);
-    renderUIBBox(decorThickness, decorSize, leftX, bottomY + decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
-
-    // Bottom-right corner L
-    renderUIBBox(decorSize, decorThickness, rightX - decorSize / 2, bottomY, 0.9f, 0.8f, 0.3f, 1.0f);
-    renderUIBBox(decorThickness, decorSize, rightX, bottomY + decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
-}
-
-void UIManager::renderPauseMenu()
-{
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-
-    // Full screen overlay with semi-transparent dark background
-    renderUIBBox(screenWidth, screenHeight, 0.0f, 0.0f, 0.1f, 0.1f, 0.15f, 0.95f);
-
-    // Center panel for pause menu
-    float panelWidth = screenWidth * 0.4f;  // 40% of screen width
-    float panelHeight = screenHeight * 0.6f; // 60% of screen height
-    float panelX = (screenWidth - panelWidth) / 2.0f;
-    float panelY = (screenHeight - panelHeight) / 2.0f;
-
-    // Panel background
-    renderUIBBox(panelWidth, panelHeight, panelX, panelY, 0.2f, 0.2f, 0.25f, 1.0f);
-
-    // Panel border/accent
-    float borderThickness = 3.0f;
-    renderUIBBox(panelWidth, borderThickness, panelX, panelY + panelHeight, 0.9f, 0.8f, 0.3f, 1.0f);
-
-    // Title
-    float titleScale = screenHeight / 1440.0f; // Scale relative to reference resolution
-    RenderText("PAUSED", panelX + panelWidth * 0.35f, panelY + panelHeight - 60.0f * titleScale,
-               1.5f * titleScale, glm::vec3(0.9f, 0.8f, 0.3f));
-
-    // Menu items (centered)
-    float itemY = panelY + panelHeight - 150.0f * titleScale;
-    float itemSpacing = 60.0f * titleScale;
-
-    RenderText("Resume", panelX + panelWidth * 0.4f, itemY, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
-    RenderText("Settings", panelX + panelWidth * 0.4f, itemY - itemSpacing, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
-    RenderText("Exit", panelX + panelWidth * 0.4f, itemY - itemSpacing * 2, titleScale, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    glDisable(GL_BLEND);
-}
-
+// =============================================================================
+// UI ELEMENT MANAGEMENT
+// =============================================================================
 void UIManager::clearUIElements()
 {
     uiElements.clear();
 }
 
+// =============================================================================
+// UI BUILDING (all values in REFERENCE coordinates - 1440x1440)
+// addBox() and addText() in header automatically scale to screen coords
+// =============================================================================
+void UIManager::buildGameMenu()
+{
+    clearUIElements();
+
+    // Colors
+    const glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    const glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    const glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    const glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    const glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+    const float border = 2.0f;
+
+    // === TOP LEFT: Power Grid Panel ===
+    // Y position: 1440 - 120 = 1320 (panel bottom-left Y in reference coords)
+    float pwrX = 20.0f, pwrY = 1320.0f, pwrW = 500.0f, pwrH = 100.0f;
+    addBox(pwrW, pwrH, pwrX, pwrY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(pwrW, border, pwrX, pwrY + pwrH, accent.r, accent.g, accent.b, 1.0f);
+    addText("POWER GRID", pwrX + 20, pwrY + pwrH - 30, 0.5f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Power bars
+    float barX = pwrX + 150, barY = pwrY + 40, barW = 30.0f, barH = 40.0f, barGap = 10.0f;
+    for (int i = 0; i < 7; i++)
+    {
+        addBox(barW, barH, barX + i * (barW + barGap), barY, 0.9f, 0.5f, 0.2f, 1.0f);
+    }
+    addText("CLOCK ATB", pwrX + 340, pwrY + 50, 0.4f, textGray.r, textGray.g, textGray.b);
+    addText("15%", pwrX + 440, pwrY + 25, 0.6f, accent.r, accent.g, accent.b);
+
+    // === TOP RIGHT: Victory Timer ===
+    float vicW = 280.0f, vicH = 70.0f, vicX = 1440.0f - vicW - 20.0f, vicY = 1350.0f;
+    addBox(vicW, vicH, vicX, vicY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(vicW, border, vicX, vicY + vicH, accent.r, accent.g, accent.b, 1.0f);
+    addText("Victory in", vicX + 20, vicY + 40, 0.5f, textGray.r, textGray.g, textGray.b);
+    addText("7", vicX + 180, vicY + 30, 1.2f, textWhite.r, textWhite.g, textWhite.b);
+    addText("turns", vicX + 230, vicY + 40, 0.5f, textGray.r, textGray.g, textGray.b);
+
+    // === LEFT SIDE: Unit Selection Panel ===
+    float unitX = 20.0f, unitY = 1100.0f, unitW = 150.0f, unitH = 200.0f;
+    addBox(unitW, unitH, unitX, unitY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(unitW, border, unitX, unitY + unitH, accent.r, accent.g, accent.b, 1.0f);
+
+    float iconSz = 60.0f;
+    // Unit 1
+    addBox(iconSz, iconSz, unitX + 10, unitY + unitH - 70, 0.2f, 0.3f, 0.4f, 1.0f);
+    addBox(iconSz - 4, 4, unitX + 12, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
+    // Unit 2
+    addBox(iconSz, iconSz, unitX + 80, unitY + unitH - 70, 0.2f, 0.4f, 0.3f, 1.0f);
+    addBox(iconSz - 4, 4, unitX + 82, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
+    // Cycle button
+    addBox(unitW - 20, 40, unitX + 10, unitY + 20, bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    addText("Cycle Unit", unitX + 25, unitY + 32, 0.4f, textWhite.r, textWhite.g, textWhite.b);
+
+    // === BOTTOM LEFT: Combat Mech Panel ===
+    float mechX = 20.0f, mechY = 20.0f, mechW = 380.0f, mechH = 220.0f;
+    addBox(mechW, mechH, mechX, mechY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(mechW, border, mechX, mechY + mechH, accent.r, accent.g, accent.b, 1.0f);
+    addText("Combat Mech", mechX + 80, mechY + mechH - 30, 0.6f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Mech icon
+    addBox(140, 140, mechX + 10, mechY + 10, 0.15f, 0.2f, 0.25f, 1.0f);
+
+    // Weapon slots
+    float wpnX = mechX + 170, wpnSz = 60.0f, wpnGap = 8.0f;
+    for (int i = 0; i < 3; i++)
+    {
+        float sx = wpnX + i * (wpnSz + wpnGap);
+        addBox(wpnSz, wpnSz, sx, mechY + 20, 0.2f, 0.25f, 0.3f, 1.0f);
+        if (i == 0)
+        {
+            addBox(wpnSz - 10, 6, sx + 5, mechY + 25, 0.3f, 0.7f, 0.9f, 1.0f);
+        }
+    }
+    addText("3", mechX + 240, mechY + mechH - 60, 0.8f, 0.3f, 0.8f, 0.3f);
+
+    // === BOTTOM RIGHT: Ground Tile Info ===
+    float tileW = 260.0f, tileH = 120.0f, tileX = 1440.0f - tileW - 20.0f, tileY = 20.0f;
+    addBox(tileW, tileH, tileX, tileY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    addBox(tileW, border, tileX, tileY + tileH, accent.r, accent.g, accent.b, 1.0f);
+    addBox(50, 50, tileX + 20, tileY + 50, 0.4f, 0.5f, 0.3f, 1.0f);
+    addText("Ground Tile", tileX + 85, tileY + 80, 0.5f, textWhite.r, textWhite.g, textWhite.b);
+    addText("No special effect.", tileX + 85, tileY + 50, 0.35f, textGray.r, textGray.g, textGray.b);
+
+    // === CENTER BOTTOM: Action Button ===
+    float actW = 150.0f, actH = 45.0f, actX = (1440.0f - actW) / 2.0f, actY = 30.0f;
+    addBox(actW, actH, actX, actY, bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    addBox(actW, border, actX, actY + actH, accent.r, accent.g, accent.b, 1.0f);
+    addText("(A) Move Unit", actX + 15, actY + 15, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+}
+
+void UIManager::buildBottomCenterMenu()
+{
+    const glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    const glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    const glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    const glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    const glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+    const float border = 2.0f;
+
+    float menuW = 200.0f, menuH = 280.0f;
+    float menuX = (1440.0f - menuW) / 2.0f, menuY = 80.0f;
+
+    // Background
+    addBox(menuW, menuH, menuX, menuY, bgDark.r, bgDark.g, bgDark.b, 0.95f);
+
+    // Borders
+    addBox(menuW, border, menuX, menuY + menuH, accent.r, accent.g, accent.b, 1.0f);
+    addBox(menuW, border, menuX, menuY, accent.r, accent.g, accent.b, 1.0f);
+    addBox(border, menuH, menuX, menuY, accent.r, accent.g, accent.b, 1.0f);
+    addBox(border, menuH, menuX + menuW - border, menuY, accent.r, accent.g, accent.b, 1.0f);
+
+    // Title
+    addText("Menu", menuX + 70, menuY + menuH - 30, 0.5f, textGray.r, textGray.g, textGray.b);
+
+    // Buttons
+    float btnW = menuW - 40.0f, btnH = 38.0f;
+    float btnX = menuX + 20.0f;
+    float btnGap = 8.0f;
+    float startY = menuY + menuH - 70.0f;
+
+    // Move button
+    float moveY = startY;
+    addBox(btnW, btnH, btnX, moveY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onMovePressed(v); });
+    addText("Move", btnX + 15, moveY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Act button
+    float actY = startY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, actY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onActPressed(v); });
+    addText("Act", btnX + 15, actY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Wait button
+    float waitY = actY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, waitY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onWaitPressed(v); });
+    addText("Wait", btnX + 15, waitY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Status button
+    float statusY = waitY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, statusY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onStatusPressed(v); });
+    addText("Status", btnX + 15, statusY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Auto-battle button
+    float autoY = statusY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, autoY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onAutoBattlePressed(v); });
+    addText("Auto-battle", btnX + 15, autoY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+}
+
+// =============================================================================
+// MAIN RENDER LOOP
+// =============================================================================
 void UIManager::renderAllUIElements(float mouseX, float mouseY)
 {
     ZoneScoped;
-    buildGameMenu();         // Ensure UI elements are built before rendering
-    buildBottomCenterMenu(); // Ensure bottom center menu is built before rendering
+
+    buildGameMenu();
+    buildBottomCenterMenu();
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -623,351 +502,194 @@ void UIManager::renderAllUIElements(float mouseX, float mouseY)
     {
         if (element.elementType == BOX)
         {
-            if (isMouseOver(mouseX, mouseY, element.width, element.height,
-                            element.x_pos, element.y_pos))
+            // Elements are stored in screen coordinates
+            bool hovered = isMouseOver(mouseX, mouseY, element.width, element.height,
+                                       element.x_pos, element.y_pos);
+
+            if (hovered && isPressed(element))
             {
-                if (isPressed(element))
-                {
-                    executeUI(element);
-                }
-                float selectedColor_R = 1.0;
-                float selectedColor_G = 0.6f;
-                float selectedColor_B = 0.0f;
-                renderUIBBox(element.width, element.height,
-                             element.x_pos, element.y_pos,
-                             selectedColor_R, selectedColor_G, selectedColor_B, element.a);
+                executeUI(element);
+            }
+
+            if (hovered)
+            {
+                // Highlight color when hovered
+                renderBoxScreen(element.x_pos, element.y_pos, element.width, element.height,
+                                1.0f, 0.6f, 0.0f, element.a);
             }
             else
             {
-                renderUIBBox(element.width, element.height,
-                             element.x_pos, element.y_pos,
-                             element.r, element.g, element.b, element.a);
+                renderBoxScreen(element.x_pos, element.y_pos, element.width, element.height,
+                                element.r, element.g, element.b, element.a);
             }
         }
         else if (element.elementType == TEXT)
         {
-            RenderText(element.text, element.x_pos, element.y_pos,
-                       element.scale, glm::vec3(element.r, element.g, element.b));
+            // Text elements store screen coords and pre-scaled font size
+            renderTextScreen(element.text, element.x_pos, element.y_pos, element.scale,
+                             glm::vec3(element.r, element.g, element.b));
         }
     }
 
     glDisable(GL_BLEND);
 }
 
-// Refactored buildGameMenu - creates elements instead of rendering
-void UIManager::buildGameMenu()
+// =============================================================================
+// LEGACY STANDALONE RENDER FUNCTIONS (use REFERENCE coordinates)
+// =============================================================================
+void UIManager::renderGameMenu()
 {
-    clearUIElements();
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Use actual screen dimensions instead of hardcoded values
-    const float screenH = static_cast<float>(screenHeight);
-    const float screenW = static_cast<float>(screenWidth);
-
-    // Reference resolution is 1440x1440 (original design)
-    // Scale based on screen dimensions
-    const float scaleX = screenW / 1440.0f;
-    const float scaleY = screenH / 1440.0f;
-
-    // Colors
-    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
-    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
-    glm::vec3 accent(0.9f, 0.8f, 0.3f);
-    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
-    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+    const glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    const glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
+    const glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    const glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    const glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+    const float border = 2.0f;
 
     // === TOP LEFT: Power Grid Panel ===
-    float powerPanelX = 20.0f * scaleX;
-    float powerPanelY = screenH - 120.0f * scaleY;
-    float powerPanelW = 500.0f * scaleX;
-    float powerPanelH = 100.0f * scaleY;
+    float pwrX = 20.0f, pwrY = 1320.0f, pwrW = 500.0f, pwrH = 100.0f;
+    renderUIBBox(pwrW, pwrH, pwrX, pwrY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(pwrW, border, pwrX, pwrY + pwrH, accent.r, accent.g, accent.b, 1.0f);
+    RenderText("POWER GRID", pwrX + 20, pwrY + pwrH - 30, 0.5f, textWhite);
 
-    addBox(powerPanelW, powerPanelH, powerPanelX, powerPanelY,
-           bgDark.r, bgDark.g, bgDark.b, 0.9f);
-
-    float borderThick = 2.0f * scaleY;
-    addBox(powerPanelW, borderThick, powerPanelX, powerPanelY + powerPanelH,
-           accent.r, accent.g, accent.b, 1.0f);
-
-    addText("POWER GRID", powerPanelX + 20 * scaleX, powerPanelY + powerPanelH - 30 * scaleY,
-            0.5f * scaleY, textWhite.r, textWhite.g, textWhite.b);
-
-    // Power bars
-    float barStartX = powerPanelX + 150 * scaleX;
-    float barY = powerPanelY + 40 * scaleY;
-    float barW = 30.0f * scaleX;
-    float barH = 40.0f * scaleY;
-    float barSpacing = 10.0f * scaleX;
-
+    float barX = pwrX + 150, barY = pwrY + 40, barW = 30.0f, barH = 40.0f, barGap = 10.0f;
     for (int i = 0; i < 7; i++)
     {
-        float barX = barStartX + i * (barW + barSpacing);
-        addBox(barW, barH, barX, barY, 0.9f, 0.5f, 0.2f, 1.0f);
+        renderUIBBox(barW, barH, barX + i * (barW + barGap), barY, 0.9f, 0.5f, 0.2f, 1.0f);
     }
-
-    addText("CLOCK ATB", powerPanelX + 340 * scaleX, powerPanelY + 50 * scaleY,
-            0.4f * scaleY, textGray.r, textGray.g, textGray.b);
-    addText("15%", powerPanelX + 440 * scaleX, powerPanelY + 25 * scaleY,
-            0.6f * scaleY, accent.r, accent.g, accent.b);
+    RenderText("CLOCK ATB", pwrX + 340, pwrY + 50, 0.4f, textGray);
+    RenderText("15%", pwrX + 440, pwrY + 25, 0.6f, accent);
 
     // === TOP RIGHT: Victory Timer ===
-    float victoryPanelW = 280.0f * scaleX;
-    float victoryPanelH = 70.0f * scaleY;
-    float victoryPanelX = screenW - victoryPanelW - 20.0f * scaleX;
-    float victoryPanelY = screenH - 90.0f * scaleY;
-
-    addBox(victoryPanelW, victoryPanelH, victoryPanelX, victoryPanelY,
-           bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(victoryPanelW, borderThick, victoryPanelX, victoryPanelY + victoryPanelH,
-           accent.r, accent.g, accent.b, 1.0f);
-
-    addText("Victory in", victoryPanelX + 20 * scaleX, victoryPanelY + 40 * scaleY,
-            0.5f * scaleY, textGray.r, textGray.g, textGray.b);
-    addText("7", victoryPanelX + 180 * scaleX, victoryPanelY + 30 * scaleY,
-            1.2f * scaleY, textWhite.r, textWhite.g, textWhite.b);
-    addText("turns", victoryPanelX + 230 * scaleX, victoryPanelY + 40 * scaleY,
-            0.5f * scaleY, textGray.r, textGray.g, textGray.b);
+    float vicW = 280.0f, vicH = 70.0f, vicX = 1440.0f - vicW - 20.0f, vicY = 1350.0f;
+    renderUIBBox(vicW, vicH, vicX, vicY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(vicW, border, vicX, vicY + vicH, accent.r, accent.g, accent.b, 1.0f);
+    RenderText("Victory in", vicX + 20, vicY + 40, 0.5f, textGray);
+    RenderText("7", vicX + 180, vicY + 30, 1.2f, textWhite);
+    RenderText("turns", vicX + 230, vicY + 40, 0.5f, textGray);
 
     // === LEFT SIDE: Unit Selection Panel ===
-    float unitPanelX = 20.0f * scaleX;
-    float unitPanelY = screenH - 340.0f * scaleY;
-    float unitPanelW = 150.0f * scaleX;
-    float unitPanelH = 200.0f * scaleY;
+    float unitX = 20.0f, unitY = 1100.0f, unitW = 150.0f, unitH = 200.0f;
+    renderUIBBox(unitW, unitH, unitX, unitY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(unitW, border, unitX, unitY + unitH, accent.r, accent.g, accent.b, 1.0f);
 
-    addBox(unitPanelW, unitPanelH, unitPanelX, unitPanelY,
-           bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(unitPanelW, borderThick, unitPanelX, unitPanelY + unitPanelH,
-           accent.r, accent.g, accent.b, 1.0f);
-
-    float iconSize = 60.0f * scaleX;
-
-    // Unit 1
-    addBox(iconSize, iconSize, unitPanelX + 10 * scaleX, unitPanelY + unitPanelH - 70 * scaleY,
-           0.2f, 0.3f, 0.4f, 1.0f);
-    addBox(iconSize - 4 * scaleX, 4 * scaleY, unitPanelX + 12 * scaleX, unitPanelY + unitPanelH - 74 * scaleY,
-           0.3f, 0.8f, 0.3f, 1.0f);
-
-    // Unit 2
-    addBox(iconSize, iconSize, unitPanelX + 80 * scaleX, unitPanelY + unitPanelH - 70 * scaleY,
-           0.2f, 0.4f, 0.3f, 1.0f);
-    addBox(iconSize - 4 * scaleX, 4 * scaleY, unitPanelX + 82 * scaleX, unitPanelY + unitPanelH - 74 * scaleY,
-           0.3f, 0.8f, 0.3f, 1.0f);
-
-    // "Cycle Unit" button
-    float cycleButtonY = unitPanelY + 20 * scaleY;
-    addBox(unitPanelW - 20 * scaleX, 40 * scaleY, unitPanelX + 10 * scaleX, cycleButtonY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    addText("Cycle Unit", unitPanelX + 25 * scaleX, cycleButtonY + 12 * scaleY,
-            0.4f * scaleY, textWhite.r, textWhite.g, textWhite.b);
+    float iconSz = 60.0f;
+    renderUIBBox(iconSz, iconSz, unitX + 10, unitY + unitH - 70, 0.2f, 0.3f, 0.4f, 1.0f);
+    renderUIBBox(iconSz - 4, 4, unitX + 12, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(iconSz, iconSz, unitX + 80, unitY + unitH - 70, 0.2f, 0.4f, 0.3f, 1.0f);
+    renderUIBBox(iconSz - 4, 4, unitX + 82, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(unitW - 20, 40, unitX + 10, unitY + 20, bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    RenderText("Cycle Unit", unitX + 25, unitY + 32, 0.4f, textWhite);
 
     // === BOTTOM LEFT: Combat Mech Panel ===
-    float mechPanelX = 20.0f * scaleX;
-    float mechPanelY = 20.0f * scaleY;
-    float mechPanelW = 380.0f * scaleX;
-    float mechPanelH = 220.0f * scaleY;
+    float mechX = 20.0f, mechY = 20.0f, mechW = 380.0f, mechH = 220.0f;
+    renderUIBBox(mechW, mechH, mechX, mechY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(mechW, border, mechX, mechY + mechH, accent.r, accent.g, accent.b, 1.0f);
+    RenderText("Combat Mech", mechX + 80, mechY + mechH - 30, 0.6f, textWhite);
 
-    addBox(mechPanelW, mechPanelH, mechPanelX, mechPanelY,
-           bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(mechPanelW, borderThick, mechPanelX, mechPanelY + mechPanelH,
-           accent.r, accent.g, accent.b, 1.0f);
+    renderUIBBox(140, 140, mechX + 10, mechY + 10, 0.15f, 0.2f, 0.25f, 1.0f);
 
-    addText("Combat Mech", mechPanelX + 80, mechPanelY + mechPanelH - 30,
-            0.6f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Mech icon
-    float mechIconSize = 140.0f;
-    addBox(mechIconSize, mechIconSize, mechPanelX + 10, mechPanelY + 10,
-           0.15f, 0.2f, 0.25f, 1.0f);
-
-    // Weapon slots
-    float weaponSlotX = mechPanelX + 170;
-    float weaponSlotSize = 60.0f;
-    float weaponSpacing = 8.0f;
-
+    float wpnX = mechX + 170, wpnSz = 60.0f, wpnGap = 8.0f;
     for (int i = 0; i < 3; i++)
     {
-        float slotX = weaponSlotX + i * (weaponSlotSize + weaponSpacing);
-        addBox(weaponSlotSize, weaponSlotSize, slotX, mechPanelY + 20,
-               0.2f, 0.25f, 0.3f, 1.0f);
-
+        float sx = wpnX + i * (wpnSz + wpnGap);
+        renderUIBBox(wpnSz, wpnSz, sx, mechY + 20, 0.2f, 0.25f, 0.3f, 1.0f);
         if (i == 0)
         {
-            addBox(weaponSlotSize - 10, 6, slotX + 5, mechPanelY + 25,
-                   0.3f, 0.7f, 0.9f, 1.0f);
+            renderUIBBox(wpnSz - 10, 6, sx + 5, mechY + 25, 0.3f, 0.7f, 0.9f, 1.0f);
         }
     }
-
-    addText("3", mechPanelX + 240, mechPanelY + mechPanelH - 60,
-            0.8f, 0.3f, 0.8f, 0.3f);
+    RenderText("3", mechX + 240, mechY + mechH - 60, 0.8f, glm::vec3(0.3f, 0.8f, 0.3f));
 
     // === BOTTOM RIGHT: Ground Tile Info ===
-    float tilePanelW = 260.0f;
-    float tilePanelH = 120.0f;
-    float tilePanelX = 1440.0f - tilePanelW - 20.0f;
-    float tilePanelY = 20.0f;
-
-    addBox(tilePanelW, tilePanelH, tilePanelX, tilePanelY,
-           bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(tilePanelW, borderThick, tilePanelX, tilePanelY + tilePanelH,
-           accent.r, accent.g, accent.b, 1.0f);
-
-    float tileIconSize = 50.0f;
-    addBox(tileIconSize, tileIconSize, tilePanelX + 20, tilePanelY + 50,
-           0.4f, 0.5f, 0.3f, 1.0f);
-
-    addText("Ground Tile", tilePanelX + 85, tilePanelY + 80,
-            0.5f, textWhite.r, textWhite.g, textWhite.b);
-    addText("No special effect.", tilePanelX + 85, tilePanelY + 50,
-            0.35f, textGray.r, textGray.g, textGray.b);
+    float tileW = 260.0f, tileH = 120.0f, tileX = 1440.0f - tileW - 20.0f, tileY = 20.0f;
+    renderUIBBox(tileW, tileH, tileX, tileY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    renderUIBBox(tileW, border, tileX, tileY + tileH, accent.r, accent.g, accent.b, 1.0f);
+    renderUIBBox(50, 50, tileX + 20, tileY + 50, 0.4f, 0.5f, 0.3f, 1.0f);
 
     // === CENTER BOTTOM: Action Button ===
-    float actionButtonW = 150.0f;
-    float actionButtonH = 45.0f;
-    float actionButtonX = (1440.0f - actionButtonW) / 2.0f;
-    float actionButtonY = 30.0f;
+    float actW = 150.0f, actH = 45.0f, actX = (1440.0f - actW) / 2.0f, actY = 30.0f;
+    renderUIBBox(actW, actH, actX, actY, bgLight.r, bgLight.g, bgLight.b, 1.0f);
+    renderUIBBox(actW, border, actX, actY + actH, accent.r, accent.g, accent.b, 1.0f);
 
-    addBox(actionButtonW, actionButtonH, actionButtonX, actionButtonY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    addBox(actionButtonW, borderThick, actionButtonX, actionButtonY + actionButtonH,
-           accent.r, accent.g, accent.b, 1.0f);
-
-    addText("(A) Move Unit", actionButtonX + 15, actionButtonY + 15,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
+    glDisable(GL_BLEND);
 }
 
-bool UIManager::isMouseOver(float mouseX, float mouseY, float element_width, float element_height,
-                            float element_x_pos, float element_y_pos)
+void UIManager::renderStatusBars()
 {
-    // Flip mouseY to match OpenGL's bottom-left coordinate system
-    mouseY = screenHeight - mouseY;
+    // Status bars use actual screen coordinates (top-right corner)
+    float barWidth = 200.0f;
+    float barHeight = 16.0f;
+    float barX = screenWidth - barWidth - 30.0f;
+    float hpBarY = screenHeight - 30.0f;
+    float mpBarY = screenHeight - 55.0f;
 
-    // Apply the same scaling used in renderUIBBox
-    const float REFERENCE_WIDTH = 1440.0f;
-    const float REFERENCE_HEIGHT = 1440.0f;
-    float scaleX = static_cast<float>(screenWidth) / REFERENCE_WIDTH;
-    float scaleY = static_cast<float>(screenHeight) / REFERENCE_HEIGHT;
+    renderBoxScreen(barX, hpBarY, barWidth, barHeight, 0.2f, 0.2f, 0.2f, 0.9f);
+    renderBoxScreen(barX, hpBarY, barWidth * 0.75f, barHeight - 4.0f, 0.8f, 0.2f, 0.2f, 1.0f);
 
-    // Scale dimensions and position (matching renderUIBBox logic)
-    float scaledWidth = element_width * scaleX;
-    float scaledHeight = element_height * scaleY;
-    float scaledX = element_x_pos * scaleX;
-    float scaledY = element_y_pos * scaleY;
+    renderBoxScreen(barX, mpBarY, barWidth, barHeight, 0.2f, 0.2f, 0.2f, 0.9f);
+    renderBoxScreen(barX, mpBarY, barWidth * 0.5f, barHeight - 4.0f, 0.2f, 0.2f, 0.8f, 1.0f);
 
-    // Check if mouse is within the scaled bounds
-    if (mouseX > scaledX && mouseX < scaledX + scaledWidth &&
-        mouseY > scaledY && mouseY < scaledY + scaledHeight)
-    {
-        return true;
-    }
-    return false;
+    float textScale = 0.4f * (static_cast<float>(screenWidth) / REFERENCE_WIDTH);
+    renderTextScreen("HP", barX - 40.0f, hpBarY + 4.0f, textScale, glm::vec3(1.0f));
+    renderTextScreen("MP", barX - 40.0f, mpBarY + 4.0f, textScale, glm::vec3(1.0f));
 }
 
-bool UIManager::isPressed(UIElement element)
+void UIManager::renderMenuDecorations(float menuCenterX, float menuCenterY, float menuWidth, float menuHeight)
 {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    {
-        // std::cout << element.elementType + " pressed" + std::to_string(glfwGetTime()) << std::endl;
-        return true;
-    }
-    return element.pressed;
+    float decorSize = 25.0f;
+    float decorThickness = 3.0f;
+    float decorOffset = 15.0f;
+
+    float leftX = menuCenterX - menuWidth / 2 + decorOffset;
+    float rightX = menuCenterX + menuWidth / 2 - decorOffset;
+    float topY = menuCenterY + menuHeight / 2 - decorOffset;
+    float bottomY = menuCenterY - menuHeight / 2 + decorOffset;
+
+    // Top-left L
+    renderUIBBox(decorSize, decorThickness, leftX + decorSize / 2, topY, 0.9f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(decorThickness, decorSize, leftX, topY - decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
+    // Top-right L
+    renderUIBBox(decorSize, decorThickness, rightX - decorSize / 2, topY, 0.9f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(decorThickness, decorSize, rightX, topY - decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
+    // Bottom-left L
+    renderUIBBox(decorSize, decorThickness, leftX + decorSize / 2, bottomY, 0.9f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(decorThickness, decorSize, leftX, bottomY + decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
+    // Bottom-right L
+    renderUIBBox(decorSize, decorThickness, rightX - decorSize / 2, bottomY, 0.9f, 0.8f, 0.3f, 1.0f);
+    renderUIBBox(decorThickness, decorSize, rightX, bottomY + decorSize / 2, 0.9f, 0.8f, 0.3f, 1.0f);
 }
 
-bool UIManager::executeUI(UIElement element)
+void UIManager::renderPauseMenu()
 {
-    if (element.functionPtr != nullptr)
-    {
-        element.functionPtr("ciao");
-    }
-    return true;
-}
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
 
-void UIManager::buildBottomCenterMenu()
-{
-    const float screenH = static_cast<float>(screenHeight);
-    const float screenW = static_cast<float>(screenWidth);
+    // Full screen overlay (screen coordinates)
+    renderBoxScreen(0, 0, screenWidth, screenHeight, 0.1f, 0.1f, 0.15f, 0.95f);
 
-    // Reference resolution is 1440x1440 (original design)
-    // Scale based on screen dimensions
-    const float scaleX = screenW / 1440.0f;
-    const float scaleY = screenH / 1440.0f;
+    float panelWidth = screenWidth * 0.4f;
+    float panelHeight = screenHeight * 0.6f;
+    float panelX = (screenWidth - panelWidth) / 2.0f;
+    float panelY = (screenHeight - panelHeight) / 2.0f;
 
-    glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
-    glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
-    glm::vec3 accent(0.9f, 0.8f, 0.3f);
-    glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
-    glm::vec3 textGray(0.7f, 0.7f, 0.7f);
+    renderBoxScreen(panelX, panelY, panelWidth, panelHeight, 0.2f, 0.2f, 0.25f, 1.0f);
+    renderBoxScreen(panelX, panelY + panelHeight, panelWidth, 3.0f, 0.9f, 0.8f, 0.3f, 1.0f);
 
-    float menuWidth = 200.0f * scaleX;
-    float menuHeight = 280.0f * scaleY;
-    float menuX = (screenW - menuWidth) / 2.0f;
-    float menuY = 80.0f * scaleY;
+    float scale = static_cast<float>(screenHeight) / REFERENCE_HEIGHT;
+    renderTextScreen("PAUSED", panelX + panelWidth * 0.35f, panelY + panelHeight - 60.0f * scale,
+                     1.5f * scale, glm::vec3(0.9f, 0.8f, 0.3f));
 
-    // Background panel
-    addBox(menuWidth, menuHeight, menuX, menuY,
-           bgDark.r, bgDark.g, bgDark.b, 0.95f);
+    float itemY = panelY + panelHeight - 150.0f * scale;
+    float itemSpacing = 60.0f * scale;
 
-    // Borders
-    float borderThick = 2.0f * scaleY;
-    addBox(menuWidth, borderThick, menuX, menuY + menuHeight,
-           accent.r, accent.g, accent.b, 1.0f); // Top
-    addBox(menuWidth, borderThick, menuX, menuY,
-           accent.r, accent.g, accent.b, 1.0f); // Bottom
-    addBox(borderThick, menuHeight, menuX, menuY,
-           accent.r, accent.g, accent.b, 1.0f); // Left
-    addBox(borderThick, menuHeight, menuX + menuWidth, menuY,
-           accent.r, accent.g, accent.b, 1.0f); // Right
+    renderTextScreen("Resume", panelX + panelWidth * 0.4f, itemY, scale, glm::vec3(1.0f));
+    renderTextScreen("Settings", panelX + panelWidth * 0.4f, itemY - itemSpacing, scale, glm::vec3(1.0f));
+    renderTextScreen("Exit", panelX + panelWidth * 0.4f, itemY - itemSpacing * 2, scale, glm::vec3(1.0f));
 
-    // Menu title
-    addText("Menu", menuX + 20, menuY + menuHeight - 30,
-            0.5f, textGray.r, textGray.g, textGray.b);
-
-    // Button dimensions
-    float buttonWidth = menuWidth - 40.0f;
-    float buttonHeight = 38.0f;
-    float buttonX = menuX + 20.0f;
-    float buttonSpacing = 8.0f;
-    float startY = menuY + menuHeight - 70.0f;
-
-    // Move button
-    auto moveCallback = [this](std::string value)
-    { this->onMovePressed(value); };
-    addBox(buttonWidth, buttonHeight, buttonX, startY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f, moveCallback);
-    addText("Move", buttonX + 15, startY + 10,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Act button
-    float actY = startY - (buttonHeight + buttonSpacing);
-    auto actCallback = [this](std::string value)
-    { this->onActPressed(value); };
-    addBox(buttonWidth, buttonHeight, buttonX, actY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f, actCallback);
-    addText("Act", buttonX + 15, actY + 10,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Wait button
-    float waitY = actY - (buttonHeight + buttonSpacing);
-    auto waitCallback = [this](std::string value)
-    { this->onWaitPressed(value); };
-    addBox(buttonWidth, buttonHeight, buttonX, waitY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f, waitCallback);
-    addText("Wait", buttonX + 15, waitY + 10,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Status button
-    float statusY = waitY - (buttonHeight + buttonSpacing);
-    auto statusCallback = [this](std::string value)
-    { this->onStatusPressed(value); };
-    addBox(buttonWidth, buttonHeight, buttonX, statusY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f, statusCallback);
-    addText("Status", buttonX + 15, statusY + 10,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Auto-battle button
-    float autoY = statusY - (buttonHeight + buttonSpacing);
-    auto autoCallback = [this](std::string value)
-    { this->onAutoBattlePressed(value); };
-    addBox(buttonWidth, buttonHeight, buttonX, autoY,
-           bgLight.r, bgLight.g, bgLight.b, 1.0f, autoCallback);
-    addText("Auto-battle", buttonX + 15, autoY + 10,
-            0.45f, textWhite.r, textWhite.g, textWhite.b);
+    glDisable(GL_BLEND);
 }

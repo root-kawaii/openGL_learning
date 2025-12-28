@@ -1,5 +1,11 @@
 #include "game.h"
 #include "../tracy/public/tracy/Tracy.hpp"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <../json/single_include/nlohmann/json.hpp>
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
@@ -20,7 +26,13 @@ Game::~Game()
 
 bool Game::initialize()
 {
-    uiManager = std::make_shared<UIManager>(SCR_HEIGHT, SCR_WIDTH);
+    // Load settings first
+    loadSettings();
+    SCR_HEIGHT = settings.resolutionHeight;
+    SCR_WIDTH = settings.resolutionWidth;
+    std::cout << "Initializing game with resolution: " << SCR_WIDTH << "x" << SCR_HEIGHT << std::endl;
+    framebuffer_size_callback(window, settings.resolutionWidth, settings.resolutionHeight);
+    uiManager = std::make_shared<UIManager>(settings.resolutionHeight, settings.resolutionWidth);
     uiManager->setWindow(window);
     uiManager->setInputManager(&inputManager);
     auto mainScene = std::make_shared<Scene>();
@@ -124,6 +136,84 @@ void Game::update()
         // Convert to microseconds for more precise sleep
         std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(sleepTime * 1000000.0f)));
     }
+}
+
+void Game::loadSettings()
+{
+    std::ifstream settingsFile("settings/settings.json");
+    if (!settingsFile.is_open())
+    {
+        std::cerr << "Failed to open settings file. Using default settings." << std::endl;
+        return;
+    }
+
+    nlohmann::json settingsJson;
+    try
+    {
+        settingsFile >> settingsJson;
+    }
+    catch (const nlohmann::json::parse_error &e)
+    {
+        std::cerr << "Error parsing settings JSON: " << e.what() << std::endl;
+        return;
+    }
+
+    std::cout << "Loading settings from settings.json..." << std::endl;
+
+    // Load graphics settings
+    if (settingsJson.contains("graphics"))
+    {
+        const auto &graphics = settingsJson["graphics"];
+
+        if (graphics.contains("resolution"))
+        {
+            const auto &resolution = graphics["resolution"];
+            settings.resolutionWidth = resolution.value("width", settings.resolutionWidth);
+            settings.resolutionHeight = resolution.value("height", settings.resolutionHeight);
+            settings.fullscreen = resolution.value("fullscreen", settings.fullscreen);
+
+            std::cout << "  Resolution: " << settings.resolutionWidth << "x" << settings.resolutionHeight
+                      << (settings.fullscreen ? " (Fullscreen)" : " (Windowed)") << std::endl;
+        }
+    }
+
+    // Load audio settings
+    if (settingsJson.contains("audio"))
+    {
+        const auto &audio = settingsJson["audio"];
+        settings.masterVolume = audio.value("masterVolume", settings.masterVolume);
+
+        std::cout << "  Master Volume: " << settings.masterVolume << std::endl;
+
+        // TODO: Apply audio settings when AudioManager has setMasterVolume method
+        // audioManager.setMasterVolume(settings.masterVolume);
+    }
+
+    // Load gameplay settings
+    if (settingsJson.contains("gameplay"))
+    {
+        const auto &gameplay = settingsJson["gameplay"];
+        settings.difficulty = gameplay.value("difficulty", settings.difficulty);
+        settings.autosave = gameplay.value("autosave", settings.autosave);
+        settings.autosaveInterval = gameplay.value("autosaveInterval", settings.autosaveInterval);
+
+        std::cout << "  Difficulty: " << settings.difficulty << std::endl;
+        std::cout << "  Autosave: " << (settings.autosave ? "Enabled" : "Disabled");
+        if (settings.autosave)
+            std::cout << " (every " << settings.autosaveInterval << "s)";
+        std::cout << std::endl;
+    }
+
+    // Load controls settings
+    if (settingsJson.contains("controls"))
+    {
+        const auto &controls = settingsJson["controls"];
+        settings.invertY = controls.value("invertY", settings.invertY);
+
+        std::cout << "  Invert Y-Axis: " << (settings.invertY ? "Yes" : "No") << std::endl;
+    }
+
+    std::cout << "Settings loaded successfully!" << std::endl;
 }
 
 void Game::render()
