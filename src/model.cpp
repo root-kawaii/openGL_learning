@@ -32,8 +32,8 @@ void Model::Draw(Shader &shader)
         GetBoneTransforms(transforms, timeSeconds);
     }
 
-    // Upload bone matrices once (applies to all meshes)
-    GLint location = glGetUniformLocation(shader.ID, "gBones");
+    // Upload bone matrices once (applies to all meshes) using cached location
+    GLint location = shader.getUniformLocation("gBones");
     if (location >= 0)
     {
         if (!transforms.empty())
@@ -104,6 +104,12 @@ void Model::loadModel(string const &path)
 
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene);
+
+    // Print final model statistics
+    std::cout << "✓ Model loaded: " << path << std::endl;
+    std::cout << "  Total vertices: " << getVertexCount() << std::endl;
+    std::cout << "  Total triangles: " << getTriangleCount() << std::endl;
+    std::cout << "=====================================" << std::endl;
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).

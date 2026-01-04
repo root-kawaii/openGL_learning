@@ -18,6 +18,8 @@
 // Forward declarations
 // class Shader;
 // class Texture;
+class GameEntity;
+struct Light;
 // class Mesh;
 // class Camera;
 
@@ -42,13 +44,13 @@ struct RenderCommand
     float distance; // for sorting
 };
 
-struct Light
-{
-    glm::vec3 position;
-    glm::vec3 color;
-    float intensity;
-    // Add more light properties as needed
-};
+// struct Light
+// {
+//     glm::vec3 position;
+//     glm::vec3 color;
+//     float intensity;
+//     // Add more light properties as needed
+// };
 
 struct GrassInstance
 {
@@ -58,10 +60,15 @@ struct GrassInstance
     glm::vec3 tint; // Individual grass blade tinting
 };
 
+class Game;      // Forward declaration
+class UIManager; // Forward declaration
+
 class RenderManager
 {
 private:
     Scene *currentScene;
+    Game *gameInstance = nullptr;
+    UIManager *uiManager = nullptr;
 
     float lastTimeSinceShaderReload = 0.0f;
 
@@ -177,6 +184,15 @@ private:
     unsigned int skyboxVAO, skyboxVBO;
     unsigned int cubemapTexture;
 
+    // Trajectory rendering control
+    bool renderTrajectory = false; // Off by default for performance
+    int trajectorySegments = 50;   // Reduced from 1000 for performance
+
+    // ID buffer update control (only render when needed for mouse picking)
+    bool needIDBufferUpdate = true; // Render on first frame
+
+    std::vector<glm::vec3> getReachableTilesForEntity(std::shared_ptr<GameEntity> entity);
+
 public:
     RenderManager();
     ~RenderManager();
@@ -197,8 +213,14 @@ public:
     };
 
     void setTimeSinceLastShaderReload(float time) { lastTimeSinceShaderReload = time; };
+
+    void setGame(Game *game) { gameInstance = game; }
+    void setUIManager(UIManager *ui) { uiManager = ui; }
     float getTimeSinceLastShaderReload() const { return lastTimeSinceShaderReload; };
     void checkAndReloadShaders();
+
+    // Light management
+    void setLights(const std::vector<Light> &sceneLights);
 
     void setBoneDebugMode(int mode) { boneDebugMode = mode; };
     int getBoneDebugMode() const { return boneDebugMode; };
@@ -274,7 +296,7 @@ public:
     Mesh *loadMesh(const std::string &name, const std::string &path);
 
     Shader *getShader(const std::string &name);
-    void useShader(GameObject &gameObject, Shader *shader, glm::vec3 lightPos, glm::mat4 lightSpaceMatrix);
+    void useShader(GameObject &gameObject, Shader *shader, std::vector<glm::vec3> &lightPos, glm::mat4 lightSpaceMatrix);
     Texture *getTexture(const std::string &name);
     Mesh *getMesh(const std::string &name);
 
@@ -315,12 +337,12 @@ public:
                     const glm::vec3 &color = glm::vec3(1.0f));
     void renderWireCube(const glm::vec3 &center, const glm::vec3 &size,
                         const glm::vec3 &color = glm::vec3(1.0f));
-    void renderSphere(const glm::vec3 &center, float radius,
-                      const glm::vec3 &color = glm::vec3(1.0f));
+    void renderLightbulb(const glm::vec3 &center,
+                         const glm::vec3 &color = glm::vec3(1.0f));
 
     int getTextureCounter() { return textureCounter; }
 
-    void renderGameObject(GameObject &gameObject, glm::vec3 lightPos, glm::mat4 lightMatrix);
+    void renderGameObject(GameObject &gameObject, std::vector<glm::vec3> &lightPos, glm::mat4 lightMatrix);
     void renderGameObjectWithShader(GameObject &gameObject, Shader shader);
     void renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID);
     void renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color);
@@ -375,4 +397,18 @@ public:
 
     void renderShadowPass();
     void renderMainPass();
+
+    // Trajectory control methods
+    void setRenderTrajectory(bool enabled) { renderTrajectory = enabled; }
+    bool getRenderTrajectory() const { return renderTrajectory; }
+    void setTrajectorySegments(int segments) { trajectorySegments = segments; }
+    int getTrajectorySegments() const { return trajectorySegments; }
+
+    // ID buffer control methods
+    void requestIDBufferUpdate() { needIDBufferUpdate = true; }
+
+    std::vector<Light> &getSceneLights()
+    {
+        return lights;
+    };
 };

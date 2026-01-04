@@ -14,6 +14,7 @@ Understand text rendering and display stuff I need
 NEXT TO DO:
 
 - need a playable version asap so in order:
+- - improve serialization clarity / performance
 - - need to select game entity and click on target tile if it is a tile on which we can move
 - - clean up board
 - - create the TURN

@@ -94,3 +94,9 @@ bool GameEntity::isReachable(glm::vec3 position)
         return true;
     return false;
 }
+
+void GameEntity::moveToTarget(GameEntity &targetEntity)
+{
+    targetDestination = targetEntity.object->position;
+    isMoving = true;
+}

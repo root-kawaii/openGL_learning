@@ -1,4 +1,7 @@
 #include "render_manager.h"
+#include "game.h"
+#include "ui.h"
+#include "serialization_utilities.h"
 #include "../tracy/public/tracy/Tracy.hpp"
 
 namespace fs = std::filesystem;
@@ -34,6 +37,33 @@ bool isInViewDistance(const glm::vec3 &objectPos, const glm::vec3 &cameraPos, fl
     float distSq = glm::length(objectPos - cameraPos);
     distSq = distSq * distSq;
     return distSq < (maxDistance * maxDistance);
+}
+
+// Light-space frustum culling for shadow pass optimization
+bool isInLightFrustum(const glm::vec3 &position, float radius,
+                      const glm::mat4 &lightProjection, const glm::mat4 &lightView)
+{
+    glm::mat4 lightVP = lightProjection * lightView;
+    glm::vec4 clipSpacePos = lightVP * glm::vec4(position, 1.0f);
+
+    // Perspective divide
+    if (clipSpacePos.w != 0.0f)
+    {
+        clipSpacePos /= clipSpacePos.w;
+    }
+
+    // Add radius in clip space (approximate)
+    float radiusInClipSpace = radius / abs(clipSpacePos.w);
+
+    // Check if within normalized device coordinates [-1, 1] with radius
+    if (clipSpacePos.x < -1.0f - radiusInClipSpace || clipSpacePos.x > 1.0f + radiusInClipSpace)
+        return false;
+    if (clipSpacePos.y < -1.0f - radiusInClipSpace || clipSpacePos.y > 1.0f + radiusInClipSpace)
+        return false;
+    if (clipSpacePos.z < -1.0f - radiusInClipSpace || clipSpacePos.z > 1.0f + radiusInClipSpace)
+        return false;
+
+    return true;
 }
 
 float skyboxVertices[] = {
@@ -115,6 +145,29 @@ bool RenderManager::initialize(int width, int height)
 void RenderManager::cleanup()
 {
     // TODO: Clean up resources
+}
+
+void RenderManager::setLights(const std::vector<Light> &sceneLights)
+{
+    // Clear existing lights
+    lightPositions.clear();
+    lights.clear();
+
+    // Convert SceneLight to Light and lightPositions
+    for (const auto &sceneLight : sceneLights)
+    {
+        // Add to lightPositions for backward compatibility
+        lightPositions.push_back(sceneLight.position);
+
+        // Create Light struct
+        Light light;
+        light.position = sceneLight.position;
+        light.color = sceneLight.color;
+        light.intensity = sceneLight.intensity;
+        lights.push_back(light);
+    }
+
+    std::cout << "RenderManager: Loaded " << lights.size() << " lights from scene" << std::endl;
 }
 
 void RenderManager::beginFrame()
@@ -377,9 +430,74 @@ void RenderManager::renderWireCube(const glm::vec3 &center, const glm::vec3 &siz
     // TODO: Immediate mode wire cube rendering
 }
 
-void RenderManager::renderSphere(const glm::vec3 &center, float radius, const glm::vec3 &color)
+void RenderManager::renderLightbulb(const glm::vec3 &center, const glm::vec3 &color)
 {
-    // TODO: Immediate mode sphere rendering
+    static unsigned int bulbVAO = 0;
+    static unsigned int bulbVBO = 0;
+    static int vertexCount = 0;
+
+    if (bulbVAO == 0)
+    {
+        std::vector<float> vertices;
+        const unsigned int X_SEGMENTS = 20;
+        const unsigned int Y_SEGMENTS = 20;
+        const float RADIUS = 0.2f; // Small size for a bulb
+
+        for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+        {
+            for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+            {
+                float xSegment = (float)x / (float)X_SEGMENTS;
+                float ySegment = (float)y / (float)Y_SEGMENTS;
+                float xPos = std::cos(xSegment * 2.0f * 3) * std::sin(ySegment * 3);
+                float yPos = std::cos(ySegment * 3);
+                float zPos = std::sin(xSegment * 2.0f * 3) * std::sin(ySegment * 3);
+
+                // Position
+                vertices.push_back(xPos * RADIUS);
+                vertices.push_back(yPos * RADIUS);
+                vertices.push_back(zPos * RADIUS);
+                // Normals (same as position for a sphere)
+                vertices.push_back(xPos);
+                vertices.push_back(yPos);
+                vertices.push_back(zPos);
+            }
+        }
+
+        // Generate indices for a triangle strip or convert to triangles
+        // For simplicity and matching your glDrawArrays style,
+        // we can use a basic sphere generation algorithm here.
+        // (Note: In a production app, use an EBO/Index Buffer)
+
+        glGenVertexArrays(1, &bulbVAO);
+        glGenBuffers(1, &bulbVBO);
+        glBindVertexArray(bulbVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, bulbVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0); // Position
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1); // Normal
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+
+        vertexCount = vertices.size() / 6;
+    }
+
+    // 1. Set your shader to a simple "Unlit" or "Flat" shader
+    // lightShader.use();
+    // lightShader.setVec3("lightColor", color);
+
+    // 2. Set Model Matrix
+    glm::mat4 model = glm::mat4(100.0f);
+    model = glm::translate(model, center);
+    // lightShader.setMat4("model", model);
+
+    // 3. Render
+    glBindVertexArray(bulbVAO);
+    // Note: This uses GL_POINTS for a 'star' effect or GL_TRIANGLE_STRIP
+    // depending on how you structured the vertex generation above.
+    glDrawArrays(GL_POINTS, 0, vertexCount);
+    glBindVertexArray(0);
 }
 
 void RenderManager::bindTextures(const std::vector<Texture *> &textures)
@@ -883,7 +1001,7 @@ void RenderManager::renderSelectedTile(glm::vec3 position, glm::vec3 color, floa
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Optional: disable depth writing so objects behind show through
-    glDepthMask(GL_FALSE);
+    // glDepthMask(GL_FALSE);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);
@@ -898,7 +1016,7 @@ void RenderManager::renderSelectedTile(glm::vec3 position, glm::vec3 color, floa
     renderCube(position);
 
     // Restore OpenGL state
-    glDepthMask(GL_TRUE);
+    // glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
 
@@ -1201,6 +1319,7 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     {
         return;
     }
+
     shader.use();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
@@ -1208,8 +1327,17 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     shader.setMat4("projection", projectionMatrix);
     shader.setMat4("view", viewMatrix);
     shader.setMat4("model", model);
-    shader.setFloat("time", glfwGetTime());
+    // shader.setFloat("time", glfwGetTime());
+    shader.setFloat("windAngle", 0.785f); // 45 degrees
+    shader.setVec3("sandColor", glm::vec3(0.76, 0.7, 0.5));
+    shader.setVec3("fogColor", glm::vec3(0.76, 0.7, 0.5));
+    shader.setFloat("fogDensity", 0.0001f); // 45 degrees
     gameObject.model.Draw(shader);
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error in renderGameObjectWithShader 2: " << error << std::endl;
+    }
 }
 
 void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader shader, glm::mat4 newProjectionMatrix, glm::mat4 newViewMatrix, glm::mat4 newModel)
@@ -1237,7 +1365,7 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     gameObject.model.Draw(shader);
 }
 
-void RenderManager::renderGameObject(GameObject &gameObject, glm::vec3 lightPos, glm::mat4 lightMatrix)
+void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::vec3> &lightPos, glm::mat4 lightMatrix)
 {
     ZoneScoped;
     // Fast distance check first
@@ -1564,7 +1692,7 @@ void RenderManager::debugIDBuffer()
 //     return 0;
 // }
 
-void RenderManager::useShader(GameObject &gameObject, Shader *shader, glm::vec3 lightPos, glm::mat4 lightSpaceMatrix)
+void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vector<glm::vec3> &lights, glm::mat4 lightSpaceMatrix)
 {
     glm::mat4 model = gameObject.GetTransform(); // Just use GetTransform() for consistency
     shader->use();
@@ -1574,11 +1702,27 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, glm::vec3 
     shader->setFloat("time", glfwGetTime());
     shader->setVec3("objectColor", gameObject.color);
     shader->setVec3("viewPos", currentCamera->Position);
-    shader->setVec3("lightPos", lightPos);
+    // shader->setVec3("lightPos", lightPos);
+
     shader->setVec3("lightColor", glm::vec3(1.0f, 0.0f, 0.0f));
     shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     shader->setInt("shadowMap", 0);
     shader->setInt("debugMode", boneDebugMode);
+
+    int lightCount = static_cast<int>(lights.size());
+    shader->setInt("numLights", lightCount);
+
+    // 2. Loop through and set each light's properties
+    for (int i = 0; i < lightCount; ++i)
+    {
+        // Construct the string keys for the array of structs
+        std::string posName = "lights[" + std::to_string(i) + "].Position";
+        std::string colName = "lights[" + std::to_string(i) + "].Color";
+
+        // Set the uniforms
+        shader->setVec3(posName, lights[i]);
+        shader->setVec3(colName, glm::vec3(1.0f, 1.0f, 1.0f));
+    }
 
     if (gameObject.shaderName == "water_noG")
     {
@@ -2104,7 +2248,8 @@ void RenderManager::initializeShaders()
     shaders["water_noG"] = std::make_shared<Shader>("shaders/water_2.vs", "shaders/water_2.fs");
     shaders["id_shader"] = std::make_shared<Shader>("shaders/id_shader.vs", "shaders/id_shader.fs");
     shaders["line_shader"] = std::make_shared<Shader>("shaders/line_shader.vs", "shaders/line_shader.fs", "shaders/line_shader.gs");
-    shaders["tile_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/tile_shader.fs");
+    shaders["tile_shader"] = std::make_shared<Shader>("shaders/tile_shader.vs", "shaders/tile_shader.fs");
+    shaders["dune_shader"] = std::make_shared<Shader>("shaders/sand_terrain.vs", "shaders/sand_terrain.fs");
 
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
@@ -2608,7 +2753,7 @@ void RenderManager::renderShadowPass()
 
     for (auto lightPos : lightPositions)
     {
-        lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
+        // lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
         // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
         lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
         lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
@@ -2623,9 +2768,28 @@ void RenderManager::renderShadowPass()
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         auto gameObjects = currentScene->getGameObjects();
+
+        // Debug: Count culled objects
+        static int shadowFrameCounter = 0;
+        int culledCount = 0;
+
         for (auto &i : gameObjects)
         {
-            renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
+            // Apply light-space frustum culling to avoid rendering objects outside shadow map
+            if (isInLightFrustum(i->position, 2.0f, lightProjection, lightView))
+            {
+                renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
+            }
+            else
+            {
+                culledCount++;
+            }
+        }
+
+        if (shadowFrameCounter++ % 60 == 0)
+        {
+            std::cout << "[DEBUG] Shadow pass: " << (gameObjects.size() - culledCount) << " rendered, "
+                      << culledCount << " culled (total: " << gameObjects.size() << ")" << std::endl;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2637,25 +2801,109 @@ void RenderManager::renderMainPass()
 
     auto gameObjects = currentScene->getGameObjects();
 
+    // Debug: Log object count every 60 frames
+    static int frameCounter = 0;
+    if (frameCounter++ % 60 == 0)
+    {
+        std::cout << "[DEBUG] Main pass rendering " << gameObjects.size() << " objects" << std::endl;
+    }
+
     // Cache the animated light position calculation (was being calculated 3 times per object!)
-    float animatedLightOffset = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
-    glm::vec3 lightPos = glm::vec3(animatedLightOffset, animatedLightOffset, animatedLightOffset);
+    // float animatedLightOffset = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
+    // glm::vec3 lightPos = glm::vec3(animatedLightOffset, animatedLightOffset, animatedLightOffset);
+    std::vector<glm::vec3> lightPositions;
+    for (auto light : lights)
+    {
+        lightPositions.push_back(light.position);
+    }
 
     for (auto &i : gameObjects)
     {
+        if (i->name == "dune")
+        {
+            // renderGameObjectWithShader(*i, *getShader("dune_shader"));
+            continue;
+        }
         // for (const auto lightPos : lightPositions)
         // {
-        renderGameObject(*i, lightPos, lightSpaceMatrix);
+        renderGameObject(*i, lightPositions, lightSpaceMatrix);
         //}
 
-        // if (i->name.find("cube") != std::string::npos && activeGameEntity.isReachable(i->position) && uiManager->isCharacterMoving)
-        //     renderManager->renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
+        // Visual feedback for entities
+        if (gameInstance)
+        {
+            // Find if this object is a game entity
+            std::shared_ptr<GameEntity> entity = nullptr;
+            for (auto &e : currentScene->getGameEntities())
+            {
+                if (e->object->ID == i->ID)
+                {
+                    entity = e;
+                    break;
+                }
+            }
+
+            if (entity && gameInstance->isEntitySelectable(entity))
+            {
+                // Highlight selected entity with gold outline
+                if (gameInstance->getSelectedEntity() && entity == gameInstance->getSelectedEntity())
+                {
+                    for (auto &tilePosition : getReachableTilesForEntity(entity))
+                    {
+                        renderSelectedTile(tilePosition, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                    }
+                }
+                // Show entities that have already moved with red tint
+                else if (entity->hasMovedThisTurn)
+                {
+                    // renderSelectedTile(i->position + glm::vec3(1, 1, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                }
+                // Show entities that can still move with green tint
+                else
+                {
+                    // renderSelectedTile(i->position, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                    // renderSelectedTile(i->position + glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                    // renderSelectedTile(i->position - glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                }
+            }
+        }
+
+        // Highlight reachable tiles when in Move mode
+        if (i->name.find("cube") != std::string::npos &&
+            gameInstance &&
+            gameInstance->getSelectedEntity() &&
+            gameInstance->canEntityMove(gameInstance->getSelectedEntity()) &&
+            gameInstance->getSelectedEntity()->isReachable(i->position) &&
+            uiManager &&
+            uiManager->isCharacterMoving)
+        {
+            renderSelectedTile(i->position, glm::vec3(0.1, 0.1, 0.9), 0.02f, 0.60f);
+        }
     }
 
-    renderSceneToIDBuffer(gameObjects);
+    // ID buffer rendering (only when needed for mouse picking)
+    if (true)
+    {
+        renderSceneToIDBuffer(gameObjects);
+        needIDBufferUpdate = false;
+    }
+
     currentScene->renderCompactColorPicker();
-    int seg = 1000;
-    renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), seg);
+
+    // Trajectory rendering (toggleable for performance)
+    if (renderTrajectory)
+    {
+        renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), trajectorySegments);
+    }
+
+    if (gameInstance->getGameMode() == ENGINE)
+    {
+        for (auto &light : lights)
+        {
+            renderArrow(light.position);
+        }
+    }
+
     renderSkyBox();
 }
 
@@ -2696,4 +2944,24 @@ void RenderManager::sceneBuffersSetup()
     {
         std::cout << "ERROR: Scene framebuffer not complete!" << std::endl;
     }
+}
+
+std::vector<glm::vec3> RenderManager::getReachableTilesForEntity(std::shared_ptr<GameEntity> entity)
+{
+    std::vector<glm::vec3> reachableTiles;
+    if (!entity)
+        return reachableTiles;
+
+    auto gameObjects = currentScene->getGameObjects();
+    for (auto &obj : gameObjects)
+    {
+        if (obj->name.find("cube") != std::string::npos)
+        {
+            if (entity->isReachable(obj->position))
+            {
+                reachableTiles.push_back(obj->position);
+            }
+        }
+    }
+    return reachableTiles;
 }

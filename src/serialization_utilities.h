@@ -1,3 +1,4 @@
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -22,6 +23,14 @@ struct SceneObject
     bool gameEntity;
 };
 
+struct Light
+{
+    glm::vec3 position;
+    glm::vec3 color;
+    float intensity;
+    // Add more light properties as needed
+};
+
 class SerializationUtilities
 {
 
@@ -30,6 +39,7 @@ public:
     ~SerializationUtilities() {};
 
     std::vector<SceneObject> getObjects() { return objects; };
+    std::vector<Light> getLights() { return lights; };
 
     SceneObject *getObjectWithId(const std::string &id)
     {
@@ -80,6 +90,7 @@ public:
 
         objects.clear();
         objectMap.clear();
+        lights.clear();
 
         for (const auto &objData : sceneData["objects"])
         {
@@ -89,6 +100,17 @@ public:
                 objects.push_back(obj);
                 objectMap[obj.id] = &objects.back();
             }
+        }
+
+        // Parse lights if present
+        if (sceneData.contains("lights") && sceneData["lights"].is_array())
+        {
+            for (const auto &lightData : sceneData["lights"])
+            {
+                Light light = parseLight(lightData);
+                lights.push_back(light);
+            }
+            std::cout << "Successfully loaded " << lights.size() << " lights" << std::endl;
         }
 
         std::cout << "Successfully loaded " << objects.size() << " objects" << std::endl;
@@ -178,7 +200,54 @@ public:
 
         return obj;
     }
-    bool saveScene(const std::string &filename, const std::vector<std::shared_ptr<GameObject>> &objects)
+
+    Light parseLight(const nlohmann::json &lightData)
+    {
+        Light light;
+        light.intensity = 1.0f; // Default intensity
+
+        try
+        {
+            // Extract position
+            if (lightData.contains("position"))
+            {
+                const auto &pos = lightData["position"];
+                light.position = glm::vec3(
+                    pos.value("x", 0.0f),
+                    pos.value("y", 0.0f),
+                    pos.value("z", 0.0f));
+            }
+
+            // Extract color
+            if (lightData.contains("color"))
+            {
+                const auto &col = lightData["color"];
+                light.color = glm::vec3(
+                    col.value("r", 1.0f),
+                    col.value("g", 1.0f),
+                    col.value("b", 1.0f));
+            }
+            else
+            {
+                light.color = glm::vec3(1.0f, 1.0f, 1.0f); // Default white
+            }
+
+            // Extract intensity
+            if (lightData.contains("intensity"))
+            {
+                light.intensity = lightData["intensity"];
+            }
+        }
+        catch (const nlohmann::json::exception &e)
+        {
+            std::cerr << "Error parsing light: " << e.what() << std::endl;
+            return Light(); // Return empty light
+        }
+
+        return light;
+    }
+
+    bool saveScene(const std::string &filename, const std::vector<std::shared_ptr<GameObject>> &objects, const std::vector<Light> &sceneLights)
     {
         try
         {
@@ -187,7 +256,7 @@ public:
 
             for (const auto &objPtr : objects)
             {
-                if (!objPtr)
+                if (!objPtr || objPtr->name.rfind("Light_", 0) == 0)
                 {
                     std::cerr << "Warning: skipping null GameObject in saveScene\n";
                     continue; // prevent crash
@@ -231,6 +300,27 @@ public:
                 sceneData["objects"].push_back(objData);
             }
 
+            // Serialize lights
+            sceneData["lights"] = nlohmann::json::array();
+            for (const auto &light : sceneLights)
+            {
+                nlohmann::json lightData;
+
+                lightData["position"] = {
+                    {"x", light.position.x},
+                    {"y", light.position.y},
+                    {"z", light.position.z}};
+
+                lightData["color"] = {
+                    {"r", light.color.r},
+                    {"g", light.color.g},
+                    {"b", light.color.b}};
+
+                lightData["intensity"] = light.intensity;
+
+                sceneData["lights"].push_back(lightData);
+            }
+
             std::ofstream file(filename);
             if (!file.is_open())
             {
@@ -254,4 +344,5 @@ public:
 private:
     std::vector<SceneObject> objects;
     std::unordered_map<std::string, SceneObject *> objectMap;
+    std::vector<Light> lights;
 };

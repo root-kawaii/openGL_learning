@@ -20,6 +20,10 @@
 #include <iostream>
 #include <../json/single_include/nlohmann/json.hpp>
 #include <filesystem>
+#include <set>
+#include <vector>
+#include <string>
+#include <memory>
 
 #include <chrono>
 #include <thread>
@@ -31,8 +35,10 @@
 #include "imgui.h"
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
+#include "../src/collision_system.h"
 #include "game_manager.h"
 #include "ui.h"
+#include "player.h"
 
 class InputManager;
 
@@ -74,7 +80,8 @@ private:
     // SceneManager sceneManager;
     // PhysicsManager physicsManager;
     // ResourceManager resourceManager;
-    SphereCollision sphereCollision;
+    SphereCollision sphereCollision; // Legacy - TODO: Remove after migration
+    CollisionSystem collisionSystem; // New optimized collision system
     InputManager inputManager;
     GameManager gameManager;
     std::shared_ptr<UIManager> uiManager;
@@ -99,6 +106,17 @@ private:
 
     void handleInput();
     void loadSettings();
+
+    int turn = 0;
+    // int turnClock = 0; // from 0 to 24
+
+    void handleTurn();
+
+    std::vector<Player> players;
+
+    // Turn management (player-based, not entity-based)
+    std::shared_ptr<GameEntity> selectedEntity;  // Currently selected entity
+    std::set<std::string> selectableEntityTags = {"88", "unit", "character"};
 
 public:
     bool initialize();
@@ -144,6 +162,15 @@ public:
         }
     };
     GameModeEnum getGameMode() { return mode; };
+
+    // Turn-based gameplay methods
+    void endPlayerTurn();
+    void resetAllEntityMovement();
+    bool isEntitySelectable(std::shared_ptr<GameEntity> entity);
+    bool canEntityMove(std::shared_ptr<GameEntity> entity);
+    void setSelectedEntity(std::shared_ptr<GameEntity> entity);
+    std::shared_ptr<GameEntity> getSelectedEntity() { return selectedEntity; }
+    int getTurnNumber() const { return turn; }
 
     void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager);
 

@@ -1,4 +1,32 @@
 {
+    "lights": [
+        {
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "intensity": 1.0,
+            "position": {
+                "x": 1.0,
+                "y": 5.736643314361572,
+                "z": 1.518140196800232
+            }
+        },
+        {
+            "color": {
+                "b": 1.0,
+                "g": 0.8999999761581421,
+                "r": 0.8999999761581421
+            },
+            "intensity": 0.800000011920929,
+            "position": {
+                "x": 5.0,
+                "y": 0.28523319959640503,
+                "z": 5.0
+            }
+        }
+    ],
     "objects": [
         {
             "collision_radius": {
@@ -9,7 +37,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "1",
+            "entity": "3",
             "id": "grid_cube_0_0",
             "path": "assets/cube.obj",
             "position": {
@@ -38,7 +66,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "2",
+            "entity": "4",
             "id": "grid_cube_1_0",
             "path": "assets/cube.obj",
             "position": {
@@ -67,7 +95,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "3",
+            "entity": "5",
             "id": "grid_cube_2_0",
             "path": "assets/cube.obj",
             "position": {
@@ -96,7 +124,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "4",
+            "entity": "6",
             "id": "grid_cube_3_0",
             "path": "assets/cube.obj",
             "position": {
@@ -125,7 +153,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "5",
+            "entity": "7",
             "id": "grid_cube_4_0",
             "path": "assets/cube.obj",
             "position": {
@@ -154,7 +182,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "6",
+            "entity": "8",
             "id": "grid_cube_5_0",
             "path": "assets/cube.obj",
             "position": {
@@ -183,7 +211,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "7",
+            "entity": "9",
             "id": "grid_cube_6_0",
             "path": "assets/cube.obj",
             "position": {
@@ -212,7 +240,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "8",
+            "entity": "10",
             "id": "grid_cube_7_0",
             "path": "assets/cube.obj",
             "position": {
@@ -241,13 +269,13 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "9",
+            "entity": "11",
             "id": "grid_cube_8_0",
             "path": "assets/cube.obj",
             "position": {
                 "x": 4.5,
                 "y": -0.5,
-                "z": -3.5
+                "z": -0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -270,7 +298,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "10",
+            "entity": "12",
             "id": "grid_cube_9_0",
             "path": "assets/cube.obj",
             "position": {
@@ -299,7 +327,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "11",
+            "entity": "13",
             "id": "grid_cube_0_1",
             "path": "assets/cube.obj",
             "position": {
@@ -328,7 +356,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "12",
+            "entity": "14",
             "id": "grid_cube_1_1",
             "path": "assets/cube.obj",
             "position": {
@@ -357,7 +385,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "13",
+            "entity": "15",
             "id": "grid_cube_2_1",
             "path": "assets/cube.obj",
             "position": {
@@ -386,7 +414,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "14",
+            "entity": "16",
             "id": "grid_cube_3_1",
             "path": "assets/cube.obj",
             "position": {
@@ -415,7 +443,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "15",
+            "entity": "17",
             "id": "grid_cube_4_1",
             "path": "assets/cube.obj",
             "position": {
@@ -444,7 +472,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "16",
+            "entity": "18",
             "id": "grid_cube_5_1",
             "path": "assets/cube.obj",
             "position": {
@@ -473,7 +501,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "17",
+            "entity": "19",
             "id": "grid_cube_6_1",
             "path": "assets/cube.obj",
             "position": {
@@ -502,13 +530,13 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "18",
+            "entity": "20",
             "id": "grid_cube_7_1",
             "path": "assets/cube.obj",
             "position": {
-                "x": 3.5,
+                "x": 4.5,
                 "y": -0.5,
-                "z": -2.5
+                "z": -0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -531,13 +559,13 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "19",
+            "entity": "21",
             "id": "grid_cube_8_1",
             "path": "assets/cube.obj",
             "position": {
                 "x": 4.5,
                 "y": -0.5,
-                "z": -2.5
+                "z": -1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -560,7 +588,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "20",
+            "entity": "22",
             "id": "grid_cube_9_1",
             "path": "assets/cube.obj",
             "position": {
@@ -589,7 +617,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "21",
+            "entity": "23",
             "id": "grid_cube_0_2",
             "path": "assets/cube.obj",
             "position": {
@@ -618,7 +646,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "22",
+            "entity": "24",
             "id": "grid_cube_1_2",
             "path": "assets/cube.obj",
             "position": {
@@ -647,7 +675,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "23",
+            "entity": "25",
             "id": "grid_cube_2_2",
             "path": "assets/cube.obj",
             "position": {
@@ -676,7 +704,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "24",
+            "entity": "26",
             "id": "grid_cube_3_2",
             "path": "assets/cube.obj",
             "position": {
@@ -705,7 +733,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "25",
+            "entity": "27",
             "id": "grid_cube_4_2",
             "path": "assets/cube.obj",
             "position": {
@@ -734,7 +762,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "26",
+            "entity": "28",
             "id": "grid_cube_5_2",
             "path": "assets/cube.obj",
             "position": {
@@ -763,7 +791,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "27",
+            "entity": "29",
             "id": "grid_cube_6_2",
             "path": "assets/cube.obj",
             "position": {
@@ -792,7 +820,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "28",
+            "entity": "30",
             "id": "grid_cube_7_2",
             "path": "assets/cube.obj",
             "position": {
@@ -821,7 +849,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "29",
+            "entity": "31",
             "id": "grid_cube_8_2",
             "path": "assets/cube.obj",
             "position": {
@@ -850,7 +878,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "30",
+            "entity": "32",
             "id": "grid_cube_9_2",
             "path": "assets/cube.obj",
             "position": {
@@ -879,7 +907,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "31",
+            "entity": "33",
             "id": "grid_cube_0_3",
             "path": "assets/cube.obj",
             "position": {
@@ -908,7 +936,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "32",
+            "entity": "34",
             "id": "grid_cube_1_3",
             "path": "assets/cube.obj",
             "position": {
@@ -937,7 +965,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "33",
+            "entity": "35",
             "id": "grid_cube_2_3",
             "path": "assets/cube.obj",
             "position": {
@@ -966,7 +994,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "34",
+            "entity": "36",
             "id": "grid_cube_3_3",
             "path": "assets/cube.obj",
             "position": {
@@ -995,13 +1023,13 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "35",
+            "entity": "37",
             "id": "grid_cube_4_3",
             "path": "assets/cube.obj",
             "position": {
-                "x": -0.5,
+                "x": -1.5,
                 "y": 0.5,
-                "z": 0.5
+                "z": -0.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1024,7 +1052,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "36",
+            "entity": "38",
             "id": "grid_cube_5_3",
             "path": "assets/cube.obj",
             "position": {
@@ -1053,7 +1081,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "37",
+            "entity": "39",
             "id": "grid_cube_6_3",
             "path": "assets/cube.obj",
             "position": {
@@ -1082,7 +1110,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "38",
+            "entity": "40",
             "id": "grid_cube_7_3",
             "path": "assets/cube.obj",
             "position": {
@@ -1111,7 +1139,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "39",
+            "entity": "41",
             "id": "grid_cube_8_3",
             "path": "assets/cube.obj",
             "position": {
@@ -1140,7 +1168,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "40",
+            "entity": "42",
             "id": "grid_cube_9_3",
             "path": "assets/cube.obj",
             "position": {
@@ -1169,7 +1197,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "41",
+            "entity": "43",
             "id": "grid_cube_0_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1198,7 +1226,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "42",
+            "entity": "44",
             "id": "grid_cube_1_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1227,7 +1255,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "43",
+            "entity": "45",
             "id": "grid_cube_2_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1256,7 +1284,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "44",
+            "entity": "46",
             "id": "grid_cube_3_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1285,7 +1313,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "45",
+            "entity": "47",
             "id": "grid_cube_4_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1314,7 +1342,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "46",
+            "entity": "48",
             "id": "grid_cube_5_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1343,7 +1371,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "47",
+            "entity": "49",
             "id": "grid_cube_6_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1372,7 +1400,7 @@
                 "g": 0.27997463941574097,
                 "r": 0.9724584817886353
             },
-            "entity": "48",
+            "entity": "50",
             "id": "grid_cube_7_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1401,7 +1429,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "49",
+            "entity": "51",
             "id": "grid_cube_8_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1430,7 +1458,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "50",
+            "entity": "52",
             "id": "grid_cube_9_4",
             "path": "assets/cube.obj",
             "position": {
@@ -1459,7 +1487,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "51",
+            "entity": "53",
             "id": "grid_cube_0_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1488,7 +1516,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "52",
+            "entity": "54",
             "id": "grid_cube_1_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1517,7 +1545,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "53",
+            "entity": "55",
             "id": "grid_cube_2_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1546,7 +1574,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "54",
+            "entity": "56",
             "id": "grid_cube_3_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1575,7 +1603,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "55",
+            "entity": "57",
             "id": "grid_cube_4_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1604,7 +1632,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "56",
+            "entity": "58",
             "id": "grid_cube_5_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1633,7 +1661,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "57",
+            "entity": "59",
             "id": "grid_cube_6_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1662,7 +1690,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "58",
+            "entity": "60",
             "id": "grid_cube_7_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1691,7 +1719,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "59",
+            "entity": "61",
             "id": "grid_cube_8_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1720,7 +1748,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "60",
+            "entity": "62",
             "id": "grid_cube_9_5",
             "path": "assets/cube.obj",
             "position": {
@@ -1749,7 +1777,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "61",
+            "entity": "63",
             "id": "grid_cube_0_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1778,7 +1806,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "62",
+            "entity": "64",
             "id": "grid_cube_1_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1807,7 +1835,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "63",
+            "entity": "65",
             "id": "grid_cube_2_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1836,7 +1864,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "64",
+            "entity": "66",
             "id": "grid_cube_3_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1865,7 +1893,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "65",
+            "entity": "67",
             "id": "grid_cube_4_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1894,13 +1922,13 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "66",
+            "entity": "68",
             "id": "grid_cube_5_6",
             "path": "assets/cube.obj",
             "position": {
                 "x": 2.5,
                 "y": 0.5,
-                "z": 2.5
+                "z": 1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -1923,7 +1951,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "67",
+            "entity": "69",
             "id": "grid_cube_6_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1952,7 +1980,7 @@
                 "g": 0.0916023775935173,
                 "r": 0.9999999403953552
             },
-            "entity": "68",
+            "entity": "70",
             "id": "grid_cube_7_6",
             "path": "assets/cube.obj",
             "position": {
@@ -1981,7 +2009,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "69",
+            "entity": "71",
             "id": "grid_cube_8_6",
             "path": "assets/cube.obj",
             "position": {
@@ -2010,7 +2038,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "70",
+            "entity": "72",
             "id": "grid_cube_9_6",
             "path": "assets/cube.obj",
             "position": {
@@ -2039,7 +2067,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "71",
+            "entity": "73",
             "id": "grid_cube_0_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2068,7 +2096,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "72",
+            "entity": "74",
             "id": "grid_cube_1_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2097,7 +2125,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "73",
+            "entity": "75",
             "id": "grid_cube_2_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2126,7 +2154,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "74",
+            "entity": "76",
             "id": "grid_cube_3_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2155,7 +2183,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "75",
+            "entity": "77",
             "id": "grid_cube_4_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2184,7 +2212,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "76",
+            "entity": "78",
             "id": "grid_cube_5_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2213,7 +2241,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "77",
+            "entity": "79",
             "id": "grid_cube_6_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2242,7 +2270,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "78",
+            "entity": "80",
             "id": "grid_cube_7_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2271,7 +2299,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "79",
+            "entity": "81",
             "id": "grid_cube_8_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2300,7 +2328,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "80",
+            "entity": "82",
             "id": "grid_cube_9_7",
             "path": "assets/cube.obj",
             "position": {
@@ -2357,7 +2385,7 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "82",
+            "entity": "84",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2386,7 +2414,7 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "entity": "83",
+            "entity": "85",
             "id": "grid_cube_6_227.000000",
             "path": "assets/cube.obj",
             "position": {
@@ -2415,7 +2443,7 @@
                 "g": 1.0,
                 "r": 0.0
             },
-            "entity": "84",
+            "entity": "86",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2444,7 +2472,7 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "85",
+            "entity": "87",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2501,7 +2529,7 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "87",
+            "entity": "89",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2530,12 +2558,12 @@
                 "g": 0.0,
                 "r": 1.0
             },
-            "entity": "88",
+            "entity": "90",
             "id": "cube",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 0.5,
-                "y": 0.5,
+                "x": -0.5,
+                "y": 0.4999999701976776,
                 "z": 2.5
             },
             "rotation": {
@@ -2559,7 +2587,7 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "89",
+            "entity": "91",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2593,7 +2621,7 @@
             "position": {
                 "x": 1.857460379600525,
                 "y": 4.026426315307617,
-                "z": 4.148624420166016
+                "z": 13.80053424835205
             },
             "rotation": {
                 "x": -1.5744620561599731,
@@ -2601,7 +2629,7 @@
                 "z": 0.0
             },
             "scale": {
-                "x": 5.8759760577231646e-05,
+                "x": 5.875811984878965e-05,
                 "y": 5.900146788917482e-05,
                 "z": 4.402092963573523e-05
             },
@@ -2616,7 +2644,7 @@
                 "g": 1.0,
                 "r": 1.0
             },
-            "entity": "91",
+            "entity": "93",
             "id": "cube",
             "path": "assets/cube.obj",
             "position": {
@@ -2645,7 +2673,7 @@
                 "g": 0.8704010248184204,
                 "r": 1.0
             },
-            "entity": "92",
+            "entity": "94",
             "id": "92",
             "path": "assets/cube.obj",
             "position": {
@@ -2674,12 +2702,13 @@
                 "g": 0.9582654237747192,
                 "r": 0.00984035711735487
             },
+            "entity": "95",
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 5.367666244506836,
-                "y": 2.75557541847229,
-                "z": -2.3231282234191895
+                "x": 4.5,
+                "y": 0.11222995817661285,
+                "z": -3.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2687,7 +2716,7 @@
                 "z": -2.1419358253479004
             },
             "scale": {
-                "x": 1.797654476831667e-05,
+                "x": 1.7976473827729933e-05,
                 "y": 1.591724867466837e-05,
                 "z": 1.8356004147790372e-05
             },
@@ -2702,12 +2731,13 @@
                 "g": 0.7940564155578613,
                 "r": 0.9452119469642639
             },
+            "entity": "96",
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 8.701399803161621,
-                "y": 2.75557541847229,
-                "z": 0.38715678453445435
+                "x": 0.5,
+                "y": -0.5,
+                "z": 4.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2730,12 +2760,13 @@
                 "g": 0.7940564155578613,
                 "r": 0.9452119469642639
             },
+            "entity": "97",
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 3.1378629207611084,
-                "y": 2.75557541847229,
-                "z": 0.38715678453445435
+                "x": 3.5,
+                "y": 2.5,
+                "z": 0.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2758,12 +2789,13 @@
                 "g": 0.7940564155578613,
                 "r": 0.9452119469642639
             },
+            "entity": "98",
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 5.367666244506836,
-                "y": 2.75557541847229,
-                "z": 0.38715678453445435
+                "x": 5.5,
+                "y": 2.5,
+                "z": 0.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2786,12 +2818,13 @@
                 "g": 0.0,
                 "r": 1.0
             },
+            "entity": "99",
             "id": "95",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 5.367666244506836,
-                "y": 2.75557541847229,
-                "z": 3.0733726024627686
+                "x": 5.5,
+                "y": 2.5,
+                "z": 3.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2830,6 +2863,34 @@
                 "x": 1.0,
                 "y": 1.0,
                 "z": 1.0
+            },
+            "shader_name": "simple_color_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.13470615446567535,
+                "g": 0.13470615446567535,
+                "r": 0.7751391530036926
+            },
+            "id": "dune",
+            "path": "assets/planes/terrain_plane.obj",
+            "position": {
+                "x": 0.0,
+                "y": -2.419518232345581,
+                "z": 9.47274398803711
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 86.0369873046875,
+                "y": 0.5854334235191345,
+                "z": 81.69203186035156
             },
             "shader_name": "simple_color_shader"
         }

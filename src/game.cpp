@@ -28,6 +28,7 @@ bool Game::initialize()
 {
     // Load settings first
     loadSettings();
+    players.push_back(Player("Player 1"));
     SCR_HEIGHT = settings.resolutionHeight;
     SCR_WIDTH = settings.resolutionWidth;
     std::cout << "Initializing game with resolution: " << SCR_WIDTH << "x" << SCR_HEIGHT << std::endl;
@@ -35,8 +36,18 @@ bool Game::initialize()
     uiManager = std::make_shared<UIManager>(settings.resolutionHeight, settings.resolutionWidth);
     uiManager->setWindow(window);
     uiManager->setInputManager(&inputManager);
-    auto mainScene = std::make_shared<Scene>();
+    uiManager->setGame(this);
+    auto mainScene = std::make_shared<Scene>(&renderManager);
     this->setScene(mainScene);
+    scene->setGame(this);
+    scene->setUIManager(uiManager.get());
+    renderManager.setGame(this);
+    renderManager.setUIManager(uiManager.get());
+
+    // Initialize turn system - player-based, not entity-based
+    // All entities start with hasMovedThisTurn = false
+    resetAllEntityMovement();
+
     return true;
 }
 
@@ -62,14 +73,8 @@ void Game::update()
     lastFrame = currentFrame;
 
     inputManager.processInput(this, window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
-    // A temporary place to store all corrections for the frame.
-    // This is the key change to prevent cumulative errors.
-    glm::vec3 cameraCorrection = glm::vec3(0.0f);
 
     // --- Phase 1: Object Movement (pre-collision) ---
-    // Let's assume the camera's desired movement is also calculated here.
-    // For example, based on keyboard input.
-    // For now, let's just stick to the objects.
     auto gameObjects = scene->getGameObjects();
     for (auto &obj : gameObjects)
     {
@@ -84,44 +89,15 @@ void Game::update()
         entites->move(deltaTime);
     }
 
-    // --- Phase 2: Collision Detection and Correction Calculation ---
-    // Check all collisions and sum up the required corrections.
-    for (size_t m = 0; m < gameObjects.size(); ++m)
-    {
-        auto &a = gameObjects[m];
-        if (a->collisionRadius == 0)
-            continue;
-
-        // 1. Calculate camera vs object collision correction.
-        // We use the camera's current position and the object's new position
-        // to determine if a collision occurred.
-        cameraCorrection -= sphereCollision.cameraPositionCorrection(camera, *a);
-
-        // 2. Object-object collision detection and correction.
-        // A better approach would be to calculate a correction for both objects (a and b)
-        // and store it to be applied later, but we'll stick to a simpler
-        // in-loop application for now.
-        for (size_t n = m + 1; n < gameObjects.size(); ++n)
-        {
-            auto &b = gameObjects[n];
-            if (b->collisionRadius == 0)
-                continue;
-
-            glm::vec3 correction = sphereCollision.simplePositionCorrection(*a, *b);
-            if (glm::length(correction) > 0.0f)
-            {
-                // Apply half the correction to each object to resolve the collision.
-                // This is much more stable than applying it to only one.
-                a->position += correction * 0.5f;
-                b->position -= correction * 0.5f;
-            }
-        }
-    }
+    // --- Phase 2: Optimized Collision Detection ---
+    // Using new CollisionSystem for better performance
+    // glm::vec3 cameraCorrection = collisionSystem.performCollisionPass(camera, gameObjects);
 
     // --- Phase 3: Apply All Final Corrections ---
-    // This is the single, final application of the camera correction for the frame.
     handleInput();
-    camera.Position += cameraCorrection;
+    // camera.Position += cameraCorrection;
+
+    handleTurn();
 
     // --- FPS Limiting to 180 FPS ---
     const float targetFPS = 250.0f;
@@ -134,7 +110,7 @@ void Game::update()
     if (sleepTime > 0.0f)
     {
         // Convert to microseconds for more precise sleep
-        std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(sleepTime * 1000000.0f)));
+        // std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(sleepTime * 1000000.0f)));
     }
 }
 
@@ -414,4 +390,82 @@ void Game::handleInput()
         }
         scene->duplicateGameObject(scene->getSelectedGameObject()->ID);
     }
+}
+
+void Game::handleTurn()
+{
+    // if (getGameMode() != GAME)
+    // {
+    //     return;
+    // }
+    auto gameEntities = scene->getGameEntities();
+    for (auto &entity : gameEntities)
+    {
+        // entity->onNewTurn();
+    }
+}
+
+// Check if entity can be selected based on tag
+bool Game::isEntitySelectable(std::shared_ptr<GameEntity> entity)
+{
+    return true;
+    if (!entity || !entity->object)
+        return false;
+    std::string entityTag = entity->object->gameEntity;
+
+    for (const auto &tag : selectableEntityTags)
+    {
+        if (entityTag.find(tag) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Check if entity can move this turn (hasn't moved yet)
+bool Game::canEntityMove(std::shared_ptr<GameEntity> entity)
+{
+    if (!entity)
+        return false;
+    return !entity->hasMovedThisTurn;
+}
+
+// Set the currently selected entity
+void Game::setSelectedEntity(std::shared_ptr<GameEntity> entity)
+{
+    selectedEntity = entity;
+    if (entity && entity->object)
+    {
+        scene->setSelectedObject(entity->object);
+        std::cout << "Selected entity: " << entity->object->name << std::endl;
+    }
+}
+
+// Reset all entity movement flags (called at end of turn)
+void Game::resetAllEntityMovement()
+{
+    auto entities = scene->getGameEntities();
+    for (auto &entity : entities)
+    {
+        entity->hasMovedThisTurn = false;
+    }
+    std::cout << "All entity movement flags reset" << std::endl;
+}
+
+// End player turn and advance to next turn
+void Game::endPlayerTurn()
+{
+    std::cout << "=== Ending Player Turn ===" << std::endl;
+
+    // Reset all entity movement flags
+    resetAllEntityMovement();
+
+    // Increment turn counter
+    turn++;
+    std::cout << "\n=== TURN " << turn << " ===" << std::endl;
+
+    // Clear selection
+    selectedEntity = nullptr;
+    scene->setSelectedObject(nullptr);
 }

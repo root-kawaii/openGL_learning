@@ -114,8 +114,8 @@ public:
             else if (name == "texture_roughness")
                 number = std::to_string(roughnessNr++);
 
-            // now set the sampler to the correct texture unit
-            glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+            // now set the sampler to the correct texture unit (using cached location)
+            glUniform1i(shader.getUniformLocation(name + number), i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }

@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "game.h"
 // Tracy profiler
 #include "../tracy/public/tracy/Tracy.hpp"
 #include "../tracy/public/tracy/TracyOpenGL.hpp"
@@ -30,6 +31,15 @@ void UIManager::onStatusPressed(std::string value)
 void UIManager::onAutoBattlePressed(std::string value)
 {
     std::cout << "Auto-battle button pressed" << std::endl;
+}
+
+void UIManager::onEndTurnPressed(std::string value)
+{
+    std::cout << "End Turn button pressed" << std::endl;
+    if (gameInstance)
+    {
+        gameInstance->endPlayerTurn();
+    }
 }
 
 // =============================================================================
@@ -482,6 +492,13 @@ void UIManager::buildBottomCenterMenu()
            [this](std::string v)
            { onAutoBattlePressed(v); });
     addText("Auto-battle", btnX + 15, autoY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
+    // End Turn button
+    float endTurnY = autoY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, endTurnY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onEndTurnPressed(v); });
+    addText("End Turn", btnX + 15, endTurnY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
 }
 
 // =============================================================================

@@ -15,6 +15,8 @@
 #include "game_entity.h"
 
 class RenderManager;
+class Game;
+class UIManager;
 
 class Scene
 {
@@ -24,6 +26,7 @@ private:
   std::vector<std::shared_ptr<GameObject>> gameObjects;
   std::unordered_map<uint32_t, std::shared_ptr<GameObject>> objectsById;
   std::vector<std::shared_ptr<GameEntity>> gameEntities;
+  std::vector<Light> sceneLights;
   GameObject *rootObject;
 
   glm::vec4 selectedColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // Start with red
@@ -40,12 +43,15 @@ private:
   ObjectPicker picker;
 
   RenderManager *renderManager;
+  Game *gameInstance = nullptr;
+  UIManager *uiManager = nullptr;
 
   void validateAllIDs();
   void debugPrintAllObjects();
 
 public:
   Scene();
+  Scene(RenderManager *renderMgr);
   Scene(std::string level);
   ~Scene();
   uint32_t entityCounter = 1;
@@ -66,12 +72,16 @@ public:
   {
     return gameEntities;
   };
+  std::vector<Light> getLights()
+  {
+    return sceneLights;
+  };
   // Environment& getEnvironment() { return environment; }
 
   std::shared_ptr<GameObject> getSelectedGameObject() { return selectedObject; };
 
   void handleInput(const glm::mat4 &view, const glm::mat4 &projection,
-                   RenderManager renderManager);
+                   RenderManager &renderManager);
   void renderGizmo(const glm::mat4 &view, const glm::mat4 &projection);
 
   // Serialization (data persistence)
@@ -92,6 +102,9 @@ public:
   {
     renderManager = renderManager;
   }
+
+  void setGame(Game *game) { gameInstance = game; }
+  void setUIManager(UIManager *ui) { uiManager = ui; }
 
   // Helper function to convert RGB to hex string
   std::string rgbToHex(const glm::vec3 &color)

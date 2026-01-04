@@ -59,6 +59,8 @@ struct UIElement
 // =============================================================================
 // UI MANAGER CLASS
 // =============================================================================
+class Game;
+
 class UIManager
 {
 private:
@@ -103,6 +105,8 @@ public:
     unsigned int screenHeight;
     bool isCharacterMoving = false;
 
+    Game* gameInstance = nullptr;
+
     UIManager(unsigned int height, unsigned int width);
     ~UIManager();
 
@@ -112,10 +116,12 @@ public:
     void onWaitPressed(std::string value);
     void onStatusPressed(std::string value);
     void onAutoBattlePressed(std::string value);
+    void onEndTurnPressed(std::string value);
 
     // Setters
     void setWindow(GLFWwindow *gameWindow) { window = gameWindow; }
     void setInputManager(InputManager *inputsManager) { inputManager = inputsManager; }
+    void setGame(Game* game) { gameInstance = game; }
 
     // Input handling
     bool isPressed(UIElement element);

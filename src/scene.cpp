@@ -1,5 +1,7 @@
 #include "scene.h"
 #include "game_object.h"
+#include "game.h"
+#include "ui.h"
 #include <memory>
 
 void discretizePosition(glm::vec3 &position)
@@ -80,6 +82,33 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
                                           translation, rotation, scale);
 
     selectedObject->SetPosition(glm::vec3(translation[0], translation[1], translation[2]));
+    // Check if the name starts with "Light_"
+    if (selectedObject->name.rfind("Light_", 0) == 0)
+    {
+      try
+      {
+        // Extract the substring after "Light_"
+        std::string indexStr = selectedObject->name.substr(6);
+        int lightIndex = std::stoi(indexStr) - 1;
+
+        // Ensure the index is within the bounds of your lights vector
+        if (lightIndex >= 0 && lightIndex < renderManager->getSceneLights().size())
+        {
+          glm::vec3 newPos = glm::vec3(translation[0], translation[1], translation[2]);
+
+          // Update the specific light in the vector
+          renderManager->getSceneLights()[lightIndex].position = newPos;
+
+          // Also update the GameObject's internal transform so the visual mesh moves
+          selectedObject->SetPosition(newPos);
+        }
+      }
+      catch (const std::exception &e)
+      {
+        // Handle cases where the name is "Light_abc" (not a number)
+        std::cout << "Invalid light name format: " << selectedObject->name << std::endl;
+      }
+    }
     selectedObject->SetRotation(glm::vec3(glm::radians(rotation[0]),
                                           glm::radians(rotation[1]),
                                           glm::radians(rotation[2])));
@@ -93,6 +122,98 @@ Scene::Scene()
   serializer.loadScene("levels/two.json");
 
   std::cout << "Loading scene objects with generated IDs..." << std::endl;
+
+  // Load lights from serializer
+  sceneLights = serializer.getLights();
+  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
+
+  for (const auto &light : sceneLights)
+  {
+    auto gameObject =
+        std::make_shared<GameObject>(
+            "Light_" + std::to_string(entityCounter),
+            "assets/capsule.obj",
+            light.position,
+            glm::vec3(0, 0, 0),
+            glm::vec3(0.5f, 0.5f, 0.5f),
+            0,
+            "simple_color_shader",
+            light.color);
+    uint32_t newID = addGameObject(gameObject);
+    std::cout << "Added light visualizer with ID: " << newID << std::endl;
+  }
+
+  // Pass lights to RenderManager if available
+  if (renderManager)
+  {
+    renderManager->setLights(sceneLights);
+  }
+
+  for (auto i : serializer.getObjects())
+  {
+    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
+    // new ID
+    auto gameObject =
+        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
+                                     i.path, i.position, i.rotation, i.scale,
+                                     i.collisionRadius, i.shader_name, i.color);
+
+    if (i.gameEntity)
+    {
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      discretizePosition(gameEntity->object->position);
+      gameEntities.push_back(gameEntity);
+    }
+
+    // FIX: Use addGameObject which will assign a fresh generated ID
+    uint32_t newID = addGameObject(gameObject);
+
+    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
+              << std::endl;
+  }
+
+  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
+            << std::endl;
+  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
+
+  // Validate all IDs are correct
+  validateAllIDs();
+  currentLevel = "levels/two.json";
+}
+
+Scene::Scene(RenderManager *renderMgr)
+{
+  renderManager = renderMgr;
+  entityCounter = 1; // Always start fresh from 1
+  serializer.loadScene("levels/two.json");
+
+  std::cout << "Loading scene objects with generated IDs..." << std::endl;
+
+  // Load lights from serializer
+  sceneLights = serializer.getLights();
+  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
+
+  for (const auto &light : sceneLights)
+  {
+    auto gameObject =
+        std::make_shared<GameObject>(
+            "Light_" + std::to_string(entityCounter),
+            "assets/capsule.obj",
+            light.position,
+            glm::vec3(0, 0, 0),
+            glm::vec3(0.5f, 0.5f, 0.5f),
+            0,
+            "simple_color_shader",
+            light.color);
+    uint32_t newID = addGameObject(gameObject);
+    std::cout << "Added light visualizer with ID: " << newID << std::endl;
+  }
+
+  // Pass lights to RenderManager if available
+  if (renderManager)
+  {
+    renderManager->setLights(sceneLights);
+  }
 
   for (auto i : serializer.getObjects())
   {
@@ -132,6 +253,32 @@ Scene::Scene(std::string level)
   serializer.loadScene(level);
 
   std::cout << "Loading scene objects with generated IDs..." << std::endl;
+
+  // Load lights from serializer
+  sceneLights = serializer.getLights();
+  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
+
+  for (const auto &light : sceneLights)
+  {
+    auto gameObject =
+        std::make_shared<GameObject>(
+            "Light_" + std::to_string(entityCounter),
+            "assets/capsule.obj",
+            light.position,
+            glm::vec3(0, 0, 0),
+            glm::vec3(0.5f, 0.5f, 0.5f),
+            0,
+            "simple_color_shader",
+            light.color);
+    uint32_t newID = addGameObject(gameObject);
+    std::cout << "Added light visualizer with ID: " << newID << std::endl;
+  }
+
+  // Pass lights to RenderManager if available
+  if (renderManager)
+  {
+    renderManager->setLights(sceneLights);
+  }
 
   for (auto i : serializer.getObjects())
   {
@@ -282,15 +429,51 @@ void Scene::validateAllIDs()
 }
 
 void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
-                        RenderManager renderManager)
+                        RenderManager &renderManager)
 {
   ImGuiIO &io = ImGui::GetIO();
 
   // Only handle clicks if not over ImGui or ImGuizmo
   if (!io.WantCaptureMouse && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
   {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+      if (gameInstance->getGameMode() == GAME)
+      {
+        auto entity = gameInstance->getSelectedEntity();
+        if (entity)
+        {
+          unsigned int objID =
+              renderManager.getObjectId(io.MousePos.x, io.MousePos.y);
+          if (objID != 0)
+          {
+            // Right-clicked on an object
+            std::shared_ptr<GameEntity> newClick = nullptr;
+            if (gameInstance)
+            {
+              for (auto &entity : gameInstance->getScene()->getGameEntities())
+              {
+                if (entity->object->ID == objID)
+                {
+                  newClick = entity;
+                  break;
+                }
+              }
+            }
+            std::cout << "\n=== RIGHT CLICK ===" << std::endl;
+            entity->moveToTarget(*newClick);
+            std::cout << "===================" << std::endl;
+            std::cout << "Deselecting entity: " << entity->object->name << std::endl;
+            gameInstance->setSelectedEntity(nullptr);
+            selectedObject = nullptr;
+          }
+        }
+      }
+    }
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
     {
+      // Request ID buffer update for accurate mouse picking
+      renderManager.requestIDBufferUpdate();
 
       unsigned int objID =
           renderManager.getObjectId(io.MousePos.x, io.MousePos.y);
@@ -298,6 +481,36 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
       std::cout << "Mouse position: (" << io.MousePos.x << ", " << io.MousePos.y
                 << ")" << std::endl;
       std::cout << "ID buffer returned: " << objID << std::endl;
+
+      std::shared_ptr<GameEntity> clickedEntity = nullptr;
+
+      if (gameInstance->getGameMode() == GAME)
+      {
+        auto it = objectsById.find(objID);
+        if (gameInstance)
+        {
+          for (auto &entity : gameInstance->getScene()->getGameEntities())
+          {
+            if (entity->object->ID == objID)
+            {
+              clickedEntity = entity;
+              break;
+            }
+          }
+        }
+        if (gameInstance->isEntitySelectable(clickedEntity))
+        {
+          gameInstance->setSelectedEntity(clickedEntity);
+          // Can select any selectable entity during player turn
+        }
+        else
+        {
+          // Ignore clicks on non-selectable entities during game mode
+          std::cout << "❌ Clicked entity is not selectable in GAME mode." << std::endl;
+          std::cout << "===================" << std::endl;
+          return;
+        }
+      }
 
       if (objID == 0)
       {
@@ -321,9 +534,41 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
         auto it = objectsById.find(objID);
         if (it != objectsById.end())
         {
-          selectedObject = it->second;
-          std::cout << "✓ Selected object: '" << selectedObject->name
-                    << "' (ID: " << objID << ")" << std::endl;
+          // Find if this object is a game entity
+          clickedEntity = nullptr;
+          if (gameInstance)
+          {
+            for (auto &entity : gameInstance->getScene()->getGameEntities())
+            {
+              if (entity->object->ID == objID)
+              {
+                clickedEntity = entity;
+                break;
+              }
+            }
+          }
+
+          // Check if it's a selectable entity
+          if (clickedEntity && gameInstance && gameInstance->isEntitySelectable(clickedEntity))
+          {
+            // Can select any selectable entity during player turn
+            selectedObject = it->second;
+            gameInstance->setSelectedEntity(clickedEntity);
+            std::cout << "✓ Selected entity: '" << selectedObject->name << "' (ID: " << objID << ")";
+
+            if (clickedEntity->hasMovedThisTurn)
+            {
+              std::cout << " [ALREADY MOVED]";
+            }
+            std::cout << std::endl;
+          }
+          else
+          {
+            // Not a selectable entity, just select the object
+            selectedObject = it->second;
+            std::cout << "✓ Selected object: '" << selectedObject->name
+                      << "' (ID: " << objID << ")" << std::endl;
+          }
         }
         else
         {
@@ -435,7 +680,7 @@ void Scene::copyEntity()
 Scene::~Scene()
 {
   std::cout << "Saving scene with generated IDs..." << std::endl;
-  serializer.saveScene(currentLevel, gameObjects);
+  serializer.saveScene(currentLevel, gameObjects, renderManager->getSceneLights());
 }
 
 // Debug method to print all objects and their IDs

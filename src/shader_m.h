@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 
 class Shader
 {
@@ -177,11 +178,33 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 
+    // Uniform location caching methods for performance optimization
+    // ------------------------------------------------------------------------
+    GLint getUniformLocation(const std::string &name) const
+    {
+        auto it = uniformLocationCache.find(name);
+        if (it != uniformLocationCache.end())
+        {
+            return it->second;
+        }
+        GLint location = glGetUniformLocation(ID, name.c_str());
+        uniformLocationCache[name] = location;
+        return location;
+    }
+
+    void clearUniformCache()
+    {
+        uniformLocationCache.clear();
+    }
+
 private:
     // Store shader file paths
     std::string vertexPath;
     std::string fragmentPath;
     std::string geometryPath;
+
+    // Uniform location cache for performance
+    mutable std::unordered_map<std::string, GLint> uniformLocationCache;
 
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------

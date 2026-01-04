@@ -118,12 +118,6 @@ int main()
   bool selected = false;
 
   glm::vec3 lightPos(-1.0f, 4.0f, 1.0f);
-  GameEntity activeGameEntity;
-  for (auto &j : game->getScene()->getGameEntities())
-  {
-    if (j->object->gameEntity == "88")
-      activeGameEntity = *j;
-  }
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
@@ -166,6 +160,25 @@ int main()
     verticesDrawn = 0;
     trianglesDrawn = 0;
     drawCalls = 0;
+
+    // Trajectory rendering controls
+    if (ImGui::CollapsingHeader("Trajectory Debug"))
+    {
+      bool enabled = renderManager->getRenderTrajectory();
+      if (ImGui::Checkbox("Render Trajectory", &enabled))
+      {
+        renderManager->setRenderTrajectory(enabled);
+      }
+
+      if (enabled)
+      {
+        int segments = renderManager->getTrajectorySegments();
+        if (ImGui::SliderInt("Segments", &segments, 10, 1000))
+        {
+          renderManager->setTrajectorySegments(segments);
+        }
+      }
+    }
 
     levelEditor->renderImGuiEditor();
 
@@ -225,12 +238,15 @@ int main()
     ///////////////////////////////////////////////////
     game->update();
 
-    // Shader hot-reload: update timer and check for shader changes
+    // Shader hot-reload: update timer and check for shader changes (ENGINE mode only)
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    renderManager->setTimeSinceLastShaderReload(renderManager->getTimeSinceLastShaderReload() + deltaTime);
-    renderManager->checkAndReloadShaders();
+    if (game->getGameMode() == ENGINE)
+    {
+      renderManager->setTimeSinceLastShaderReload(renderManager->getTimeSinceLastShaderReload() + deltaTime);
+      renderManager->checkAndReloadShaders();
+    }
 
     // Render ImGui
     ImGui::Render();

@@ -21,6 +21,7 @@ public:
     std::shared_ptr<GameObject> object;
     glm::vec3 targetDestination;
     bool isMoving = false;
+    bool hasMovedThisTurn = false;
 
     void move(float deltaTime);
     bool isGroundHigher(glm::vec3 position);
@@ -29,4 +30,5 @@ public:
     float distanceFromGameEntity(glm::vec3 position);
 
     bool isReachable(glm::vec3 position);
+    void moveToTarget(GameEntity &targetEntity);
 };

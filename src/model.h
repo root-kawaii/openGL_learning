@@ -47,6 +47,23 @@ public:
 
     vector<Vertex> GetAllVertices() const;
 
+    // Get model statistics for performance debugging
+    int getTriangleCount() const {
+        int total = 0;
+        for (const auto& mesh : meshes) {
+            total += mesh.indices.size() / 3;
+        }
+        return total;
+    }
+
+    int getVertexCount() const {
+        int total = 0;
+        for (const auto& mesh : meshes) {
+            total += mesh.vertices.size();
+        }
+        return total;
+    }
+
     void SetDiffuseTexture(unsigned int textureID);
     void GetBoneTransforms(vector<glm::mat4> &transforms, float timeSeconds) const;
     void GetBoneTransformsWithDebugAnim(vector<glm::mat4> &transforms, float time) const;
