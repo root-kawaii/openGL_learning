@@ -89,6 +89,35 @@ void Game::update()
         entites->move(deltaTime);
     }
 
+    // --- Animation System Test: Switch between animations every 3 seconds ---
+    static float animationTimer = 0.0f;
+    static bool isPlayingBounce = false;
+    animationTimer += deltaTime;
+
+    if (animationTimer >= 1.0f)
+    {
+        animationTimer = 0.0f;
+        isPlayingBounce = !isPlayingBounce;
+
+        // Switch animation on all mech_drone models
+        for (auto &obj : gameObjects)
+        {
+            if (obj->modelPath.find("mech_drone_multi") != std::string::npos)
+            {
+                if (isPlayingBounce)
+                {
+                    std::cout << "[Animation] Switching to Bounce animation with 0.5s blend" << std::endl;
+                    obj->model.PlayAnimation("Bounce", 0.5f);
+                }
+                else
+                {
+                    std::cout << "[Animation] Switching to Take 001 animation with 0.5s blend" << std::endl;
+                    obj->model.PlayAnimation("Take 001", 0.5f);
+                }
+            }
+        }
+    }
+
     // --- Phase 2: Optimized Collision Detection ---
     // Using new CollisionSystem for better performance
     // glm::vec3 cameraCorrection = collisionSystem.performCollisionPass(camera, gameObjects);

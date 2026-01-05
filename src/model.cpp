@@ -2,12 +2,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <glm/gtc/quaternion.hpp>
 #include <iostream>
 #include <string>
 #include <set>
 
 // Constructor definition
-Model::Model(const string &path, bool gamma) : gammaCorrection(gamma)
+Model::Model(const string &path, bool gamma)
+    : gammaCorrection(gamma), m_LastUpdateTime(0.0f), m_AnimationsInitialized(false)
 {
     loadModel(path);
 }
@@ -104,6 +106,9 @@ void Model::loadModel(string const &path)
 
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene);
+
+    // Initialize animation system
+    InitializeAnimations();
 
     // Print final model statistics
     std::cout << "✓ Model loaded: " << path << std::endl;
@@ -622,44 +627,15 @@ void Model::parseSingleBone(unsigned int i, aiBone *bone, vector<Vertex> &vertic
 
 void Model::GetBoneTransforms(vector<glm::mat4> &transforms, float timeSeconds) const
 {
-    transforms.clear();
+    // Calculate delta time
+    float deltaTime = timeSeconds - m_LastUpdateTime;
+    m_LastUpdateTime = timeSeconds;
 
-    if (!scene || !scene->mAnimations || scene->mNumAnimations == 0)
-    {
-        static bool printed = false;
-        if (!printed) {
-            std::cout << "No animations found in scene" << std::endl;
-            printed = true;
-        }
-        return;
-    }
+    // Update animation state (advance time, handle blending)
+    const_cast<Model*>(this)->UpdateAnimationState(deltaTime);
 
-    static bool printedAnimInfo = false;
-    if (!printedAnimInfo) {
-        std::cout << "Animation found: " << scene->mAnimations[0]->mName.C_Str() << std::endl;
-        std::cout << "  Duration: " << scene->mAnimations[0]->mDuration << " ticks" << std::endl;
-        std::cout << "  Ticks per second: " << scene->mAnimations[0]->mTicksPerSecond << std::endl;
-        std::cout << "  Number of channels: " << scene->mAnimations[0]->mNumChannels << std::endl;
-        printedAnimInfo = true;
-    }
-
-    float ticksPerSecond = (float)(scene->mAnimations[0]->mTicksPerSecond != 0 ? scene->mAnimations[0]->mTicksPerSecond : 25.0);
-    float timeInTicks = timeSeconds * ticksPerSecond;
-    float animationTime = fmod(timeInTicks, (float)scene->mAnimations[0]->mDuration);
-
-    if (!scene || !scene->mRootNode || m_BoneInfo.empty())
-    {
-        return;
-    }
-
-    // Traverse the entire skeleton hierarchy using cached global inverse transform
-    ReadNodeHierarchy(animationTime, m_BoneInfo, scene->mRootNode, m_globalInverseTransform);
-
-    // Collect all bone transforms
-    for (const auto &bone : m_BoneInfo)
-    {
-        transforms.push_back(bone.FinalTransformation);
-    }
+    // Get transforms based on current state
+    GetBoneTransformsInternal(transforms);
 }
 
 void Model::GetBoneTransformsWithDebugAnim(vector<glm::mat4> &transforms, float time) const
@@ -869,4 +845,594 @@ void Model::ReadNodeHierarchy(float animationTime, vector<BoneInfo> &boneInfo, c
     {
         ReadNodeHierarchy(animationTime, boneInfo, pNode->mChildren[i], GlobalTransformation);
     }
+}
+
+// ============================================================================
+// Multi-Animation System Implementation
+// ============================================================================
+
+void Model::InitializeAnimations()
+{
+    m_AnimationNameToIndexMap.clear();
+    m_AnimationsInitialized = true;
+    m_LastUpdateTime = 0.0f;
+
+    if (!scene || !scene->mAnimations || scene->mNumAnimations == 0) {
+        // Model has no animations - that's fine, transforms will just be empty
+        return;
+    }
+
+    // Build name-to-index mapping
+    for (unsigned int i = 0; i < scene->mNumAnimations; ++i) {
+        std::string name(scene->mAnimations[i]->mName.C_Str());
+        m_AnimationNameToIndexMap[name] = i;
+
+        std::cout << "Registered animation: '" << name << "' (index " << i << ")" << std::endl;
+    }
+
+    // Set default animation to first one
+    m_CurrentAnimation.animationIndex = 0;
+    m_CurrentAnimation.currentTime = 0.0f;
+    m_CurrentAnimation.isLooping = true;
+    m_CurrentAnimation.playbackSpeed = 1.0f;
+    m_CurrentAnimation.isPaused = false;
+}
+
+void Model::ReadNodeHierarchyForAnimation(
+    float animTime,
+    vector<BoneInfo>& boneInfo,
+    const aiNode* pNode,
+    const glm::mat4& ParentTransform,
+    const aiAnimation* pAnimation) const
+{
+    string NodeName(pNode->mName.data);
+
+    // Start with the static node transformation
+    aiMatrix4x4 aiNodeTransform = pNode->mTransformation;
+    glm::mat4 NodeTransformation = glm::transpose(glm::mat4(
+        aiNodeTransform.a1, aiNodeTransform.a2, aiNodeTransform.a3, aiNodeTransform.a4,
+        aiNodeTransform.b1, aiNodeTransform.b2, aiNodeTransform.b3, aiNodeTransform.b4,
+        aiNodeTransform.c1, aiNodeTransform.c2, aiNodeTransform.c3, aiNodeTransform.c4,
+        aiNodeTransform.d1, aiNodeTransform.d2, aiNodeTransform.d3, aiNodeTransform.d4));
+
+    // Check if this node has an animation channel
+    const aiNodeAnim* pNodeAnim = nullptr;
+    for (uint i = 0; i < pAnimation->mNumChannels; i++) {
+        if (string(pAnimation->mChannels[i]->mNodeName.data) == NodeName) {
+            pNodeAnim = pAnimation->mChannels[i];
+            break;
+        }
+    }
+
+    // If this node is animated, interpolate between keyframes
+    if (pNodeAnim) {
+        // Interpolate scaling
+        aiVector3D scaling(1, 1, 1);
+        if (pNodeAnim->mNumScalingKeys > 0) {
+            if (pNodeAnim->mNumScalingKeys == 1) {
+                scaling = pNodeAnim->mScalingKeys[0].mValue;
+            } else {
+                uint scalingIndex = 0;
+                for (uint i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
+                    if (animTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+                        scalingIndex = i;
+                        break;
+                    }
+                }
+                uint nextScalingIndex = (scalingIndex + 1) % pNodeAnim->mNumScalingKeys;
+                float deltaTime = (float)(pNodeAnim->mScalingKeys[nextScalingIndex].mTime -
+                                         pNodeAnim->mScalingKeys[scalingIndex].mTime);
+                float factor = (animTime - (float)pNodeAnim->mScalingKeys[scalingIndex].mTime) / deltaTime;
+                const aiVector3D& start = pNodeAnim->mScalingKeys[scalingIndex].mValue;
+                const aiVector3D& end = pNodeAnim->mScalingKeys[nextScalingIndex].mValue;
+                scaling = start + factor * (end - start);
+            }
+        }
+
+        // Interpolate rotation
+        aiQuaternion rotation(1, 0, 0, 0);
+        if (pNodeAnim->mNumRotationKeys > 0) {
+            if (pNodeAnim->mNumRotationKeys == 1) {
+                rotation = pNodeAnim->mRotationKeys[0].mValue;
+            } else {
+                uint rotationIndex = 0;
+                for (uint i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
+                    if (animTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+                        rotationIndex = i;
+                        break;
+                    }
+                }
+                uint nextRotationIndex = (rotationIndex + 1) % pNodeAnim->mNumRotationKeys;
+                float deltaTime = (float)(pNodeAnim->mRotationKeys[nextRotationIndex].mTime -
+                                         pNodeAnim->mRotationKeys[rotationIndex].mTime);
+                float factor = (animTime - (float)pNodeAnim->mRotationKeys[rotationIndex].mTime) / deltaTime;
+                const aiQuaternion& start = pNodeAnim->mRotationKeys[rotationIndex].mValue;
+                const aiQuaternion& end = pNodeAnim->mRotationKeys[nextRotationIndex].mValue;
+                aiQuaternion::Interpolate(rotation, start, end, factor);
+                rotation.Normalize();
+            }
+        }
+
+        // Interpolate position
+        aiVector3D position(0, 0, 0);
+        if (pNodeAnim->mNumPositionKeys > 0) {
+            if (pNodeAnim->mNumPositionKeys == 1) {
+                position = pNodeAnim->mPositionKeys[0].mValue;
+            } else {
+                uint positionIndex = 0;
+                for (uint i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
+                    if (animTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+                        positionIndex = i;
+                        break;
+                    }
+                }
+                uint nextPositionIndex = (positionIndex + 1) % pNodeAnim->mNumPositionKeys;
+                float deltaTime = (float)(pNodeAnim->mPositionKeys[nextPositionIndex].mTime -
+                                         pNodeAnim->mPositionKeys[positionIndex].mTime);
+                float factor = (animTime - (float)pNodeAnim->mPositionKeys[positionIndex].mTime) / deltaTime;
+                const aiVector3D& start = pNodeAnim->mPositionKeys[positionIndex].mValue;
+                const aiVector3D& end = pNodeAnim->mPositionKeys[nextPositionIndex].mValue;
+                position = start + factor * (end - start);
+            }
+        }
+
+        // Combine transformations
+        aiMatrix4x4 scalingMatrix, rotationMatrix, translationMatrix;
+        aiMatrix4x4::Scaling(scaling, scalingMatrix);
+        rotationMatrix = aiMatrix4x4(rotation.GetMatrix());
+        aiMatrix4x4::Translation(position, translationMatrix);
+        aiNodeTransform = translationMatrix * rotationMatrix * scalingMatrix;
+
+        NodeTransformation = glm::transpose(glm::mat4(
+            aiNodeTransform.a1, aiNodeTransform.a2, aiNodeTransform.a3, aiNodeTransform.a4,
+            aiNodeTransform.b1, aiNodeTransform.b2, aiNodeTransform.b3, aiNodeTransform.b4,
+            aiNodeTransform.c1, aiNodeTransform.c2, aiNodeTransform.c3, aiNodeTransform.c4,
+            aiNodeTransform.d1, aiNodeTransform.d2, aiNodeTransform.d3, aiNodeTransform.d4));
+    }
+
+    glm::mat4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+    // Update bone final transform if this node is a bone
+    auto it = m_BoneNameToIndexMap.find(NodeName);
+    if (it != m_BoneNameToIndexMap.end()) {
+        uint BoneIndex = it->second;
+        if (BoneIndex < boneInfo.size()) {
+            boneInfo[BoneIndex].FinalTransformation = m_globalInverseTransform *
+                                                     GlobalTransformation *
+                                                     boneInfo[BoneIndex].OffsetMatrix;
+        }
+    }
+
+    // Recursively process child nodes
+    for (uint i = 0; i < pNode->mNumChildren; i++) {
+        ReadNodeHierarchyForAnimation(animTime, boneInfo, pNode->mChildren[i],
+                                     GlobalTransformation, pAnimation);
+    }
+}
+
+void Model::ComputeBoneTransformsForAnimation(
+    vector<glm::mat4>& transforms,
+    unsigned int animIndex,
+    float animTime) const
+{
+    transforms.clear();
+
+    if (!scene || !scene->mAnimations || animIndex >= scene->mNumAnimations) {
+        return;
+    }
+
+    const aiAnimation* pAnimation = scene->mAnimations[animIndex];
+
+    // Create a copy of bone info to work with
+    vector<BoneInfo> boneInfo = m_BoneInfo;
+
+    // Traverse skeleton hierarchy with this animation
+    ReadNodeHierarchyForAnimation(animTime, boneInfo, scene->mRootNode,
+                                  m_globalInverseTransform, pAnimation);
+
+    // Collect transforms
+    for (const auto& bone : boneInfo) {
+        transforms.push_back(bone.FinalTransformation);
+    }
+}
+
+void Model::UpdateSingleAnimationTime(AnimationState& animState, float deltaTime)
+{
+    if (animState.animationIndex < 0 || !scene ||
+        animState.animationIndex >= (int)scene->mNumAnimations) {
+        return;
+    }
+
+    const aiAnimation* pAnimation = scene->mAnimations[animState.animationIndex];
+    float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ?
+                                   pAnimation->mTicksPerSecond : 25.0);
+
+    // Advance time in ticks
+    float deltaTimeTicks = deltaTime * ticksPerSecond * animState.playbackSpeed;
+    animState.currentTime += deltaTimeTicks;
+
+    // Handle looping
+    float duration = (float)pAnimation->mDuration;
+    if (animState.isLooping) {
+        animState.currentTime = fmod(animState.currentTime, duration);
+    } else {
+        // Clamp to duration if not looping
+        if (animState.currentTime > duration) {
+            animState.currentTime = duration;
+            animState.isPaused = true; // Auto-pause at end
+        }
+    }
+}
+
+void Model::UpdateAnimationState(float deltaTime)
+{
+    if (m_CurrentAnimation.isPaused) {
+        return;
+    }
+
+    if (m_BlendState.isBlending) {
+        // Update blend progress
+        m_BlendState.blendElapsed += deltaTime;
+        m_BlendState.blendFactor = std::min(1.0f,
+            m_BlendState.blendElapsed / m_BlendState.blendDuration);
+
+        // Advance both source and target animations
+        UpdateSingleAnimationTime(m_BlendState.sourceAnim, deltaTime);
+        UpdateSingleAnimationTime(m_BlendState.targetAnim, deltaTime);
+
+        // Check if blend is complete
+        if (m_BlendState.blendFactor >= 1.0f) {
+            // Blend complete - switch to target animation
+            m_CurrentAnimation = m_BlendState.targetAnim;
+            m_BlendState.isBlending = false;
+        }
+    } else {
+        // Check if animation is about to loop and should blend to beginning
+        if (m_CurrentAnimation.isLooping && m_CurrentAnimation.animationIndex >= 0 && scene) {
+            const aiAnimation* pAnimation = scene->mAnimations[m_CurrentAnimation.animationIndex];
+            float duration = (float)pAnimation->mDuration;
+            float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ? pAnimation->mTicksPerSecond : 25.0);
+
+            // Blend threshold: 0.3 seconds before end (in ticks)
+            float blendThresholdTicks = 0.3f * ticksPerSecond;
+            float timeUntilEnd = duration - m_CurrentAnimation.currentTime;
+
+            // If we're close to the end, start blending to the beginning
+            if (timeUntilEnd <= blendThresholdTicks && timeUntilEnd > 0) {
+                // Setup blend from current position to beginning of same animation
+                m_BlendState.isBlending = true;
+                m_BlendState.sourceAnim = m_CurrentAnimation;
+                m_BlendState.targetAnim = m_CurrentAnimation;
+                m_BlendState.targetAnim.currentTime = 0.0f; // Target is the beginning
+                m_BlendState.blendDuration = timeUntilEnd / ticksPerSecond; // Blend over remaining time
+                m_BlendState.blendElapsed = 0.0f;
+                m_BlendState.blendFactor = 0.0f;
+                return; // Let next frame handle the blend
+            }
+        }
+
+        // Store previous time for event checking
+        float previousTime = m_CurrentAnimation.currentTime;
+
+        // Update current animation time
+        UpdateSingleAnimationTime(m_CurrentAnimation, deltaTime);
+
+        // Check for events that should trigger
+        CheckAnimationEvents(previousTime, m_CurrentAnimation.currentTime);
+    }
+}
+
+void Model::BlendBoneTransforms(
+    const vector<glm::mat4>& t1,
+    const vector<glm::mat4>& t2,
+    float blendFactor,
+    vector<glm::mat4>& out) const
+{
+    out.clear();
+
+    size_t boneCount = std::min(t1.size(), t2.size());
+    out.reserve(boneCount);
+
+    for (size_t i = 0; i < boneCount; ++i) {
+        // Extract translation
+        glm::vec3 pos1 = glm::vec3(t1[i][3]);
+        glm::vec3 pos2 = glm::vec3(t2[i][3]);
+
+        // Extract scale by computing length of each basis vector
+        glm::vec3 scale1 = glm::vec3(
+            glm::length(glm::vec3(t1[i][0])),
+            glm::length(glm::vec3(t1[i][1])),
+            glm::length(glm::vec3(t1[i][2]))
+        );
+        glm::vec3 scale2 = glm::vec3(
+            glm::length(glm::vec3(t2[i][0])),
+            glm::length(glm::vec3(t2[i][1])),
+            glm::length(glm::vec3(t2[i][2]))
+        );
+
+        // Extract rotation (normalize the rotation matrix to remove scale)
+        glm::mat3 rotMat1 = glm::mat3(
+            glm::vec3(t1[i][0]) / scale1.x,
+            glm::vec3(t1[i][1]) / scale1.y,
+            glm::vec3(t1[i][2]) / scale1.z
+        );
+        glm::mat3 rotMat2 = glm::mat3(
+            glm::vec3(t2[i][0]) / scale2.x,
+            glm::vec3(t2[i][1]) / scale2.y,
+            glm::vec3(t2[i][2]) / scale2.z
+        );
+        glm::quat rot1 = glm::quat_cast(rotMat1);
+        glm::quat rot2 = glm::quat_cast(rotMat2);
+
+        // Interpolate
+        glm::vec3 finalPos = glm::mix(pos1, pos2, blendFactor);
+        glm::quat finalRot = glm::slerp(rot1, rot2, blendFactor);
+        glm::vec3 finalScale = glm::mix(scale1, scale2, blendFactor);
+
+        // Reconstruct matrix
+        glm::mat4 finalTransform = glm::mat4(1.0f);
+        finalTransform = glm::translate(finalTransform, finalPos);
+        finalTransform *= glm::mat4_cast(finalRot);
+        finalTransform = glm::scale(finalTransform, finalScale);
+
+        out.push_back(finalTransform);
+    }
+}
+
+void Model::GetBoneTransformsInternal(vector<glm::mat4>& transforms) const
+{
+    if (m_BlendState.isBlending) {
+        // Compute transforms for source animation
+        vector<glm::mat4> sourceTransforms;
+        ComputeBoneTransformsForAnimation(
+            sourceTransforms,
+            m_BlendState.sourceAnim.animationIndex,
+            m_BlendState.sourceAnim.currentTime
+        );
+
+        // Compute transforms for target animation
+        vector<glm::mat4> targetTransforms;
+        ComputeBoneTransformsForAnimation(
+            targetTransforms,
+            m_BlendState.targetAnim.animationIndex,
+            m_BlendState.targetAnim.currentTime
+        );
+
+        // Blend the two
+        BlendBoneTransforms(sourceTransforms, targetTransforms,
+                           m_BlendState.blendFactor, transforms);
+    } else {
+        // No blending - just compute for current animation
+        ComputeBoneTransformsForAnimation(
+            transforms,
+            m_CurrentAnimation.animationIndex,
+            m_CurrentAnimation.currentTime
+        );
+    }
+}
+
+// ============================================================================
+// Public API: Animation Control
+// ============================================================================
+
+void Model::PlayAnimation(const std::string& animationName, float blendDuration)
+{
+    auto it = m_AnimationNameToIndexMap.find(animationName);
+    if (it == m_AnimationNameToIndexMap.end()) {
+        std::cerr << "Animation '" << animationName << "' not found!" << std::endl;
+        return;
+    }
+
+    PlayAnimationByIndex(it->second, blendDuration);
+}
+
+void Model::PlayAnimationByIndex(unsigned int animIndex, float blendDuration)
+{
+    if (!scene || animIndex >= scene->mNumAnimations) {
+        std::cerr << "Invalid animation index: " << animIndex << std::endl;
+        return;
+    }
+
+    // If already playing this animation, do nothing
+    if (!m_BlendState.isBlending && m_CurrentAnimation.animationIndex == (int)animIndex) {
+        return;
+    }
+
+    if (blendDuration <= 0.0f || m_CurrentAnimation.animationIndex < 0) {
+        // No blending - instant switch
+        m_CurrentAnimation.animationIndex = animIndex;
+        m_CurrentAnimation.currentTime = 0.0f;
+        m_CurrentAnimation.isPaused = false;
+        m_BlendState.isBlending = false;
+    } else {
+        // Setup blend
+        m_BlendState.isBlending = true;
+        m_BlendState.sourceAnim = m_CurrentAnimation;
+        m_BlendState.targetAnim = AnimationState();
+        m_BlendState.targetAnim.animationIndex = animIndex;
+        m_BlendState.targetAnim.currentTime = 0.0f;
+        m_BlendState.targetAnim.playbackSpeed = m_CurrentAnimation.playbackSpeed;
+        m_BlendState.targetAnim.isLooping = m_CurrentAnimation.isLooping;
+        m_BlendState.blendDuration = blendDuration;
+        m_BlendState.blendElapsed = 0.0f;
+        m_BlendState.blendFactor = 0.0f;
+    }
+}
+
+std::string Model::GetCurrentAnimationName() const
+{
+    if (m_CurrentAnimation.animationIndex < 0 || !scene) {
+        return "";
+    }
+    return std::string(scene->mAnimations[m_CurrentAnimation.animationIndex]->mName.C_Str());
+}
+
+std::vector<std::string> Model::GetAvailableAnimations() const
+{
+    std::vector<std::string> names;
+    for (const auto& pair : m_AnimationNameToIndexMap) {
+        names.push_back(pair.first);
+    }
+    return names;
+}
+
+bool Model::HasAnimation(const std::string& animationName) const
+{
+    return m_AnimationNameToIndexMap.find(animationName) != m_AnimationNameToIndexMap.end();
+}
+
+// ============================================================================
+// Public API: Playback Control
+// ============================================================================
+
+void Model::PauseAnimation()
+{
+    m_CurrentAnimation.isPaused = true;
+}
+
+void Model::ResumeAnimation()
+{
+    m_CurrentAnimation.isPaused = false;
+}
+
+bool Model::IsAnimationPaused() const
+{
+    return m_CurrentAnimation.isPaused;
+}
+
+void Model::SetAnimationSpeed(float speed)
+{
+    m_CurrentAnimation.playbackSpeed = speed;
+}
+
+float Model::GetAnimationSpeed() const
+{
+    return m_CurrentAnimation.playbackSpeed;
+}
+
+void Model::SetAnimationLooping(bool loop)
+{
+    m_CurrentAnimation.isLooping = loop;
+}
+
+bool Model::IsAnimationLooping() const
+{
+    return m_CurrentAnimation.isLooping;
+}
+
+float Model::GetAnimationTime() const
+{
+    if (m_CurrentAnimation.animationIndex < 0 || !scene) {
+        return 0.0f;
+    }
+
+    const aiAnimation* pAnimation = scene->mAnimations[m_CurrentAnimation.animationIndex];
+    float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ?
+                                   pAnimation->mTicksPerSecond : 25.0);
+
+    // Convert ticks to seconds
+    return m_CurrentAnimation.currentTime / ticksPerSecond;
+}
+
+float Model::GetAnimationDuration() const
+{
+    if (m_CurrentAnimation.animationIndex < 0 || !scene) {
+        return 0.0f;
+    }
+
+    const aiAnimation* pAnimation = scene->mAnimations[m_CurrentAnimation.animationIndex];
+    float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ?
+                                   pAnimation->mTicksPerSecond : 25.0);
+
+    // Convert ticks to seconds
+    return (float)pAnimation->mDuration / ticksPerSecond;
+}
+
+void Model::SetAnimationTime(float timeInSeconds)
+{
+    if (m_CurrentAnimation.animationIndex < 0 || !scene) {
+        return;
+    }
+
+    const aiAnimation* pAnimation = scene->mAnimations[m_CurrentAnimation.animationIndex];
+    float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ?
+                                   pAnimation->mTicksPerSecond : 25.0);
+
+    // Convert seconds to ticks
+    m_CurrentAnimation.currentTime = timeInSeconds * ticksPerSecond;
+
+    // Clamp to valid range
+    float duration = (float)pAnimation->mDuration;
+    m_CurrentAnimation.currentTime = std::max(0.0f, std::min(m_CurrentAnimation.currentTime, duration));
+}
+
+// ============================================================================
+// Public API: Event System
+// ============================================================================
+
+void Model::RegisterAnimationEvent(
+    const std::string& animationName,
+    float timeInSeconds,
+    std::function<void()> callback)
+{
+    m_AnimationEvents.emplace_back(animationName, timeInSeconds, callback);
+}
+
+void Model::CheckAnimationEvents(float previousTime, float currentTime)
+{
+    if (m_CurrentAnimation.animationIndex < 0) return;
+
+    const aiAnimation* pAnimation = scene->mAnimations[m_CurrentAnimation.animationIndex];
+    std::string currentAnimName(pAnimation->mName.C_Str());
+
+    float ticksPerSecond = (float)(pAnimation->mTicksPerSecond != 0 ?
+                                   pAnimation->mTicksPerSecond : 25.0);
+
+    // Convert ticks to seconds
+    float prevTimeSec = previousTime / ticksPerSecond;
+    float currTimeSec = currentTime / ticksPerSecond;
+
+    for (auto& event : m_AnimationEvents) {
+        // Only check events for current animation
+        if (event.animationName != currentAnimName) continue;
+
+        // Check if event time is between previous and current time
+        bool crossedEvent = false;
+
+        if (prevTimeSec < currTimeSec) {
+            // Normal forward playback
+            crossedEvent = (event.triggerTime >= prevTimeSec &&
+                          event.triggerTime < currTimeSec);
+        } else {
+            // Looped back to start
+            crossedEvent = (event.triggerTime >= prevTimeSec ||
+                          event.triggerTime < currTimeSec);
+        }
+
+        if (crossedEvent && !event.hasTriggered) {
+            event.callback();
+            event.hasTriggered = true;
+        }
+
+        // Reset trigger flag if we've passed the event time by a lot
+        if (currTimeSec < event.triggerTime - 0.1f) {
+            event.hasTriggered = false;
+        }
+    }
+}
+
+void Model::ClearAnimationEvents(const std::string& animationName)
+{
+    m_AnimationEvents.erase(
+        std::remove_if(m_AnimationEvents.begin(), m_AnimationEvents.end(),
+            [&animationName](const AnimationEvent& e) {
+                return e.animationName == animationName;
+            }),
+        m_AnimationEvents.end()
+    );
+}
+
+void Model::ClearAllAnimationEvents()
+{
+    m_AnimationEvents.clear();
 }
