@@ -29,6 +29,15 @@ private:
 
     bool hasBall = false;
 
+    // Ball shooting state
+    bool isBallFlying = false;
+    bool isLinearTrajectory = false; // true for pass (straight line), false for shoot (parabolic)
+    glm::vec3 ballStartPos;
+    glm::vec3 ballEndPos = glm::vec3(5.0f, 5.0f, 5.0f);
+    float ballFlightTime = 0.0f;
+    float ballFlightDuration = 1.5f; // Time in seconds for ball to reach target
+    GameEntity* passTarget = nullptr; // Entity we're passing to
+
 public:
     GameEntity();
     GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject);
@@ -50,7 +59,8 @@ public:
     bool executeQueuedMovement(float deltaTime);
     void queueMovement(glm::vec3 destination);
     void clearMovementQueue();
-    bool hasQueuedMovements() const { return !movementQueue.empty(); }
+    bool hasQueuedMovements() const { return !movementQueue.empty() || hasCurrentCommand; }
+    glm::vec3 getQueuedDestination() const;
 
     // Helper methods
     bool isGroundHigher(glm::vec3 position);
@@ -62,4 +72,12 @@ public:
 
     // Scene reference for collision detection
     void setScene(Scene *scenePtr) { scene = scenePtr; }
+
+    // Ball control
+    bool getHasBall() const { return hasBall; }
+    void setHasBall(bool has) { hasBall = has; }
+    void shootBall(glm::vec3 target);
+    void passBall(GameEntity* targetEntity);
+    void updateBallFlight(float deltaTime);
+    bool isBallInFlight() const { return isBallFlying; }
 };

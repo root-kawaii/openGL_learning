@@ -346,6 +346,7 @@ public:
     void renderGameObjectWithShader(GameObject &gameObject, Shader shader);
     void renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID);
     void renderGameObjectWithColor(GameObject &gameObject, Shader shader, glm::vec4 color);
+    void renderGhostObject(GameObject &gameObject, glm::vec3 position, float alpha = 0.4f);
 
     void renderCameraAttachedObject(GameObject &gameObject, Shader shader);
 

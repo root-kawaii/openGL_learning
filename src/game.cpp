@@ -86,6 +86,12 @@ void Game::update()
     // Update queued movement system
     updateTurnExecution();
 
+    // Update ball flight trajectory
+    for (auto &entity : scene->getGameEntities())
+    {
+        entity->updateBallFlight(deltaTime);
+    }
+
     // --- Animation System Test: Switch between animations every 3 seconds ---
     static float animationTimer = 0.0f;
     static bool isPlayingBounce = false;
@@ -415,6 +421,50 @@ void Game::handleInput()
             return;
         }
         scene->duplicateGameObject(scene->getSelectedGameObject()->ID);
+    }
+
+    // Shoot ball with 'F' key
+    if (wasKeyJustPressed(GLFW_KEY_F, window))
+    {
+        // Find entity with the ball and shoot
+        for (auto &entity : scene->getGameEntities())
+        {
+            if (entity->getHasBall())
+            {
+                entity->shootBall(glm::vec3(-2.45f, 2.85f, 0.18f));
+                break;
+            }
+        }
+    }
+
+    // Pass ball with 'G' key
+    if (wasKeyJustPressed(GLFW_KEY_G, window))
+    {
+        // Find entity with the ball
+        std::shared_ptr<GameEntity> ballHolder = nullptr;
+        for (auto &entity : scene->getGameEntities())
+        {
+            if (entity->getHasBall())
+            {
+                ballHolder = entity;
+                break;
+            }
+        }
+
+        if (ballHolder)
+        {
+            // Find another capsule entity to pass to
+            for (auto &entity : scene->getGameEntities())
+            {
+                // Pass to any other capsule entity (not the one holding the ball)
+                if (entity != ballHolder &&
+                    entity->object->name.find("capsule") != std::string::npos)
+                {
+                    ballHolder->passBall(entity.get());
+                    break;
+                }
+            }
+        }
     }
 }
 

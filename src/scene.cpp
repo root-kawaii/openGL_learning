@@ -235,6 +235,14 @@ Scene::Scene(RenderManager *renderMgr)
       auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
       discretizePosition(gameEntity->object->position);
       gameEntity->setScene(this);
+
+      // Set capsule to have the ball at game start
+      if (gameObject->name == "capsule")
+      {
+        gameEntity->setHasBall(true);
+        std::cout << "Capsule entity starts with the ball" << std::endl;
+      }
+
       gameEntities.push_back(gameEntity);
     }
 

@@ -1825,6 +1825,56 @@ void RenderManager::renderGameObjectWithColor(GameObject &gameObject, Shader sha
     }
 }
 
+void RenderManager::renderGhostObject(GameObject &gameObject, glm::vec3 position, float alpha)
+{
+    ZoneScoped;
+    if (!isInViewDistance(position, currentCamera->Position, 1000.0f))
+    {
+        return;
+    }
+
+    if (!isInFrustum(position, 1.0f, projectionMatrix * viewMatrix))
+    {
+        return;
+    }
+
+    Shader *shader = getShader("simple_color_shader");
+    if (!shader)
+        return;
+
+    shader->use();
+
+    // Flickering effect using time - vary the brightness
+    float time = static_cast<float>(glfwGetTime());
+    float flicker = 0.5f + 0.5f * sin(time * 10.0f); // Oscillates between 0 and 1
+
+    // Subdued color (desaturated), with flickering brightness
+    glm::vec3 baseColor = gameObject.color;
+    glm::vec3 desaturated = glm::mix(baseColor, glm::vec3(0.5f), 0.5f); // 50% desaturation
+    float flickerBrightness = 0.3f + 0.4f * flicker; // Flickers between 30% and 70% brightness
+    glm::vec3 ghostColor = desaturated * flickerBrightness;
+
+    shader->setVec3("objectColor", ghostColor);
+
+    // Use destination X and Z, but keep the object's current Y position
+    glm::vec3 ghostPosition = glm::vec3(position.x, gameObject.position.y, position.z);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    model = glm::translate(model, ghostPosition) * scaling;
+    shader->setMat4("projection", projectionMatrix);
+    shader->setMat4("view", viewMatrix);
+    shader->setMat4("model", model);
+
+    // Use polygon offset to prevent z-fighting with the actual object
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    gameObject.model.Draw(*shader);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+}
+
 void RenderManager::renderGameObjectWithTexture(GameObject &gameObject, Shader shader, unsigned int textureID)
 {
     ZoneScoped;
@@ -2645,13 +2695,11 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glDisable(GL_DEPTH_TEST);
         glBindVertexArray(thickVAO);
-        glDrawArrays(GL_LINE_STRIP, 0, segments + 1);
+        glDrawArrays(GL_POINTS, 0, segments + 1);
         glBindVertexArray(0);
 
         glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
     }
 }
 
@@ -2825,16 +2873,11 @@ void RenderManager::renderMainPass()
             // renderGameObjectWithShader(*i, *getShader("dune_shader"));
             continue;
         }
-        // for (const auto lightPos : lightPositions)
-        // {
-        renderGameObject(*i, lightPositions, lightSpaceMatrix);
-        //}
 
-        // Visual feedback for entities
+        // Find if this object is a game entity
+        std::shared_ptr<GameEntity> entity = nullptr;
         if (gameInstance)
         {
-            // Find if this object is a game entity
-            std::shared_ptr<GameEntity> entity = nullptr;
             for (auto &e : currentScene->getGameEntities())
             {
                 if (e->object->ID == i->ID)
@@ -2843,29 +2886,44 @@ void RenderManager::renderMainPass()
                     break;
                 }
             }
+        }
 
-            if (entity && gameInstance->isEntitySelectable(entity))
+        // Always render the actual object at its current position
+        renderGameObject(*i, lightPositions, lightSpaceMatrix);
+
+        // Additionally render ghost at destination if entity has queued movements
+        if (entity && entity->hasQueuedMovements())
+        {
+            glm::vec3 destination = entity->getQueuedDestination();
+            // Only show ghost if destination is different from current position
+            if (glm::distance(destination, entity->object->position) > 0.5f)
             {
-                // Highlight selected entity with gold outline
-                if (gameInstance->getSelectedEntity() && entity == gameInstance->getSelectedEntity())
+                renderGhostObject(*entity->object, destination, 0.4f);
+            }
+        }
+
+        // Visual feedback for entities
+        if (gameInstance && entity && gameInstance->isEntitySelectable(entity))
+        {
+            // Highlight selected entity with gold outline
+            if (gameInstance->getSelectedEntity() && entity == gameInstance->getSelectedEntity())
+            {
+                for (auto &tilePosition : getReachableTilesForEntity(entity))
                 {
-                    for (auto &tilePosition : getReachableTilesForEntity(entity))
-                    {
-                        renderSelectedTile(tilePosition, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
-                    }
+                    renderSelectedTile(tilePosition, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
                 }
-                // Show entities that have already moved with red tint
-                else if (entity->hasMovedThisTurn)
-                {
-                    // renderSelectedTile(i->position + glm::vec3(1, 1, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
-                }
-                // Show entities that can still move with green tint
-                else
-                {
-                    // renderSelectedTile(i->position, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
-                    // renderSelectedTile(i->position + glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
-                    // renderSelectedTile(i->position - glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
-                }
+            }
+            // Show entities that have already moved with red tint
+            else if (entity->hasMovedThisTurn)
+            {
+                // renderSelectedTile(i->position + glm::vec3(1, 1, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+            }
+            // Show entities that can still move with green tint
+            else
+            {
+                // renderSelectedTile(i->position, glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                // renderSelectedTile(i->position + glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
+                // renderSelectedTile(i->position - glm::vec3(1, 0, 1), glm::vec3(0.9, 0.8, 0.3), 0.05f, 0.80f);
             }
         }
 

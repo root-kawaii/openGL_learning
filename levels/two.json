@@ -2927,13 +2927,42 @@
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
-                "x": -1.5,
+                "x": -3.5,
                 "y": 0.5,
-                "z": 3.5
+                "z": -3.5
             },
             "rotation": {
                 "x": 0.0,
                 "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.46171611547470093,
+                "y": 0.536937952041626,
+                "z": 0.25626856088638306
+            },
+            "shader_name": "simple_color_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 1.0,
+                "g": 0.0,
+                "r": 0.0
+            },
+            "entity": "107",
+            "id": "capsule2",
+            "path": "assets/capsule.obj",
+            "position": {
+                "x": 5.5,
+                "y": 0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
                 "z": 0.0
             },
             "scale": {
@@ -2983,9 +3012,9 @@
             "id": "ball",
             "path": "assets/ball.obj",
             "position": {
-                "x": -1.5010106563568115,
-                "y": 0.5,
-                "z": 2.680889129638672
+                "x": -3.5,
+                "y": 1.0,
+                "z": -3.5
             },
             "rotation": {
                 "x": 0.0,

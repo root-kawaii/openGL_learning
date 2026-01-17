@@ -39,6 +39,27 @@ void GameEntity::clearMovementQueue()
     hasCurrentCommand = false;
 }
 
+glm::vec3 GameEntity::getQueuedDestination() const
+{
+    if (hasCurrentCommand)
+    {
+        return currentCommand.destination;
+    }
+    if (!movementQueue.empty())
+    {
+        // Return the last destination in the queue (final position)
+        std::queue<MovementCommand> tempQueue = movementQueue;
+        MovementCommand lastCmd;
+        while (!tempQueue.empty())
+        {
+            lastCmd = tempQueue.front();
+            tempQueue.pop();
+        }
+        return lastCmd.destination;
+    }
+    return object->position; // No queued movement, return current position
+}
+
 // Helper function to find the highest Y position at a given X,Z coordinate
 float GameEntity::findGroundHeight(float x, float z)
 {
@@ -122,7 +143,14 @@ bool GameEntity::executeQueuedMovement(float deltaTime)
 
         // Find the ground height at the new position
         float groundY = findGroundHeight(newX, newZ);
+        glm::vec3 movement = glm::vec3(newX, groundY, newZ) - object->position;
         object->position = glm::vec3(newX, groundY, newZ);
+
+        // Move ball with entity if we have it
+        if (hasBall && scene && scene->ball)
+        {
+            scene->ball->position += movement;
+        }
 
         timeSinceMovement = 0;
         return true; // Moved this tick
@@ -137,7 +165,14 @@ bool GameEntity::executeQueuedMovement(float deltaTime)
 
         // Find the ground height at the new position
         float groundY = findGroundHeight(newX, newZ);
+        glm::vec3 movement = glm::vec3(newX, groundY, newZ) - object->position;
         object->position = glm::vec3(newX, groundY, newZ);
+
+        // Move ball with entity if we have it
+        if (hasBall && scene && scene->ball)
+        {
+            scene->ball->position += movement;
+        }
 
         timeSinceMovement = 0;
         return true; // Moved this tick
@@ -271,4 +306,94 @@ void GameEntity::moveToTarget(GameEntity &targetEntity)
 {
     targetDestination = targetEntity.object->position;
     isMoving = true;
+}
+
+void GameEntity::shootBall(glm::vec3 target)
+{
+    if (!hasBall || !scene || !scene->ball)
+        return;
+
+    // Release the ball
+    hasBall = false;
+    isBallFlying = true;
+    isLinearTrajectory = false; // Parabolic arc for shooting
+    ballStartPos = scene->ball->position;
+    ballEndPos = target;
+    ballFlightTime = 0.0f;
+    passTarget = nullptr; // Not a pass, just a shoot
+
+    std::cout << "[Shoot] Ball shot from (" << ballStartPos.x << ", " << ballStartPos.y << ", " << ballStartPos.z
+              << ") to (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
+}
+
+void GameEntity::passBall(GameEntity* targetEntity)
+{
+    if (!hasBall || !scene || !scene->ball || !targetEntity)
+        return;
+
+    // Release the ball
+    hasBall = false;
+    isBallFlying = true;
+    isLinearTrajectory = true; // Straight line for passing
+    ballStartPos = scene->ball->position;
+    // Pass to the target entity's position (slightly above)
+    ballEndPos = targetEntity->object->position + glm::vec3(0.0f, 0.5f, 0.0f);
+    ballFlightTime = 0.0f;
+    ballFlightDuration = 0.8f; // Faster for a pass
+    passTarget = targetEntity; // Remember who we're passing to
+
+    std::cout << "[Pass] Ball passed from (" << ballStartPos.x << ", " << ballStartPos.y << ", " << ballStartPos.z
+              << ") to " << targetEntity->object->name << " at (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
+}
+
+void GameEntity::updateBallFlight(float deltaTime)
+{
+    if (!isBallFlying || !scene || !scene->ball)
+        return;
+
+    ballFlightTime += deltaTime;
+    float t = ballFlightTime / ballFlightDuration;
+
+    if (t >= 1.0f)
+    {
+        // Ball reached destination
+        t = 1.0f;
+        isBallFlying = false;
+        scene->ball->position = ballEndPos;
+
+        // If this was a pass, give the ball to the target entity
+        if (passTarget != nullptr)
+        {
+            passTarget->setHasBall(true);
+            std::cout << "[Pass] " << passTarget->object->name << " caught the ball!" << std::endl;
+            passTarget = nullptr;
+        }
+        else
+        {
+            std::cout << "[Shoot] Ball landed at (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
+        }
+        return;
+    }
+
+    // Linear interpolation for X and Z
+    float x = ballStartPos.x + t * (ballEndPos.x - ballStartPos.x);
+    float z = ballStartPos.z + t * (ballEndPos.z - ballStartPos.z);
+    float y;
+
+    if (isLinearTrajectory)
+    {
+        // Straight line for passes
+        y = ballStartPos.y + t * (ballEndPos.y - ballStartPos.y);
+    }
+    else
+    {
+        // Parabolic arc for shoots
+        // y(t) = startY + t*(endY - startY) + 4*h*t*(1-t) where h is the peak height above the linear path
+        float linearY = ballStartPos.y + t * (ballEndPos.y - ballStartPos.y);
+        float peakHeight = 3.0f; // Height of the arc above the linear path
+        float parabolicOffset = 4.0f * peakHeight * t * (1.0f - t);
+        y = linearY + parabolicOffset;
+    }
+
+    scene->ball->position = glm::vec3(x, y, z);
 }

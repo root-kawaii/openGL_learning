@@ -14,14 +14,14 @@ Understand text rendering and display stuff I need
 NEXT TO DO:
 
 - need a playable version asap so in order:
-- - need to select game entity and click on target tile if it is a tile on which we can move
-- - clean up board
-- - create the TURN
-- - test 2 vs 2 or something like that
 - - add ball interaction and pass and shoot maybe
 - - add actions such as push or jump
 - - add actions such block
+- - add action to build block below you
+- - add keys support to make actions quicker
 - - test with more vertical arenas
+- - flickering for ghost position kinda ugly
+- - add arrows for movement
 - - improve serialization clarity / performance
 
 
