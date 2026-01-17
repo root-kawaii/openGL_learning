@@ -83,11 +83,8 @@ void Game::update()
         obj->position += obj->speed * deltaTime;
     }
 
-    auto gameEntities = scene->getGameEntities();
-    for (auto &entites : gameEntities)
-    {
-        entites->move(deltaTime);
-    }
+    // Update queued movement system
+    updateTurnExecution();
 
     // --- Animation System Test: Switch between animations every 3 seconds ---
     static float animationTimer = 0.0f;
@@ -482,10 +479,198 @@ void Game::resetAllEntityMovement()
     std::cout << "All entity movement flags reset" << std::endl;
 }
 
+// Hash function for glm::ivec3
+struct ivec3Hash
+{
+    size_t operator()(const glm::ivec3 &v) const
+    {
+        return std::hash<int>()(v.x) ^
+               (std::hash<int>()(v.y) << 1) ^
+               (std::hash<int>()(v.z) << 2);
+    }
+};
+
+// Helper to discretize position to grid
+glm::ivec3 discretizeToGrid(const glm::vec3 &pos)
+{
+    return glm::ivec3(std::floor(pos.x), std::floor(pos.y), std::floor(pos.z));
+}
+
+// Start turn execution - trigger all queued movements
+void Game::startTurnExecution()
+{
+    if (turnState != TurnState::PLANNING)
+    {
+        std::cout << "[Turn] Cannot start execution - not in planning phase" << std::endl;
+        return;
+    }
+
+    std::cout << "\n=== TURN EXECUTION START ===" << std::endl;
+    turnState = TurnState::EXECUTING;
+    allMovementsComplete = false;
+
+    // Count queued movements
+    int queuedCount = 0;
+    for (auto &entity : scene->getGameEntities())
+    {
+        if (entity->hasQueuedMovements())
+            queuedCount++;
+    }
+    std::cout << "[Turn] " << queuedCount << " entities with queued movements" << std::endl;
+}
+
+// Update turn execution - process movements and detect collisions
+void Game::updateTurnExecution()
+{
+    if (turnState != TurnState::EXECUTING)
+        return;
+
+    // Track which entities moved this tick
+    std::vector<std::pair<std::shared_ptr<GameEntity>, glm::vec3>> tickMovements;
+
+    // Execute one step for each entity
+    for (auto &entity : scene->getGameEntities())
+    {
+
+        glm::vec3 oldPos = entity->object->position;
+        bool moved = entity->executeQueuedMovement(deltaTime);
+
+        if (moved)
+        {
+            tickMovements.push_back({entity, oldPos});
+        }
+    }
+
+    // Collision detection
+    if (!tickMovements.empty())
+    {
+        detectCollisions(tickMovements);
+    }
+
+    // Check if all movements complete
+    if (checkAllMovementsComplete())
+    {
+        std::cout << "=== TURN EXECUTION COMPLETE ===" << std::endl;
+        turnState = TurnState::PLANNING;
+        allMovementsComplete = true;
+    }
+}
+
+// Check if all entities have completed their movements
+bool Game::checkAllMovementsComplete()
+{
+    for (auto &entity : scene->getGameEntities())
+    {
+        if (entity->hasQueuedMovements() || entity->hasCurrentCommand)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Detect collisions between entities
+void Game::detectCollisions(const std::vector<std::pair<std::shared_ptr<GameEntity>, glm::vec3>> &tickMovements)
+{
+    // Build arrivals map: destination -> [entities]
+    std::unordered_map<glm::ivec3, std::vector<std::shared_ptr<GameEntity>>, ivec3Hash> arrivals;
+
+    // Track movements for crossing detection
+    struct Movement
+    {
+        std::shared_ptr<GameEntity> entity;
+        glm::ivec3 from;
+        glm::ivec3 to;
+    };
+    std::vector<Movement> movements;
+
+    // Gather all movements this tick
+    for (const auto &[entity, oldPos] : tickMovements)
+    {
+        glm::ivec3 fromGrid = discretizeToGrid(oldPos);
+        glm::ivec3 toGrid = discretizeToGrid(entity->object->position);
+
+        arrivals[toGrid].push_back(entity);
+        movements.push_back({entity, fromGrid, toGrid});
+    }
+
+    // 1. Detect same-cell collisions (2+ entities at same position)
+    for (const auto &[cell, entities] : arrivals)
+    {
+        if (entities.size() > 1)
+        {
+            std::cout << "[Collision] Same-cell: " << entities.size()
+                      << " entities at (" << cell.x << ", " << cell.y << ", " << cell.z << ")" << std::endl;
+            handleSameCellCollision(cell, entities);
+        }
+    }
+
+    // 2. Detect crossing collisions (A→B while B→A)
+    for (size_t i = 0; i < movements.size(); i++)
+    {
+        for (size_t j = i + 1; j < movements.size(); j++)
+        {
+            const auto &a = movements[i];
+            const auto &b = movements[j];
+
+            // Check if they swapped positions
+            if (a.from == b.to && a.to == b.from)
+            {
+                std::cout << "[Collision] Crossing: entities swapped positions" << std::endl;
+                handleCrossingCollision(a.entity, b.entity);
+            }
+        }
+    }
+}
+
+// Handle same-cell collision - stack entities vertically
+void Game::handleSameCellCollision(glm::ivec3 cell, const std::vector<std::shared_ptr<GameEntity>> &entities)
+{
+    // Stack entities vertically
+    // For now: random order (future: use weight field)
+    float stackHeight = 0.0f;
+
+    for (auto &entity : entities)
+    {
+        // Set Y position based on stack order
+        glm::vec3 pos = entity->object->position;
+        pos.y = static_cast<float>(cell.y) + stackHeight;
+        entity->object->position = pos;
+
+        std::cout << "[Stacking] Entity at height " << stackHeight << std::endl;
+
+        // TODO: Play jump animation
+        // entity->object->model.PlayAnimation("Jump");
+
+        stackHeight += 1.0f;
+    }
+
+    // Update scene occupancy map
+    scene->updateOccupancyAfterCollision(cell, entities);
+}
+
+// Handle crossing collision - entities swap positions
+void Game::handleCrossingCollision(std::shared_ptr<GameEntity> entityA, std::shared_ptr<GameEntity> entityB)
+{
+    // TODO: Play crossing animation
+    std::cout << "[Crossing] Entities crossed paths" << std::endl;
+    // Could play a "dodge" or "bump" animation
+}
+
 // End player turn and advance to next turn
 void Game::endPlayerTurn()
 {
     std::cout << "=== Ending Player Turn ===" << std::endl;
+
+    // Reset turn state to planning
+    turnState = TurnState::PLANNING;
+    allMovementsComplete = true;
+
+    // Clear all queued movements
+    for (auto &entity : scene->getGameEntities())
+    {
+        entity->clearMovementQueue();
+    }
 
     // Reset all entity movement flags
     resetAllEntityMovement();

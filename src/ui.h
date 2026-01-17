@@ -117,6 +117,7 @@ public:
     void onStatusPressed(std::string value);
     void onAutoBattlePressed(std::string value);
     void onEndTurnPressed(std::string value);
+    void onExecuteTurnPressed(std::string value);
 
     // Setters
     void setWindow(GLFWwindow *gameWindow) { window = gameWindow; }

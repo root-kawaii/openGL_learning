@@ -228,6 +228,7 @@ int main()
       }
 
       uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ????? seems ok actually
+      renderManager->renderParabolicTrajectory(game->getScene()->ball->position, glm::vec3(5, 5, 5), 200);
     }
     else if (game->getGameMode() == PAUSE)
     {

@@ -2584,7 +2584,6 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
 void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
                                               int segments)
 {
-    float totalTime = 2.0f * 1.0f * sin(45.0f) / 1.0f;
 
     std::vector<float> vertexIndices;
     for (int i = 0; i <= segments; ++i)
@@ -2638,7 +2637,7 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         thickShader->setFloat("alpha", 1.0f);
 
         // Thickness uniforms for geometry shader
-        thickShader->setFloat("lineWidth", 200.0f);
+        thickShader->setFloat("lineWidth", 20.0f);
         thickShader->setVec2("screenSize", glm::vec2(screenWidth, screenHeight));
         thickShader->setBool("antiAlias", false);
 
@@ -2646,11 +2645,13 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        glDisable(GL_DEPTH_TEST);
         glBindVertexArray(thickVAO);
-        glDrawArrays(GL_POINTS, 0, segments + 1);
+        glDrawArrays(GL_LINE_STRIP, 0, segments + 1);
         glBindVertexArray(0);
 
         glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
     }
 }
 
@@ -2788,8 +2789,8 @@ void RenderManager::renderShadowPass()
 
         if (shadowFrameCounter++ % 60 == 0)
         {
-            std::cout << "[DEBUG] Shadow pass: " << (gameObjects.size() - culledCount) << " rendered, "
-                      << culledCount << " culled (total: " << gameObjects.size() << ")" << std::endl;
+            // std::cout << "[DEBUG] Shadow pass: " << (gameObjects.size() - culledCount) << " rendered, "
+            //           << culledCount << " culled (total: " << gameObjects.size() << ")" << std::endl;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2805,7 +2806,7 @@ void RenderManager::renderMainPass()
     static int frameCounter = 0;
     if (frameCounter++ % 60 == 0)
     {
-        std::cout << "[DEBUG] Main pass rendering " << gameObjects.size() << " objects" << std::endl;
+        // std::cout << "[DEBUG] Main pass rendering " << gameObjects.size() << " objects" << std::endl;
     }
 
     // Cache the animated light position calculation (was being calculated 3 times per object!)

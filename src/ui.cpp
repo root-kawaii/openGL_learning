@@ -42,6 +42,15 @@ void UIManager::onEndTurnPressed(std::string value)
     }
 }
 
+void UIManager::onExecuteTurnPressed(std::string value)
+{
+    std::cout << "Execute Turn button pressed" << std::endl;
+    if (gameInstance)
+    {
+        gameInstance->startTurnExecution();
+    }
+}
+
 // =============================================================================
 // CONSTRUCTOR / DESTRUCTOR
 // =============================================================================
@@ -493,8 +502,15 @@ void UIManager::buildBottomCenterMenu()
            { onAutoBattlePressed(v); });
     addText("Auto-battle", btnX + 15, autoY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
 
+    // Execute Turn button (NEW - for queued movement system)
+    float executeTurnY = autoY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, executeTurnY, bgDark.r, bgDark.g, bgDark.b, 1.0f,
+           [this](std::string v)
+           { onExecuteTurnPressed(v); });
+    addText("Execute Turn", btnX + 15, executeTurnY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+
     // End Turn button
-    float endTurnY = autoY - (btnH + btnGap);
+    float endTurnY = executeTurnY - (btnH + btnGap);
     addBox(btnW, btnH, btnX, endTurnY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
            [this](std::string v)
            { onEndTurnPressed(v); });

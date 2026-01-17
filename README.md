@@ -14,7 +14,6 @@ Understand text rendering and display stuff I need
 NEXT TO DO:
 
 - need a playable version asap so in order:
-- - improve serialization clarity / performance
 - - need to select game entity and click on target tile if it is a tile on which we can move
 - - clean up board
 - - create the TURN
@@ -23,6 +22,7 @@ NEXT TO DO:
 - - add actions such as push or jump
 - - add actions such block
 - - test with more vertical arenas
+- - improve serialization clarity / performance
 
 
 

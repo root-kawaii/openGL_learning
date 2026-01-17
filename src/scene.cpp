@@ -162,7 +162,13 @@ Scene::Scene()
     {
       auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
       discretizePosition(gameEntity->object->position);
+      gameEntity->setScene(this);
       gameEntities.push_back(gameEntity);
+    }
+
+    if (gameObject->name == "ball")
+    {
+      ball = gameObject.get();
     }
 
     // FIX: Use addGameObject which will assign a fresh generated ID
@@ -228,7 +234,13 @@ Scene::Scene(RenderManager *renderMgr)
     {
       auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
       discretizePosition(gameEntity->object->position);
+      gameEntity->setScene(this);
       gameEntities.push_back(gameEntity);
+    }
+
+    if (gameObject->name == "ball")
+    {
+      ball = gameObject.get();
     }
 
     // FIX: Use addGameObject which will assign a fresh generated ID
@@ -293,6 +305,7 @@ Scene::Scene(std::string level)
     {
       auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
       discretizePosition(gameEntity->object->position);
+      gameEntity->setScene(this);
       gameEntities.push_back(gameEntity);
     }
 
@@ -461,7 +474,38 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
               }
             }
             std::cout << "\n=== RIGHT CLICK ===" << std::endl;
-            entity->moveToTarget(*newClick);
+
+            // Queue movement instead of immediate execution
+            if (gameInstance && gameInstance->getTurnState() == Game::TurnState::PLANNING)
+            {
+              // Get target position - either from clicked entity or from clicked object
+              glm::vec3 targetPos;
+              if (newClick)
+              {
+                targetPos = newClick->object->position;
+              }
+              else
+              {
+                // Clicked on a regular object (not an entity) - get its position
+                auto it = objectsById.find(objID);
+                if (it != objectsById.end())
+                {
+                  targetPos = it->second->position;
+                }
+                else
+                {
+                  std::cout << "Cannot find clicked object" << std::endl;
+                  return;
+                }
+              }
+              entity->queueMovement(targetPos);
+              std::cout << "Queued movement for entity to target position" << std::endl;
+            }
+            else
+            {
+              std::cout << "Cannot queue movement - not in planning phase" << std::endl;
+            }
+
             std::cout << "===================" << std::endl;
             std::cout << "Deselecting entity: " << entity->object->name << std::endl;
             gameInstance->setSelectedEntity(nullptr);
@@ -760,4 +804,13 @@ void Scene::renderCompactColorPicker()
     }
   }
   ImGui::End();
+}
+
+// Update occupancy map after collision
+void Scene::updateOccupancyAfterCollision(glm::ivec3 cell, const std::vector<std::shared_ptr<GameEntity>> &entities)
+{
+  // This is a placeholder for future occupancy tracking
+  // For now, just log the collision
+  std::cout << "[Occupancy] Cell (" << cell.x << ", " << cell.z
+            << ") now has " << entities.size() << " entities" << std::endl;
 }

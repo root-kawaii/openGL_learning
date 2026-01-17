@@ -55,6 +55,7 @@ public:
   Scene(std::string level);
   ~Scene();
   uint32_t entityCounter = 1;
+  GameObject *ball;
   // Pure data operations
   void addGameObject(std::string gameObjectPath);
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
@@ -105,6 +106,9 @@ public:
 
   void setGame(Game *game) { gameInstance = game; }
   void setUIManager(UIManager *ui) { uiManager = ui; }
+
+  // Occupancy map for entity collision tracking
+  void updateOccupancyAfterCollision(glm::ivec3 cell, const std::vector<std::shared_ptr<GameEntity>> &entities);
 
   // Helper function to convert RGB to hex string
   std::string rgbToHex(const glm::vec3 &color)

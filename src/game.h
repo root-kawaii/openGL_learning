@@ -115,10 +115,25 @@ private:
     std::vector<Player> players;
 
     // Turn management (player-based, not entity-based)
-    std::shared_ptr<GameEntity> selectedEntity;  // Currently selected entity
+    std::shared_ptr<GameEntity> selectedEntity; // Currently selected entity
     std::set<std::string> selectableEntityTags = {"88", "unit", "character"};
 
+    // Collision detection
+    void detectCollisions(const std::vector<std::pair<std::shared_ptr<GameEntity>, glm::vec3>> &tickMovements);
+    void handleSameCellCollision(glm::ivec3 cell, const std::vector<std::shared_ptr<GameEntity>> &entities);
+    void handleCrossingCollision(std::shared_ptr<GameEntity> entityA, std::shared_ptr<GameEntity> entityB);
+
 public:
+    // Turn-based movement system
+    enum class TurnState
+    {
+        PLANNING,  // Players queue movements
+        EXECUTING, // Movements being executed
+        RESOLVING  // Animations playing
+    };
+
+    TurnState turnState = TurnState::PLANNING;
+    bool allMovementsComplete = true;
     bool initialize();
     void run();
     void update();
@@ -171,6 +186,12 @@ public:
     void setSelectedEntity(std::shared_ptr<GameEntity> entity);
     std::shared_ptr<GameEntity> getSelectedEntity() { return selectedEntity; }
     int getTurnNumber() const { return turn; }
+
+    // Queued movement system
+    void startTurnExecution();
+    void updateTurnExecution();
+    bool checkAllMovementsComplete();
+    TurnState getTurnState() const { return turnState; }
 
     void processGameInput(GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager);
 
