@@ -466,6 +466,15 @@ void Game::handleInput()
             }
         }
     }
+
+    // Add cube below selected entity with 'V' key
+    if (wasKeyJustPressed(GLFW_KEY_V, window))
+    {
+        if (selectedEntity)
+        {
+            scene->addCubeBelowEntity(selectedEntity, "simple_color_shader");
+        }
+    }
 }
 
 void Game::handleTurn()

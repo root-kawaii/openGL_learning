@@ -94,6 +94,7 @@ public:
   void renderCompactColorPicker();
 
   void addCubeOnTop(std::string shaderName);
+  void addCubeBelowEntity(std::shared_ptr<GameEntity> entity, std::string shaderName);
   void setSelectedObject(std::shared_ptr<GameObject> object)
   {
     selectedObject = object;

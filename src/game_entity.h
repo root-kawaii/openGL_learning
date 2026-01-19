@@ -4,7 +4,7 @@
 #include <vector>
 #include <queue>
 #include <glm/glm.hpp>
-#include "../src/game_object.h"
+#include "../src/game_object.h" // Includes AABB
 #include <cmath>
 
 // Forward declaration to avoid circular dependency
@@ -80,4 +80,9 @@ public:
     void passBall(GameEntity* targetEntity);
     void updateBallFlight(float deltaTime);
     bool isBallInFlight() const { return isBallFlying; }
+
+private:
+    // Ball collision detection
+    bool checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::vec3& hitNormal);
+    bool sphereAABBCollision(glm::vec3 sphereCenter, float radius, const AABB& box, glm::vec3& hitNormal);
 };

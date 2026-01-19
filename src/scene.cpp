@@ -693,6 +693,34 @@ void Scene::addCubeOnTop(std::string shader_name)
   }
 }
 
+void Scene::addCubeBelowEntity(std::shared_ptr<GameEntity> entity, std::string shaderName)
+{
+  if (!entity || !entity->object)
+  {
+    std::cout << "No entity provided!" << std::endl;
+    return;
+  }
+
+  // Get entity's current position
+  glm::vec3 entityPos = entity->object->position;
+
+  // Create cube at entity's current position (entity will move up)
+  glm::vec3 cubePosition = glm::vec3(entityPos.x, entityPos.y - 0.5f, entityPos.z);
+
+  std::shared_ptr<GameObject> newCube = std::make_shared<GameObject>(
+      "cube", "assets/cube.obj", cubePosition, glm::vec3(0, 0, 0),
+      glm::vec3(1, 1, 1), 0.0f, shaderName, glm::vec3(1, 1, 1));
+
+  uint32_t cubeID = addGameObject(newCube);
+
+  // Move entity up by 1 unit
+  entity->object->position.y += 1.0f;
+
+  std::cout << "Created cube at (" << cubePosition.x << ", " << cubePosition.y
+            << ", " << cubePosition.z << ") with ID: " << cubeID
+            << ". Entity moved to y=" << entity->object->position.y << std::endl;
+}
+
 void Scene::copyEntity()
 {
   // Check if there's a selected object to copy

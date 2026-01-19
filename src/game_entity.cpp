@@ -395,5 +395,109 @@ void GameEntity::updateBallFlight(float deltaTime)
         y = linearY + parabolicOffset;
     }
 
-    scene->ball->position = glm::vec3(x, y, z);
+    glm::vec3 newPos = glm::vec3(x, y, z);
+    glm::vec3 hitNormal;
+    float ballRadius = 0.25f; // Ball radius for collision
+
+    // Check for collision
+    if (checkBallCollision(newPos, ballRadius, hitNormal))
+    {
+        // Calculate reflection direction
+        glm::vec3 direction = glm::normalize(ballEndPos - ballStartPos);
+        glm::vec3 reflectedDir = glm::reflect(direction, hitNormal);
+
+        // Calculate remaining distance
+        float totalDistance = glm::distance(ballStartPos, ballEndPos);
+        float traveledDistance = totalDistance * t;
+        float remainingDistance = totalDistance - traveledDistance;
+
+        // Set new trajectory from current position
+        ballStartPos = scene->ball->position; // Use old position before collision
+        ballEndPos = ballStartPos + reflectedDir * remainingDistance * 0.7f; // 0.7 dampening
+        ballFlightTime = 0.0f;
+
+        // Cancel pass on collision
+        if (passTarget != nullptr)
+        {
+            std::cout << "[Collision] Pass intercepted! Ball bouncing off obstacle." << std::endl;
+            passTarget = nullptr;
+        }
+        else
+        {
+            std::cout << "[Collision] Ball bounced!" << std::endl;
+        }
+        return;
+    }
+
+    scene->ball->position = newPos;
+}
+
+bool GameEntity::sphereAABBCollision(glm::vec3 sphereCenter, float radius, const AABB& box, glm::vec3& hitNormal)
+{
+    if (!box.IsValid())
+        return false;
+
+    // Find closest point on AABB to sphere center
+    glm::vec3 closestPoint;
+    closestPoint.x = glm::clamp(sphereCenter.x, box.min.x, box.max.x);
+    closestPoint.y = glm::clamp(sphereCenter.y, box.min.y, box.max.y);
+    closestPoint.z = glm::clamp(sphereCenter.z, box.min.z, box.max.z);
+
+    // Check if closest point is within sphere radius
+    float distanceSq = glm::distance(sphereCenter, closestPoint);
+
+    if (distanceSq < radius)
+    {
+        // Calculate hit normal (from closest point to sphere center)
+        if (distanceSq > 0.0001f)
+        {
+            hitNormal = glm::normalize(sphereCenter - closestPoint);
+        }
+        else
+        {
+            // Sphere center is inside AABB, find which face is closest
+            glm::vec3 toCenter = sphereCenter - box.GetCenter();
+            glm::vec3 halfSize = box.GetSize() * 0.5f;
+
+            // Find axis with smallest penetration
+            glm::vec3 penetration = halfSize - glm::abs(toCenter);
+
+            if (penetration.x < penetration.y && penetration.x < penetration.z)
+                hitNormal = glm::vec3(toCenter.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+            else if (penetration.y < penetration.z)
+                hitNormal = glm::vec3(0.0f, toCenter.y > 0 ? 1.0f : -1.0f, 0.0f);
+            else
+                hitNormal = glm::vec3(0.0f, 0.0f, toCenter.z > 0 ? 1.0f : -1.0f);
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool GameEntity::checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::vec3& hitNormal)
+{
+    if (!scene)
+        return false;
+
+    for (const auto& obj : scene->getGameObjects())
+    {
+        // Skip the ball itself
+        if (obj.get() == scene->ball)
+            continue;
+
+        // Skip objects that are game entities (capsules, etc.)
+        if (!obj->gameEntity.empty())
+            continue;
+
+        // Get world AABB and check collision
+        AABB worldAABB = obj->GetWorldAABB();
+        if (sphereAABBCollision(ballPos, ballRadius, worldAABB, hitNormal))
+        {
+            std::cout << "[Collision] Ball hit: " << obj->name << std::endl;
+            return true;
+        }
+    }
+
+    return false;
 }
