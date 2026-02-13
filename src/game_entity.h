@@ -5,6 +5,7 @@
 #include <queue>
 #include <glm/glm.hpp>
 #include "../src/game_object.h" // Includes AABB
+#include "entity_class.h"
 #include <cmath>
 
 // Forward declaration to avoid circular dependency
@@ -24,7 +25,6 @@ private:
     float timeWaitMilliseconds = 300;
     float timeSinceMovement = 0;
 
-    float speed = 5;
     Scene *scene = nullptr;
 
     bool hasBall = false;
@@ -41,8 +41,10 @@ private:
 public:
     GameEntity();
     GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject);
+    GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType);
 
     std::shared_ptr<GameObject> object;
+    EntityClass entityClass;
 
     // Legacy movement (kept for backward compatibility)
     glm::vec3 targetDestination;

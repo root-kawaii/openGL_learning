@@ -13,24 +13,62 @@ void UIManager::onMovePressed(std::string value)
     isCharacterMoving = true;
 }
 
-void UIManager::onActPressed(std::string value)
+void UIManager::onShootPressed(std::string value)
 {
-    std::cout << "Act button pressed" << std::endl;
+    std::cout << "Shoot button pressed" << std::endl;
+    if (!gameInstance)
+        return;
+    auto entities = gameInstance->getScene()->getGameEntities();
+    for (auto &entity : entities)
+    {
+        if (entity->getHasBall())
+        {
+            entity->shootBall(glm::vec3(-2.45f, 2.85f, 0.18f));
+            break;
+        }
+    }
+}
+
+void UIManager::onPassPressed(std::string value)
+{
+    std::cout << "Pass button pressed" << std::endl;
+    if (!gameInstance)
+        return;
+    auto entities = gameInstance->getScene()->getGameEntities();
+    std::shared_ptr<GameEntity> ballHolder = nullptr;
+    for (auto &entity : entities)
+    {
+        if (entity->getHasBall())
+        {
+            ballHolder = entity;
+            break;
+        }
+    }
+    if (ballHolder)
+    {
+        for (auto &entity : entities)
+        {
+            if (entity != ballHolder &&
+                entity->object->name.find("capsule") != std::string::npos)
+            {
+                ballHolder->passBall(entity.get());
+                break;
+            }
+        }
+    }
 }
 
 void UIManager::onWaitPressed(std::string value)
 {
     std::cout << "Wait button pressed" << std::endl;
-}
-
-void UIManager::onStatusPressed(std::string value)
-{
-    std::cout << "Status button pressed" << std::endl;
-}
-
-void UIManager::onAutoBattlePressed(std::string value)
-{
-    std::cout << "Auto-battle button pressed" << std::endl;
+    if (!gameInstance)
+        return;
+    auto selected = gameInstance->getSelectedEntity();
+    if (selected)
+    {
+        selected->hasMovedThisTurn = true;
+        std::cout << selected->object->name << " is waiting." << std::endl;
+    }
 }
 
 void UIManager::onEndTurnPressed(std::string value)
@@ -352,89 +390,50 @@ void UIManager::buildGameMenu()
 {
     clearUIElements();
 
+    if (!gameInstance)
+        return;
+
     // Colors
     const glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
-    const glm::vec3 bgLight(0.15f, 0.15f, 0.2f);
     const glm::vec3 accent(0.9f, 0.8f, 0.3f);
     const glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
-    const glm::vec3 textGray(0.7f, 0.7f, 0.7f);
     const float border = 2.0f;
 
-    // === TOP LEFT: Power Grid Panel ===
-    // Y position: 1440 - 120 = 1320 (panel bottom-left Y in reference coords)
-    float pwrX = 20.0f, pwrY = 1320.0f, pwrW = 500.0f, pwrH = 100.0f;
-    addBox(pwrW, pwrH, pwrX, pwrY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(pwrW, border, pwrX, pwrY + pwrH, accent.r, accent.g, accent.b, 1.0f);
-    addText("POWER GRID", pwrX + 20, pwrY + pwrH - 30, 0.5f, textWhite.r, textWhite.g, textWhite.b);
+    // === TOP CENTER: Playable Entity Selector ===
+    auto entities = gameInstance->getScene()->getGameEntities();
+    auto selectedEntity = gameInstance->getSelectedEntity();
 
-    // Power bars
-    float barX = pwrX + 150, barY = pwrY + 40, barW = 30.0f, barH = 40.0f, barGap = 10.0f;
-    for (int i = 0; i < 7; i++)
+    float btnW = 160.0f;
+    float btnH = 50.0f;
+    float btnGap = 10.0f;
+    float totalW = entities.size() * btnW + (entities.size() - 1) * btnGap;
+    float startX = (1440.0f - totalW) / 2.0f;
+    float barY = 1370.0f;
+
+    // Background bar
+    addBox(totalW + 20.0f, btnH + 20.0f, startX - 10.0f, barY - 10.0f, bgDark.r, bgDark.g, bgDark.b, 0.85f);
+    addBox(totalW + 20.0f, border, startX - 10.0f, barY + btnH + 10.0f, accent.r, accent.g, accent.b, 1.0f);
+
+    for (size_t i = 0; i < entities.size(); i++)
     {
-        addBox(barW, barH, barX + i * (barW + barGap), barY, 0.9f, 0.5f, 0.2f, 1.0f);
-    }
-    addText("CLOCK ATB", pwrX + 340, pwrY + 50, 0.4f, textGray.r, textGray.g, textGray.b);
-    addText("15%", pwrX + 440, pwrY + 25, 0.6f, accent.r, accent.g, accent.b);
+        float btnX = startX + i * (btnW + btnGap);
+        bool isSelected = (selectedEntity && selectedEntity == entities[i]);
 
-    // === TOP RIGHT: Victory Timer ===
-    float vicW = 280.0f, vicH = 70.0f, vicX = 1440.0f - vicW - 20.0f, vicY = 1350.0f;
-    addBox(vicW, vicH, vicX, vicY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(vicW, border, vicX, vicY + vicH, accent.r, accent.g, accent.b, 1.0f);
-    addText("Victory in", vicX + 20, vicY + 40, 0.5f, textGray.r, textGray.g, textGray.b);
-    addText("7", vicX + 180, vicY + 30, 1.2f, textWhite.r, textWhite.g, textWhite.b);
-    addText("turns", vicX + 230, vicY + 40, 0.5f, textGray.r, textGray.g, textGray.b);
-
-    // === LEFT SIDE: Unit Selection Panel ===
-    float unitX = 20.0f, unitY = 1100.0f, unitW = 150.0f, unitH = 200.0f;
-    addBox(unitW, unitH, unitX, unitY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(unitW, border, unitX, unitY + unitH, accent.r, accent.g, accent.b, 1.0f);
-
-    float iconSz = 60.0f;
-    // Unit 1
-    addBox(iconSz, iconSz, unitX + 10, unitY + unitH - 70, 0.2f, 0.3f, 0.4f, 1.0f);
-    addBox(iconSz - 4, 4, unitX + 12, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
-    // Unit 2
-    addBox(iconSz, iconSz, unitX + 80, unitY + unitH - 70, 0.2f, 0.4f, 0.3f, 1.0f);
-    addBox(iconSz - 4, 4, unitX + 82, unitY + unitH - 74, 0.3f, 0.8f, 0.3f, 1.0f);
-    // Cycle button
-    addBox(unitW - 20, 40, unitX + 10, unitY + 20, bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    addText("Cycle Unit", unitX + 25, unitY + 32, 0.4f, textWhite.r, textWhite.g, textWhite.b);
-
-    // === BOTTOM LEFT: Combat Mech Panel ===
-    float mechX = 20.0f, mechY = 20.0f, mechW = 380.0f, mechH = 220.0f;
-    addBox(mechW, mechH, mechX, mechY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(mechW, border, mechX, mechY + mechH, accent.r, accent.g, accent.b, 1.0f);
-    addText("Combat Mech", mechX + 80, mechY + mechH - 30, 0.6f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Mech icon
-    addBox(140, 140, mechX + 10, mechY + 10, 0.15f, 0.2f, 0.25f, 1.0f);
-
-    // Weapon slots
-    float wpnX = mechX + 170, wpnSz = 60.0f, wpnGap = 8.0f;
-    for (int i = 0; i < 3; i++)
-    {
-        float sx = wpnX + i * (wpnSz + wpnGap);
-        addBox(wpnSz, wpnSz, sx, mechY + 20, 0.2f, 0.25f, 0.3f, 1.0f);
-        if (i == 0)
+        // Button box - gold if selected, dark if not
+        if (isSelected)
         {
-            addBox(wpnSz - 10, 6, sx + 5, mechY + 25, 0.3f, 0.7f, 0.9f, 1.0f);
+            addBox(btnW, btnH, btnX, barY, accent.r, accent.g, accent.b, 0.9f);
+            addText(entities[i]->object->name, btnX + 15, barY + 15, 0.45f, 0.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            auto entity = entities[i];
+            addBox(btnW, btnH, btnX, barY, 0.15f, 0.15f, 0.2f, 0.9f,
+                   [this, entity](std::string v)
+                   { gameInstance->setSelectedEntity(entity); });
+            addText(entities[i]->object->name, btnX + 15, barY + 15, 0.45f, textWhite.r, textWhite.g, textWhite.b);
         }
     }
-    addText("3", mechX + 240, mechY + mechH - 60, 0.8f, 0.3f, 0.8f, 0.3f);
-
-    // === BOTTOM RIGHT: Ground Tile Info ===
-    float tileW = 260.0f, tileH = 120.0f, tileX = 1440.0f - tileW - 20.0f, tileY = 20.0f;
-    addBox(tileW, tileH, tileX, tileY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
-    addBox(tileW, border, tileX, tileY + tileH, accent.r, accent.g, accent.b, 1.0f);
-    addBox(50, 50, tileX + 20, tileY + 50, 0.4f, 0.5f, 0.3f, 1.0f);
-    addText("Ground Tile", tileX + 85, tileY + 80, 0.5f, textWhite.r, textWhite.g, textWhite.b);
-    addText("No special effect.", tileX + 85, tileY + 50, 0.35f, textGray.r, textGray.g, textGray.b);
-
-    // === CENTER BOTTOM: Action Button ===
-    float actW = 150.0f, actH = 45.0f, actX = (1440.0f - actW) / 2.0f, actY = 30.0f;
-    addBox(actW, actH, actX, actY, bgLight.r, bgLight.g, bgLight.b, 1.0f);
-    addBox(actW, border, actX, actY + actH, accent.r, accent.g, accent.b, 1.0f);
-    addText("(A) Move Unit", actX + 15, actY + 15, 0.45f, textWhite.r, textWhite.g, textWhite.b);
 }
 
 void UIManager::buildBottomCenterMenu()
@@ -446,7 +445,7 @@ void UIManager::buildBottomCenterMenu()
     const glm::vec3 textGray(0.7f, 0.7f, 0.7f);
     const float border = 2.0f;
 
-    float menuW = 200.0f, menuH = 280.0f;
+    float menuW = 200.0f, menuH = 250.0f;
     float menuX = (1440.0f - menuW) / 2.0f, menuY = 80.0f;
 
     // Background
@@ -459,62 +458,55 @@ void UIManager::buildBottomCenterMenu()
     addBox(border, menuH, menuX + menuW - border, menuY, accent.r, accent.g, accent.b, 1.0f);
 
     // Title
-    addText("Menu", menuX + 70, menuY + menuH - 30, 0.5f, textGray.r, textGray.g, textGray.b);
+    addText("Actions", menuX + 55, menuY + menuH - 30, 0.5f, textGray.r, textGray.g, textGray.b);
 
     // Buttons
-    float btnW = menuW - 40.0f, btnH = 38.0f;
+    float btnW = menuW - 40.0f, btnH = 32.0f;
     float btnX = menuX + 20.0f;
-    float btnGap = 8.0f;
-    float startY = menuY + menuH - 70.0f;
+    float btnGap = 6.0f;
+    float startY = menuY + menuH - 65.0f;
 
     // Move button
     float moveY = startY;
     addBox(btnW, btnH, btnX, moveY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
            [this](std::string v)
            { onMovePressed(v); });
-    addText("Move", btnX + 15, moveY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+    addText("Move", btnX + 15, moveY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 
-    // Act button
-    float actY = startY - (btnH + btnGap);
-    addBox(btnW, btnH, btnX, actY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+    // Shoot button
+    float shootY = startY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, shootY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
            [this](std::string v)
-           { onActPressed(v); });
-    addText("Act", btnX + 15, actY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+           { onShootPressed(v); });
+    addText("Shoot", btnX + 15, shootY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
+
+    // Pass button
+    float passY = shootY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, passY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+           [this](std::string v)
+           { onPassPressed(v); });
+    addText("Pass", btnX + 15, passY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 
     // Wait button
-    float waitY = actY - (btnH + btnGap);
+    float waitY = passY - (btnH + btnGap);
     addBox(btnW, btnH, btnX, waitY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
            [this](std::string v)
            { onWaitPressed(v); });
-    addText("Wait", btnX + 15, waitY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+    addText("Wait", btnX + 15, waitY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 
-    // Status button
-    float statusY = waitY - (btnH + btnGap);
-    addBox(btnW, btnH, btnX, statusY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
-           [this](std::string v)
-           { onStatusPressed(v); });
-    addText("Status", btnX + 15, statusY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Auto-battle button
-    float autoY = statusY - (btnH + btnGap);
-    addBox(btnW, btnH, btnX, autoY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
-           [this](std::string v)
-           { onAutoBattlePressed(v); });
-    addText("Auto-battle", btnX + 15, autoY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
-
-    // Execute Turn button (NEW - for queued movement system)
-    float executeTurnY = autoY - (btnH + btnGap);
-    addBox(btnW, btnH, btnX, executeTurnY, bgDark.r, bgDark.g, bgDark.b, 1.0f,
+    // Execute Turn button
+    float executeTurnY = waitY - (btnH + btnGap);
+    addBox(btnW, btnH, btnX, executeTurnY, 0.2f, 0.35f, 0.2f, 1.0f,
            [this](std::string v)
            { onExecuteTurnPressed(v); });
-    addText("Execute Turn", btnX + 15, executeTurnY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+    addText("Execute Turn", btnX + 15, executeTurnY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 
     // End Turn button
     float endTurnY = executeTurnY - (btnH + btnGap);
-    addBox(btnW, btnH, btnX, endTurnY, bgLight.r, bgLight.g, bgLight.b, 1.0f,
+    addBox(btnW, btnH, btnX, endTurnY, 0.35f, 0.15f, 0.15f, 1.0f,
            [this](std::string v)
            { onEndTurnPressed(v); });
-    addText("End Turn", btnX + 15, endTurnY + 10, 0.45f, textWhite.r, textWhite.g, textWhite.b);
+    addText("End Turn", btnX + 15, endTurnY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 }
 
 // =============================================================================

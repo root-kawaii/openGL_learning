@@ -146,41 +146,41 @@ int main()
     ImGuiIO &io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     game->getScene()->handleInput(view, projection, *renderManager);
-    game->getScene()->renderGizmo(view, projection);
-    // Render a white box
-    // ui.setProjectionMatrix(projection); // For 1920x1080
+    if (game->getGameMode() == ENGINE)
+    {
+      game->getScene()->renderGizmo(view, projection);
 
-    // NOW this is safe:
-    ImGui::Text("Camera position %f   %f   %f", game->camera.Position.x,
-                game->camera.Position.y, game->camera.Position.z);
-    ImGui::Text("Resolution %d   %d", game->SCR_HEIGHT, game->SCR_WIDTH);
-    ImGui::Text("Vertices drawn %d", verticesDrawn);
-    ImGui::Text("Triangles drawn %d", trianglesDrawn);
-    ImGui::Text("Draw calls %d ", drawCalls);
+      ImGui::Text("Camera position %f   %f   %f", game->camera.Position.x,
+                  game->camera.Position.y, game->camera.Position.z);
+      ImGui::Text("Resolution %d   %d", game->SCR_HEIGHT, game->SCR_WIDTH);
+      ImGui::Text("Vertices drawn %d", verticesDrawn);
+      ImGui::Text("Triangles drawn %d", trianglesDrawn);
+      ImGui::Text("Draw calls %d ", drawCalls);
+
+      // Trajectory rendering controls
+      if (ImGui::CollapsingHeader("Trajectory Debug"))
+      {
+        bool enabled = renderManager->getRenderTrajectory();
+        if (ImGui::Checkbox("Render Trajectory", &enabled))
+        {
+          renderManager->setRenderTrajectory(enabled);
+        }
+
+        if (enabled)
+        {
+          int segments = renderManager->getTrajectorySegments();
+          if (ImGui::SliderInt("Segments", &segments, 10, 1000))
+          {
+            renderManager->setTrajectorySegments(segments);
+          }
+        }
+      }
+
+      levelEditor->renderImGuiEditor();
+    }
     verticesDrawn = 0;
     trianglesDrawn = 0;
     drawCalls = 0;
-
-    // Trajectory rendering controls
-    if (ImGui::CollapsingHeader("Trajectory Debug"))
-    {
-      bool enabled = renderManager->getRenderTrajectory();
-      if (ImGui::Checkbox("Render Trajectory", &enabled))
-      {
-        renderManager->setRenderTrajectory(enabled);
-      }
-
-      if (enabled)
-      {
-        int segments = renderManager->getTrajectorySegments();
-        if (ImGui::SliderInt("Segments", &segments, 10, 1000))
-        {
-          renderManager->setTrajectorySegments(segments);
-        }
-      }
-    }
-
-    levelEditor->renderImGuiEditor();
 
     if (true)
     {
@@ -220,11 +220,12 @@ int main()
       }
       else
       {
-        auto object = game->getScene()->getSelectedGameObject();
-        if (object != nullptr)
-        {
-          renderManager->renderVerticalArrow(object->position + glm::vec3(0, 1.15, 0));
-        }
+        // Render arrow above selected game entity in GAME mode
+        auto selected = game->getSelectedEntity();
+        // if (selected && selected->object)
+        // {
+        //   renderManager->renderVerticalArrow(selected->object->position + glm::vec3(0, 4.15, 0));
+        // }
       }
 
       uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ????? seems ok actually

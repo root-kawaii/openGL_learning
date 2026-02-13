@@ -2927,9 +2927,9 @@
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
-                "x": -4.5,
+                "x": 1.5,
                 "y": 0.5,
-                "z": -3.5
+                "z": -1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2956,13 +2956,13 @@
             "id": "capsule2",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 5.5,
+                "x": 3.5,
                 "y": 0.5,
-                "z": -2.5
+                "z": -3.5
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": -0.0,
                 "z": 0.0
             },
             "scale": {
@@ -3012,9 +3012,9 @@
             "id": "ball",
             "path": "assets/ball.obj",
             "position": {
-                "x": -11.123823165893555,
+                "x": 3.5,
                 "y": 1.0,
-                "z": -2.7988317012786865
+                "z": -3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -3102,7 +3102,7 @@
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": -0.0,
                 "z": 0.0
             },
             "scale": {

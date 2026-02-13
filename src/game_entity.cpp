@@ -11,6 +11,14 @@ GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameO
 {
     object = gameObject;
     object->gameEntity = entityName;
+    entityClass = EntityClass::fromType(EntityClassType::DEFAULT);
+}
+
+GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType)
+{
+    object = gameObject;
+    object->gameEntity = entityName;
+    entityClass = EntityClass::fromType(classType);
 }
 
 void GameEntity::queueMovement(glm::vec3 destination)

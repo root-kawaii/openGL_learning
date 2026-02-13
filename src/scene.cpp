@@ -538,7 +538,6 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
 
       if (gameInstance->getGameMode() == GAME)
       {
-        auto it = objectsById.find(objID);
         if (gameInstance)
         {
           for (auto &entity : gameInstance->getScene()->getGameEntities())
@@ -550,18 +549,14 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
             }
           }
         }
-        if (gameInstance->isEntitySelectable(clickedEntity))
+        // Only change selection if we clicked on an actual entity
+        if (clickedEntity && gameInstance->isEntitySelectable(clickedEntity))
         {
           gameInstance->setSelectedEntity(clickedEntity);
-          // Can select any selectable entity during player turn
         }
-        else
-        {
-          // Ignore clicks on non-selectable entities during game mode
-          std::cout << "❌ Clicked entity is not selectable in GAME mode." << std::endl;
-          std::cout << "===================" << std::endl;
-          return;
-        }
+        // Don't deselect when clicking background or non-entity objects
+        std::cout << "===================" << std::endl;
+        return;
       }
 
       if (objID == 0)

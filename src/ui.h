@@ -112,10 +112,9 @@ public:
 
     // Callbacks
     void onMovePressed(std::string value);
-    void onActPressed(std::string value);
+    void onShootPressed(std::string value);
+    void onPassPressed(std::string value);
     void onWaitPressed(std::string value);
-    void onStatusPressed(std::string value);
-    void onAutoBattlePressed(std::string value);
     void onEndTurnPressed(std::string value);
     void onExecuteTurnPressed(std::string value);
 
