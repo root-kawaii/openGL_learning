@@ -11,6 +11,8 @@ void UIManager::onMovePressed(std::string value)
 {
     std::cout << "Move button pressed" << std::endl;
     isCharacterMoving = true;
+    isPassing = false;
+    passTargetEntity = nullptr;
 }
 
 void UIManager::onShootPressed(std::string value)
@@ -32,30 +34,9 @@ void UIManager::onShootPressed(std::string value)
 void UIManager::onPassPressed(std::string value)
 {
     std::cout << "Pass button pressed" << std::endl;
-    if (!gameInstance)
-        return;
-    auto entities = gameInstance->getScene()->getGameEntities();
-    std::shared_ptr<GameEntity> ballHolder = nullptr;
-    for (auto &entity : entities)
-    {
-        if (entity->getHasBall())
-        {
-            ballHolder = entity;
-            break;
-        }
-    }
-    if (ballHolder)
-    {
-        for (auto &entity : entities)
-        {
-            if (entity != ballHolder &&
-                entity->object->name.find("capsule") != std::string::npos)
-            {
-                ballHolder->passBall(entity.get());
-                break;
-            }
-        }
-    }
+    isPassing = true;
+    isCharacterMoving = false;
+    passTargetEntity = nullptr;
 }
 
 void UIManager::onWaitPressed(std::string value)
@@ -83,10 +64,26 @@ void UIManager::onEndTurnPressed(std::string value)
 void UIManager::onExecuteTurnPressed(std::string value)
 {
     std::cout << "Execute Turn button pressed" << std::endl;
-    if (gameInstance)
+    if (!gameInstance)
+        return;
+
+    // Execute pending pass if in pass mode with a target
+    if (isPassing && passTargetEntity)
     {
-        gameInstance->startTurnExecution();
+        auto entities = gameInstance->getScene()->getGameEntities();
+        for (auto &entity : entities)
+        {
+            if (entity->getHasBall())
+            {
+                entity->passBall(passTargetEntity.get());
+                break;
+            }
+        }
+        isPassing = false;
+        passTargetEntity = nullptr;
     }
+
+    gameInstance->startTurnExecution();
 }
 
 // =============================================================================

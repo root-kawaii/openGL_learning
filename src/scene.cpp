@@ -160,7 +160,13 @@ Scene::Scene()
 
     if (i.gameEntity)
     {
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      EntityClassType classType = EntityClassType::DEFAULT;
+      if (gameObject->name == "capsule")
+        classType = EntityClassType::STRIKER;
+      else if (gameObject->name == "capsule2")
+        classType = EntityClassType::DEFENDER;
+
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
       discretizePosition(gameEntity->object->position);
       gameEntity->setScene(this);
       gameEntities.push_back(gameEntity);
@@ -232,7 +238,13 @@ Scene::Scene(RenderManager *renderMgr)
 
     if (i.gameEntity)
     {
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      EntityClassType classType = EntityClassType::DEFAULT;
+      if (gameObject->name == "capsule")
+        classType = EntityClassType::STRIKER;
+      else if (gameObject->name == "capsule2")
+        classType = EntityClassType::DEFENDER;
+
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
       discretizePosition(gameEntity->object->position);
       gameEntity->setScene(this);
 
@@ -311,7 +323,13 @@ Scene::Scene(std::string level)
 
     if (i.gameEntity)
     {
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject);
+      EntityClassType classType = EntityClassType::DEFAULT;
+      if (gameObject->name == "capsule")
+        classType = EntityClassType::STRIKER;
+      else if (gameObject->name == "capsule2")
+        classType = EntityClassType::DEFENDER;
+
+      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
       discretizePosition(gameEntity->object->position);
       gameEntity->setScene(this);
       gameEntities.push_back(gameEntity);
@@ -482,6 +500,18 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
               }
             }
             std::cout << "\n=== RIGHT CLICK ===" << std::endl;
+
+            // Handle pass target selection
+            auto uiManager = gameInstance->getUIManager();
+            if (uiManager && uiManager->isPassing)
+            {
+              if (newClick && newClick != entity)
+              {
+                uiManager->passTargetEntity = newClick;
+                std::cout << "Pass target set to: " << newClick->object->name << std::endl;
+              }
+              return;
+            }
 
             // Queue movement instead of immediate execution
             if (gameInstance && gameInstance->getTurnState() == Game::TurnState::PLANNING)

@@ -374,6 +374,7 @@ public:
 
     void renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength);
     void renderParabolicTrajectory(glm::vec3 start, glm::vec3 target, int segments);
+    void renderLinearTrajectory(glm::vec3 start, glm::vec3 target, int segments);
 
     void onWindowResize(int newWidth, int newHeight)
     {

@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -60,6 +61,7 @@ struct UIElement
 // UI MANAGER CLASS
 // =============================================================================
 class Game;
+class GameEntity;
 
 class UIManager
 {
@@ -104,6 +106,8 @@ public:
     unsigned int screenWidth;
     unsigned int screenHeight;
     bool isCharacterMoving = false;
+    bool isPassing = false;
+    std::shared_ptr<GameEntity> passTargetEntity = nullptr;
 
     Game* gameInstance = nullptr;
 

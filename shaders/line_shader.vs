@@ -8,6 +8,7 @@ uniform vec3 targetPos;
 uniform int segments;
 uniform float arcHeightMultiplier;
 uniform float pointSize;
+uniform float arcFactor; // 1.0 = parabolic, 0.0 = linear
 
 void main()
 {
@@ -16,16 +17,17 @@ void main()
     vec3 displacement = targetPos - startPos;
     float distance = length(displacement.xz);
     float heightDiff = displacement.y;
-    float arcHeight = max(distance * arcHeightMultiplier, abs(heightDiff) + 2.0);
-    
+
     float x = startPos.x + t * displacement.x;
     float z = startPos.z + t * displacement.z;
-    float y = startPos.y + t * heightDiff + 4.0 * arcHeight * t * (1.0 - t);
-    
+
+    // Parabolic arc height (only applied when arcFactor > 0)
+    float arcHeight = max(distance * arcHeightMultiplier, abs(heightDiff) + 2.0);
+    float parabolicOffset = 4.0 * arcHeight * t * (1.0 - t) * arcFactor;
+    float y = startPos.y + t * heightDiff + parabolicOffset;
+
     vec3 worldPos = vec3(x, y, z);
-    
+
     // Apply model matrix here, geometry shader expects world positions
     gl_Position = model * vec4(worldPos, 1.0);
-    
-    // Remove gl_PointSize since we're using geometry shader now
 }

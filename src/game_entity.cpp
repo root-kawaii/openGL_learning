@@ -305,7 +305,7 @@ float GameEntity::distanceFromGameEntity(glm::vec3 position)
 
 bool GameEntity::isReachable(glm::vec3 position)
 {
-    if (distanceFromGameEntity(position) <= speed)
+    if (distanceFromGameEntity(position) <= entityClass.movementSpeed)
         return true;
     return false;
 }
@@ -328,6 +328,8 @@ void GameEntity::shootBall(glm::vec3 target)
     ballStartPos = scene->ball->position;
     ballEndPos = target;
     ballFlightTime = 0.0f;
+    // Higher strength = faster shot (base 1.5s, scaled down by strength)
+    ballFlightDuration = 1.5f * (5.0f / static_cast<float>(entityClass.strength));
     passTarget = nullptr; // Not a pass, just a shoot
 
     std::cout << "[Shoot] Ball shot from (" << ballStartPos.x << ", " << ballStartPos.y << ", " << ballStartPos.z
@@ -347,7 +349,8 @@ void GameEntity::passBall(GameEntity* targetEntity)
     // Pass to the target entity's position (slightly above)
     ballEndPos = targetEntity->object->position + glm::vec3(0.0f, 0.5f, 0.0f);
     ballFlightTime = 0.0f;
-    ballFlightDuration = 0.8f; // Faster for a pass
+    // Higher strength = faster pass (base 0.8s, scaled down by strength)
+    ballFlightDuration = 0.8f * (5.0f / static_cast<float>(entityClass.strength));
     passTarget = targetEntity; // Remember who we're passing to
 
     std::cout << "[Pass] Ball passed from (" << ballStartPos.x << ", " << ballStartPos.y << ", " << ballStartPos.z

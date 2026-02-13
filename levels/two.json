@@ -2841,7 +2841,7 @@
             "id": "mech_drone_multi",
             "path": "assets/mech_drone_multi.glb",
             "position": {
-                "x": 0.5,
+                "x": 4.5,
                 "y": 0.5,
                 "z": 0.5
             },
@@ -2872,7 +2872,7 @@
             "position": {
                 "x": 2.5,
                 "y": 0.5,
-                "z": 2.5
+                "z": -1.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2927,9 +2927,9 @@
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 1.5,
+                "x": 3.5,
                 "y": 0.5,
-                "z": -1.5
+                "z": -3.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2956,8 +2956,8 @@
             "id": "capsule2",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 3.5,
-                "y": 0.5,
+                "x": -3.5,
+                "y": 3.0,
                 "z": -3.5
             },
             "rotation": {
@@ -3012,8 +3012,8 @@
             "id": "ball",
             "path": "assets/ball.obj",
             "position": {
-                "x": 3.5,
-                "y": 1.0,
+                "x": -3.5,
+                "y": 3.5,
                 "z": -3.5
             },
             "rotation": {

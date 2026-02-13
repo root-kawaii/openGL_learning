@@ -2685,6 +2685,7 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         thickShader->setFloat("arcHeightMultiplier", 1.0f);
         thickShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
         thickShader->setFloat("alpha", 1.0f);
+        thickShader->setFloat("arcFactor", 1.0f); // parabolic
 
         // Thickness uniforms for geometry shader
         thickShader->setFloat("lineWidth", 20.0f);
@@ -2696,6 +2697,73 @@ void RenderManager::renderParabolicTrajectory(glm::vec3 start, glm::vec3 target,
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glBindVertexArray(thickVAO);
+        glDrawArrays(GL_POINTS, 0, segments + 1);
+        glBindVertexArray(0);
+
+        glDisable(GL_BLEND);
+    }
+}
+
+void RenderManager::renderLinearTrajectory(glm::vec3 start, glm::vec3 target, int segments)
+{
+    std::vector<float> vertexIndices;
+    for (int i = 0; i <= segments; ++i)
+    {
+        vertexIndices.push_back(static_cast<float>(i));
+    }
+
+    static unsigned int linearVAO = 0, linearVBO = 0;
+    static int cachedSegments = -1;
+
+    if (linearVAO == 0 || cachedSegments != segments)
+    {
+        if (linearVAO != 0)
+        {
+            glDeleteVertexArrays(1, &linearVAO);
+            glDeleteBuffers(1, &linearVBO);
+        }
+
+        glGenVertexArrays(1, &linearVAO);
+        glGenBuffers(1, &linearVBO);
+
+        glBindVertexArray(linearVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, linearVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertexIndices.size() * sizeof(float),
+                     vertexIndices.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
+
+        cachedSegments = segments;
+    }
+
+    Shader *thickShader = getShader("line_shader");
+    if (thickShader)
+    {
+        thickShader->use();
+
+        thickShader->setMat4("model", glm::mat4(1.0f));
+        thickShader->setMat4("view", viewMatrix);
+        thickShader->setMat4("projection", projectionMatrix);
+        thickShader->setVec3("startPos", start);
+        thickShader->setVec3("targetPos", target);
+        thickShader->setInt("segments", segments);
+        thickShader->setFloat("gravity", 0.0f);
+        thickShader->setFloat("initialVelocity", 0.0f);
+        thickShader->setFloat("pointSize", 1.0f);
+        thickShader->setFloat("arcHeightMultiplier", 0.0f);
+        thickShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+        thickShader->setFloat("alpha", 1.0f);
+        thickShader->setFloat("arcFactor", 0.0f); // linear
+
+        thickShader->setFloat("lineWidth", 20.0f);
+        thickShader->setVec2("screenSize", glm::vec2(screenWidth, screenHeight));
+        thickShader->setBool("antiAlias", false);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glBindVertexArray(linearVAO);
         glDrawArrays(GL_POINTS, 0, segments + 1);
         glBindVertexArray(0);
 
@@ -2953,6 +3021,22 @@ void RenderManager::renderMainPass()
     if (renderTrajectory)
     {
         renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), trajectorySegments);
+    }
+
+    // Pass trajectory preview
+    if (uiManager && uiManager->isPassing && uiManager->passTargetEntity)
+    {
+        for (auto &entity : gameInstance->getScene()->getGameEntities())
+        {
+            if (entity->getHasBall())
+            {
+                renderLinearTrajectory(
+                    entity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
+                    uiManager->passTargetEntity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
+                    100);
+                break;
+            }
+        }
     }
 
     if (gameInstance->getGameMode() == ENGINE)
