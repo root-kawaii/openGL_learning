@@ -2927,9 +2927,9 @@
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 0.5,
+                "x": 3.5,
                 "y": 0.5,
-                "z": -1.5
+                "z": -2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2956,7 +2956,7 @@
             "id": "capsule2",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 4.5,
+                "x": -0.5,
                 "y": 0.5,
                 "z": -2.5
             },
@@ -3012,9 +3012,9 @@
             "id": "ball",
             "path": "assets/ball.obj",
             "position": {
-                "x": -1.9003338813781738,
+                "x": -0.5,
                 "y": 0.5,
-                "z": -1.9311915636062622
+                "z": -2.5
             },
             "rotation": {
                 "x": 0.0,

@@ -402,12 +402,11 @@ void GameEntity::updateBallFlight(float deltaTime)
         t = 1.0f;
         isBallFlying = false;
 
-        // If this was a pass, give the ball to the target entity
+        // If this was a pass, ball lands at target position (pickup system handles the rest)
         if (passTarget != nullptr)
         {
             scene->ball->position = ballEndPos;
-            passTarget->setHasBall(true);
-            std::cout << "[Pass] " << passTarget->object->name << " caught the ball!" << std::endl;
+            std::cout << "[Pass] Ball arrived near " << passTarget->object->name << std::endl;
             passTarget = nullptr;
         }
         else if (shotWillScore)
