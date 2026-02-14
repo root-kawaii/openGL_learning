@@ -2841,9 +2841,9 @@
             "id": "mech_drone_multi",
             "path": "assets/mech_drone_multi.glb",
             "position": {
-                "x": 4.5,
+                "x": 2.5,
                 "y": 0.5,
-                "z": 0.5
+                "z": 1.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2852,7 +2852,7 @@
             },
             "scale": {
                 "x": 1.7976473827729933e-05,
-                "y": 1.692519072094001e-05,
+                "y": 1.692512523732148e-05,
                 "z": 1.8356004147790372e-05
             },
             "shader_name": "simple_color_shader"
@@ -2870,9 +2870,9 @@
             "id": "mech_drone_red",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 2.5,
+                "x": 4.5,
                 "y": 0.5,
-                "z": -1.5
+                "z": 3.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2927,9 +2927,9 @@
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
-                "x": 3.5,
+                "x": 0.5,
                 "y": 0.5,
-                "z": -3.5
+                "z": -1.5
             },
             "rotation": {
                 "x": 0.0,
@@ -2956,9 +2956,9 @@
             "id": "capsule2",
             "path": "assets/capsule.obj",
             "position": {
-                "x": -3.5,
-                "y": 3.0,
-                "z": -3.5
+                "x": 4.5,
+                "y": 0.5,
+                "z": -2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -3012,9 +3012,9 @@
             "id": "ball",
             "path": "assets/ball.obj",
             "position": {
-                "x": -3.5,
-                "y": 3.5,
-                "z": -3.5
+                "x": -1.9003338813781738,
+                "y": 0.5,
+                "z": -1.9311915636062622
             },
             "rotation": {
                 "x": 0.0,

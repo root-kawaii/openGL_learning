@@ -206,7 +206,7 @@ public:
     bool initialize(int width, int height);
     void cleanup();
 
-    void setRes(int height, int width)
+    void setRes(int width, int height)
     {
         screenWidth = width;
         screenHeight = height;

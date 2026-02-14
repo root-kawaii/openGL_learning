@@ -146,6 +146,7 @@ public:
     // UI BUILDING & RENDERING
     // =========================================================================
     void buildGameMenu();
+    void buildActionBufferUI();
     void buildBottomCenterMenu();
     void renderAllUIElements(float mouseX, float mouseY);
     void clearUIElements();

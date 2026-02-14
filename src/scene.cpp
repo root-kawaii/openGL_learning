@@ -501,22 +501,39 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
             }
             std::cout << "\n=== RIGHT CLICK ===" << std::endl;
 
-            // Handle pass target selection
+            // Handle pass target selection — buffer a PASS action
             auto uiManager = gameInstance->getUIManager();
             if (uiManager && uiManager->isPassing)
             {
               if (newClick && newClick != entity)
               {
-                uiManager->passTargetEntity = newClick;
-                std::cout << "Pass target set to: " << newClick->object->name << std::endl;
+                // Find entity with ball
+                std::shared_ptr<GameEntity> ballHolder = nullptr;
+                for (auto &e : gameInstance->getScene()->getGameEntities())
+                {
+                  if (e->getHasBall())
+                  {
+                    ballHolder = e;
+                    break;
+                  }
+                }
+                if (ballHolder)
+                {
+                  BufferedAction action;
+                  action.type = ActionType::PASS;
+                  action.targetEntity = newClick.get();
+                  action.description = "Pass -> " + newClick->object->name;
+                  ballHolder->bufferAction(action);
+                }
+                uiManager->passTargetEntity = newClick; // keep for trajectory preview
+                uiManager->isPassing = false;
               }
               return;
             }
 
-            // Queue movement instead of immediate execution
+            // Buffer a MOVE action
             if (gameInstance && gameInstance->getTurnState() == Game::TurnState::PLANNING)
             {
-              // Get target position - either from clicked entity or from clicked object
               glm::vec3 targetPos;
               if (newClick)
               {
@@ -524,7 +541,6 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
               }
               else
               {
-                // Clicked on a regular object (not an entity) - get its position
                 auto it = objectsById.find(objID);
                 if (it != objectsById.end())
                 {
@@ -536,8 +552,11 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
                   return;
                 }
               }
-              entity->queueMovement(targetPos);
-              std::cout << "Queued movement for entity to target position" << std::endl;
+              BufferedAction action;
+              action.type = ActionType::MOVE;
+              action.targetPosition = targetPos;
+              action.description = "Move (" + std::to_string((int)targetPos.x) + ", " + std::to_string((int)targetPos.z) + ")";
+              entity->bufferAction(action);
             }
             else
             {
@@ -545,9 +564,6 @@ void Scene::handleInput(const glm::mat4 &view, const glm::mat4 &projection,
             }
 
             std::cout << "===================" << std::endl;
-            std::cout << "Deselecting entity: " << entity->object->name << std::endl;
-            gameInstance->setSelectedEntity(nullptr);
-            selectedObject = nullptr;
           }
         }
       }

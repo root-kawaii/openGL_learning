@@ -2,6 +2,7 @@
 #include "scene.h"
 #include <thread>
 #include <chrono>
+#include <random>
 
 GameEntity::GameEntity()
 {
@@ -81,6 +82,8 @@ float GameEntity::findGroundHeight(float x, float z)
     {
         if (obj.get() == object.get())
             continue; // Skip self
+        if (scene->ball && obj.get() == scene->ball)
+            continue; // Skip ball
 
         // Check if this object is at the same X,Z position (discretized)
         float objX = std::floor(obj->position.x);
@@ -332,11 +335,39 @@ void GameEntity::shootBall(glm::vec3 target)
     ballFlightDuration = 1.5f * (5.0f / static_cast<float>(entityClass.strength));
     passTarget = nullptr; // Not a pass, just a shoot
 
+    // Compute shot accuracy based on accuracy stat and distance
+    float distance = glm::distance(object->position, target);
+    float baseChance = static_cast<float>(entityClass.accuracy) / 10.0f;
+    float probability = glm::clamp(baseChance - (distance * 0.03f), 0.05f, 0.95f);
+
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> rollDist(0.0f, 1.0f);
+    float roll = rollDist(rng);
+    shotWillScore = (roll < probability);
+    isRebounding = false;
+
+    if (!shotWillScore)
+    {
+        // Offset the target so ball hits the rim instead of going in
+        std::uniform_real_distribution<float> offsetDist(0.5f, 1.5f);
+        std::uniform_real_distribution<float> angleDist(0.0f, glm::two_pi<float>());
+        float offsetMag = offsetDist(rng);
+        float angle = angleDist(rng);
+        ballEndPos.x += offsetMag * cos(angle);
+        ballEndPos.z += offsetMag * sin(angle);
+        std::cout << "[Shoot] MISS (prob=" << probability << ", roll=" << roll << ") offset target to ("
+                  << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
+    }
+    else
+    {
+        std::cout << "[Shoot] ON TARGET (prob=" << probability << ", roll=" << roll << ")" << std::endl;
+    }
+
     std::cout << "[Shoot] Ball shot from (" << ballStartPos.x << ", " << ballStartPos.y << ", " << ballStartPos.z
               << ") to (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
 }
 
-void GameEntity::passBall(GameEntity* targetEntity)
+void GameEntity::passBall(GameEntity *targetEntity)
 {
     if (!hasBall || !scene || !scene->ball || !targetEntity)
         return;
@@ -370,17 +401,60 @@ void GameEntity::updateBallFlight(float deltaTime)
         // Ball reached destination
         t = 1.0f;
         isBallFlying = false;
-        scene->ball->position = ballEndPos;
 
         // If this was a pass, give the ball to the target entity
         if (passTarget != nullptr)
         {
+            scene->ball->position = ballEndPos;
             passTarget->setHasBall(true);
             std::cout << "[Pass] " << passTarget->object->name << " caught the ball!" << std::endl;
             passTarget = nullptr;
         }
+        else if (shotWillScore)
+        {
+            // GOAL! Respawn ball at arena center
+            glm::vec3 arenaCenter(0.0f, 0.5f, 0.0f);
+            scene->ball->position = arenaCenter;
+            std::cout << "[GOAL!] Ball respawned at arena center" << std::endl;
+            shotWillScore = false;
+        }
+        else if (!isRebounding)
+        {
+            // Miss — apply rebound from target position
+            scene->ball->position = ballEndPos;
+
+            // Random rebound direction based on incoming direction
+            glm::vec3 incomingDir = glm::normalize(ballEndPos - ballStartPos);
+            static std::mt19937 bounceRng(std::random_device{}());
+            std::uniform_real_distribution<float> deviationDist(-0.5f, 0.5f);
+            float deviationAngle = deviationDist(bounceRng);
+            float cosA = cos(deviationAngle);
+            float sinA = sin(deviationAngle);
+            // Reflect roughly back and deviate randomly around Y
+            float rx = -(incomingDir.x * cosA - incomingDir.z * sinA);
+            float rz = -(incomingDir.x * sinA + incomingDir.z * cosA);
+            glm::vec2 reboundDir2 = glm::normalize(glm::vec2(rx, rz));
+
+            // Rebound distance scales with shot distance
+            float totalDist = glm::distance(ballStartPos, ballEndPos);
+            float reboundDist = totalDist * 0.3f;
+
+            ballStartPos = ballEndPos;
+            ballEndPos = ballStartPos + glm::vec3(reboundDir2.x, 0.0f, reboundDir2.y) * reboundDist;
+            ballEndPos.y = 0.5f; // Ground level
+            isLinearTrajectory = true;
+            ballFlightTime = 0.0f;
+            ballFlightDuration = 0.6f; // Short rebound duration
+            isBallFlying = true;
+            isRebounding = true;
+
+            std::cout << "[Shoot] Ball missed, rebounding to (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
+        }
         else
         {
+            // Rebound finished — ball lands
+            scene->ball->position = ballEndPos;
+            isRebounding = false;
             std::cout << "[Shoot] Ball landed at (" << ballEndPos.x << ", " << ballEndPos.y << ", " << ballEndPos.z << ")" << std::endl;
         }
         return;
@@ -407,43 +481,10 @@ void GameEntity::updateBallFlight(float deltaTime)
     }
 
     glm::vec3 newPos = glm::vec3(x, y, z);
-    glm::vec3 hitNormal;
-    float ballRadius = 0.25f; // Ball radius for collision
-
-    // Check for collision
-    if (checkBallCollision(newPos, ballRadius, hitNormal))
-    {
-        // Calculate reflection direction
-        glm::vec3 direction = glm::normalize(ballEndPos - ballStartPos);
-        glm::vec3 reflectedDir = glm::reflect(direction, hitNormal);
-
-        // Calculate remaining distance
-        float totalDistance = glm::distance(ballStartPos, ballEndPos);
-        float traveledDistance = totalDistance * t;
-        float remainingDistance = totalDistance - traveledDistance;
-
-        // Set new trajectory from current position
-        ballStartPos = scene->ball->position; // Use old position before collision
-        ballEndPos = ballStartPos + reflectedDir * remainingDistance * 0.7f; // 0.7 dampening
-        ballFlightTime = 0.0f;
-
-        // Cancel pass on collision
-        if (passTarget != nullptr)
-        {
-            std::cout << "[Collision] Pass intercepted! Ball bouncing off obstacle." << std::endl;
-            passTarget = nullptr;
-        }
-        else
-        {
-            std::cout << "[Collision] Ball bounced!" << std::endl;
-        }
-        return;
-    }
-
     scene->ball->position = newPos;
 }
 
-bool GameEntity::sphereAABBCollision(glm::vec3 sphereCenter, float radius, const AABB& box, glm::vec3& hitNormal)
+bool GameEntity::sphereAABBCollision(glm::vec3 sphereCenter, float radius, const AABB &box, glm::vec3 &hitNormal)
 {
     if (!box.IsValid())
         return false;
@@ -486,12 +527,12 @@ bool GameEntity::sphereAABBCollision(glm::vec3 sphereCenter, float radius, const
     return false;
 }
 
-bool GameEntity::checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::vec3& hitNormal)
+bool GameEntity::checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::vec3 &hitNormal)
 {
     if (!scene)
         return false;
 
-    for (const auto& obj : scene->getGameObjects())
+    for (const auto &obj : scene->getGameObjects())
     {
         // Skip the ball itself
         if (obj.get() == scene->ball)
@@ -510,5 +551,60 @@ bool GameEntity::checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::ve
         }
     }
 
+    return false;
+}
+
+// =============================================================================
+// ACTION BUFFER SYSTEM
+// =============================================================================
+
+bool GameEntity::bufferAction(const BufferedAction &action)
+{
+    if (action.type == ActionType::MOVE && hasBufferedMove())
+    {
+        std::cout << "[Buffer] Rejected: already has a MOVE action" << std::endl;
+        return false;
+    }
+    if (action.type != ActionType::MOVE && hasBufferedNonMove())
+    {
+        std::cout << "[Buffer] Rejected: already has a non-MOVE action" << std::endl;
+        return false;
+    }
+    actionBuffer.push_back(action);
+    std::cout << "[Buffer] Added: " << action.description << std::endl;
+    return true;
+}
+
+void GameEntity::removeAction(int index)
+{
+    if (index >= 0 && index < static_cast<int>(actionBuffer.size()))
+    {
+        std::cout << "[Buffer] Removed: " << actionBuffer[index].description << std::endl;
+        actionBuffer.erase(actionBuffer.begin() + index);
+    }
+}
+
+void GameEntity::clearActions()
+{
+    actionBuffer.clear();
+}
+
+bool GameEntity::hasBufferedMove() const
+{
+    for (const auto &a : actionBuffer)
+    {
+        if (a.type == ActionType::MOVE)
+            return true;
+    }
+    return false;
+}
+
+bool GameEntity::hasBufferedNonMove() const
+{
+    for (const auto &a : actionBuffer)
+    {
+        if (a.type != ActionType::MOVE)
+            return true;
+    }
     return false;
 }

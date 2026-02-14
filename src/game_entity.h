@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <vector>
 #include <queue>
+#include <string>
 #include <glm/glm.hpp>
 #include "../src/game_object.h" // Includes AABB
 #include "entity_class.h"
@@ -10,6 +11,23 @@
 
 // Forward declaration to avoid circular dependency
 class Scene;
+class GameEntity;
+
+// Action types for the buffered action system
+enum class ActionType
+{
+    MOVE,
+    SHOOT,
+    PASS
+};
+
+struct BufferedAction
+{
+    ActionType type;
+    glm::vec3 targetPosition = glm::vec3(0.0f);
+    GameEntity *targetEntity = nullptr;
+    std::string description;
+};
 
 // Movement command for queued movement system
 struct MovementCommand
@@ -37,6 +55,8 @@ private:
     float ballFlightTime = 0.0f;
     float ballFlightDuration = 1.5f; // Time in seconds for ball to reach target
     GameEntity* passTarget = nullptr; // Entity we're passing to
+    bool shotWillScore = false; // Computed at shoot time based on accuracy + distance
+    bool isRebounding = false;  // True during the rebound after a missed shot
 
 public:
     GameEntity();
@@ -82,6 +102,15 @@ public:
     void passBall(GameEntity* targetEntity);
     void updateBallFlight(float deltaTime);
     bool isBallInFlight() const { return isBallFlying; }
+
+    // Action buffer system
+    std::vector<BufferedAction> actionBuffer;
+    bool bufferAction(const BufferedAction &action);
+    void removeAction(int index);
+    void clearActions();
+    const std::vector<BufferedAction> &getActionBuffer() const { return actionBuffer; }
+    bool hasBufferedMove() const;
+    bool hasBufferedNonMove() const;
 
 private:
     // Ball collision detection

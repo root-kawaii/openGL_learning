@@ -133,7 +133,7 @@ RenderManager::~RenderManager()
 bool RenderManager::initialize(int width, int height)
 {
     // TODO: Initialize OpenGL states, default shaders, etc.
-    setRes(height, width);
+    setRes(width, height);
     setupIDBuffer();
     arrowModel = std::make_shared<Model>("assets/arrow.obj");
     lineModel = std::make_shared<Model>("assets/line.obj");
@@ -1531,9 +1531,7 @@ void RenderManager::renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject
             std::cerr << "Warning: GameObject has ID 0 (reserved for background)" << std::endl;
             continue;
         }
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject->scale);
-        model = glm::translate(model, gameObject->position) * scaling;
+        glm::mat4 model = gameObject->GetTransform();
         idShader->setUint("objectID", gameObject->ID);
         idShader->setMat4("model", model);
 
@@ -1859,9 +1857,14 @@ void RenderManager::renderGhostObject(GameObject &gameObject, glm::vec3 position
     // Use destination X and Z, but keep the object's current Y position
     glm::vec3 ghostPosition = glm::vec3(position.x, gameObject.position.y, position.z);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), gameObject.scale);
-    model = glm::translate(model, ghostPosition) * scaling;
+    // Build T × R × S using the ghost position but the object's rotation and scale
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), ghostPosition);
+    glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), gameObject.rotation.x, glm::vec3(1, 0, 0));
+    glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), gameObject.rotation.y, glm::vec3(0, 1, 0));
+    glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), gameObject.rotation.z, glm::vec3(0, 0, 1));
+    glm::mat4 rotationMatrix = rotationZ * rotationY * rotationX;
+    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), gameObject.scale);
+    glm::mat4 model = translationMatrix * rotationMatrix * scaleMatrix;
     shader->setMat4("projection", projectionMatrix);
     shader->setMat4("view", viewMatrix);
     shader->setMat4("model", model);
@@ -2959,12 +2962,31 @@ void RenderManager::renderMainPass()
         // Always render the actual object at its current position
         renderGameObject(*i, lightPositions, lightSpaceMatrix);
 
-        // Additionally render ghost at destination if entity has queued movements
-        if (entity && entity->hasQueuedMovements())
+        // Render ghost at destination if entity has queued movements (EXECUTING) or buffered MOVE (PLANNING)
+        if (entity)
         {
-            glm::vec3 destination = entity->getQueuedDestination();
-            // Only show ghost if destination is different from current position
-            if (glm::distance(destination, entity->object->position) > 0.5f)
+            glm::vec3 destination = glm::vec3(0.0f);
+            bool hasDestination = false;
+
+            if (entity->hasQueuedMovements())
+            {
+                destination = entity->getQueuedDestination();
+                hasDestination = true;
+            }
+            else
+            {
+                for (const auto &action : entity->getActionBuffer())
+                {
+                    if (action.type == ActionType::MOVE)
+                    {
+                        destination = action.targetPosition;
+                        hasDestination = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasDestination && glm::distance(destination, entity->object->position) > 0.5f)
             {
                 renderGhostObject(*entity->object, destination, 0.4f);
             }
@@ -3023,17 +3045,25 @@ void RenderManager::renderMainPass()
         renderParabolicTrajectory(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-2.5f, 2.5f, 0.66f), trajectorySegments);
     }
 
-    // Pass trajectory preview
-    if (uiManager && uiManager->isPassing && uiManager->passTargetEntity)
+    // Pass trajectory preview - show when entity has a buffered PASS action
+    if (uiManager && gameInstance)
     {
         for (auto &entity : gameInstance->getScene()->getGameEntities())
         {
             if (entity->getHasBall())
             {
-                renderLinearTrajectory(
-                    entity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
-                    uiManager->passTargetEntity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
-                    100);
+                // Check if this entity has a buffered PASS action
+                for (const auto &action : entity->getActionBuffer())
+                {
+                    if (action.type == ActionType::PASS && action.targetEntity)
+                    {
+                        renderLinearTrajectory(
+                            entity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
+                            action.targetEntity->object->position + glm::vec3(0.0f, 0.5f, 0.0f),
+                            100);
+                        break;
+                    }
+                }
                 break;
             }
         }

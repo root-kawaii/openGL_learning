@@ -20,15 +20,18 @@ void UIManager::onShootPressed(std::string value)
     std::cout << "Shoot button pressed" << std::endl;
     if (!gameInstance)
         return;
-    auto entities = gameInstance->getScene()->getGameEntities();
-    for (auto &entity : entities)
-    {
-        if (entity->getHasBall())
-        {
-            entity->shootBall(glm::vec3(-2.45f, 2.85f, 0.18f));
-            break;
-        }
-    }
+    auto selected = gameInstance->getSelectedEntity();
+    if (!selected || !selected->getHasBall())
+        return;
+
+    BufferedAction action;
+    action.type = ActionType::SHOOT;
+    action.targetPosition = glm::vec3(-2.45f, 2.85f, 0.18f);
+    action.description = "Shoot";
+    selected->bufferAction(action);
+
+    isPassing = false;
+    isCharacterMoving = false;
 }
 
 void UIManager::onPassPressed(std::string value)
@@ -67,21 +70,9 @@ void UIManager::onExecuteTurnPressed(std::string value)
     if (!gameInstance)
         return;
 
-    // Execute pending pass if in pass mode with a target
-    if (isPassing && passTargetEntity)
-    {
-        auto entities = gameInstance->getScene()->getGameEntities();
-        for (auto &entity : entities)
-        {
-            if (entity->getHasBall())
-            {
-                entity->passBall(passTargetEntity.get());
-                break;
-            }
-        }
-        isPassing = false;
-        passTargetEntity = nullptr;
-    }
+    isPassing = false;
+    isCharacterMoving = false;
+    passTargetEntity = nullptr;
 
     gameInstance->startTurnExecution();
 }
@@ -427,9 +418,79 @@ void UIManager::buildGameMenu()
             auto entity = entities[i];
             addBox(btnW, btnH, btnX, barY, 0.15f, 0.15f, 0.2f, 0.9f,
                    [this, entity](std::string v)
-                   { gameInstance->setSelectedEntity(entity); });
+                   {
+                       gameInstance->setSelectedEntity(entity);
+                       isPassing = false;
+                       isCharacterMoving = false;
+                   });
             addText(entities[i]->object->name, btnX + 15, barY + 15, 0.45f, textWhite.r, textWhite.g, textWhite.b);
         }
+    }
+}
+
+void UIManager::buildActionBufferUI()
+{
+    if (!gameInstance)
+        return;
+
+    auto selected = gameInstance->getSelectedEntity();
+    if (!selected)
+        return;
+
+    const auto &buffer = selected->getActionBuffer();
+    if (buffer.empty())
+        return;
+
+    const glm::vec3 bgDark(0.1f, 0.1f, 0.15f);
+    const glm::vec3 accent(0.9f, 0.8f, 0.3f);
+    const glm::vec3 textWhite(1.0f, 1.0f, 1.0f);
+    const float border = 2.0f;
+
+    float itemH = 35.0f;
+    float itemGap = 5.0f;
+    float panelW = 350.0f;
+    float panelH = buffer.size() * (itemH + itemGap) + 40.0f;
+    float panelX = (1440.0f - panelW) / 2.0f;
+    float panelY = 1370.0f - panelH - 10.0f;
+
+    // Background
+    addBox(panelW, panelH, panelX, panelY, bgDark.r, bgDark.g, bgDark.b, 0.9f);
+    // Top border
+    addBox(panelW, border, panelX, panelY + panelH, accent.r, accent.g, accent.b, 1.0f);
+
+    // Title
+    addText("Queued Actions", panelX + 10.0f, panelY + panelH - 25.0f, 0.4f,
+            accent.r, accent.g, accent.b);
+
+    float xBtnSize = 25.0f;
+    for (size_t i = 0; i < buffer.size(); i++)
+    {
+        float rowY = panelY + panelH - 45.0f - i * (itemH + itemGap);
+
+        // Row background
+        addBox(panelW - 20.0f, itemH, panelX + 10.0f, rowY,
+               0.15f, 0.15f, 0.2f, 1.0f);
+
+        // Action text
+        std::string label = std::to_string(i + 1) + ". " + buffer[i].description;
+        addText(label, panelX + 20.0f, rowY + 8.0f, 0.38f,
+                textWhite.r, textWhite.g, textWhite.b);
+
+        // X button
+        float xBtnX = panelX + panelW - 20.0f - xBtnSize;
+        int capturedIndex = static_cast<int>(i);
+        auto entityPtr = selected;
+        addBox(xBtnSize, xBtnSize, xBtnX, rowY + (itemH - xBtnSize) / 2.0f,
+               0.6f, 0.15f, 0.15f, 1.0f,
+               [entityPtr, capturedIndex](std::string v)
+               {
+                   if (entityPtr)
+                   {
+                       entityPtr->removeAction(capturedIndex);
+                   }
+               });
+        addText("X", xBtnX + 7.0f, rowY + (itemH - xBtnSize) / 2.0f + 4.0f, 0.35f,
+                1.0f, 1.0f, 1.0f);
     }
 }
 
@@ -514,6 +575,7 @@ void UIManager::renderAllUIElements(float mouseX, float mouseY)
     ZoneScoped;
 
     buildGameMenu();
+    buildActionBufferUI();
     buildBottomCenterMenu();
 
     glDisable(GL_DEPTH_TEST);

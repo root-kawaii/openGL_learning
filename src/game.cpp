@@ -92,6 +92,41 @@ void Game::update()
         entity->updateBallFlight(deltaTime);
     }
 
+    // Loose ball pickup — check every 5 frames
+    static int pickupFrameCounter = 0;
+    if (++pickupFrameCounter >= 5 && scene->ball)
+    {
+        pickupFrameCounter = 0;
+        bool ballOwned = false;
+        bool ballInFlight = false;
+        for (auto &entity : scene->getGameEntities())
+        {
+            if (entity->getHasBall()) ballOwned = true;
+            if (entity->isBallInFlight()) ballInFlight = true;
+        }
+        if (!ballOwned && !ballInFlight)
+        {
+            float closestDist = 1.5f; // pickup radius
+            std::shared_ptr<GameEntity> closest = nullptr;
+            for (auto &entity : scene->getGameEntities())
+            {
+                float dist = glm::distance(entity->object->position, scene->ball->position);
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closest = entity;
+                }
+            }
+            if (closest)
+            {
+                closest->setHasBall(true);
+                scene->ball->position = closest->object->position;
+                scene->ball->position.y = 0.5f;
+                std::cout << "[Pickup] " << closest->object->name << " picked up loose ball!" << std::endl;
+            }
+        }
+    }
+
     // --- Animation System Test: Switch between animations every 3 seconds ---
     static float animationTimer = 0.0f;
     static bool isPlayingBounce = false;
@@ -565,6 +600,29 @@ void Game::startTurnExecution()
     }
 
     std::cout << "\n=== TURN EXECUTION START ===" << std::endl;
+
+    // Process all entity action buffers
+    for (auto &entity : scene->getGameEntities())
+    {
+        for (const auto &action : entity->getActionBuffer())
+        {
+            switch (action.type)
+            {
+            case ActionType::MOVE:
+                entity->queueMovement(action.targetPosition);
+                break;
+            case ActionType::SHOOT:
+                entity->shootBall(action.targetPosition);
+                break;
+            case ActionType::PASS:
+                if (action.targetEntity)
+                    entity->passBall(action.targetEntity);
+                break;
+            }
+        }
+        entity->clearActions();
+    }
+
     turnState = TurnState::EXECUTING;
     allMovementsComplete = false;
 
@@ -729,6 +787,7 @@ void Game::endPlayerTurn()
     for (auto &entity : scene->getGameEntities())
     {
         entity->clearMovementQueue();
+        entity->clearActions();
     }
 
     // Reset all entity movement flags
