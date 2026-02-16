@@ -22,7 +22,7 @@
             "intensity": 0.800000011920929,
             "position": {
                 "x": 4.898331642150879,
-                "y": 0.28523319959640503,
+                "y": 0.10431128740310669,
                 "z": 5.0
             }
         }
@@ -2841,8 +2841,8 @@
             "id": "mech_drone_multi",
             "path": "assets/mech_drone_multi.glb",
             "position": {
-                "x": 2.5,
-                "y": 0.5,
+                "x": -0.5,
+                "y": -0.5,
                 "z": 1.5
             },
             "rotation": {
@@ -2852,10 +2852,10 @@
             },
             "scale": {
                 "x": 1.7976473827729933e-05,
-                "y": 1.692512523732148e-05,
+                "y": 1.692509977146983e-05,
                 "z": 1.8356004147790372e-05
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "textured_shader"
         },
         {
             "collision_radius": {
@@ -2884,7 +2884,7 @@
                 "y": 1.591724867466837e-05,
                 "z": 1.8047057892545126e-05
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "textured_shader"
         },
         {
             "collision_radius": {
@@ -2984,19 +2984,19 @@
             "id": "dune",
             "path": "assets/planes/terrain_plane.obj",
             "position": {
-                "x": 0.0,
-                "y": -2.419518232345581,
-                "z": 9.47274398803711
+                "x": -6.588107585906982,
+                "y": 3.7072362899780273,
+                "z": 11.535469055175781
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": -0.0,
                 "z": 0.0
             },
             "scale": {
                 "x": 86.0369873046875,
-                "y": 0.5854334235191345,
-                "z": 81.69203186035156
+                "y": 1.0000001111620804e-06,
+                "z": 0.08169203251600266
             },
             "shader_name": "simple_color_shader"
         },
@@ -3111,6 +3111,62 @@
                 "z": 1.0
             },
             "shader_name": "simple_color_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "113",
+            "path": "assets/apartment.glb",
+            "position": {
+                "x": 11.83432674407959,
+                "y": 2.646575927734375,
+                "z": 4.071627616882324
+            },
+            "rotation": {
+                "x": 2.107401132583618,
+                "y": -1.5313329696655273,
+                "z": -0.5619744062423706
+            },
+            "scale": {
+                "x": 0.9999659657478333,
+                "y": 0.9999972581863403,
+                "z": 0.9999966025352478
+            },
+            "shader_name": "default"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "115",
+            "path": "assets/stylized_tree.glb",
+            "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "default"
         }
     ]
 }

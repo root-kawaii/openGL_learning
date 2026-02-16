@@ -235,8 +235,10 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     // metallic: texture_metallicN
     // roughness: texture_roughnessN
 
-    // 1. diffuse maps
+    // 1. diffuse maps (try DIFFUSE first, fall back to BASE_COLOR for PBR/GLB models)
     vector<Mesh_Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+    if (diffuseMaps.empty())
+        diffuseMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse", scene);
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // 2. specular maps
     vector<Mesh_Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);

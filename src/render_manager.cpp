@@ -2293,6 +2293,7 @@ void RenderManager::initializeShaders()
     shaders["skybox_shader"] = std::make_shared<Shader>("shaders/cubemap.vs", "shaders/cubemap.fs");
     shaders["simple_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader.fs");
     shaders["simple_color_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_flat_color.fs");
+    shaders["textured_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_textured.fs");
     shaders["debug_shader"] = std::make_shared<Shader>("shaders/debug.vs", "shaders/debug.fs");
     shaders["model_shader"] = std::make_shared<Shader>("shaders/model.vs", "shaders/model.fs");
     shaders["smoke_shader"] = std::make_shared<Shader>("shaders/smoke.vs", "shaders/smoke.fs");

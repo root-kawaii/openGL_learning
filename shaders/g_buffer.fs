@@ -11,10 +11,10 @@ in vec3 FragPos;
 in vec3 Normal;
 in float viewDepth;
 
-uniform sampler2D texture_diffuse;
-uniform sampler2D texture_specular;
-uniform sampler2D texture_metallic;
-uniform sampler2D texture_roughness;
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
+uniform sampler2D texture_metallic1;
+uniform sampler2D texture_roughness1;
 
 uniform float time;
 uniform float selected;
@@ -43,23 +43,23 @@ void main()
     // Store the diffuse per-fragment color
     if(selected == objectID && selected!=0){
         float blinkFactor = (sin(time * 10) + 1.0) * 0.5;
-        vec3 diffuse = texture(texture_specular, TexCoords).rgb;
+        vec3 diffuse = texture(texture_specular1, TexCoords).rgb;
         msaaGAlbedoSpec.rgb = mix(diffuse, vec3(0.8, 0.0, 0.8), blinkFactor * 0.7); // 0.7 controls purple intensity
     }
     else{
-        msaaGAlbedoSpec.rgb = texture(texture_diffuse, TexCoords).rgb;
+        msaaGAlbedoSpec.rgb = texture(texture_diffuse1, TexCoords).rgb;
     }
     
     // Store specular intensity in gAlbedoSpec's alpha component
-    msaaGAlbedoSpec.a = texture(texture_specular, TexCoords).r;
+    msaaGAlbedoSpec.a = texture(texture_specular1, TexCoords).r;
     
     // Calculate and store linear depth
     // Method 1: From gl_FragCoord.z
     msaaGLinearDepth = viewDepth;
     msaaGLinearDepth = (viewDepth - near_plane) / (far_plane - near_plane);
 
-    msaaGMetallic = texture(texture_metallic, TexCoords).rgb;
-    msaaGRoughness = texture(texture_roughness, TexCoords).rgb;
+    msaaGMetallic = texture(texture_metallic1, TexCoords).rgb;
+    msaaGRoughness = texture(texture_roughness1, TexCoords).rgb;
     
     // Method 2: Alternative - from distance to camera (try this if Method 1 doesn't work)
     // vec3 viewPos = vec3(0.0, 0.0, 0.0); // Camera position in view space

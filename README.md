@@ -13,6 +13,9 @@ Understand text rendering and display stuff I need
 
 NEXT TO DO:
 
+- - improve look
+
+
 - need a playable version asap so in order:
 - - add ball interaction and pass and shoot maybe
 - - add actions such as push or jump
@@ -23,6 +26,7 @@ NEXT TO DO:
 - - flickering for ghost position kinda ugly
 - - add arrows for movement
 - - improve serialization clarity / performance
+
 
 
 
