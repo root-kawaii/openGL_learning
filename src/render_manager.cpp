@@ -1722,6 +1722,45 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
         shader->setVec3(colName, glm::vec3(1.0f, 1.0f, 1.0f));
     }
 
+    if (gameObject.shaderName == "terrain_tile_shader")
+    {
+        shader->setInt("terrainType", gameObject.terrainType);
+        shader->setFloat("texTiling", 0.25f); // texture spans ~4 tiles
+
+        // PBR terrain textures (2K): 3 material sets (diffuse + normal each)
+        // Unit 0 = shadowMap (bound elsewhere)
+        unsigned int grassDiff  = loadAndCacheTexture("t_grass_diff",  "assets/terrain/grass_rock_diff.jpg");
+        unsigned int grassNor   = loadAndCacheTexture("t_grass_nor",   "assets/terrain/grass_rock_nor.png");
+        unsigned int stoneDiff  = loadAndCacheTexture("t_stone_diff",  "assets/terrain/rocky_diff.jpg");
+        unsigned int stoneNor   = loadAndCacheTexture("t_stone_nor",   "assets/terrain/rocky_nor.png");
+        unsigned int rock2Diff  = loadAndCacheTexture("t_rock2_diff",  "assets/terrain/rocky2_diff.jpg");
+        unsigned int rock2Nor   = loadAndCacheTexture("t_rock2_nor",   "assets/terrain/rocky2_nor.png");
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, grassDiff);
+        shader->setInt("tex_grass_diff", 1);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, grassNor);
+        shader->setInt("tex_grass_nor", 2);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, stoneDiff);
+        shader->setInt("tex_stone_diff", 3);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, stoneNor);
+        shader->setInt("tex_stone_nor", 4);
+
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, rock2Diff);
+        shader->setInt("tex_rock2_diff", 5);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, rock2Nor);
+        shader->setInt("tex_rock2_nor", 6);
+    }
+
     if (gameObject.shaderName == "water_noG")
     {
         // Camera and view uniforms
@@ -1849,7 +1888,7 @@ void RenderManager::renderGhostObject(GameObject &gameObject, glm::vec3 position
     // Subdued color (desaturated), with flickering brightness
     glm::vec3 baseColor = gameObject.color;
     glm::vec3 desaturated = glm::mix(baseColor, glm::vec3(0.5f), 0.5f); // 50% desaturation
-    float flickerBrightness = 0.3f + 0.4f * flicker; // Flickers between 30% and 70% brightness
+    float flickerBrightness = 0.3f + 0.4f * flicker;                    // Flickers between 30% and 70% brightness
     glm::vec3 ghostColor = desaturated * flickerBrightness;
 
     shader->setVec3("objectColor", ghostColor);
@@ -2304,6 +2343,7 @@ void RenderManager::initializeShaders()
     shaders["line_shader"] = std::make_shared<Shader>("shaders/line_shader.vs", "shaders/line_shader.fs", "shaders/line_shader.gs");
     shaders["tile_shader"] = std::make_shared<Shader>("shaders/tile_shader.vs", "shaders/tile_shader.fs");
     shaders["dune_shader"] = std::make_shared<Shader>("shaders/sand_terrain.vs", "shaders/sand_terrain.fs");
+    shaders["terrain_tile_shader"] = std::make_shared<Shader>("shaders/terrain_tile.vs", "shaders/terrain_tile.fs");
 
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",

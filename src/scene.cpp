@@ -157,6 +157,7 @@ Scene::Scene()
         std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
                                      i.path, i.position, i.rotation, i.scale,
                                      i.collisionRadius, i.shader_name, i.color);
+    gameObject->terrainType = i.terrainType;
 
     if (i.gameEntity)
     {
@@ -235,6 +236,7 @@ Scene::Scene(RenderManager *renderMgr)
         std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
                                      i.path, i.position, i.rotation, i.scale,
                                      i.collisionRadius, i.shader_name, i.color);
+    gameObject->terrainType = i.terrainType;
 
     if (i.gameEntity)
     {
@@ -320,6 +322,7 @@ Scene::Scene(std::string level)
         std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
                                      i.path, i.position, i.rotation, i.scale,
                                      i.collisionRadius, i.shader_name, i.color);
+    gameObject->terrainType = i.terrainType;
 
     if (i.gameEntity)
     {

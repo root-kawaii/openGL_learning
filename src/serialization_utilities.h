@@ -21,6 +21,7 @@ struct SceneObject
     glm::vec3 scale;
     float collisionRadius;
     bool gameEntity;
+    int terrainType = 0; // 0=stone, 1=grass, 2=dirt, 3=moss
 };
 
 struct Light
@@ -185,6 +186,11 @@ public:
             {
                 obj.gameEntity = true;
             }
+            // Extract terrain type
+            if (objData.contains("terrain_type"))
+            {
+                obj.terrainType = objData["terrain_type"];
+            }
             // Extract collision radius
             if (objData.contains("collision_radius"))
             {
@@ -296,6 +302,11 @@ public:
 
                 objData["collision_radius"] = {
                     {"v", obj.collisionRadius}};
+
+                if (objPtr->terrainType != 0)
+                {
+                    objData["terrain_type"] = objPtr->terrainType;
+                }
 
                 sceneData["objects"].push_back(objData);
             }

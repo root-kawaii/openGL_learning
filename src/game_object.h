@@ -98,6 +98,7 @@ public:
     float ID;
     std::string name;
     std::string gameEntity;
+    int terrainType = 0; // 0=stone, 1=grass, 2=dirt, 3=moss
 
     glm::mat4 getModelMatrix() const
     {

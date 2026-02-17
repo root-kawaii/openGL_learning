@@ -8,9 +8,9 @@
             },
             "intensity": 1.0,
             "position": {
-                "x": 1.0,
-                "y": 4.7988104820251465,
-                "z": 3.6030490398406982
+                "x": 0.519264817237854,
+                "y": 3.8084633350372314,
+                "z": 1.4664690494537354
             }
         },
         {
@@ -21,9 +21,9 @@
             },
             "intensity": 0.800000011920929,
             "position": {
-                "x": 4.898331642150879,
-                "y": 0.10431128740310669,
-                "z": 5.0
+                "x": 2.148142099380493,
+                "y": 1.9374667406082153,
+                "z": 4.351565837860107
             }
         }
     ],
@@ -54,7 +54,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -82,7 +83,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -110,7 +111,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -138,7 +139,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -166,7 +167,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -194,7 +195,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -222,7 +223,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -250,7 +251,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -278,7 +279,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -306,7 +307,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -334,7 +335,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -362,7 +363,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -390,7 +392,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -418,7 +421,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -446,7 +450,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -474,7 +478,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -502,7 +507,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -530,7 +536,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -558,7 +565,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -586,7 +593,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -614,7 +621,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -642,7 +649,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -670,7 +678,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -698,7 +707,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -726,7 +736,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -754,7 +765,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -782,7 +794,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -810,7 +823,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -838,7 +852,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -866,7 +881,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -894,7 +910,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -922,7 +939,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -950,7 +967,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -978,7 +996,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1006,7 +1025,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1034,7 +1054,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1062,7 +1083,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1090,7 +1112,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1118,7 +1141,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -1146,7 +1169,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -1174,7 +1197,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1202,7 +1226,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1230,7 +1255,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1258,7 +1284,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1286,7 +1313,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1314,7 +1342,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1342,7 +1371,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1370,7 +1400,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1398,7 +1429,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1426,7 +1458,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1454,7 +1487,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1482,7 +1516,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1510,7 +1545,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1538,7 +1574,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1566,7 +1603,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1594,7 +1632,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1622,7 +1661,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1650,7 +1690,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1678,7 +1719,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -1706,7 +1747,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1734,7 +1776,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -1762,7 +1804,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -1790,7 +1832,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1818,7 +1861,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -1846,7 +1890,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1874,7 +1919,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1902,7 +1948,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -1930,7 +1977,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1958,7 +2006,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1986,7 +2035,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2014,7 +2063,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2042,7 +2091,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2070,7 +2120,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2098,7 +2149,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2126,7 +2178,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2154,7 +2207,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2182,7 +2236,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2210,7 +2265,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2238,7 +2294,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2266,7 +2323,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2294,7 +2352,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2322,7 +2380,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2350,7 +2408,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2378,7 +2437,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2406,7 +2466,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2434,7 +2495,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
         },
         {
             "collision_radius": {
@@ -2462,7 +2524,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2490,7 +2552,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2518,7 +2580,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2546,7 +2609,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2574,7 +2638,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2602,7 +2666,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2630,7 +2694,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2658,7 +2722,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2686,7 +2750,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2714,7 +2778,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2742,7 +2807,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2770,7 +2835,8 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
         },
         {
             "collision_radius": {
@@ -2798,7 +2864,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -2826,7 +2892,7 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "shader_name": "simple_color_shader"
+            "shader_name": "terrain_tile_shader"
         },
         {
             "collision_radius": {
@@ -3111,62 +3177,6 @@
                 "z": 1.0
             },
             "shader_name": "simple_color_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 1.0,
-                "g": 1.0,
-                "r": 1.0
-            },
-            "id": "113",
-            "path": "assets/apartment.glb",
-            "position": {
-                "x": 11.83432674407959,
-                "y": 2.646575927734375,
-                "z": 4.071627616882324
-            },
-            "rotation": {
-                "x": 2.107401132583618,
-                "y": -1.5313329696655273,
-                "z": -0.5619744062423706
-            },
-            "scale": {
-                "x": 0.9999659657478333,
-                "y": 0.9999972581863403,
-                "z": 0.9999966025352478
-            },
-            "shader_name": "default"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 1.0,
-                "g": 1.0,
-                "r": 1.0
-            },
-            "id": "115",
-            "path": "assets/stylized_tree.glb",
-            "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "default"
         }
     ]
 }
