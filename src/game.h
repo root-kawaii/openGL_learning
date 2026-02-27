@@ -16,6 +16,7 @@
 
 #include <../src/game_object.h>
 #include <../src/scene.h>
+#include <../src/vn_manager.h>
 
 #include <iostream>
 #include <../json/single_include/nlohmann/json.hpp>
@@ -67,6 +68,7 @@ enum GameModeEnum
     GAME,
     ENGINE,
     PAUSE,
+    VISUAL_NOVEL,
 };
 
 class Game
@@ -85,6 +87,7 @@ private:
     InputManager inputManager;
     GameManager gameManager;
     std::shared_ptr<UIManager> uiManager;
+    VNManager vnManager;
 
     // Game state
     // GameState currentState;
@@ -177,6 +180,7 @@ public:
         }
     };
     GameModeEnum getGameMode() { return mode; };
+    VNManager&   getVNManager() { return vnManager; }
 
     // Turn-based gameplay methods
     void endPlayerTurn();

@@ -1,0 +1,55 @@
+{
+    "locations": [
+        {
+            "id": "locker_room",
+            "name": "Locker Room",
+            "camera": { "x": 4.0, "y": 1.8, "z": 8.0, "yaw": -100.0, "pitch": -8.0 },
+            "characters": [
+                {
+                    "id": "coach",
+                    "name": "Coach Maria",
+                    "sprite": "assets/character.png"
+                }
+            ],
+            "dialogue": [
+                { "character": "coach", "text": "Good match out there today. Your positioning has improved a lot." },
+                { "character": "coach", "text": "Still, you need to communicate more with your teammates. Basketball is not a solo sport." },
+                { "character": "coach", "text": "Get some rest. We have practice again tomorrow at 8 sharp." }
+            ]
+        },
+        {
+            "id": "rooftop",
+            "name": "Rooftop",
+            "camera": { "x": 0.0, "y": 18.0, "z": 0.0, "yaw": -60.0, "pitch": -35.0 },
+            "characters": [
+                {
+                    "id": "coach",
+                    "name": "Coach Maria",
+                    "sprite": "assets/character.png"
+                }
+            ],
+            "dialogue": [
+                { "character": "coach", "text": "Beautiful view from up here, isn't it? The whole city laid out before us." },
+                { "character": "coach", "text": "Sometimes you need to step back to see the bigger picture. That's true in life and in basketball." },
+                { "character": "coach", "text": "The team is counting on you. Don't let them down." }
+            ]
+        },
+        {
+            "id": "gym",
+            "name": "Training Gym",
+            "camera": { "x": 13.0, "y": 4.5, "z": 12.0, "yaw": -140.0, "pitch": -18.0 },
+            "characters": [
+                {
+                    "id": "coach",
+                    "name": "Coach Maria",
+                    "sprite": "assets/character.png"
+                }
+            ],
+            "dialogue": [
+                { "character": "coach", "text": "You stayed late to practice again. That dedication will take you far." },
+                { "character": "coach", "text": "Work on your three-pointer. It's the weakest part of your game right now." },
+                { "character": "coach", "text": "Remember — talent gets you in the door, but hard work keeps you there." }
+            ]
+        }
+    ]
+}

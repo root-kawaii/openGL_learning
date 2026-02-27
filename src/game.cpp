@@ -1,4 +1,5 @@
 #include "game.h"
+#include "history.h"
 #include "../tracy/public/tracy/Tracy.hpp"
 #include <iostream>
 #include <fstream>
@@ -43,6 +44,8 @@ bool Game::initialize()
     scene->setUIManager(uiManager.get());
     renderManager.setGame(this);
     renderManager.setUIManager(uiManager.get());
+
+    vnManager.init(&renderManager, &camera);
 
     // Initialize turn system - player-based, not entity-based
     // All entities start with hasMovedThisTurn = false
@@ -449,13 +452,72 @@ bool wasKeyJustPressed(int key, GLFWwindow *window)
 
 void Game::handleInput()
 {
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && wasKeyJustPressed(GLFW_KEY_C, window))
+    // TAB — enter VN mode (test shortcut)
+    if (wasKeyJustPressed(GLFW_KEY_TAB, window) && mode == GAME)
     {
-        if (scene->getSelectedGameObject() == nullptr)
+        mode = VISUAL_NOVEL;
+        vnManager.enter();
+    }
+
+    // VN mode controls — consume input and return early
+    if (mode == VISUAL_NOVEL)
+    {
+        if (wasKeyJustPressed(GLFW_KEY_SPACE, window) || wasKeyJustPressed(GLFW_KEY_ENTER, window))
+            vnManager.onAdvance();
+        if (wasKeyJustPressed(GLFW_KEY_ESCAPE, window))
         {
-            return;
+            vnManager.exit();
+            mode = GAME;
         }
-        scene->duplicateGameObject(scene->getSelectedGameObject()->ID);
+        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window))
+            vnManager.onNextLocation();
+        if (wasKeyJustPressed(GLFW_KEY_LEFT, window))
+            vnManager.onPrevLocation();
+        return;
+    }
+
+    bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                     glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+
+    // Shift+C — copy selected object to clipboard
+    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_C, window))
+    {
+        scene->copyToClipboard();
+    }
+
+    // Shift+V — paste clipboard as new object (auto-selected)
+    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_V, window))
+    {
+        scene->pasteFromClipboard();
+    }
+
+    // Ctrl+Z — undo
+    bool ctrlHeld = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+                    glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+    if (ctrlHeld && !shiftHeld && wasKeyJustPressed(GLFW_KEY_Z, window))
+        scene->undo();
+
+    // Ctrl+Y — redo
+    if (ctrlHeld && wasKeyJustPressed(GLFW_KEY_Y, window))
+        scene->redo();
+
+    // Arrow keys — move selected object 1 unit at a time (X / Z plane)
+    auto sel = scene->getSelectedGameObject();
+    if (sel)
+    {
+        TransformState before = { sel->position, sel->rotation, sel->scale, sel->color };
+        bool moved = false;
+
+        if (wasKeyJustPressed(GLFW_KEY_LEFT,  window)) { sel->position.x -= 1.0f; moved = true; }
+        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window)) { sel->position.x += 1.0f; moved = true; }
+        if (wasKeyJustPressed(GLFW_KEY_UP,    window)) { sel->position.z -= 1.0f; moved = true; }
+        if (wasKeyJustPressed(GLFW_KEY_DOWN,  window)) { sel->position.z += 1.0f; moved = true; }
+
+        if (moved)
+        {
+            TransformState after = { sel->position, sel->rotation, sel->scale, sel->color };
+            scene->pushTransformCommand(sel->ID, before, after);
+        }
     }
 
     // Shoot ball with 'F' key
@@ -502,14 +564,7 @@ void Game::handleInput()
         }
     }
 
-    // Add cube below selected entity with 'V' key
-    if (wasKeyJustPressed(GLFW_KEY_V, window))
-    {
-        if (selectedEntity)
-        {
-            scene->addCubeBelowEntity(selectedEntity, "simple_color_shader");
-        }
-    }
+
 }
 
 void Game::handleTurn()
@@ -800,4 +855,8 @@ void Game::endPlayerTurn()
     // Clear selection
     selectedEntity = nullptr;
     scene->setSelectedObject(nullptr);
+
+    // Auto-enter VN mode between turns
+    mode = VISUAL_NOVEL;
+    vnManager.enter();
 }

@@ -10,8 +10,11 @@ layout (location = 6) in vec4 weights;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+uniform vec4 clipPlane;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    vec4 worldPos = model * vec4(aPos, 1.0);
+    gl_ClipDistance[0] = dot(worldPos, clipPlane);
+    gl_Position = projection * view * worldPos;
 }

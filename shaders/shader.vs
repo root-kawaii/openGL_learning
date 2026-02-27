@@ -24,6 +24,7 @@ uniform mat4 view;
 uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
 uniform float time;
+uniform vec4 clipPlane;
 
 const int MAX_BONES = 100;
 uniform mat4 gBones[MAX_BONES];
@@ -57,6 +58,7 @@ void main()
     }
 
     vec4 worldPos = model * PosL;
+    gl_ClipDistance[0] = dot(worldPos, clipPlane);
 
     vs_out.FragPos = worldPos.xyz;
     vs_out.Normal = transpose(inverse(mat3(model))) * NormalL.xyz;

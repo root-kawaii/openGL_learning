@@ -6,9 +6,11 @@ out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
 out vec4 ClipSpacePos;
+out vec4 ReflClipPos;   // fragment position in reflected-camera clip space
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 reflectionVP; // projection * reflected-view (set by renderWaterPass)
 uniform float time;        
 uniform float waveHeight;  
 uniform float waveSpeed;   
@@ -179,8 +181,9 @@ void main()
     
     // Calculate world position
     vec4 worldPos = model * vec4(pos, 1.0);
-    FragPos = worldPos.xyz;
-    
+    FragPos    = worldPos.xyz;
+    ReflClipPos = reflectionVP * worldPos;
+
     // Calculate normals (only for surface vertices to save performance)
     vec3 newNormal = aNormal;
     if (depthInfluence > 0.1) {

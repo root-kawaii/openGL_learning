@@ -15,6 +15,7 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float seed; // Seed for randomness - change this to get different terrain
+uniform vec4 clipPlane;
 
 // Hard-coded terrain parameters
 const float mountainHeight = 15.0;
@@ -184,6 +185,7 @@ void main()
     
     // Calculate world position
     vec4 worldPos = model * vec4(pos, 1.0);
+    gl_ClipDistance[0] = dot(worldPos, clipPlane);
     FragPos = worldPos.xyz;
     TexCoords = aTexCoords;
     

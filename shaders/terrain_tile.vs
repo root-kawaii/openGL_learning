@@ -20,10 +20,12 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
+uniform vec4 clipPlane;
 
 void main()
 {
     vec4 worldPos = model * vec4(aPos, 1.0);
+    gl_ClipDistance[0] = dot(worldPos, clipPlane);
     mat3 normalMatrix = transpose(inverse(mat3(model)));
 
     vs_out.FragPos = worldPos.xyz;

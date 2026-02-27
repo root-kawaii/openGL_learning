@@ -139,6 +139,14 @@ bool RenderManager::initialize(int width, int height)
     lineModel = std::make_shared<Model>("assets/line.obj");
     elModel = std::make_shared<Model>("assets/el.obj");
     setUpSkyBox();
+    // 1500 half-extent covers the full 1000-unit far plane in all directions.
+    // Y=-0.5 keeps the water below the tile floor (tiles have centers at Y~0.5)
+    // so the level sits as an island above the water surface.
+    generateWaterMesh(1500.0f, -0.5f, 200);
+    // Ground plane: 2 units below main level floor (tile bottom = Y 0, so -2.0).
+    // 200 half-extent spans the visible seabed under the transparent water.
+    generateGroundMesh(200.0f, -2.0f, 8);
+    setupReflectionFBO();
     return true;
 }
 
@@ -1706,6 +1714,7 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
     shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     shader->setInt("shadowMap", 0);
     shader->setInt("debugMode", boneDebugMode);
+    shader->setVec4("clipPlane", activeClipPlane);
 
     int lightCount = static_cast<int>(lights.size());
     shader->setInt("numLights", lightCount);
@@ -2333,17 +2342,24 @@ void RenderManager::initializeShaders()
     shaders["simple_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader.fs");
     shaders["simple_color_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_flat_color.fs");
     shaders["textured_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_textured.fs");
+    shaders["rock_shader"]     = std::make_shared<Shader>("shaders/shader.vs", "shaders/rock.fs");
     shaders["debug_shader"] = std::make_shared<Shader>("shaders/debug.vs", "shaders/debug.fs");
     shaders["model_shader"] = std::make_shared<Shader>("shaders/model.vs", "shaders/model.fs");
     shaders["smoke_shader"] = std::make_shared<Shader>("shaders/smoke.vs", "shaders/smoke.fs");
     shaders["grid_shader"] = std::make_shared<Shader>("shaders/grid.vs", "shaders/grid.fs");
     shaders["grid_shader_2"] = std::make_shared<Shader>("shaders/grid_2.vs", "shaders/grid_2.fs");
     shaders["water_noG"] = std::make_shared<Shader>("shaders/water_2.vs", "shaders/water_2.fs");
+    // No geometry shader — water.vs already computes smooth analytic normals via
+    // FBM gradient finite-differences; flat per-face GS normals cause visible
+    // faceting on large quads.
+    shaders["water_forward"] = std::make_shared<Shader>("shaders/water.vs",
+                                                        "shaders/water_forward.fs");
     shaders["id_shader"] = std::make_shared<Shader>("shaders/id_shader.vs", "shaders/id_shader.fs");
     shaders["line_shader"] = std::make_shared<Shader>("shaders/line_shader.vs", "shaders/line_shader.fs", "shaders/line_shader.gs");
     shaders["tile_shader"] = std::make_shared<Shader>("shaders/tile_shader.vs", "shaders/tile_shader.fs");
     shaders["dune_shader"] = std::make_shared<Shader>("shaders/sand_terrain.vs", "shaders/sand_terrain.fs");
     shaders["terrain_tile_shader"] = std::make_shared<Shader>("shaders/terrain_tile.vs", "shaders/terrain_tile.fs");
+    shaders["ground_shader"] = std::make_shared<Shader>("shaders/ground.vs", "shaders/ground.fs");
 
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
@@ -2905,6 +2921,456 @@ void RenderManager::renderSkyBox()
     glDepthFunc(GL_LESS);
 }
 
+// ---------------------------------------------------------------------------
+// Water mesh generation
+// Creates a flat XZ grid of (divisions x divisions) quads at Y=yLevel.
+// The mesh is stored in waterVAO/VBO/EBO and re-used every frame.
+// ---------------------------------------------------------------------------
+void RenderManager::generateWaterMesh(float halfExtent, float yLevel, int divisions)
+{
+    // Clean up any pre-existing mesh
+    if (waterVAO != 0)
+    {
+        glDeleteVertexArrays(1, &waterVAO);
+        glDeleteBuffers(1, &waterVBO);
+        glDeleteBuffers(1, &waterEBO);
+        waterVAO = waterVBO = waterEBO = waterIndexCount = 0;
+    }
+
+    waterYLevel     = yLevel;
+    waterHalfExtent = halfExtent;
+
+    int vertsPerSide = divisions + 1;
+
+    // Each vertex: position(3) + normal(3) + texcoord(2) = 8 floats
+    std::vector<float> verts;
+    verts.reserve(vertsPerSide * vertsPerSide * 8);
+
+    for (int z = 0; z <= divisions; ++z)
+    {
+        for (int x = 0; x <= divisions; ++x)
+        {
+            float fx = -halfExtent + (float)x / (float)divisions * 2.0f * halfExtent;
+            float fz = -halfExtent + (float)z / (float)divisions * 2.0f * halfExtent;
+
+            // Position
+            verts.push_back(fx);
+            verts.push_back(yLevel);
+            verts.push_back(fz);
+            // Normal (pointing up; geometry shader overwrites with accurate value)
+            verts.push_back(0.0f);
+            verts.push_back(1.0f);
+            verts.push_back(0.0f);
+            // Texcoord
+            verts.push_back((float)x / (float)divisions);
+            verts.push_back((float)z / (float)divisions);
+        }
+    }
+
+    // Two triangles per quad, wound CCW from above so normals point +Y
+    std::vector<unsigned int> indices;
+    indices.reserve(divisions * divisions * 6);
+
+    for (int z = 0; z < divisions; ++z)
+    {
+        for (int x = 0; x < divisions; ++x)
+        {
+            unsigned int tl = z * vertsPerSide + x;
+            unsigned int tr = tl + 1;
+            unsigned int bl = tl + vertsPerSide;
+            unsigned int br = bl + 1;
+
+            // Triangle 1 — CCW from +Y
+            indices.push_back(tl);
+            indices.push_back(bl);
+            indices.push_back(tr);
+            // Triangle 2
+            indices.push_back(tr);
+            indices.push_back(bl);
+            indices.push_back(br);
+        }
+    }
+
+    waterIndexCount = (unsigned int)indices.size();
+
+    glGenVertexArrays(1, &waterVAO);
+    glGenBuffers(1, &waterVBO);
+    glGenBuffers(1, &waterEBO);
+
+    glBindVertexArray(waterVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, waterVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 (GLsizeiptr)(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, waterEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 (GLsizeiptr)(indices.size() * sizeof(unsigned int)),
+                 indices.data(), GL_STATIC_DRAW);
+
+    // aPos      — location 0
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    // aNormal   — location 1
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    // aTexCoords — location 2
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    std::cout << "[Water] Mesh generated: " << divisions << "x" << divisions
+              << " quads, " << waterIndexCount / 3 << " triangles, "
+              << "extent=" << halfExtent << ", y=" << yLevel << std::endl;
+
+    // Ensure textures are loaded (needed by renderWaterPass)
+    if (textures.find("foam") == textures.end())
+        loadTexture("foam", "assets/foam.png");
+    if (textures.find("water_normal") == textures.end())
+        loadTexture("water_normal", "assets/water_normal.png");
+}
+
+// ---------------------------------------------------------------------------
+// Water render pass — called after all opaque objects, before skybox.
+// Uses water.vs (FBM waves) + water.gs (accurate normals) + water_forward.fs
+// (cubemap reflection + Fresnel + foam).
+// ---------------------------------------------------------------------------
+void RenderManager::renderWaterPass()
+{
+    if (waterVAO == 0)
+        return;
+
+    Shader* shader = getShader("water_forward");
+    if (!shader)
+        return;
+
+    shader->use();
+
+    // Matrices
+    glm::mat4 model = glm::mat4(1.0f);
+    shader->setMat4("model",      model);
+    shader->setMat4("view",       viewMatrix);
+    shader->setMat4("projection", projectionMatrix);
+    shader->setFloat("time", (float)glfwGetTime());
+
+    // Wave parameters (matched to level scale)
+    shader->setFloat("waveHeight",       0.22f);
+    shader->setFloat("waveSpeed",        0.35f);
+    shader->setFloat("waveFreq",         0.45f);
+    shader->setFloat("surfaceLevel",     waterYLevel);
+    shader->setFloat("surfaceThickness", 2.0f);
+
+    // Camera
+    shader->setVec3("cameraWorldPos", currentCamera->Position);
+
+    // Water appearance uniforms
+    shader->setVec3("waterColorShallow", glm::vec3(0.30f, 0.72f, 0.92f));
+    shader->setVec3("waterColorDeep",    glm::vec3(0.04f, 0.20f, 0.55f));
+    shader->setFloat("waterAlpha",       0.92f);  // higher = less see-through colour bleed
+    shader->setFloat("reflectStrength",  0.70f);
+    shader->setFloat("specStrength",     0.80f);
+    shader->setFloat("foamStrength",     0.65f);
+
+    // Sun — must match the direction baked into cubemap.fs so reflections are consistent
+    glm::vec3 sun = glm::normalize(glm::vec3(0.55f, 0.30f, 0.40f));
+    shader->setVec3("sunDir",   sun);
+    shader->setVec3("sunColor", glm::vec3(1.0f, 0.96f, 0.88f));
+
+    // Normal map (two scrolling layers in shader)
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textures.at("water_normal")->id);
+    shader->setInt("normalMap", 0);
+
+    // Foam texture
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textures.at("foam")->id);
+    shader->setInt("foamTexture", 1);
+
+    // Planar reflection texture + VP matrix for correct UV projection
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, reflectionTexture);
+    shader->setInt("reflectionTexture", 2);
+    shader->setMat4("reflectionVP", reflectionVP);
+
+    // Enable alpha blending; disable depth writes so transparent water
+    // doesn't occlude objects behind it in the depth buffer
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    // Render both sides (camera can dip below water level)
+    glDisable(GL_CULL_FACE);
+
+    glBindVertexArray(waterVAO);
+    glDrawElements(GL_TRIANGLES, (GLsizei)waterIndexCount, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+
+    // Restore state
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+}
+
+// ---------------------------------------------------------------------------
+// Ground mesh — flat plane at groundYLevel, covers the visible seabed under
+// the transparent water.  Vertex layout: position(3)+normal(3)+texcoord(2).
+// ---------------------------------------------------------------------------
+void RenderManager::generateGroundMesh(float halfExtent, float yLevel, int divisions)
+{
+    // Clean up any pre-existing mesh
+    if (groundVAO != 0)
+    {
+        glDeleteVertexArrays(1, &groundVAO);
+        glDeleteBuffers(1, &groundVBO);
+        glDeleteBuffers(1, &groundEBO);
+        groundVAO = groundVBO = groundEBO = groundIndexCount = 0;
+    }
+
+    groundYLevel     = yLevel;
+    groundHalfExtent = halfExtent;
+
+    int vertsPerSide = divisions + 1;
+
+    std::vector<float> verts;
+    verts.reserve(vertsPerSide * vertsPerSide * 8);
+
+    for (int z = 0; z <= divisions; ++z)
+    {
+        for (int x = 0; x <= divisions; ++x)
+        {
+            float fx = -halfExtent + (float)x / (float)divisions * 2.0f * halfExtent;
+            float fz = -halfExtent + (float)z / (float)divisions * 2.0f * halfExtent;
+
+            // Position
+            verts.push_back(fx);
+            verts.push_back(yLevel);
+            verts.push_back(fz);
+            // Normal (up)
+            verts.push_back(0.0f);
+            verts.push_back(1.0f);
+            verts.push_back(0.0f);
+            // Texcoord (normalised 0-1 across the whole plane; shader will tile by world pos)
+            verts.push_back((float)x / (float)divisions);
+            verts.push_back((float)z / (float)divisions);
+        }
+    }
+
+    std::vector<unsigned int> indices;
+    indices.reserve(divisions * divisions * 6);
+
+    for (int z = 0; z < divisions; ++z)
+    {
+        for (int x = 0; x < divisions; ++x)
+        {
+            unsigned int tl = z * vertsPerSide + x;
+            unsigned int tr = tl + 1;
+            unsigned int bl = tl + vertsPerSide;
+            unsigned int br = bl + 1;
+
+            indices.push_back(tl);
+            indices.push_back(bl);
+            indices.push_back(tr);
+            indices.push_back(tr);
+            indices.push_back(bl);
+            indices.push_back(br);
+        }
+    }
+
+    groundIndexCount = (unsigned int)indices.size();
+
+    glGenVertexArrays(1, &groundVAO);
+    glGenBuffers(1, &groundVBO);
+    glGenBuffers(1, &groundEBO);
+
+    glBindVertexArray(groundVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 (GLsizeiptr)(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, groundEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 (GLsizeiptr)(indices.size() * sizeof(unsigned int)),
+                 indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    std::cout << "[Ground] Mesh generated: " << divisions << "x" << divisions
+              << " quads, extent=" << halfExtent << ", y=" << yLevel << std::endl;
+
+    if (textures.find("ground_tex") == textures.end())
+        loadTexture("ground_tex", "assets/GroundTexture.png");
+}
+
+// ---------------------------------------------------------------------------
+// Ground render pass — called before water so depth test hides it where land
+// tiles cover it, and the water sees it through its transparency.
+// ---------------------------------------------------------------------------
+void RenderManager::renderGroundPass()
+{
+    if (groundVAO == 0)
+        return;
+
+    Shader* shader = getShader("ground_shader");
+    if (!shader)
+        return;
+
+    shader->use();
+
+    // Matrices
+    glm::mat4 model = glm::mat4(1.0f);
+    shader->setMat4("model",            model);
+    shader->setMat4("view",             viewMatrix);
+    shader->setMat4("projection",       projectionMatrix);
+    shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    // Camera / lighting
+    if (currentCamera)
+        shader->setVec3("viewPos", currentCamera->Position);
+
+    if (!lightPositions.empty())
+    {
+        shader->setVec3("lightPos",   lightPositions[0]);
+        shader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
+    }
+
+    shader->setFloat("texTiling", 4.0f); // repeat texture every 4 world units
+
+    // Bind ground texture
+    auto it = textures.find("ground_tex");
+    if (it != textures.end())
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, it->second->id);
+        shader->setInt("groundTexture", 0);
+    }
+
+    // Bind shadow map
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    shader->setInt("shadowMap", 1);
+
+    glBindVertexArray(groundVAO);
+    glDrawElements(GL_TRIANGLES, (GLsizei)groundIndexCount, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+}
+
+// ---------------------------------------------------------------------------
+// setupReflectionFBO — creates a half-resolution colour+depth FBO used by
+// renderReflectionPass() to capture the scene from the mirrored camera.
+// ---------------------------------------------------------------------------
+void RenderManager::setupReflectionFBO()
+{
+    // Clean up existing resources
+    if (reflectionFBO)      { glDeleteFramebuffers(1,  &reflectionFBO);      reflectionFBO      = 0; }
+    if (reflectionTexture)  { glDeleteTextures(1,       &reflectionTexture);  reflectionTexture  = 0; }
+    if (reflectionDepthRBO) { glDeleteRenderbuffers(1, &reflectionDepthRBO); reflectionDepthRBO = 0; }
+
+    int w = std::max(screenWidth  / 2, 1);
+    int h = std::max(screenHeight / 2, 1);
+
+    glGenFramebuffers(1, &reflectionFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, reflectionFBO);
+
+    // Colour attachment
+    glGenTextures(1, &reflectionTexture);
+    glBindTexture(GL_TEXTURE_2D, reflectionTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, reflectionTexture, 0);
+
+    // Depth renderbuffer
+    glGenRenderbuffers(1, &reflectionDepthRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, reflectionDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, reflectionDepthRBO);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "[Reflection] Framebuffer incomplete!" << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    std::cout << "[Reflection] FBO created " << w << "x" << h << std::endl;
+}
+
+// ---------------------------------------------------------------------------
+// renderReflectionPass — renders all opaque scene objects from a camera
+// mirrored across the water surface, into reflectionFBO.  The resulting
+// texture is sampled by water_forward.fs for planar reflections.
+// ---------------------------------------------------------------------------
+void RenderManager::renderReflectionPass()
+{
+    if (!reflectionFBO || !currentCamera || !currentScene)
+        return;
+
+    int w = std::max(screenWidth  / 2, 1);
+    int h = std::max(screenHeight / 2, 1);
+
+    // -- 1. Build reflected view matrix ------------------------------------
+    // Mirror the camera across the horizontal plane Y = waterYLevel.
+    glm::vec3 camPos    = currentCamera->Position;
+    float     wy        = waterYLevel;
+    glm::vec3 reflPos   = glm::vec3(camPos.x, 2.0f * wy - camPos.y, camPos.z);
+    glm::vec3 camTarget = camPos + currentCamera->Front;
+    glm::vec3 reflTarget = glm::vec3(camTarget.x, 2.0f * wy - camTarget.y, camTarget.z);
+    // Keep Up direction unchanged — reflected camera is below looking upward;
+    // flipping Up is NOT needed because projecting through reflectionVP already
+    // accounts for the mirror, and the Y-flip in lookAt would flip the FBO image.
+    glm::vec3 reflUp   = currentCamera->Up;
+    glm::mat4 reflView = glm::lookAt(reflPos, reflTarget, reflUp);
+
+    // Save reflectionVP for the water shader to project fragments correctly
+    reflectionVP = projectionMatrix * reflView;
+
+    // -- 2. Bind FBO + set half-res viewport --------------------------------
+    glBindFramebuffer(GL_FRAMEBUFFER, reflectionFBO);
+    glViewport(0, 0, w, h);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // -- 3. Enable clip plane: keep only geometry above the water surface ---
+    // Plane equation:  dot((x,y,z,1), (0,1,0,-wy)) = y - wy >= 0
+    activeClipPlane = glm::vec4(0.0f, 1.0f, 0.0f, -wy);
+    glEnable(GL_CLIP_DISTANCE0);
+
+    // Disable backface culling so tile/model undersides are visible in reflection
+    glDisable(GL_CULL_FACE);
+
+    // -- 4. Override view matrix so useShader() uses the reflected camera ---
+    glm::mat4 savedView = viewMatrix;
+    viewMatrix = reflView;
+
+    // -- 5. Render all opaque scene objects ---------------------------------
+    std::vector<glm::vec3> lightPos;
+    for (auto &l : lights) lightPos.push_back(l.position);
+
+    for (auto &obj : currentScene->getGameObjects())
+    {
+        if (obj->name == "dune") continue;
+        renderGameObject(*obj, lightPos, lightSpaceMatrix);
+    }
+
+    // -- 6. Restore state ---------------------------------------------------
+    viewMatrix = savedView;
+    glDisable(GL_CLIP_DISTANCE0);
+    glEnable(GL_CULL_FACE);
+    activeClipPlane = glm::vec4(0.0f, -1.0f, 0.0f, 1e6f);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, screenWidth, screenHeight);
+}
+
 void RenderManager::renderShadowPass()
 {
     ZoneScoped;
@@ -2959,6 +3425,10 @@ void RenderManager::renderShadowPass()
 void RenderManager::renderMainPass()
 {
     ZoneScoped;
+
+    // Build the planar reflection texture before any objects write to the main
+    // depth buffer — the reflection pass needs a clean depth buffer.
+    renderReflectionPass();
 
     auto gameObjects = currentScene->getGameObjects();
 
@@ -3117,6 +3587,13 @@ void RenderManager::renderMainPass()
             renderArrow(light.position);
         }
     }
+
+    // Ground pass first so it writes depth; water (alpha-blended) sees it beneath.
+    renderGroundPass();
+
+    // Render water after all opaque objects so depth test works correctly,
+    // and before skybox so the sky cubemap is already bound for reflection.
+    renderWaterPass();
 
     renderSkyBox();
 }

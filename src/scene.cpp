@@ -74,8 +74,13 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
                        operation, mode, glm::value_ptr(transform));
 
+  // Capture state when drag starts
+  bool isUsingNow = ImGuizmo::IsUsing();
+  if (isUsingNow && !gizmoWasUsing)
+    gizmoBefore = captureState(selectedObject);
+
   // Update object if gizmo was used
-  if (ImGuizmo::IsUsing())
+  if (isUsingNow)
   {
     float translation[3], rotation[3], scale[3];
     ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform),
@@ -114,6 +119,12 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
                                           glm::radians(rotation[2])));
     selectedObject->SetScale(glm::vec3(scale[0], scale[1], scale[2]));
   }
+
+  // Push history command when drag finishes
+  if (!isUsingNow && gizmoWasUsing && selectedObject)
+    pushTransformCommand(selectedObject->ID, gizmoBefore, captureState(selectedObject));
+
+  gizmoWasUsing = isUsingNow;
 }
 
 Scene::Scene()
@@ -800,6 +811,145 @@ void Scene::copyEntity()
             << copiedGameObject->position.z << ")" << std::endl;
 }
 
+void Scene::copyToClipboard()
+{
+  if (!selectedObject)
+  {
+    std::cout << "Nothing selected to copy." << std::endl;
+    return;
+  }
+  clipboardObject = selectedObject;
+  std::cout << "Copied '" << selectedObject->name << "' to clipboard." << std::endl;
+}
+
+void Scene::pasteFromClipboard()
+{
+  if (!clipboardObject)
+  {
+    std::cout << "Clipboard is empty." << std::endl;
+    return;
+  }
+
+  auto pasted = std::make_shared<GameObject>(
+      clipboardObject->name,
+      clipboardObject->modelPath,
+      clipboardObject->position + glm::vec3(1.0f, 0.0f, 0.0f),
+      clipboardObject->rotation,
+      clipboardObject->scale,
+      clipboardObject->collisionRadius,
+      clipboardObject->shaderName,
+      clipboardObject->color);
+
+  addGameObject(pasted);
+  selectedObject = pasted;
+
+  // Record in history so Ctrl+Z can remove it
+  HistoryCommand cmd;
+  cmd.type        = HistoryCmdType::ADD_OBJECT;
+  cmd.addedObject = pasted;
+  history.push(cmd);
+
+  std::cout << "Pasted '" << pasted->name << "' at ("
+            << pasted->position.x << ", " << pasted->position.y
+            << ", " << pasted->position.z << ")." << std::endl;
+}
+
+// ---------------------------------------------------------------------------
+// History helpers
+// ---------------------------------------------------------------------------
+TransformState Scene::captureState(const std::shared_ptr<GameObject>& obj) const
+{
+  TransformState s;
+  s.position = obj->position;
+  s.rotation = obj->rotation;
+  s.scale    = obj->scale;
+  s.color    = obj->color;
+  return s;
+}
+
+void Scene::applyState(const std::shared_ptr<GameObject>& obj, const TransformState& s)
+{
+  obj->SetPosition(s.position);
+  obj->SetRotation(s.rotation);
+  obj->SetScale(s.scale);
+  obj->color = s.color;
+}
+
+void Scene::removeGameObjectById(uint32_t id)
+{
+  objectsById.erase(id);
+  gameObjects.erase(
+      std::remove_if(gameObjects.begin(), gameObjects.end(),
+                     [id](const auto& o) { return o->ID == id; }),
+      gameObjects.end());
+  if (selectedObject && selectedObject->ID == id)
+    selectedObject = nullptr;
+}
+
+void Scene::reInsertGameObject(std::shared_ptr<GameObject> obj)
+{
+  objectsById[obj->ID] = obj;
+  gameObjects.push_back(obj);
+  selectedObject = obj;
+}
+
+void Scene::pushTransformCommand(uint32_t id,
+                                  const TransformState& before,
+                                  const TransformState& after)
+{
+  HistoryCommand cmd;
+  cmd.type     = HistoryCmdType::TRANSFORM;
+  cmd.objectId = id;
+  cmd.before   = before;
+  cmd.after    = after;
+  history.push(cmd);
+}
+
+void Scene::undo()
+{
+  if (!history.canUndo()) return;
+
+  HistoryCommand cmd = history.popUndo();
+
+  if (cmd.type == HistoryCmdType::TRANSFORM)
+  {
+    auto it = objectsById.find(cmd.objectId);
+    if (it == objectsById.end()) return;
+    // Swap: after → before on object, keep after in cmd for redo
+    applyState(it->second, cmd.before);
+    selectedObject = it->second;
+    history.pushRedo(cmd);
+  }
+  else if (cmd.type == HistoryCmdType::ADD_OBJECT)
+  {
+    // Undo of add = remove the object
+    removeGameObjectById(cmd.addedObject->ID);
+    history.pushRedo(cmd);
+  }
+}
+
+void Scene::redo()
+{
+  if (!history.canRedo()) return;
+
+  HistoryCommand cmd = history.popRedo();
+
+  if (cmd.type == HistoryCmdType::TRANSFORM)
+  {
+    auto it = objectsById.find(cmd.objectId);
+    if (it == objectsById.end()) return;
+    applyState(it->second, cmd.after);
+    selectedObject = it->second;
+    history.pushUndo(cmd);
+  }
+  else if (cmd.type == HistoryCmdType::ADD_OBJECT)
+  {
+    // Redo of add = re-insert the same object with same ID
+    reInsertGameObject(cmd.addedObject);
+    history.pushUndo(cmd);
+  }
+}
+
 // Destructor - save scene with current state
 Scene::~Scene()
 {
@@ -865,8 +1015,9 @@ void Scene::renderCompactColorPicker()
 
     if (ImGui::Button("Apply", ImVec2(-1, 0)))
     {
-      // applyColorToSelectedObject();
+      TransformState before = captureState(selectedObject);
       selectedObject->color = glm::vec3(selectedColor.x, selectedColor.y, selectedColor.z);
+      pushTransformCommand(selectedObject->ID, before, captureState(selectedObject));
     }
     if (ImGui::Button("Move", ImVec2(-2, 0)))
     {

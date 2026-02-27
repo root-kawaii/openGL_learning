@@ -237,6 +237,12 @@ int main()
       uiManager->renderPauseMenu();
     }
 
+    // VN overlay — renders on top of live 3D scene
+    if (game->getGameMode() == VISUAL_NOVEL)
+    {
+      game->getVNManager().render(game->SCR_WIDTH, game->SCR_HEIGHT);
+    }
+
     ///////////////////////////////////////////////////
     game->update();
 
@@ -244,6 +250,9 @@ int main()
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
+    game->getVNManager().update(deltaTime);
+
     if (game->getGameMode() == ENGINE)
     {
       renderManager->setTimeSinceLastShaderReload(renderManager->getTimeSinceLastShaderReload() + deltaTime);

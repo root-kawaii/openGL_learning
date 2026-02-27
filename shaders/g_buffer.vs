@@ -16,6 +16,7 @@ out float viewDepth;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform vec4 clipPlane;
 
 const int MAX_BONES = 100;
 uniform mat4 gBones[MAX_BONES];
@@ -49,6 +50,7 @@ void main()
     }
 
     vec4 worldPos = model * PosL;
+    gl_ClipDistance[0] = dot(worldPos, clipPlane);
     FragPos = worldPos.xyz;
     TexCoords = aTexCoords;
 

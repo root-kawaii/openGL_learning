@@ -20,6 +20,7 @@ uniform mat4 projection;
 uniform mat4 lightSpaceMatrix;
 uniform float windAngle;
 uniform float time;
+uniform vec4 clipPlane;
 
 // --- Helper: Simple Noise ---
 float hash(vec2 p) {
@@ -80,7 +81,9 @@ void main() {
     float h = getDuneHeight(pos.xz);
     pos.y += h;
 
-    vs_out.FragPos = vec4(model * vec4(pos, 1.0)).xyz;
+    vec4 worldPos4 = model * vec4(pos, 1.0);
+    gl_ClipDistance[0] = dot(worldPos4, clipPlane);
+    vs_out.FragPos = worldPos4.xyz;
     
     // Normal calculation
     mat3 normalMatrix = mat3(transpose(inverse(model)));

@@ -4,6 +4,7 @@
 #include "render_manager.h"
 #include "object_picker.h"
 #include "serialization_utilities.h"
+#include "history.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -40,7 +41,20 @@ private:
   // Environment environment;
   glm::vec3 groundSelection;
   std::shared_ptr<GameObject> selectedObject;
+  std::shared_ptr<GameObject> clipboardObject;   // Shift+C stores here
   ObjectPicker picker;
+
+  // Undo / redo
+  HistoryManager history;
+  bool           gizmoWasUsing = false;
+  TransformState gizmoBefore;
+
+  // Helpers
+  TransformState captureState(const std::shared_ptr<GameObject>& obj) const;
+  void           applyState(const std::shared_ptr<GameObject>& obj,
+                             const TransformState& s);
+  void           removeGameObjectById(uint32_t id);
+  void           reInsertGameObject(std::shared_ptr<GameObject> obj);
 
   RenderManager *renderManager;
   Game *gameInstance = nullptr;
@@ -90,6 +104,15 @@ public:
   void load(const std::string &path);
 
   void copyEntity();
+  void copyToClipboard();
+  void pasteFromClipboard();
+
+  // History
+  void undo();
+  void redo();
+  void pushTransformCommand(uint32_t id,
+                             const TransformState& before,
+                             const TransformState& after);
 
   void renderCompactColorPicker();
 

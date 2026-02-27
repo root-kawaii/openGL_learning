@@ -155,6 +155,7 @@ set(PROJECT_SOURCES
     src/level_editor.cpp
     src/game_entity.cpp
     src/game_manager.cpp
+    src/vn_manager.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------

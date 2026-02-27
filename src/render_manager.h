@@ -184,6 +184,33 @@ private:
     unsigned int skyboxVAO, skyboxVBO;
     unsigned int cubemapTexture;
 
+    // Procedural water mesh (generated at runtime, covers full level)
+    unsigned int waterVAO        = 0;
+    unsigned int waterVBO        = 0;
+    unsigned int waterEBO        = 0;
+    unsigned int waterIndexCount = 0;
+    float        waterYLevel     = 0.0f;
+    float        waterHalfExtent = 100.0f;
+
+    // Procedural ground mesh (flat seabed, 2 units below main level)
+    unsigned int groundVAO        = 0;
+    unsigned int groundVBO        = 0;
+    unsigned int groundEBO        = 0;
+    unsigned int groundIndexCount = 0;
+    float        groundYLevel     = -2.0f;
+    float        groundHalfExtent = 200.0f;
+
+    // Planar reflection FBO — renders scene from mirrored camera for water reflections
+    unsigned int reflectionFBO      = 0;
+    unsigned int reflectionTexture  = 0;
+    unsigned int reflectionDepthRBO = 0;
+
+    // Clip plane sent to all scene vertex shaders; non-clipping by default
+    glm::vec4 activeClipPlane = glm::vec4(0.0f, -1.0f, 0.0f, 1e6f);
+
+    // Reflection VP matrix saved by renderReflectionPass, sent to water shader
+    glm::mat4 reflectionVP = glm::mat4(1.0f);
+
     // Trajectory rendering control
     bool renderTrajectory = false; // Off by default for performance
     int trajectorySegments = 50;   // Reduced from 1000 for performance
@@ -387,6 +414,9 @@ public:
         setupIDBuffer();
 
         std::cout << "ID buffer recreated for new window size" << std::endl;
+
+        // Recreate reflection FBO at new half-resolution
+        setupReflectionFBO();
     };
 
     void renderArrow(glm::vec3 position);
@@ -399,6 +429,18 @@ public:
 
     void renderShadowPass();
     void renderMainPass();
+
+    // Water system
+    void generateWaterMesh(float halfExtent = 1500.0f, float yLevel = 0.0f, int divisions = 200);
+    void renderWaterPass();
+
+    // Ground system
+    void generateGroundMesh(float halfExtent = 200.0f, float yLevel = -2.0f, int divisions = 8);
+    void renderGroundPass();
+
+    // Planar reflection system
+    void setupReflectionFBO();
+    void renderReflectionPass();
 
     // Trajectory control methods
     void setRenderTrajectory(bool enabled) { renderTrajectory = enabled; }
