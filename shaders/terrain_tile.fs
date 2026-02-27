@@ -89,7 +89,8 @@ TerrainSample sampleMaterial(sampler2D diffTex, sampler2D norTex, vec2 uv) {
 
 // Sample the top face based on terrain type
 TerrainSample sampleTop(vec2 uv, vec3 worldPos) {
-    vec2 vuv = worldUV(uv);
+    // uv is LocalPos.xz in [-0.5, 0.5]; remap to [0, 1] for full texture per tile
+    vec2 vuv = uv + 0.5;
 
     TerrainSample s;
     if (terrainType == 0) {
@@ -114,7 +115,8 @@ TerrainSample sampleTop(vec2 uv, vec3 worldPos) {
 
 // Sample side/cliff face
 TerrainSample sampleSide(vec2 uv, vec3 worldPos) {
-    vec2 vuv = worldUV(uv);
+    // World-space UVs for continuous cliff texture; 1 tile = 1 world unit
+    vec2 vuv = uv * texTiling * 4.0;
 
     // Cliff sides always use rocky_terrain_02
     TerrainSample s = sampleMaterial(tex_rock2_diff, tex_rock2_nor, vuv);
@@ -136,13 +138,13 @@ struct TriplanarResult {
 
 TriplanarResult getTerrainTriplanar(vec3 worldPos, vec3 geometryNormal) {
     vec3 blendWeights = abs(geometryNormal);
-    blendWeights = pow(blendWeights, vec3(2.0));
+    blendWeights = pow(blendWeights, vec3(6.0));
     blendWeights /= (blendWeights.x + blendWeights.y + blendWeights.z);
 
-    // X projection (side face)
+    // X projection (side face) — world-space UVs so cliff texture is continuous
     TerrainSample xSample = sampleSide(worldPos.yz, worldPos);
-    // Y projection (top face)
-    TerrainSample ySample = sampleTop(worldPos.xz, worldPos);
+    // Y projection (top face) — LOCAL UVs so each tile is isolated, no cross-tile blending
+    TerrainSample ySample = sampleTop(fs_in.LocalPos.xz, worldPos);
     // Z projection (side face)
     TerrainSample zSample = sampleSide(worldPos.xy, worldPos);
 
