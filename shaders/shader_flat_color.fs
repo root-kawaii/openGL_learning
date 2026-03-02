@@ -48,7 +48,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightPos)
     float currentDepth = projCoords.z;
     vec3 normal = normalize(fs_in.Normal);
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = max(0.002 * (1.0 - dot(normal, lightDir)), 0.0002);
     
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -134,24 +134,24 @@ void main()
     vec3 totalLighting = vec3(0.0);
     
     // Ambient is calculated once
-    vec3 ambient = 0.15 * objectColor.rgb; 
+    vec3 ambient = 0.15 * objectColor.rgb;
 
     // Loop through all active light sources
     for(int i = 0; i < numLights; i++)
     {
         vec3 lightDir = normalize(lights[i].Position - fs_in.FragPos);
-        
+
         // Enhanced diffuse with sharper bands
         float diff = max(dot(lightDir, normal), 0.0);
         float cellDiff = floor(diff * levels) / levels;
         float diffSmooth = smoothstep(0.0, 0.1, diff - floor(diff * levels) / levels);
         cellDiff = mix(cellDiff, cellDiff + 1.0/levels, diffSmooth * 0.3);
-        
+
         // Enhanced specular
         vec3 halfwayDir = normalize(lightDir + viewDir);
         float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
         float cellSpec = smoothstep(specularThreshold - 0.05, specularThreshold + 0.05, spec);
-        
+
         // Shadow (Only apply shadow from the first light source to match shadowMap)
         float shadow = 0.0;
         if(i == 0) {
@@ -162,7 +162,7 @@ void main()
         // Combine for this specific light
         vec3 diffuse = cellDiff * lights[i].Color * objectColor.rgb;
         vec3 specular = cellSpec * lights[i].Color * 0.6;
-        
+
         // Apply shadow to this light's contribution
         totalLighting += mix(diffuse + specular, vec3(0.0), cellShadow);
     }

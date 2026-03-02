@@ -182,7 +182,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightPos, vec3 normal) {
     projCoords = projCoords * 0.5 + 0.5;
     float currentDepth = projCoords.z;
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = max(0.002 * (1.0 - dot(normal, lightDir)), 0.0002);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);

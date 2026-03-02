@@ -1373,6 +1373,18 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     gameObject.model.Draw(shader);
 }
 
+void RenderManager::drawShadowCaster(GameObject &gameObject, Shader *shader)
+{
+    // No camera-frustum check here — the shadow pass must render objects that are
+    // outside the camera view but still in the light's path (they cast shadows on
+    // things the camera CAN see). Culling by camera frustum is what causes missing
+    // shadows when an occluder is behind or beside the camera. Only light-space
+    // culling (done by the caller) is correct here.
+    // Only "model" is needed — lightSpaceMatrix is already set once before the loop.
+    shader->setMat4("model", gameObject.GetTransform());
+    gameObject.model.Draw(*shader);
+}
+
 void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::vec3> &lightPos, glm::mat4 lightMatrix)
 {
     ZoneScoped;
@@ -1700,18 +1712,17 @@ void RenderManager::debugIDBuffer()
 
 void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vector<glm::vec3> &lights, glm::mat4 lightSpaceMatrix)
 {
-    glm::mat4 model = gameObject.GetTransform(); // Just use GetTransform() for consistency
+    glm::mat4 model = gameObject.GetTransform();
     shader->use();
     shader->setMat4("projection", projectionMatrix);
     shader->setMat4("view", viewMatrix);
-    shader->setMat4("model", model);
     shader->setFloat("time", glfwGetTime());
-    shader->setVec3("objectColor", gameObject.color);
     shader->setVec3("viewPos", currentCamera->Position);
-    // shader->setVec3("lightPos", lightPos);
+    shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    shader->setMat4("model", model);
+    shader->setVec3("objectColor", gameObject.color);
 
     shader->setVec3("lightColor", glm::vec3(1.0f, 0.0f, 0.0f));
-    shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     shader->setInt("shadowMap", 0);
     shader->setInt("debugMode", boneDebugMode);
     shader->setVec4("clipPlane", activeClipPlane);
@@ -1719,16 +1730,14 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
     int lightCount = static_cast<int>(lights.size());
     shader->setInt("numLights", lightCount);
 
-    // 2. Loop through and set each light's properties
+    // 2. Loop through and set each light's properties (stack buffers, no heap alloc)
+    char nameBuf[32];
     for (int i = 0; i < lightCount; ++i)
     {
-        // Construct the string keys for the array of structs
-        std::string posName = "lights[" + std::to_string(i) + "].Position";
-        std::string colName = "lights[" + std::to_string(i) + "].Color";
-
-        // Set the uniforms
-        shader->setVec3(posName, lights[i]);
-        shader->setVec3(colName, glm::vec3(1.0f, 1.0f, 1.0f));
+        snprintf(nameBuf, sizeof(nameBuf), "lights[%d].Position", i);
+        shader->setVec3(nameBuf, lights[i]);
+        snprintf(nameBuf, sizeof(nameBuf), "lights[%d].Color", i);
+        shader->setVec3(nameBuf, glm::vec3(1.0f, 1.0f, 1.0f));
     }
 
     if (gameObject.shaderName == "terrain_tile_shader")
@@ -1738,35 +1747,28 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
 
         // PBR terrain textures (2K): 3 material sets (diffuse + normal each)
         // Unit 0 = shadowMap (bound elsewhere)
-        unsigned int grassDiff  = loadAndCacheTexture("t_grass_diff",  "assets/terrain/grass_rock_diff.jpg");
-        unsigned int grassNor   = loadAndCacheTexture("t_grass_nor",   "assets/terrain/grass_rock_nor.png");
-        unsigned int stoneDiff  = loadAndCacheTexture("t_stone_diff",  "assets/terrain/rocky_diff.jpg");
-        unsigned int stoneNor   = loadAndCacheTexture("t_stone_nor",   "assets/terrain/rocky_nor.png");
-        unsigned int rock2Diff  = loadAndCacheTexture("t_rock2_diff",  "assets/terrain/rocky2_diff.jpg");
-        unsigned int rock2Nor   = loadAndCacheTexture("t_rock2_nor",   "assets/terrain/rocky2_nor.png");
-
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, grassDiff);
+        glBindTexture(GL_TEXTURE_2D, t_grassDiff);
         shader->setInt("tex_grass_diff", 1);
 
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, grassNor);
+        glBindTexture(GL_TEXTURE_2D, t_grassNor);
         shader->setInt("tex_grass_nor", 2);
 
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, stoneDiff);
+        glBindTexture(GL_TEXTURE_2D, t_stoneDiff);
         shader->setInt("tex_stone_diff", 3);
 
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, stoneNor);
+        glBindTexture(GL_TEXTURE_2D, t_stoneNor);
         shader->setInt("tex_stone_nor", 4);
 
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, rock2Diff);
+        glBindTexture(GL_TEXTURE_2D, t_rock2Diff);
         shader->setInt("tex_rock2_diff", 5);
 
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, rock2Nor);
+        glBindTexture(GL_TEXTURE_2D, t_rock2Nor);
         shader->setInt("tex_rock2_nor", 6);
     }
 
@@ -2361,6 +2363,14 @@ void RenderManager::initializeShaders()
     shaders["terrain_tile_shader"] = std::make_shared<Shader>("shaders/terrain_tile.vs", "shaders/terrain_tile.fs");
     shaders["ground_shader"] = std::make_shared<Shader>("shaders/ground.vs", "shaders/ground.fs");
 
+    // Pre-cache terrain textures so the hot draw path doesn't do map lookups every frame
+    t_grassDiff = loadAndCacheTexture("t_grass_diff", "assets/terrain/grass_rock_diff.jpg");
+    t_grassNor  = loadAndCacheTexture("t_grass_nor",  "assets/terrain/grass_rock_nor.png");
+    t_stoneDiff = loadAndCacheTexture("t_stone_diff", "assets/terrain/rocky_diff.jpg");
+    t_stoneNor  = loadAndCacheTexture("t_stone_nor",  "assets/terrain/rocky_nor.png");
+    t_rock2Diff = loadAndCacheTexture("t_rock2_diff", "assets/terrain/rocky2_diff.jpg");
+    t_rock2Nor  = loadAndCacheTexture("t_rock2_nor",  "assets/terrain/rocky2_nor.png");
+
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
                                                               "shaders/simple_depth_shader.fs",
@@ -2379,14 +2389,25 @@ void RenderManager::initializeDepthFBO()
     // Create depth texture
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, screenWidth, screenHeight,
+    // Must match the viewport used in renderShadowPass — previously this was
+    // screenWidth×screenHeight, meaning only the top-left 1024×1024 of a
+    // 1920×1080 texture had valid data. textureSize() in the FS returned the
+    // full screen size so PCF offsets were wrong, and the rest of the map had
+    // garbage depths causing large portions of the scene to be incorrectly lit.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SHADOW_WIDTH, SHADOW_HEIGHT,
                  0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // CLAMP_TO_BORDER with white: fragments outside the shadow frustum sample
+    // depth=1 (max), so they always pass the shadow test and appear fully lit.
+    // CLAMP_TO_EDGE was wrong — it repeated the edge shadow value outside the
+    // frustum, causing false shadows along the borders.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // Attach depth texture to framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
@@ -3374,51 +3395,44 @@ void RenderManager::renderReflectionPass()
 void RenderManager::renderShadowPass()
 {
     ZoneScoped;
-    // 1. render depth of scene to texture (from light's perspective)
-    // --------------------------------------------------------------
-    static glm::mat4 lightProjection, lightView;
+    if (lightPositions.empty()) return;
 
-    for (auto lightPos : lightPositions)
+    // WHY single light: the fragment shaders only call ShadowCalculation for i==0,
+    // so running the full depth pass for every light in lightPositions was rendering
+    // N-1 complete shadow maps that are never read — pure waste.
+    const glm::vec3 &lightPos = lightPositions[0];
+
+    glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
+    glm::mat4 lightView       = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightSpaceMatrix           = lightProjection * lightView;
+
+    // WHY pointer: `Shader depthPrePass = *getShader(...)` copied the entire Shader
+    // struct by value every frame, then renderGameObjectWithShader took it by value
+    // again — another copy per object. A pointer costs nothing.
+    Shader *depthShader = getShader("depth_pre_pass");
+    depthShader->use();
+    depthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    // Disable face culling for the shadow pass. Without this, the pass inherits
+    // whatever cull state the previous frame left — non-deterministic. More
+    // importantly, back-face culling from the light's PoV would discard faces
+    // that should write depth (e.g. the underside of a mesh that faces the light
+    // at a low angle), leaving holes in the shadow map.
+    glDisable(GL_CULL_FACE);
+
+    for (auto &i : currentScene->getGameObjects())
     {
-        // lightPos.z = static_cast<float>(sin(glfwGetTime() * 1.5) * 3.0);
-        // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-        lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-        lightSpaceMatrix = lightProjection * lightView;
-        // render scene from light's point of view
-        Shader depthPrePass = *getShader("depth_pre_pass");
-        depthPrePass.use();
-        depthPrePass.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        auto gameObjects = currentScene->getGameObjects();
-
-        // Debug: Count culled objects
-        static int shadowFrameCounter = 0;
-        int culledCount = 0;
-
-        for (auto &i : gameObjects)
-        {
-            // Apply light-space frustum culling to avoid rendering objects outside shadow map
-            if (isInLightFrustum(i->position, 2.0f, lightProjection, lightView))
-            {
-                renderGameObjectWithShader(*i, depthPrePass, lightProjection, lightView, i->getModelMatrix());
-            }
-            else
-            {
-                culledCount++;
-            }
-        }
-
-        if (shadowFrameCounter++ % 60 == 0)
-        {
-            // std::cout << "[DEBUG] Shadow pass: " << (gameObjects.size() - culledCount) << " rendered, "
-            //           << culledCount << " culled (total: " << gameObjects.size() << ")" << std::endl;
-        }
+        // Light-space frustum cull: skip objects outside the shadow map region.
+        // We do NOT camera-cull here — see drawShadowCaster for explanation.
+        if (isInLightFrustum(i->position, 2.0f, lightProjection, lightView))
+            drawShadowCaster(*i, depthShader);
     }
+
+    glEnable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -3541,8 +3555,8 @@ void RenderManager::renderMainPass()
         }
     }
 
-    // ID buffer rendering (only when needed for mouse picking)
-    if (true)
+    // ID buffer rendering — only update on mouse click, not every frame
+    if (needIDBufferUpdate)
     {
         renderSceneToIDBuffer(gameObjects);
         needIDBufferUpdate = false;

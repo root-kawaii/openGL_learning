@@ -118,7 +118,7 @@ private:
         // glm::vec3(10.0f, -10.0f, 10.0f),
     };
     float near_plane = 1.0f, far_plane = 75.5f;
-    float SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    float SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
     // Render settings
     glm::vec4 clearColor;
@@ -183,6 +183,11 @@ private:
 
     unsigned int skyboxVAO, skyboxVBO;
     unsigned int cubemapTexture;
+
+    // Cached terrain texture IDs (loaded once, reused every frame)
+    unsigned int t_grassDiff = 0, t_grassNor = 0;
+    unsigned int t_stoneDiff = 0, t_stoneNor = 0;
+    unsigned int t_rock2Diff = 0, t_rock2Nor = 0;
 
     // Procedural water mesh (generated at runtime, covers full level)
     unsigned int waterVAO        = 0;
@@ -392,6 +397,7 @@ public:
     void renderGrassPoints(const std::vector<glm::vec3> &positions);
 
     void renderGameObjectWithShader(GameObject &gameObject, Shader shader, glm::mat4 newProjectionMatrix, glm::mat4 newViewMatrix, glm::mat4 newModel);
+    void drawShadowCaster(GameObject &gameObject, Shader *shader);
 
     void initializeShaders();
     void initializeDepthFBO();
