@@ -18,7 +18,8 @@ enum class ActionType
 {
     MOVE,
     SHOOT,
-    PASS
+    PASS,
+    TACKLE,  // Steal the ball from an adjacent enemy (strength contest)
 };
 
 struct BufferedAction
@@ -71,6 +72,11 @@ public:
     bool isMoving = false;
     bool hasMovedThisTurn = false;
 
+    // Per-turn state
+    bool isTired      = false; // true if sprinted last turn → half movement range
+    bool sprintQueued = false; // toggled by R key → double movement range this turn
+    bool isTackling   = false; // set when TACKLE action queued — triggers on adjacency during movement
+
     // Queued movement system
     std::queue<MovementCommand> movementQueue;
     bool hasCurrentCommand = false;
@@ -95,6 +101,9 @@ public:
     // Scene reference for collision detection
     void setScene(Scene *scenePtr) { scene = scenePtr; }
 
+    // Movement helpers
+    int  getEffectiveMovementSpeed() const;
+
     // Ball control
     bool getHasBall() const { return hasBall; }
     void setHasBall(bool has) { hasBall = has; }
@@ -102,6 +111,12 @@ public:
     void passBall(GameEntity* targetEntity);
     void updateBallFlight(float deltaTime);
     bool isBallInFlight() const { return isBallFlying; }
+
+    // New actions
+    // tackle(): called by game loop when this entity steps adjacent to `target` while isTackling.
+    // Returns true = steal succeeded; false = ball knocked loose (caller handles repositioning).
+    bool tackle(GameEntity* target);
+    void onTurnEnd(); // reset per-turn flags (called when EXECUTING→PLANNING)
 
     // Action buffer system
     std::vector<BufferedAction> actionBuffer;

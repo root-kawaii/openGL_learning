@@ -5,7 +5,7 @@
 namespace fs = std::filesystem;
 
 GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
-    : model(fs::path(modelPath)), // Initialize Model here!
+    : model(std::make_shared<Model>(fs::path(modelPath))),
       modelPath(modelPath),
       name(name),
       position(position),
@@ -16,7 +16,7 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 }
 
 GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius)
-    : model(fs::path(modelPath)), // Initialize Model here!
+    : model(std::make_shared<Model>(fs::path(modelPath))),
       modelPath(modelPath),
       name(name),
       position(position),
@@ -28,7 +28,7 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 }
 
 GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color)
-    : model(fs::path(modelPath)), // Initialize Model here!
+    : model(std::make_shared<Model>(fs::path(modelPath))),
       modelPath(modelPath),
       name(name),
       position(position),
@@ -41,8 +41,22 @@ GameObject::GameObject(std::string name, std::string modelPath, glm::vec3 positi
 {
 }
 
+// Used by Scene when models are pre-loaded and cached (avoids redundant loads).
+GameObject::GameObject(std::string name, std::shared_ptr<Model> modelPtr, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color)
+    : model(modelPtr),
+      name(name),
+      position(position),
+      rotation(rotation),
+      scale(scale),
+      speed(glm::vec3(0, 0, 0)),
+      collisionRadius(collisionRadius),
+      shaderName(shaderName),
+      color(color)
+{
+}
+
 GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
-    : model(gameObject->modelPath) // Load model from path instead of copying
+    : model(gameObject->model) // Share the same Model (VAO/VBOs, no reload)
       ,
       modelPath(gameObject->modelPath) // Copy model path
       ,
@@ -143,7 +157,7 @@ void GameObject::CalculateAABB()
 
   localAABB = AABB(); // Reset AABB
 
-  const auto &vertices = model.GetAllVertices(); // You'll need to implement this in Model class
+  const auto &vertices = model->GetAllVertices();
   for (const auto &vertex : vertices)
   {
     localAABB.ExpandToInclude(vertex.Position);

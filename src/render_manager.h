@@ -188,26 +188,38 @@ private:
     unsigned int t_grassDiff = 0, t_grassNor = 0;
     unsigned int t_stoneDiff = 0, t_stoneNor = 0;
     unsigned int t_rock2Diff = 0, t_rock2Nor = 0;
+    // Optional PBR maps (0 = not loaded, shader falls back to defaults)
+    unsigned int t_grassAO = 0, t_stoneAO = 0;
+    unsigned int t_grassRough = 0, t_stoneRough = 0;
+
+    // Track current paths so the UI can display them
+    std::string terrainPaths[3][4]; // [slot][mapType]
 
     // Procedural water mesh (generated at runtime, covers full level)
-    unsigned int waterVAO        = 0;
-    unsigned int waterVBO        = 0;
-    unsigned int waterEBO        = 0;
+    unsigned int waterVAO = 0;
+    unsigned int waterVBO = 0;
+    unsigned int waterEBO = 0;
     unsigned int waterIndexCount = 0;
-    float        waterYLevel     = 0.0f;
-    float        waterHalfExtent = 100.0f;
+    float waterYLevel = 0.0f;
+    float waterHalfExtent = 100.0f;
 
     // Procedural ground mesh (flat seabed, 2 units below main level)
-    unsigned int groundVAO        = 0;
-    unsigned int groundVBO        = 0;
-    unsigned int groundEBO        = 0;
+    unsigned int groundVAO = 0;
+    unsigned int groundVBO = 0;
+    unsigned int groundEBO = 0;
     unsigned int groundIndexCount = 0;
-    float        groundYLevel     = -2.0f;
-    float        groundHalfExtent = 200.0f;
+    float groundYLevel = -2.0f;
+    float groundHalfExtent = 200.0f;
+
+    // Procedural terrain mesh (FBM-displaced, toon-shaded, covers level footprint)
+    unsigned int procTerrainVAO = 0;
+    unsigned int procTerrainVBO = 0;
+    unsigned int procTerrainEBO = 0;
+    unsigned int procTerrainIndexCount = 0;
 
     // Planar reflection FBO — renders scene from mirrored camera for water reflections
-    unsigned int reflectionFBO      = 0;
-    unsigned int reflectionTexture  = 0;
+    unsigned int reflectionFBO = 0;
+    unsigned int reflectionTexture = 0;
     unsigned int reflectionDepthRBO = 0;
 
     // Clip plane sent to all scene vertex shaders; non-clipping by default
@@ -223,6 +235,41 @@ private:
     // ID buffer update control (only render when needed for mouse picking)
     bool needIDBufferUpdate = true; // Render on first frame
 
+    // Rain particle system
+    struct RainParticle
+    {
+        glm::vec3 pos;
+    };
+    static constexpr int RAIN_COUNT = 15000;
+    unsigned int rainVAO = 0;
+    unsigned int rainMeshVBO = 0;
+    unsigned int rainInstanceVBO = 0;
+    std::vector<RainParticle> rainParticles;
+    std::vector<glm::vec3> rainInstanceData;
+    std::mt19937 rainRng{123};
+    bool rainEnabled = false;
+
+    // ── Tile instancing ────────────────────────────────────────────────────────
+    struct TileInstance
+    {
+        glm::mat4 modelMatrix;
+        float terrainType;
+        float pad[3]{}; // align to 16 bytes
+    };
+
+    struct TileBatch
+    {
+        unsigned int instanceVBO = 0;
+        bool setupDone = false;
+    };
+
+    std::unordered_map<std::string, TileBatch> tileBatches;
+    void setupTileBatch(const std::string &modelPath, Model &model, size_t maxInstances);
+    void renderTilesInstanced(const std::vector<std::shared_ptr<GameObject>> &objects,
+                              const std::vector<glm::vec3> &lightPos,
+                              const glm::mat4 &lightSpaceMatrix);
+    void clearTileBatches();
+
     std::vector<glm::vec3> getReachableTilesForEntity(std::shared_ptr<GameEntity> entity);
 
 public:
@@ -237,6 +284,10 @@ public:
     // Initialization
     bool initialize(int width, int height);
     void cleanup();
+
+    // Terrain texture hot-swap (slot 0=grass, 1=stone, 2=rock2 | map 0=diff, 1=nor, 2=ao, 3=rough)
+    bool reloadTerrainSlot(int slot, int mapType, const std::string &path);
+    std::string getTerrainSlotPath(int slot, int mapType) const;
 
     void setRes(int width, int height)
     {
@@ -436,6 +487,12 @@ public:
     void renderShadowPass();
     void renderMainPass();
 
+    // Rain system
+    void initRainSystem();
+    void renderRainPass(float dt);
+    void setRainEnabled(bool enabled) { rainEnabled = enabled; }
+    bool getRainEnabled() const { return rainEnabled; }
+
     // Water system
     void generateWaterMesh(float halfExtent = 1500.0f, float yLevel = 0.0f, int divisions = 200);
     void renderWaterPass();
@@ -443,6 +500,11 @@ public:
     // Ground system
     void generateGroundMesh(float halfExtent = 200.0f, float yLevel = -2.0f, int divisions = 8);
     void renderGroundPass();
+
+    // Procedural terrain system
+    void generateProcTerrainMesh(float halfExtentX, float halfExtentZ, float baseY,
+                                 int divisions, float centerX = 0.0f, float centerZ = 0.0f);
+    void renderProcTerrainPass();
 
     // Planar reflection system
     void setupReflectionFBO();

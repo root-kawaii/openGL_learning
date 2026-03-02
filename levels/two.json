@@ -8,9 +8,9 @@
             },
             "intensity": 1.0,
             "position": {
-                "x": 2.2193245887756348,
-                "y": 3.5714900493621826,
-                "z": 0.9189110994338989
+                "x": 11.160033226013184,
+                "y": 2.6541693210601807,
+                "z": -0.6150046586990356
             }
         },
         {
@@ -21,9 +21,9 @@
             },
             "intensity": 0.800000011920929,
             "position": {
-                "x": -0.21053457260131836,
-                "y": 1.50068998336792,
-                "z": 6.386469841003418
+                "x": 0.8807362914085388,
+                "y": 5.519134521484375,
+                "z": -0.7020896077156067
             }
         }
     ],
@@ -346,93 +346,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_1_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_2_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_4_1",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -451,93 +364,6 @@
                 "z": 0.5
             },
             "shader_name": "terrain_tile_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_1",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": -3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -632,122 +458,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_1_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_2_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_4_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_5_2",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -767,93 +477,6 @@
             },
             "shader_name": "terrain_tile_shader",
             "terrain_type": 2
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_8_2",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": -2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -940,151 +563,6 @@
                 "z": 0.5
             },
             "shader_name": "terrain_tile_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_2_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": -1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": -1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_4_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": -1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": -1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_3",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": -1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1209,238 +687,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_1_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_2_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_4_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_8_4",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": -0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_9_4",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -1499,122 +745,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_1_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_2_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_4_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_5_5",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -1634,64 +764,6 @@
             },
             "shader_name": "terrain_tile_shader",
             "terrain_type": 2
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_5",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 0.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -1815,35 +887,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_2_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_3_6",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -1873,151 +916,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_4_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_6_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 1.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_8_6",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": 1.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_9_6",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -2027,7 +925,7 @@
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": -0.0,
                 "z": 0.0
             },
             "scale": {
@@ -2064,35 +962,6 @@
                 "z": 0.5
             },
             "shader_name": "terrain_tile_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_1_7",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -3.5,
-                "y": -0.5,
-                "z": 2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2161,64 +1030,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_4_7",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": 2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_7",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": 2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_6_7",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -2238,64 +1049,6 @@
             },
             "shader_name": "terrain_tile_shader",
             "terrain_type": 2
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_7_7",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 2.5,
-                "y": -0.5,
-                "z": 2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_8_7",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": 2.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2391,122 +1144,6 @@
                 "g": 0.800000011920929,
                 "r": 0.4000000059604645
             },
-            "id": "grid_cube_2_8",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -2.5,
-                "y": -0.5,
-                "z": 3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_3_8",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -1.5,
-                "y": -0.5,
-                "z": 3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_4_8",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": -0.5,
-                "y": -0.5,
-                "z": 3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_5_8",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 0.5,
-                "y": -0.5,
-                "z": 3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 3
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
             "id": "grid_cube_6_8",
             "path": "assets/stone_cube.glb",
             "position": {
@@ -2553,35 +1190,6 @@
                 "z": 0.5
             },
             "shader_name": "terrain_tile_shader"
-        },
-        {
-            "collision_radius": {
-                "v": 0.0
-            },
-            "color": {
-                "b": 0.10000000149011612,
-                "g": 0.800000011920929,
-                "r": 0.4000000059604645
-            },
-            "id": "grid_cube_8_8",
-            "path": "assets/cube.obj",
-            "position": {
-                "x": 3.5,
-                "y": -0.5,
-                "z": 3.5
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "shader_name": "terrain_tile_shader",
-            "terrain_type": 1
         },
         {
             "collision_radius": {
@@ -2903,13 +1511,13 @@
                 "g": 0.9582654237747192,
                 "r": 0.00984035711735487
             },
-            "entity": "103",
+            "entity": "55",
             "id": "mech_drone_multi",
             "path": "assets/mech_drone_multi.glb",
             "position": {
                 "x": -0.5,
-                "y": -0.5,
-                "z": 1.5
+                "y": 0.5,
+                "z": 3.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2932,13 +1540,13 @@
                 "g": 0.0,
                 "r": 1.0
             },
-            "entity": "104",
+            "entity": "56",
             "id": "mech_drone_red",
             "path": "assets/mech_drone.glb",
             "position": {
-                "x": 4.5,
+                "x": -1.5,
                 "y": 0.5,
-                "z": 3.5
+                "z": 0.5
             },
             "rotation": {
                 "x": -0.984654426574707,
@@ -2989,7 +1597,7 @@
                 "g": 0.0,
                 "r": 1.0
             },
-            "entity": "106",
+            "entity": "58",
             "id": "capsule",
             "path": "assets/capsule.obj",
             "position": {
@@ -3018,13 +1626,13 @@
                 "g": 0.0,
                 "r": 0.0
             },
-            "entity": "107",
+            "entity": "59",
             "id": "capsule2",
             "path": "assets/capsule.obj",
             "position": {
                 "x": 1.5,
                 "y": 0.5,
-                "z": -2.1848340034484863
+                "z": -2.5
             },
             "rotation": {
                 "x": 0.0,
@@ -3177,6 +1785,5334 @@
                 "z": 1.0
             },
             "shader_name": "simple_color_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_10_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_11_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 6.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_12_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_13_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_14_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 9.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_15_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_16_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_17_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 12.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_18_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_0",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_1",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_2",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_3",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_4",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_5",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_6",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_7",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_8",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_19_9",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": -0.7204999923706055,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 2
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.6474009156227112,
+                "g": 0.8029261231422424,
+                "r": 0.18156598508358002
+            },
+            "id": "basket2",
+            "path": "assets/basket.glb",
+            "position": {
+                "x": 13.82773208618164,
+                "y": -0.5029807090759277,
+                "z": 0.059657394886016846
+            },
+            "rotation": {
+                "x": 2.0497889518737793,
+                "y": -1.5514369010925293,
+                "z": 2.623992681503296
+            },
+            "scale": {
+                "x": 1.1869163513183594,
+                "y": 0.9994269609451294,
+                "z": 0.9407334923744202
+            },
+            "shader_name": "simple_color_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_0",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -4.623700141906738,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_3",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -1.6237000226974487,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_6",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 1.3762999773025513,
+                "y": -0.505892813205719,
+                "z": -5.024180889129639
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.9999585151672363,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_9",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 4.376299858093262,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_12",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 7.376299858093262,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_15",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 10.376299858093262,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_s_18",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 13.376299858093262,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_1",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -3.623699903488159,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_4",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -0.6237000226974487,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_7",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 2.376300096511841,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_10",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 5.376299858093262,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_13",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 8.376299858093262,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_16",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 11.376299858093262,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_n_19",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 14.376299858093262,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_w_0",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": -4.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_w_2",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": -2.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_w_4",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": -0.5382000207901001
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_w_6",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": 1.4617999792099
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_w_8",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": 3.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_e_1",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": -3.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_e_3",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": -1.5382000207901
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_e_5",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": 0.4618000090122223
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_e_7",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": 2.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_e_9",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": 4.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 1.5707999467849731,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_c_sw",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_c_se",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": -5.5381999015808105
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_c_nw",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": -5.623700141906738,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.5
+            },
+            "color": {
+                "b": 0.6000000238418579,
+                "g": 0.6000000238418579,
+                "r": 0.6000000238418579
+            },
+            "id": "wall_c_ne",
+            "path": "assets/stone_wall.glb",
+            "position": {
+                "x": 15.376299858093262,
+                "y": 0.0,
+                "z": 5.4618000984191895
+            },
+            "rotation": {
+                "x": -1.5836786031723022,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_0",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": -6.199999809265137,
+                "y": -0.30000001192092896,
+                "z": -5.800000190734863
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.4000000059604645,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.8999999761581421,
+                "y": 0.8999999761581421,
+                "z": 0.8999999761581421
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_1",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": -5.0,
+                "y": -0.30000001192092896,
+                "z": -6.199999809265137
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 1.7999999523162842,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.699999988079071,
+                "y": 0.699999988079071,
+                "z": 0.699999988079071
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_2",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 3.4000000953674316,
+                "y": -0.30000001192092896,
+                "z": -6.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.8999999761581421,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_3",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 8.564236640930176,
+                "y": 0.25395071506500244,
+                "z": -3.4908032417297363
+            },
+            "rotation": {
+                "x": -3.1415908336639404,
+                "y": 0.8415926694869995,
+                "z": -3.1415908336639404
+            },
+            "scale": {
+                "x": 0.8000000715255737,
+                "y": 0.800000011920929,
+                "z": 0.8000000715255737
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_4",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 1.399999976158142,
+                "y": -0.30000001192092896,
+                "z": 5.900000095367432
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 1.100000023841858,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.8500000238418579,
+                "y": 0.8500000238418579,
+                "z": 0.8500000238418579
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_5",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 11.399999618530273,
+                "y": -0.30000001192092896,
+                "z": 5.699999809265137
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 3.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_6",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 16.200000762939453,
+                "y": -0.30000001192092896,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.6000000238418579,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.75,
+                "y": 0.75,
+                "z": 0.75
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.6000000238418579
+            },
+            "color": {
+                "b": 1.0,
+                "g": 1.0,
+                "r": 1.0
+            },
+            "id": "rock_7",
+            "path": "assets/boulder.glb",
+            "position": {
+                "x": 15.800000190734863,
+                "y": -0.30000001192092896,
+                "z": 2.799999952316284
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 2.0999999046325684,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.8999999761581421,
+                "y": 0.8999999761581421,
+                "z": 0.8999999761581421
+            },
+            "shader_name": "rock_shader"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_1",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_2",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -0.5,
+                "z": -2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_3",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": -1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_4",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -0.5,
+                "z": -0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_5",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_6_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 1.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_6",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -0.5,
+                "z": 1.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_1_7",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -3.5,
+                "y": -0.5,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_7",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_7",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_7_7",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 2.5,
+                "y": -0.5,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_7",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -0.5,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_2_8",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -2.5,
+                "y": -0.5,
+                "z": 3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_3_8",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -1.5,
+                "y": -0.5,
+                "z": 3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_4_8",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -0.5,
+                "y": -0.5,
+                "z": 3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_5_8",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": 3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 3
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.10000000149011612,
+                "g": 0.800000011920929,
+                "r": 0.4000000059604645
+            },
+            "id": "grid_cube_8_8",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 3.5,
+                "y": -0.5,
+                "z": 3.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "shader_name": "terrain_tile_shader",
+            "terrain_type": 1
         }
     ]
 }

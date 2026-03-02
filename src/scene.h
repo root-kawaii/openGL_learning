@@ -63,6 +63,10 @@ private:
   void validateAllIDs();
   void debugPrintAllObjects();
 
+  // Shared parallel-loading core used by all constructors.
+  // setStartupState = true → also assigns ball pointer and hasBall on capsule.
+  void buildFromSerializer(const std::string &levelFile, bool setStartupState);
+
 public:
   Scene();
   Scene(RenderManager *renderMgr);

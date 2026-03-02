@@ -99,23 +99,19 @@ void main()
     }
 
     // Normal rendering mode (debugMode == 0)
-    vec3 ambient = 0.99 * color;
+    const float BANDS  = 4.0;
+    const float POSTER = 6.0;
 
-    // Diffuse lighting
-    vec3 lightColor = vec3(1.0);
+    vec3 normal   = normalize(vs_out.Normal);
     vec3 lightDir = normalize(lightPos - vs_out.FragPos);
-    vec3 normal = normalize(vs_out.Normal);
-    float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = diff * lightColor;
+    float diff    = max(dot(lightDir, normal), 0.0);
+    float band    = floor(diff * BANDS) / BANDS;
 
-    // Simple specular
-    vec3 viewDir = normalize(viewPos - vs_out.FragPos);
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
-    vec3 specular = spec * lightColor;
+    vec3 ambient    = 0.20 * color;
+    vec3 lit        = band * color;
+    vec3 finalColor = ambient + lit;
 
-    // Combine lighting
-    vec3 result = (ambient + diffuse + specular) * color;
+    finalColor = floor(finalColor * POSTER + 0.5) / POSTER;
 
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(finalColor, 1.0);
 }

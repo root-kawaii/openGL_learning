@@ -30,10 +30,8 @@ vec3 getBoneColor(int boneID) {
     return vec3(r, g, b);
 }
 
-const int levels = 3;
-const float rimPower = 3.0;
-const float rimThreshold = 0.5;
-const float specularThreshold = 0.8;
+const float BANDS  = 4.0;
+const float POSTER = 6.0;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightPos)
 {
@@ -76,46 +74,25 @@ void main()
 
     // Sample diffuse texture
     vec3 texColor = texture(texture_diffuse1, fs_in.TexCoords).rgb;
-    vec3 normal = normalize(fs_in.Normal);
-    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-    vec3 totalLighting = vec3(0.0);
-
-    vec3 ambient = 0.15 * texColor;
+    vec3 normal   = normalize(fs_in.Normal);
+    vec3 totalDiffuse = vec3(0.0);
 
     for(int i = 0; i < numLights; i++)
     {
         vec3 lightDir = normalize(lights[i].Position - fs_in.FragPos);
-
-        float diff = max(dot(lightDir, normal), 0.0);
-        float cellDiff = floor(diff * levels) / levels;
-        float diffSmooth = smoothstep(0.0, 0.1, diff - floor(diff * levels) / levels);
-        cellDiff = mix(cellDiff, cellDiff + 1.0/levels, diffSmooth * 0.3);
-
-        vec3 halfwayDir = normalize(lightDir + viewDir);
-        float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-        float cellSpec = smoothstep(specularThreshold - 0.05, specularThreshold + 0.05, spec);
-
-        float shadow = 0.0;
-        if(i == 0) {
-            shadow = ShadowCalculation(fs_in.FragPosLightSpace, lights[i].Position);
-        }
-        float cellShadow = smoothstep(0.4, 0.6, shadow);
-
-        vec3 diffuse = cellDiff * lights[i].Color * texColor;
-        vec3 specular = cellSpec * lights[i].Color * 0.6;
-
-        totalLighting += mix(diffuse + specular, vec3(0.0), cellShadow);
+        float diff    = max(dot(lightDir, normal), 0.0);
+        float band    = floor(diff * BANDS) / BANDS;
+        totalDiffuse += band * lights[i].Color;
     }
 
-    float rimDot = 1.0 - max(dot(viewDir, normal), 0.0);
-    float rimIntensity = pow(rimDot, rimPower);
-    rimIntensity = smoothstep(rimThreshold, 1.0, rimIntensity);
-    vec3 rimColor = vec3(0.4, 0.7, 0.9) * rimIntensity * 0.6;
+    float shadow   = (numLights > 0) ? ShadowCalculation(fs_in.FragPosLightSpace, lights[0].Position) : 0.0;
+    float inShadow = step(0.5, shadow);
 
-    vec3 finalColor = ambient + totalLighting + rimColor;
+    vec3 ambient    = 0.20 * texColor;
+    vec3 lit        = totalDiffuse * texColor;
+    vec3 finalColor = ambient + lit * (1.0 - inShadow * 0.7);
 
-    float luminance = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    finalColor = mix(vec3(luminance), finalColor, 1.15);
+    finalColor = floor(finalColor * POSTER + 0.5) / POSTER;
 
     FragColor = vec4(finalColor, 1.0);
 }

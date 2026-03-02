@@ -3,6 +3,8 @@
 #include "ui.h"
 #include "serialization_utilities.h"
 #include "../tracy/public/tracy/Tracy.hpp"
+#include <future>
+#include <../include/stb_image.h>
 
 namespace fs = std::filesystem;
 
@@ -146,6 +148,9 @@ bool RenderManager::initialize(int width, int height)
     // Ground plane: 2 units below main level floor (tile bottom = Y 0, so -2.0).
     // 200 half-extent spans the visible seabed under the transparent water.
     generateGroundMesh(200.0f, -2.0f, 8);
+    // Procedural terrain: covers the level footprint (150-unit half-extent),
+    // base at Y=-1 so it sits just below the tile floor, FBM amplitude +10 upwards.
+    generateProcTerrainMesh(5.0f, 5.0f, -1.0f, 2500, 0.0f, 0.0f);
     setupReflectionFBO();
     return true;
 }
@@ -1340,7 +1345,7 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     shader.setVec3("sandColor", glm::vec3(0.76, 0.7, 0.5));
     shader.setVec3("fogColor", glm::vec3(0.76, 0.7, 0.5));
     shader.setFloat("fogDensity", 0.0001f); // 45 degrees
-    gameObject.model.Draw(shader);
+    gameObject.model->Draw(shader);
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
     {
@@ -1370,7 +1375,7 @@ void RenderManager::renderGameObjectWithShader(GameObject &gameObject, Shader sh
     shader.setMat4("view", newViewMatrix);
     shader.setMat4("model", model);
     shader.setFloat("time", glfwGetTime());
-    gameObject.model.Draw(shader);
+    gameObject.model->Draw(shader);
 }
 
 void RenderManager::drawShadowCaster(GameObject &gameObject, Shader *shader)
@@ -1382,7 +1387,7 @@ void RenderManager::drawShadowCaster(GameObject &gameObject, Shader *shader)
     // culling (done by the caller) is correct here.
     // Only "model" is needed — lightSpaceMatrix is already set once before the loop.
     shader->setMat4("model", gameObject.GetTransform());
-    gameObject.model.Draw(*shader);
+    gameObject.model->Draw(*shader);
 }
 
 void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::vec3> &lightPos, glm::mat4 lightMatrix)
@@ -1404,7 +1409,7 @@ void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::ve
     useShader(gameObject, shader, lightPos, lightMatrix);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    gameObject.model.Draw(*shader);
+    gameObject.model->Draw(*shader);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
@@ -1566,7 +1571,7 @@ void RenderManager::renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject
         {
             continue;
         }
-        gameObject->model.Draw(*idShader);
+        gameObject->model->Draw(*idShader);
         renderedCount++;
     }
 
@@ -1770,6 +1775,24 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_2D, t_rock2Nor);
         shader->setInt("tex_rock2_nor", 6);
+
+        // Optional PBR maps
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, t_grassAO);
+        shader->setInt("tex_grass_ao", 7);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, t_stoneAO);
+        shader->setInt("tex_stone_ao", 8);
+        glActiveTexture(GL_TEXTURE9);
+        glBindTexture(GL_TEXTURE_2D, t_grassRough);
+        shader->setInt("tex_grass_rough", 9);
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D, t_stoneRough);
+        shader->setInt("tex_stone_rough", 10);
+        shader->setBool("hasGrassAO", t_grassAO != 0);
+        shader->setBool("hasStoneAO", t_stoneAO != 0);
+        shader->setBool("hasGrassRough", t_grassRough != 0);
+        shader->setBool("hasStoneRough", t_stoneRough != 0);
     }
 
     if (gameObject.shaderName == "water_noG")
@@ -1864,7 +1887,7 @@ void RenderManager::renderGameObjectWithColor(GameObject &gameObject, Shader sha
     }
 
     // Draw the model
-    gameObject.model.Draw(shader);
+    gameObject.model->Draw(shader);
 
     // Disable blending after drawing
     if (color.a < 1.0f)
@@ -1923,7 +1946,7 @@ void RenderManager::renderGhostObject(GameObject &gameObject, glm::vec3 position
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);
 
-    gameObject.model.Draw(*shader);
+    gameObject.model->Draw(*shader);
 
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
@@ -1950,8 +1973,8 @@ void RenderManager::renderGameObjectWithTexture(GameObject &gameObject, Shader s
     shader.setMat4("view", viewMatrix);
     shader.setMat4("model", model);
     shader.setFloat("time", glfwGetTime());
-    gameObject.model.SetDiffuseTexture(textureID);
-    gameObject.model.Draw(shader);
+    gameObject.model->SetDiffuseTexture(textureID);
+    gameObject.model->Draw(shader);
 }
 
 void RenderManager::renderCameraAttachedObject(GameObject &gameObject, Shader shader)
@@ -1979,7 +2002,7 @@ void RenderManager::renderCameraAttachedObject(GameObject &gameObject, Shader sh
     shader.setMat4("model", model);
     shader.setFloat("time", glfwGetTime());
 
-    gameObject.model.Draw(shader);
+    gameObject.model->Draw(shader);
 }
 
 // Enhanced version with customizable axes, colors, and center highlighting
@@ -2344,7 +2367,7 @@ void RenderManager::initializeShaders()
     shaders["simple_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader.fs");
     shaders["simple_color_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_flat_color.fs");
     shaders["textured_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/shader_textured.fs");
-    shaders["rock_shader"]     = std::make_shared<Shader>("shaders/shader.vs", "shaders/rock.fs");
+    shaders["rock_shader"] = std::make_shared<Shader>("shaders/shader.vs", "shaders/rock.fs");
     shaders["debug_shader"] = std::make_shared<Shader>("shaders/debug.vs", "shaders/debug.fs");
     shaders["model_shader"] = std::make_shared<Shader>("shaders/model.vs", "shaders/model.fs");
     shaders["smoke_shader"] = std::make_shared<Shader>("shaders/smoke.vs", "shaders/smoke.fs");
@@ -2362,14 +2385,88 @@ void RenderManager::initializeShaders()
     shaders["dune_shader"] = std::make_shared<Shader>("shaders/sand_terrain.vs", "shaders/sand_terrain.fs");
     shaders["terrain_tile_shader"] = std::make_shared<Shader>("shaders/terrain_tile.vs", "shaders/terrain_tile.fs");
     shaders["ground_shader"] = std::make_shared<Shader>("shaders/ground.vs", "shaders/ground.fs");
+    shaders["proc_terrain"] = std::make_shared<Shader>("shaders/proc_terrain.vs",
+                                                       "shaders/proc_terrain.fs",
+                                                       "shaders/proc_terrain.gs");
 
-    // Pre-cache terrain textures so the hot draw path doesn't do map lookups every frame
-    t_grassDiff = loadAndCacheTexture("t_grass_diff", "assets/terrain/grass_rock_diff.jpg");
-    t_grassNor  = loadAndCacheTexture("t_grass_nor",  "assets/terrain/grass_rock_nor.png");
-    t_stoneDiff = loadAndCacheTexture("t_stone_diff", "assets/terrain/rocky_diff.jpg");
-    t_stoneNor  = loadAndCacheTexture("t_stone_nor",  "assets/terrain/rocky_nor.png");
-    t_rock2Diff = loadAndCacheTexture("t_rock2_diff", "assets/terrain/rocky2_diff.jpg");
-    t_rock2Nor  = loadAndCacheTexture("t_rock2_nor",  "assets/terrain/rocky2_nor.png");
+    // Decode terrain textures in parallel (stbi_load is thread-safe); upload on main thread.
+    struct RawPixels
+    {
+        unsigned char *data = nullptr;
+        int w = 0, h = 0, nc = 0;
+    };
+    const std::vector<std::string> terrainFiles = {
+        "assets/bark_08_4k/bark_08_baseColor_4k.png",                       // 0 → grassDiff, rock2Diff
+        "assets/bark_08_4k/bark_08_normal_gl_4k.png",                       // 1 → grassNor,  rock2Nor
+        "assets/bark_08_4k/bark_08_ambientOcclusion_4k.png",                // 2 → grassAO
+        "assets/bark_08_4k/bark_08_roughness_4k.png",                       // 3 → grassRough
+        "assets/floor_tiles_16_4k/floor_tiles_16__basecolor_4k.png",        // 4 → stoneDiff
+        "assets/floor_tiles_16_4k/floor_tiles_16__normal_gl_4k.png",        // 5 → stoneNor
+        "assets/floor_tiles_16_4k/floor_tiles_16__ambientocclusion_4k.png", // 6 → stoneAO
+        "assets/floor_tiles_16_4k/floor_tiles_16__roughness_4k.png",        // 7 → stoneRough
+    };
+
+    // Phase 1: decode in parallel
+    std::vector<std::future<RawPixels>> decFutures;
+    for (const auto &path : terrainFiles)
+    {
+        decFutures.push_back(std::async(std::launch::async, [path]()
+                                        {
+            RawPixels r;
+            r.data = stbi_load(path.c_str(), &r.w, &r.h, &r.nc, 0);
+            return r; }));
+    }
+
+    // Phase 2: GPU upload on main thread (GL calls must stay here)
+    auto uploadPixels = [](RawPixels r, const std::string &path) -> unsigned int
+    {
+        if (!r.data)
+        {
+            std::cout << "Terrain tex FAILED: " << path << std::endl;
+            return 0;
+        }
+        unsigned int id;
+        glGenTextures(1, &id);
+        GLenum fmt = r.nc == 1 ? GL_RED : r.nc == 3 ? GL_RGB
+                                                    : GL_RGBA;
+        glBindTexture(GL_TEXTURE_2D, id);
+        glTexImage2D(GL_TEXTURE_2D, 0, fmt, r.w, r.h, 0, fmt, GL_UNSIGNED_BYTE, r.data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(r.data);
+        return id;
+    };
+
+    std::vector<unsigned int> tids(terrainFiles.size());
+    for (size_t i = 0; i < terrainFiles.size(); ++i)
+        tids[i] = uploadPixels(decFutures[i].get(), terrainFiles[i]);
+
+    t_grassDiff = tids[0];
+    t_grassNor = tids[1];
+    t_grassAO = tids[2];
+    t_grassRough = tids[3];
+    t_stoneDiff = tids[4];
+    t_stoneNor = tids[5];
+    t_stoneAO = tids[6];
+    t_stoneRough = tids[7];
+    t_rock2Diff = tids[0];
+    t_rock2Nor = tids[1]; // rock2 reuses grass textures
+
+    terrainPaths[0][0] = terrainFiles[0];
+    terrainPaths[0][1] = terrainFiles[1];
+    terrainPaths[0][2] = terrainFiles[2];
+    terrainPaths[0][3] = terrainFiles[3];
+    terrainPaths[1][0] = terrainFiles[4];
+    terrainPaths[1][1] = terrainFiles[5];
+    terrainPaths[1][2] = terrainFiles[6];
+    terrainPaths[1][3] = terrainFiles[7];
+    terrainPaths[2][0] = terrainFiles[0];
+    terrainPaths[2][1] = terrainFiles[1];
+    terrainPaths[2][2] = terrainFiles[2];
+    terrainPaths[2][3] = terrainFiles[3];
 
     // Three-file shaders (vertex + fragment + geometry)
     shaders["simple_depth_shader"] = std::make_shared<Shader>("shaders/simple_depth_shader.vs",
@@ -2378,6 +2475,10 @@ void RenderManager::initializeShaders()
     shaders["grass_shader"] = std::make_shared<Shader>("shaders/grass.vs",
                                                        "shaders/grass.fs");
     //    "shaders/grass.gs");
+
+    shaders["rain_shader"] = std::make_shared<Shader>("shaders/rain.vs", "shaders/rain.fs");
+
+    initRainSystem();
 }
 
 void RenderManager::initializeDepthFBO()
@@ -2441,6 +2542,35 @@ unsigned int RenderManager::loadAndCacheTexture(const std::string &name, const s
     unsigned int texture = loadTexture(name.c_str(), path.c_str());
     textureCache[name] = texture;
     return texture;
+}
+
+bool RenderManager::reloadTerrainSlot(int slot, int mapType, const std::string &path)
+{
+    unsigned int newTex = loadTexture(path, path.c_str());
+    if (newTex == 0)
+        return false;
+
+    // Map slot/mapType to the right member variable
+    unsigned int *targets[3][4] = {
+        {&t_grassDiff, &t_grassNor, &t_grassAO, &t_grassRough},
+        {&t_stoneDiff, &t_stoneNor, &t_stoneAO, &t_stoneRough},
+        {&t_rock2Diff, &t_rock2Nor, &t_grassAO, &t_grassRough}, // rock2 AO/rough share grass
+    };
+
+    if (slot < 0 || slot > 2 || mapType < 0 || mapType > 3)
+        return false;
+
+    glDeleteTextures(1, targets[slot][mapType]);
+    *targets[slot][mapType] = newTex;
+    terrainPaths[slot][mapType] = path;
+    return true;
+}
+
+std::string RenderManager::getTerrainSlotPath(int slot, int mapType) const
+{
+    if (slot < 0 || slot > 2 || mapType < 0 || mapType > 3)
+        return "";
+    return terrainPaths[slot][mapType];
 }
 
 void RenderManager::generateGrassInstances(const glm::vec3 &center, float radius, int density)
@@ -2559,6 +2689,178 @@ void RenderManager::setupGrassInstancing()
 
     std::cout << "Grass instancing setup complete for " << grassInstances.size() << " instances" << std::endl;
     grassInstanced = true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tile instancing
+// ─────────────────────────────────────────────────────────────────────────────
+
+void RenderManager::clearTileBatches()
+{
+    for (auto &[path, batch] : tileBatches)
+        if (batch.instanceVBO)
+            glDeleteBuffers(1, &batch.instanceVBO);
+    tileBatches.clear();
+}
+
+void RenderManager::setupTileBatch(const std::string &modelPath, Model &model, size_t maxInstances)
+{
+    auto &batch = tileBatches[modelPath];
+    if (batch.setupDone)
+        return;
+
+    glGenBuffers(1, &batch.instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, batch.instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, maxInstances * sizeof(TileInstance), nullptr, GL_DYNAMIC_DRAW);
+
+    for (auto &mesh : model.meshes)
+    {
+        glBindVertexArray(mesh.VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, batch.instanceVBO);
+
+        // mat4 instanceModel → locations 7, 8, 9, 10  (one vec4 per column)
+        for (int col = 0; col < 4; col++)
+        {
+            GLuint loc = 7 + col;
+            glEnableVertexAttribArray(loc);
+            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(TileInstance),
+                                  (void *)(offsetof(TileInstance, modelMatrix) + col * sizeof(glm::vec4)));
+            glVertexAttribDivisor(loc, 1);
+        }
+
+        // float instanceTerrainType → location 11
+        glEnableVertexAttribArray(11);
+        glVertexAttribPointer(11, 1, GL_FLOAT, GL_FALSE, sizeof(TileInstance),
+                              (void *)offsetof(TileInstance, terrainType));
+        glVertexAttribDivisor(11, 1);
+
+        glBindVertexArray(0);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    batch.setupDone = true;
+}
+
+void RenderManager::renderTilesInstanced(
+    const std::vector<std::shared_ptr<GameObject>> &gameObjects,
+    const std::vector<glm::vec3> &lightPos,
+    const glm::mat4 &lightSpaceMatrix)
+{
+    // Collect instances grouped by model path
+    std::unordered_map<std::string, std::vector<TileInstance>> perModel;
+    std::unordered_map<std::string, Model *> pathToModel;
+
+    for (auto &obj : gameObjects)
+    {
+        if (obj->shaderName != "terrain_tile_shader")
+            continue;
+
+        TileInstance inst;
+        inst.modelMatrix = obj->getModelMatrix();
+        inst.terrainType = static_cast<float>(obj->terrainType);
+        perModel[obj->modelPath].push_back(inst);
+        if (!pathToModel.count(obj->modelPath))
+            pathToModel[obj->modelPath] = obj->model.get();
+    }
+
+    if (perModel.empty())
+        return;
+
+    Shader *shader = getShader("terrain_tile_shader");
+    if (!shader)
+        return;
+
+    // Set shared uniforms once for all tile batches
+    shader->use();
+    shader->setMat4("projection", projectionMatrix);
+    shader->setMat4("view", viewMatrix);
+    shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    shader->setVec4("clipPlane", activeClipPlane);
+    shader->setFloat("texTiling", 0.25f);
+    shader->setInt("shadowMap", 0);
+    shader->setVec3("viewPos", currentCamera->Position);
+    shader->setInt("numLights", static_cast<int>(lightPos.size()));
+
+    char buf[32];
+    for (int i = 0; i < (int)lightPos.size(); i++)
+    {
+        snprintf(buf, sizeof(buf), "lights[%d].Position", i);
+        shader->setVec3(buf, lightPos[i]);
+        snprintf(buf, sizeof(buf), "lights[%d].Color", i);
+        shader->setVec3(buf, glm::vec3(1.0f));
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    shader->setInt("shadowMap", 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, t_grassDiff);
+    shader->setInt("tex_grass_diff", 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, t_grassNor);
+    shader->setInt("tex_grass_nor", 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, t_stoneDiff);
+    shader->setInt("tex_stone_diff", 3);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, t_stoneNor);
+    shader->setInt("tex_stone_nor", 4);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, t_rock2Diff);
+    shader->setInt("tex_rock2_diff", 5);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, t_rock2Nor);
+    shader->setInt("tex_rock2_nor", 6);
+    glActiveTexture(GL_TEXTURE7);
+    glBindTexture(GL_TEXTURE_2D, t_grassAO);
+    shader->setInt("tex_grass_ao", 7);
+    glActiveTexture(GL_TEXTURE8);
+    glBindTexture(GL_TEXTURE_2D, t_stoneAO);
+    shader->setInt("tex_stone_ao", 8);
+    glActiveTexture(GL_TEXTURE9);
+    glBindTexture(GL_TEXTURE_2D, t_grassRough);
+    shader->setInt("tex_grass_rough", 9);
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, t_stoneRough);
+    shader->setInt("tex_stone_rough", 10);
+    shader->setBool("hasGrassAO", t_grassAO != 0);
+    shader->setBool("hasStoneAO", t_stoneAO != 0);
+    shader->setBool("hasGrassRough", t_grassRough != 0);
+    shader->setBool("hasStoneRough", t_stoneRough != 0);
+
+    for (auto &[path, instances] : perModel)
+    {
+        Model *model = pathToModel[path];
+        if (!model || instances.empty())
+            continue;
+
+        // One-time setup: attach instance VBO to the mesh VAOs
+        setupTileBatch(path, *model, instances.size() + 64);
+
+        auto &batch = tileBatches[path];
+
+        // Upload this frame's instance data
+        glBindBuffer(GL_ARRAY_BUFFER, batch.instanceVBO);
+        size_t needed = instances.size() * sizeof(TileInstance);
+        GLint allocated;
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &allocated);
+        if ((size_t)allocated < needed)
+            glBufferData(GL_ARRAY_BUFFER, needed, instances.data(), GL_DYNAMIC_DRAW);
+        else
+            glBufferSubData(GL_ARRAY_BUFFER, 0, needed, instances.data());
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Draw all meshes of this model in one instanced call
+        for (auto &mesh : model->meshes)
+        {
+            glBindVertexArray(mesh.VAO);
+            glDrawElementsInstanced(GL_TRIANGLES,
+                                    static_cast<GLsizei>(mesh.indices.size()),
+                                    GL_UNSIGNED_INT, 0,
+                                    static_cast<GLsizei>(instances.size()));
+        }
+        glBindVertexArray(0);
+    }
 }
 
 void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, int grassDensity, float windStrength)
@@ -2958,7 +3260,7 @@ void RenderManager::generateWaterMesh(float halfExtent, float yLevel, int divisi
         waterVAO = waterVBO = waterEBO = waterIndexCount = 0;
     }
 
-    waterYLevel     = yLevel;
+    waterYLevel = yLevel;
     waterHalfExtent = halfExtent;
 
     int vertsPerSide = divisions + 1;
@@ -3032,13 +3334,13 @@ void RenderManager::generateWaterMesh(float halfExtent, float yLevel, int divisi
 
     // aPos      — location 0
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     // aNormal   — location 1
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     // aTexCoords — location 2
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 
     glBindVertexArray(0);
 
@@ -3063,7 +3365,7 @@ void RenderManager::renderWaterPass()
     if (waterVAO == 0)
         return;
 
-    Shader* shader = getShader("water_forward");
+    Shader *shader = getShader("water_forward");
     if (!shader)
         return;
 
@@ -3071,16 +3373,16 @@ void RenderManager::renderWaterPass()
 
     // Matrices
     glm::mat4 model = glm::mat4(1.0f);
-    shader->setMat4("model",      model);
-    shader->setMat4("view",       viewMatrix);
+    shader->setMat4("model", model);
+    shader->setMat4("view", viewMatrix);
     shader->setMat4("projection", projectionMatrix);
     shader->setFloat("time", (float)glfwGetTime());
 
     // Wave parameters (matched to level scale)
-    shader->setFloat("waveHeight",       0.22f);
-    shader->setFloat("waveSpeed",        0.35f);
-    shader->setFloat("waveFreq",         0.45f);
-    shader->setFloat("surfaceLevel",     waterYLevel);
+    shader->setFloat("waveHeight", 0.22f);
+    shader->setFloat("waveSpeed", 0.35f);
+    shader->setFloat("waveFreq", 0.45f);
+    shader->setFloat("surfaceLevel", waterYLevel);
     shader->setFloat("surfaceThickness", 2.0f);
 
     // Camera
@@ -3088,15 +3390,15 @@ void RenderManager::renderWaterPass()
 
     // Water appearance uniforms
     shader->setVec3("waterColorShallow", glm::vec3(0.30f, 0.72f, 0.92f));
-    shader->setVec3("waterColorDeep",    glm::vec3(0.04f, 0.20f, 0.55f));
-    shader->setFloat("waterAlpha",       0.92f);  // higher = less see-through colour bleed
-    shader->setFloat("reflectStrength",  0.70f);
-    shader->setFloat("specStrength",     0.80f);
-    shader->setFloat("foamStrength",     0.65f);
+    shader->setVec3("waterColorDeep", glm::vec3(0.04f, 0.20f, 0.55f));
+    shader->setFloat("waterAlpha", 0.92f); // higher = less see-through colour bleed
+    shader->setFloat("reflectStrength", 0.70f);
+    shader->setFloat("specStrength", 0.80f);
+    shader->setFloat("foamStrength", 0.65f);
 
     // Sun — must match the direction baked into cubemap.fs so reflections are consistent
     glm::vec3 sun = glm::normalize(glm::vec3(0.55f, 0.30f, 0.40f));
-    shader->setVec3("sunDir",   sun);
+    shader->setVec3("sunDir", sun);
     shader->setVec3("sunColor", glm::vec3(1.0f, 0.96f, 0.88f));
 
     // Normal map (two scrolling layers in shader)
@@ -3148,7 +3450,7 @@ void RenderManager::generateGroundMesh(float halfExtent, float yLevel, int divis
         groundVAO = groundVBO = groundEBO = groundIndexCount = 0;
     }
 
-    groundYLevel     = yLevel;
+    groundYLevel = yLevel;
     groundHalfExtent = halfExtent;
 
     int vertsPerSide = divisions + 1;
@@ -3217,11 +3519,11 @@ void RenderManager::generateGroundMesh(float halfExtent, float yLevel, int divis
                  indices.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 
     glBindVertexArray(0);
 
@@ -3241,7 +3543,7 @@ void RenderManager::renderGroundPass()
     if (groundVAO == 0)
         return;
 
-    Shader* shader = getShader("ground_shader");
+    Shader *shader = getShader("ground_shader");
     if (!shader)
         return;
 
@@ -3249,9 +3551,9 @@ void RenderManager::renderGroundPass()
 
     // Matrices
     glm::mat4 model = glm::mat4(1.0f);
-    shader->setMat4("model",            model);
-    shader->setMat4("view",             viewMatrix);
-    shader->setMat4("projection",       projectionMatrix);
+    shader->setMat4("model", model);
+    shader->setMat4("view", viewMatrix);
+    shader->setMat4("projection", projectionMatrix);
     shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
     // Camera / lighting
@@ -3260,7 +3562,7 @@ void RenderManager::renderGroundPass()
 
     if (!lightPositions.empty())
     {
-        shader->setVec3("lightPos",   lightPositions[0]);
+        shader->setVec3("lightPos", lightPositions[0]);
         shader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
     }
 
@@ -3286,17 +3588,214 @@ void RenderManager::renderGroundPass()
 }
 
 // ---------------------------------------------------------------------------
+// Procedural terrain — domain-warped FBM height field, flat-normal toon shade
+// ---------------------------------------------------------------------------
+
+// ---- Noise helpers (file-local, not exposed in header) --------------------
+
+static float ptHash(float x, float y)
+{
+    // Fast deterministic hash in [0,1)
+    float h = std::sin(x * 127.1f + y * 311.7f) * 43758.5453123f;
+    return h - std::floor(h);
+}
+
+static float ptNoise(float x, float y)
+{
+    int ix = (int)std::floor(x), iy = (int)std::floor(y);
+    float fx = x - (float)ix, fy = y - (float)iy;
+    // Smoothstep
+    float ux = fx * fx * (3.0f - 2.0f * fx);
+    float uy = fy * fy * (3.0f - 2.0f * fy);
+    float a = ptHash((float)ix, (float)iy);
+    float b = ptHash((float)(ix + 1), (float)iy);
+    float c = ptHash((float)ix, (float)(iy + 1));
+    float d = ptHash((float)(ix + 1), (float)(iy + 1));
+    return glm::mix(glm::mix(a, b, ux), glm::mix(c, d, ux), uy);
+}
+
+static float ptFBM(float x, float y, int octaves)
+{
+    float val = 0.0f, amp = 0.5f, freq = 1.0f;
+    for (int i = 0; i < octaves; ++i)
+    {
+        val += amp * ptNoise(x * freq, y * freq);
+        amp *= 0.5f;
+        freq *= 2.0f;
+    }
+    return val;
+}
+
+// Domain-warped FBM — "state of the art" terrain: warp input coords with a
+// secondary FBM to break up grid artifacts and produce rocky, overhanging forms.
+static float ptDomainWarpedFBM(float x, float y)
+{
+    float wx = ptFBM(x + 1.7f, y + 9.2f, 4);
+    float wy = ptFBM(x + 8.3f, y + 2.8f, 4);
+    const float warpStrength = 2.8f;
+    return ptFBM(x + warpStrength * wx, y + warpStrength * wy, 7);
+}
+
+static float ptHeight(float worldX, float worldZ, float amplitude)
+{
+    const float freq = 0.025f; // lower → larger feature scale
+    float raw = ptDomainWarpedFBM(worldX * freq, worldZ * freq);
+    // raw in [0,1] approx; remap to [0, amplitude]
+    return raw * amplitude;
+}
+
+// ---- Mesh generation ------------------------------------------------------
+void RenderManager::generateProcTerrainMesh(float halfExtentX, float halfExtentZ, float baseY, int divisions, float centerX, float centerZ)
+{
+    if (procTerrainVAO != 0)
+    {
+        glDeleteVertexArrays(1, &procTerrainVAO);
+        glDeleteBuffers(1, &procTerrainVBO);
+        glDeleteBuffers(1, &procTerrainEBO);
+        procTerrainVAO = procTerrainVBO = procTerrainEBO = procTerrainIndexCount = 0;
+    }
+
+    const float amplitude = 10.0f; // max height above baseY
+    int vertsPerSide = divisions + 1;
+
+    // Each vertex: position(3) + normal(3) + texcoord(2) = 8 floats
+    // Normals start as (0,1,0); the geometry shader overwrites with flat normals.
+    std::vector<float> verts;
+    verts.reserve(vertsPerSide * vertsPerSide * 8);
+
+    for (int z = 0; z <= divisions; ++z)
+    {
+        for (int x = 0; x <= divisions; ++x)
+        {
+            float fx = -halfExtentX + (float)x / (float)divisions * 2.0f * halfExtentX;
+            float fz = -halfExtentZ + (float)z / (float)divisions * 2.0f * halfExtentZ;
+            float fy = baseY + ptHeight(fx, fz, amplitude);
+
+            verts.push_back(fx);
+            verts.push_back(fy);
+            verts.push_back(fz);
+            // Normal placeholder (GS computes actual flat normals)
+            verts.push_back(0.0f);
+            verts.push_back(1.0f);
+            verts.push_back(0.0f);
+            // Texcoord
+            verts.push_back((float)x / (float)divisions);
+            verts.push_back((float)z / (float)divisions);
+        }
+    }
+
+    std::vector<unsigned int> indices;
+    indices.reserve(divisions * divisions * 6);
+
+    for (int z = 0; z < divisions; ++z)
+    {
+        for (int x = 0; x < divisions; ++x)
+        {
+            unsigned int tl = z * vertsPerSide + x;
+            unsigned int tr = tl + 1;
+            unsigned int bl = tl + vertsPerSide;
+            unsigned int br = bl + 1;
+
+            indices.push_back(tl);
+            indices.push_back(bl);
+            indices.push_back(tr);
+
+            indices.push_back(tr);
+            indices.push_back(bl);
+            indices.push_back(br);
+        }
+    }
+
+    procTerrainIndexCount = (unsigned int)indices.size();
+
+    glGenVertexArrays(1, &procTerrainVAO);
+    glGenBuffers(1, &procTerrainVBO);
+    glGenBuffers(1, &procTerrainEBO);
+
+    glBindVertexArray(procTerrainVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, procTerrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, procTerrainEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(indices.size() * sizeof(unsigned int)),
+                 indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    std::cout << "[ProcTerrain] Mesh generated: " << divisions << "x" << divisions
+              << " quads, " << procTerrainIndexCount / 3 << " triangles"
+              << ", extent=" << halfExtentX << ", baseY=" << baseY << std::endl;
+}
+
+// ---- Render pass -----------------------------------------------------------
+void RenderManager::renderProcTerrainPass()
+{
+    if (procTerrainVAO == 0)
+        return;
+
+    Shader *shader = getShader("proc_terrain");
+    if (!shader)
+        return;
+
+    shader->use();
+
+    glm::mat4 model = glm::mat4(1.0f);
+    shader->setMat4("model", model);
+    shader->setMat4("view", viewMatrix);
+    shader->setMat4("projection", projectionMatrix);
+
+    if (currentCamera)
+        shader->setVec3("viewPos", currentCamera->Position);
+
+    if (!lightPositions.empty())
+    {
+        shader->setVec3("lightPos", lightPositions[0]);
+        shader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
+    }
+    else
+    {
+        shader->setVec3("lightPos", glm::vec3(0.0f, 50.0f, 0.0f));
+        shader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
+    }
+
+    glBindVertexArray(procTerrainVAO);
+    glDrawElements(GL_TRIANGLES, (GLsizei)procTerrainIndexCount, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+}
+
+// ---------------------------------------------------------------------------
 // setupReflectionFBO — creates a half-resolution colour+depth FBO used by
 // renderReflectionPass() to capture the scene from the mirrored camera.
 // ---------------------------------------------------------------------------
 void RenderManager::setupReflectionFBO()
 {
     // Clean up existing resources
-    if (reflectionFBO)      { glDeleteFramebuffers(1,  &reflectionFBO);      reflectionFBO      = 0; }
-    if (reflectionTexture)  { glDeleteTextures(1,       &reflectionTexture);  reflectionTexture  = 0; }
-    if (reflectionDepthRBO) { glDeleteRenderbuffers(1, &reflectionDepthRBO); reflectionDepthRBO = 0; }
+    if (reflectionFBO)
+    {
+        glDeleteFramebuffers(1, &reflectionFBO);
+        reflectionFBO = 0;
+    }
+    if (reflectionTexture)
+    {
+        glDeleteTextures(1, &reflectionTexture);
+        reflectionTexture = 0;
+    }
+    if (reflectionDepthRBO)
+    {
+        glDeleteRenderbuffers(1, &reflectionDepthRBO);
+        reflectionDepthRBO = 0;
+    }
 
-    int w = std::max(screenWidth  / 2, 1);
+    int w = std::max(screenWidth / 2, 1);
     int h = std::max(screenHeight / 2, 1);
 
     glGenFramebuffers(1, &reflectionFBO);
@@ -3335,20 +3834,20 @@ void RenderManager::renderReflectionPass()
     if (!reflectionFBO || !currentCamera || !currentScene)
         return;
 
-    int w = std::max(screenWidth  / 2, 1);
+    int w = std::max(screenWidth / 2, 1);
     int h = std::max(screenHeight / 2, 1);
 
     // -- 1. Build reflected view matrix ------------------------------------
     // Mirror the camera across the horizontal plane Y = waterYLevel.
-    glm::vec3 camPos    = currentCamera->Position;
-    float     wy        = waterYLevel;
-    glm::vec3 reflPos   = glm::vec3(camPos.x, 2.0f * wy - camPos.y, camPos.z);
+    glm::vec3 camPos = currentCamera->Position;
+    float wy = waterYLevel;
+    glm::vec3 reflPos = glm::vec3(camPos.x, 2.0f * wy - camPos.y, camPos.z);
     glm::vec3 camTarget = camPos + currentCamera->Front;
     glm::vec3 reflTarget = glm::vec3(camTarget.x, 2.0f * wy - camTarget.y, camTarget.z);
     // Keep Up direction unchanged — reflected camera is below looking upward;
     // flipping Up is NOT needed because projecting through reflectionVP already
     // accounts for the mirror, and the Y-flip in lookAt would flip the FBO image.
-    glm::vec3 reflUp   = currentCamera->Up;
+    glm::vec3 reflUp = currentCamera->Up;
     glm::mat4 reflView = glm::lookAt(reflPos, reflTarget, reflUp);
 
     // Save reflectionVP for the water shader to project fragments correctly
@@ -3374,11 +3873,18 @@ void RenderManager::renderReflectionPass()
 
     // -- 5. Render all opaque scene objects ---------------------------------
     std::vector<glm::vec3> lightPos;
-    for (auto &l : lights) lightPos.push_back(l.position);
+    for (auto &l : lights)
+        lightPos.push_back(l.position);
+
+    // Terrain tiles use instanced rendering — skip individual draw + batch them
+    renderTilesInstanced(currentScene->getGameObjects(), lightPos, lightSpaceMatrix);
 
     for (auto &obj : currentScene->getGameObjects())
     {
-        if (obj->name == "dune") continue;
+        if (obj->shaderName == "terrain_tile_shader")
+            continue;
+        if (obj->name == "dune")
+            continue;
         renderGameObject(*obj, lightPos, lightSpaceMatrix);
     }
 
@@ -3395,7 +3901,8 @@ void RenderManager::renderReflectionPass()
 void RenderManager::renderShadowPass()
 {
     ZoneScoped;
-    if (lightPositions.empty()) return;
+    if (lightPositions.empty())
+        return;
 
     // WHY single light: the fragment shaders only call ShadowCalculation for i==0,
     // so running the full depth pass for every light in lightPositions was rendering
@@ -3403,8 +3910,8 @@ void RenderManager::renderShadowPass()
     const glm::vec3 &lightPos = lightPositions[0];
 
     glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
-    glm::mat4 lightView       = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    lightSpaceMatrix           = lightProjection * lightView;
+    glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightSpaceMatrix = lightProjection * lightView;
 
     // WHY pointer: `Shader depthPrePass = *getShader(...)` copied the entire Shader
     // struct by value every frame, then renderGameObjectWithShader took it by value
@@ -3462,8 +3969,15 @@ void RenderManager::renderMainPass()
         lightPositions.push_back(light.position);
     }
 
+    // Draw all terrain_tile_shader objects in one instanced batch per model
+    renderTilesInstanced(gameObjects, lightPositions, lightSpaceMatrix);
+
     for (auto &i : gameObjects)
     {
+        // Terrain tiles are handled by renderTilesInstanced above
+        if (i->shaderName == "terrain_tile_shader")
+            continue;
+
         if (i->name == "dune")
         {
             // renderGameObjectWithShader(*i, *getShader("dune_shader"));
@@ -3605,12 +4119,141 @@ void RenderManager::renderMainPass()
     // Ground pass first so it writes depth; water (alpha-blended) sees it beneath.
     renderGroundPass();
 
+    // Procedural terrain: opaque, rendered after ground/tiles, before water.
+    renderProcTerrainPass();
+
     // Render water after all opaque objects so depth test works correctly,
     // and before skybox so the sky cubemap is already bound for reflection.
     renderWaterPass();
 
     renderSkyBox();
 }
+
+// ---------------------------------------------------------------------------
+// Rain system
+// ---------------------------------------------------------------------------
+
+void RenderManager::initRainSystem()
+{
+    rainParticles.resize(RAIN_COUNT);
+    rainInstanceData.resize(RAIN_COUNT);
+
+    // Fixed world-space box, matching renderRainPass constants.
+    std::uniform_real_distribution<float> xDist(-80.0f, 80.0f);
+    std::uniform_real_distribution<float> zDist(-80.0f, 80.0f);
+    std::uniform_real_distribution<float> yDist(-10.0f, 30.0f);
+
+    for (auto &p : rainParticles)
+    {
+        p.pos = glm::vec3(xDist(rainRng), yDist(rainRng), zDist(rainRng));
+        rainInstanceData[&p - rainParticles.data()] = p.pos;
+    }
+
+    // Static quad mesh: a thin elongated strip oriented in local space.
+    // x in [-0.5, 0.5], y in [0.0, 1.0] — mapped to width/length in the shader.
+    glm::vec2 meshVerts[4] = {
+        {-0.5f, 0.0f}, // bottom-left
+        {0.5f, 0.0f},  // bottom-right
+        {-0.5f, 1.0f}, // top-left
+        {0.5f, 1.0f},  // top-right
+    };
+
+    glGenVertexArrays(1, &rainVAO);
+    glGenBuffers(1, &rainMeshVBO);
+    glGenBuffers(1, &rainInstanceVBO);
+
+    glBindVertexArray(rainVAO);
+
+    // Attribute 0: per-vertex local XY
+    glBindBuffer(GL_ARRAY_BUFFER, rainMeshVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(meshVerts), meshVerts, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // Attribute 2: per-instance world position
+    glBindBuffer(GL_ARRAY_BUFFER, rainInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, RAIN_COUNT * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+
+    glBindVertexArray(0);
+}
+
+void RenderManager::renderRainPass(float dt)
+{
+    if (!rainEnabled || !currentCamera || rainVAO == 0)
+        return;
+
+    constexpr float fallSpeed = 20.0f;
+    constexpr float halfTileX = 35.0f; // tiling half-extent around camera
+    constexpr float halfTileZ = 35.0f;
+    constexpr float worldYTop = 30.0f;
+    constexpr float worldYBot = -10.0f;
+
+    const glm::vec3 camPos = currentCamera->Position;
+
+    // Wrap helper: maps value into [lo, hi) with modular arithmetic
+    auto wrap = [](float x, float lo, float hi) -> float
+    {
+        float range = hi - lo;
+        return x - range * std::floor((x - lo) / range);
+    };
+
+    std::uniform_real_distribution<float> ySpawnDist(worldYBot, worldYTop);
+
+    for (int i = 0; i < RAIN_COUNT; ++i)
+    {
+        rainParticles[i].pos.y -= fallSpeed * dt;
+
+        // Wrap XZ so rain tiles infinitely around the camera.
+        // Particles leaving one edge reappear on the opposite edge —
+        // always behind the camera so the seam is never visible.
+        rainParticles[i].pos.x = wrap(rainParticles[i].pos.x,
+                                      camPos.x - halfTileX,
+                                      camPos.x + halfTileX);
+        rainParticles[i].pos.z = wrap(rainParticles[i].pos.z,
+                                      camPos.z - halfTileZ,
+                                      camPos.z + halfTileZ);
+
+        // Only respawn in Y — XZ wrapping keeps them in the box forever
+        if (rainParticles[i].pos.y < worldYBot)
+            rainParticles[i].pos.y = ySpawnDist(rainRng);
+
+        rainInstanceData[i] = rainParticles[i].pos;
+    }
+
+    // Upload updated positions
+    glBindBuffer(GL_ARRAY_BUFFER, rainInstanceVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, RAIN_COUNT * sizeof(glm::vec3), rainInstanceData.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // --- Draw ---
+    Shader &shader = *shaders.at("rain_shader");
+    shader.use();
+    shader.setMat4("view", viewMatrix);
+    shader.setMat4("projection", projectionMatrix);
+    shader.setVec3("cameraRight", currentCamera->Right);
+    shader.setFloat("streakWidth", 0.02f);
+    shader.setFloat("streakLength", 2.5f);
+    shader.setFloat("opacity", 0.6f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);   // transparent — don't pollute the depth buffer
+    glEnable(GL_DEPTH_TEST); // but respect depth so rain is occluded by geometry
+    glDisable(GL_CULL_FACE); // rain quads must be visible from any camera angle
+
+    glBindVertexArray(rainVAO);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, RAIN_COUNT);
+    glBindVertexArray(0);
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+}
+
+// ---------------------------------------------------------------------------
 
 void RenderManager::sceneBuffersSetup()
 {

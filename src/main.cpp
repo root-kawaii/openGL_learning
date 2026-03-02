@@ -205,6 +205,9 @@ int main()
       glEnable(GL_DEPTH_TEST); // Re-enable depth testing
 
       renderManager->renderMainPass(); // work on this
+
+      renderManager->renderRainPass(deltaTime);
+
       // ///////////
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

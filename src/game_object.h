@@ -63,6 +63,8 @@ public:
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale);
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius);
     GameObject(std::string name, std::string modelPath, glm::vec3 position, glm::vec3 rotaion, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color);
+    // Accepts a pre-loaded (and cached) Model — used by Scene for parallel loading.
+    GameObject(std::string name, std::shared_ptr<Model> model, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float collisionRadius, std::string shaderName, glm::vec3 color);
     GameObject(std::shared_ptr<GameObject> gameObject);
     ~GameObject();
 
@@ -85,7 +87,7 @@ public:
     AABB GetWorldAABB() const;
     void CalculateAABB(); // Call this after loading model to calculate local AABB
 
-    Model model;
+    std::shared_ptr<Model> model;
     std::string shaderName;
     glm::vec3 color;
     std::string modelPath;

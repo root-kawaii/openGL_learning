@@ -37,18 +37,30 @@ public:
         game = gamePtr;
         std::cout << "LevelEditor: Game set successfully, use_count: " << game.use_count() << std::endl;
     }
-    void setRenderManager(RenderManager *renderManager) { renderManager = renderManager; };
+    void setRenderManager(RenderManager *rm) { renderManager = rm; };
 
 private:
     RenderManager *renderManager;
     std::shared_ptr<Game> game;
     std::vector<Level> levels;
     std::vector<std::string> models;
-    std::vector<std::string> textures;
+    std::vector<std::string> textures; // flat list for legacy Textures panel
 
     void parseLevelsList(std::string path);
     void parseModel(std::string path);
     void parseTextures(std::string path);
 
     bool levelsPressed = false;
+
+    // ── Terrain texture inspector ─────────────────────────────────────────
+    // Recursive scan of assets/ for all image files
+    std::vector<std::string> allTexturePaths;
+    void scanAllTextures(const std::string &root);
+
+    // Picker popup state
+    int  pickerSlot    = -1; // 0=grass 1=stone 2=rock2
+    int  pickerMapType = -1; // 0=diff 1=nor 2=ao 3=rough
+    char pickerFilter[128]  = "";
+
+    void renderTerrainInspector();
 };

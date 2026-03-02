@@ -14,6 +14,33 @@ Model::Model(const string &path, bool gamma)
     loadModel(path);
 }
 
+// Constructor for parallel pre-loading: caller already ran importer->ReadFile() on a
+// background thread.  processNode() (which creates Meshes + uploads to GPU) runs here,
+// on whichever thread calls this constructor — that MUST be the main (GL) thread.
+Model::Model(std::shared_ptr<Assimp::Importer> preloaded, const string &path, bool gamma)
+    : gammaCorrection(gamma), m_LastUpdateTime(0.0f), m_AnimationsInitialized(false)
+{
+    importer = preloaded;
+    scene    = importer->GetScene();
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        std::cout << "ERROR::ASSIMP (preloaded): " << importer->GetErrorString() << std::endl;
+        return;
+    }
+    aiMatrix4x4 aiRootTransform = scene->mRootNode->mTransformation;
+    aiMatrix4x4 aiGlobalInverse = aiRootTransform;
+    aiGlobalInverse.Inverse();
+    m_globalInverseTransform = glm::transpose(glm::mat4(
+        aiGlobalInverse.a1, aiGlobalInverse.a2, aiGlobalInverse.a3, aiGlobalInverse.a4,
+        aiGlobalInverse.b1, aiGlobalInverse.b2, aiGlobalInverse.b3, aiGlobalInverse.b4,
+        aiGlobalInverse.c1, aiGlobalInverse.c2, aiGlobalInverse.c3, aiGlobalInverse.c4,
+        aiGlobalInverse.d1, aiGlobalInverse.d2, aiGlobalInverse.d3, aiGlobalInverse.d4));
+    directory = path.substr(0, path.find_last_of('/'));
+    processNode(scene->mRootNode, scene);
+    InitializeAnimations();
+    std::cout << "✓ Model ready (preloaded): " << path << std::endl;
+}
+
 // Draw method definition
 void Model::Draw(Shader &shader)
 {

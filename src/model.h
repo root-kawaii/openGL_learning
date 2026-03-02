@@ -20,6 +20,8 @@
 #include <memory>
 #include <functional>
 #include <stb_image.h>
+#include <mutex>
+#include <unordered_map>
 
 using namespace std;
 
@@ -82,6 +84,10 @@ public:
     bool enableDebugAnimation = false;
 
     Model(const string &path, bool gamma = false);
+    // Takes an already-ReadFile'd importer (used for parallel pre-loading).
+    // processNode / GPU upload still happen on the calling thread.
+    Model(std::shared_ptr<Assimp::Importer> preloaded, const string &path, bool gamma = false);
+
     void Draw(Shader &shader);
 
     vector<Vertex> GetAllVertices() const;

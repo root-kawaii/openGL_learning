@@ -3,6 +3,10 @@
 #include "game.h"
 #include "ui.h"
 #include <memory>
+#include <future>
+#include <unordered_map>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 void discretizePosition(glm::vec3 &position)
 {
@@ -127,242 +131,108 @@ void Scene::renderGizmo(const glm::mat4 &view, const glm::mat4 &projection)
   gizmoWasUsing = isUsingNow;
 }
 
-Scene::Scene()
+// ── Shared parallel-loading core ─────────────────────────────────────────────
+void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupState)
 {
-  entityCounter = 1; // Always start fresh from 1
-  serializer.loadScene("levels/two.json");
+  serializer.loadScene(levelFile);
+  entityCounter = 1;
 
-  std::cout << "Loading scene objects with generated IDs..." << std::endl;
-
-  // Load lights from serializer
   sceneLights = serializer.getLights();
-  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
+  std::cout << "Scene: " << sceneLights.size() << " lights, loading objects..." << std::endl;
 
+  // Step 1 — fire off one ReadFile thread per unique model path (all in parallel)
+  std::unordered_map<std::string, std::future<std::shared_ptr<Assimp::Importer>>> importFutures;
+
+  auto enqueueIfNew = [&](const std::string &path) {
+    if (importFutures.find(path) == importFutures.end()) {
+      importFutures[path] = std::async(std::launch::async, [path]() {
+        auto imp = std::make_shared<Assimp::Importer>();
+        imp->ReadFile(path,
+            aiProcess_Triangulate | aiProcess_GenSmoothNormals |
+            aiProcess_FlipUVs    | aiProcess_CalcTangentSpace);
+        return imp;
+      });
+    }
+  };
+
+  enqueueIfNew("assets/capsule.obj"); // used for light visualisers
+  for (const auto &obj : serializer.getObjects())
+    enqueueIfNew(obj.path);
+
+  // Step 2 — collect results; processNode + GPU upload happen here on main thread
+  std::unordered_map<std::string, std::shared_ptr<Model>> modelCache;
+  for (auto &[path, fut] : importFutures)
+    modelCache[path] = std::make_shared<Model>(fut.get(), path);
+
+  std::cout << "Scene: " << modelCache.size() << " unique models loaded." << std::endl;
+
+  // Step 3 — light visualiser capsules (share the same cached model)
   for (const auto &light : sceneLights)
   {
-    auto gameObject =
-        std::make_shared<GameObject>(
-            "Light_" + std::to_string(entityCounter),
-            "assets/capsule.obj",
-            light.position,
-            glm::vec3(0, 0, 0),
-            glm::vec3(0.5f, 0.5f, 0.5f),
-            0,
-            "simple_color_shader",
-            light.color);
-    uint32_t newID = addGameObject(gameObject);
-    std::cout << "Added light visualizer with ID: " << newID << std::endl;
+    auto go = std::make_shared<GameObject>(
+        "Light_" + std::to_string(entityCounter),
+        modelCache.at("assets/capsule.obj"),
+        light.position, glm::vec3(0), glm::vec3(0.5f),
+        0, "simple_color_shader", light.color);
+    addGameObject(go);
   }
 
-  // Pass lights to RenderManager if available
   if (renderManager)
-  {
     renderManager->setLights(sceneLights);
-  }
 
-  for (auto i : serializer.getObjects())
+  // Step 4 — scene objects, all sharing cached models
+  for (const auto &i : serializer.getObjects())
   {
-    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
-    // new ID
-    auto gameObject =
-        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
-                                     i.path, i.position, i.rotation, i.scale,
-                                     i.collisionRadius, i.shader_name, i.color);
-    gameObject->terrainType = i.terrainType;
+    auto go = std::make_shared<GameObject>(
+        i.id, modelCache.at(i.path),
+        i.position, i.rotation, i.scale,
+        i.collisionRadius, i.shader_name, i.color);
+    go->terrainType = i.terrainType;
+    go->modelPath = i.path; // preserve path so saveScene writes it correctly
 
     if (i.gameEntity)
     {
       EntityClassType classType = EntityClassType::DEFAULT;
-      if (gameObject->name == "capsule")
-        classType = EntityClassType::STRIKER;
-      else if (gameObject->name == "capsule2")
-        classType = EntityClassType::DEFENDER;
+      if (go->name == "capsule")       classType = EntityClassType::STRIKER;
+      else if (go->name == "capsule2") classType = EntityClassType::DEFENDER;
 
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
-      discretizePosition(gameEntity->object->position);
-      gameEntity->setScene(this);
-      gameEntities.push_back(gameEntity);
+      auto ge = std::make_shared<GameEntity>(std::to_string(entityCounter), go, classType);
+      discretizePosition(ge->object->position);
+      ge->setScene(this);
+
+      if (setStartupState && go->name == "capsule")
+        ge->setHasBall(true);
+
+      gameEntities.push_back(ge);
     }
 
-    if (gameObject->name == "ball")
-    {
-      ball = gameObject.get();
-    }
+    if (go->name == "ball")
+      ball = go.get();
 
-    // FIX: Use addGameObject which will assign a fresh generated ID
-    uint32_t newID = addGameObject(gameObject);
-
-    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
-              << std::endl;
+    addGameObject(go);
   }
 
-  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
-            << std::endl;
-  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
-
-  // Validate all IDs are correct
+  std::cout << "Scene loaded: " << gameObjects.size() << " objects." << std::endl;
   validateAllIDs();
-  currentLevel = "levels/two.json";
+  currentLevel = levelFile;
+}
+
+// ── Three constructors all delegate to buildFromSerializer ────────────────────
+
+Scene::Scene()
+{
+  buildFromSerializer("levels/two.json", false);
 }
 
 Scene::Scene(RenderManager *renderMgr)
 {
   renderManager = renderMgr;
-  entityCounter = 1; // Always start fresh from 1
-  serializer.loadScene("levels/two.json");
-
-  std::cout << "Loading scene objects with generated IDs..." << std::endl;
-
-  // Load lights from serializer
-  sceneLights = serializer.getLights();
-  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
-
-  for (const auto &light : sceneLights)
-  {
-    auto gameObject =
-        std::make_shared<GameObject>(
-            "Light_" + std::to_string(entityCounter),
-            "assets/capsule.obj",
-            light.position,
-            glm::vec3(0, 0, 0),
-            glm::vec3(0.5f, 0.5f, 0.5f),
-            0,
-            "simple_color_shader",
-            light.color);
-    uint32_t newID = addGameObject(gameObject);
-    std::cout << "Added light visualizer with ID: " << newID << std::endl;
-  }
-
-  // Pass lights to RenderManager if available
-  if (renderManager)
-  {
-    renderManager->setLights(sceneLights);
-  }
-
-  for (auto i : serializer.getObjects())
-  {
-    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
-    // new ID
-    auto gameObject =
-        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
-                                     i.path, i.position, i.rotation, i.scale,
-                                     i.collisionRadius, i.shader_name, i.color);
-    gameObject->terrainType = i.terrainType;
-
-    if (i.gameEntity)
-    {
-      EntityClassType classType = EntityClassType::DEFAULT;
-      if (gameObject->name == "capsule")
-        classType = EntityClassType::STRIKER;
-      else if (gameObject->name == "capsule2")
-        classType = EntityClassType::DEFENDER;
-
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
-      discretizePosition(gameEntity->object->position);
-      gameEntity->setScene(this);
-
-      // Set capsule to have the ball at game start
-      if (gameObject->name == "capsule")
-      {
-        gameEntity->setHasBall(true);
-        std::cout << "Capsule entity starts with the ball" << std::endl;
-      }
-
-      gameEntities.push_back(gameEntity);
-    }
-
-    if (gameObject->name == "ball")
-    {
-      ball = gameObject.get();
-    }
-
-    // FIX: Use addGameObject which will assign a fresh generated ID
-    uint32_t newID = addGameObject(gameObject);
-
-    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
-              << std::endl;
-  }
-
-  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
-            << std::endl;
-  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
-
-  // Validate all IDs are correct
-  validateAllIDs();
-  currentLevel = "levels/two.json";
+  buildFromSerializer("levels/two.json", true);
 }
 
 Scene::Scene(std::string level)
 {
-  entityCounter = 1; // Always start fresh from 1
-  serializer.loadScene(level);
-
-  std::cout << "Loading scene objects with generated IDs..." << std::endl;
-
-  // Load lights from serializer
-  sceneLights = serializer.getLights();
-  std::cout << "Scene loaded with " << sceneLights.size() << " lights" << std::endl;
-
-  for (const auto &light : sceneLights)
-  {
-    auto gameObject =
-        std::make_shared<GameObject>(
-            "Light_" + std::to_string(entityCounter),
-            "assets/capsule.obj",
-            light.position,
-            glm::vec3(0, 0, 0),
-            glm::vec3(0.5f, 0.5f, 0.5f),
-            0,
-            "simple_color_shader",
-            light.color);
-    uint32_t newID = addGameObject(gameObject);
-    std::cout << "Added light visualizer with ID: " << newID << std::endl;
-  }
-
-  // Pass lights to RenderManager if available
-  if (renderManager)
-  {
-    renderManager->setLights(sceneLights);
-  }
-
-  for (auto i : serializer.getObjects())
-  {
-    // FIX: Create GameObject WITHOUT using saved ID - let addGameObject assign
-    // new ID
-    auto gameObject =
-        std::make_shared<GameObject>(i.id, // This becomes the name, not the ID
-                                     i.path, i.position, i.rotation, i.scale,
-                                     i.collisionRadius, i.shader_name, i.color);
-    gameObject->terrainType = i.terrainType;
-
-    if (i.gameEntity)
-    {
-      EntityClassType classType = EntityClassType::DEFAULT;
-      if (gameObject->name == "capsule")
-        classType = EntityClassType::STRIKER;
-      else if (gameObject->name == "capsule2")
-        classType = EntityClassType::DEFENDER;
-
-      auto gameEntity = std::make_shared<GameEntity>(std::to_string(entityCounter), gameObject, classType);
-      discretizePosition(gameEntity->object->position);
-      gameEntity->setScene(this);
-      gameEntities.push_back(gameEntity);
-    }
-
-    // FIX: Use addGameObject which will assign a fresh generated ID
-    uint32_t newID = addGameObject(gameObject);
-
-    std::cout << "Loaded object '" << i.id << "' with generated ID: " << newID
-              << std::endl;
-  }
-
-  std::cout << "Scene loaded with " << gameObjects.size() << " objects"
-            << std::endl;
-  std::cout << "Next new object will get ID: " << entityCounter << std::endl;
-
-  // Validate all IDs are correct
-  validateAllIDs();
-  currentLevel = level;
+  buildFromSerializer(level, false);
 }
 
 uint32_t Scene::addGameObject(std::shared_ptr<GameObject> gameObject)

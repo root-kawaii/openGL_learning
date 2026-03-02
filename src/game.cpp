@@ -148,12 +148,12 @@ void Game::update()
                 if (isPlayingBounce)
                 {
                     std::cout << "[Animation] Switching to Bounce animation with 0.5s blend" << std::endl;
-                    obj->model.PlayAnimation("Bounce", 0.5f);
+                    obj->model->PlayAnimation("Bounce", 0.5f);
                 }
                 else
                 {
                     std::cout << "[Animation] Switching to Take 001 animation with 0.5s blend" << std::endl;
-                    obj->model.PlayAnimation("Take 001", 0.5f);
+                    obj->model->PlayAnimation("Take 001", 0.5f);
                 }
             }
         }
