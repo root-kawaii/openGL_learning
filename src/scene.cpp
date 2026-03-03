@@ -188,6 +188,7 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
         i.position, i.rotation, i.scale,
         i.collisionRadius, i.shader_name, i.color);
     go->terrainType = i.terrainType;
+    go->materialName = i.materialName; // named PBR material reference
     go->modelPath = i.path; // preserve path so saveScene writes it correctly
 
     if (i.gameEntity)
@@ -211,6 +212,10 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
 
     addGameObject(go);
   }
+
+  // Upload PBR material textures to the GPU
+  if (renderManager && !serializer.getMaterials().empty())
+    renderManager->loadPBRMaterials(serializer.getMaterials());
 
   std::cout << "Scene loaded: " << gameObjects.size() << " objects." << std::endl;
   validateAllIDs();

@@ -101,6 +101,9 @@ unsigned int loadCubemapForSkyBox(vector<std::string> faces)
             stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
+            // Keep GL_RGB (not GL_SRGB): the skybox display shader passes raw texel values
+            // straight to the framebuffer, so they must stay in sRGB encoding for correct
+            // monitor output. PBR shaders linearise explicitly with pow(envColor, 2.2).
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height,
                          0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
@@ -112,7 +115,10 @@ unsigned int loadCubemapForSkyBox(vector<std::string> faces)
             stbi_image_free(data);
         }
     }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // Generate mipmaps so textureLod() in PBR shaders can sample blurred
+    // reflections for rough surfaces (higher lod = blurrier = rougher look).
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -1407,8 +1413,14 @@ void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::ve
     // Use pointer instead of copying the entire shader object
     Shader *shader = getShader(gameObject.shaderName);
     useShader(gameObject, shader, lightPos, lightMatrix);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    // pbr_model_textured reads its albedo from the model's embedded texture_diffuse1
+    // which Mesh::Draw binds to slot 0.  Overwriting slot 0 here would make the
+    // shader sample the depth map as albedo, so skip it for that shader.
+    if (gameObject.shaderName != "pbr_model_textured")
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+    }
     gameObject.model->Draw(*shader);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
@@ -1793,6 +1805,102 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
         shader->setBool("hasStoneAO", t_stoneAO != 0);
         shader->setBool("hasGrassRough", t_grassRough != 0);
         shader->setBool("hasStoneRough", t_stoneRough != 0);
+    }
+
+    // ── PBR shaders ───────────────────────────────────────────────────────────
+    if (gameObject.shaderName == "pbr_direct")
+    {
+        // Uniform material: derive albedo from the object's colour field,
+        // use sensible physical defaults for metallic/roughness/ao.
+        // These can later be exposed per-object or via ImGui.
+        shader->setVec3("albedo", gameObject.color);
+        shader->setFloat("metallic", 0.0f);  // stone/wood: dielectric
+        shader->setFloat("roughness", 0.5f); // medium roughness
+        shader->setFloat("ao", 1.0f);        // no occlusion by default
+
+        // Shadow map — slot 0 (already bound by useShader header)
+        shader->setInt("shadowMap", 0);
+
+        // PBR lights need higher radiance values than toon lights
+        // because we divide by distance² — scale colour from 1 → 150
+        for (int i = 0; i < static_cast<int>(lights.size()); ++i)
+        {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "lights[%d].Color", i);
+            shader->setVec3(buf, glm::vec3(150.0f));
+        }
+    }
+
+    if (gameObject.shaderName == "pbr_textured")
+    {
+        // Tell each sampler which texture unit it lives on.
+        // Unit 0 = shadowMap (bound in the common header above).
+        shader->setInt("shadowMap", 0);
+        shader->setInt("albedoMap", 1);
+        shader->setInt("normalMap", 2);
+        shader->setInt("metallicMap", 3);
+        shader->setInt("roughnessMap", 4);
+        shader->setInt("aoMap", 5);
+        shader->setFloat("texTiling", 2.0f);
+
+        // Bind PBR textures from the named material library.
+        // If a map is missing (ID == 0) we bind a 1×1 fallback so the shader
+        // doesn't sample garbage.
+        auto it = pbrMaterials.find(gameObject.materialName);
+        if (it != pbrMaterials.end())
+        {
+            const PBRMaterial &mat = it->second;
+            auto bindOrWhite = [](unsigned int id, int unit)
+            {
+                glActiveTexture(GL_TEXTURE0 + unit);
+                // id==0 means the map was not provided; 0 is the default
+                // OpenGL texture which is black — acceptable fallback.
+                glBindTexture(GL_TEXTURE_2D, id);
+            };
+            bindOrWhite(mat.albedo, 1);
+            bindOrWhite(mat.normal, 2);
+            bindOrWhite(mat.metallic, 3);
+            bindOrWhite(mat.roughness, 4);
+            bindOrWhite(mat.ao, 5);
+        }
+
+        // Skybox cubemap for env reflections — slot 6 (above the 5 material maps)
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        shader->setInt("envMap", 6);
+
+        // Scale lights for PBR inverse-square attenuation
+        for (int i = 0; i < static_cast<int>(lights.size()); ++i)
+        {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "lights[%d].Color", i);
+            shader->setVec3(buf, glm::vec3(150.0f));
+        }
+    }
+
+    if (gameObject.shaderName == "pbr_model_textured")
+    {
+        // texture_diffuse1 (slot 0) and texture_normal1 (slot 1) are bound
+        // automatically by Mesh::Draw — we don't touch those slots here.
+        //
+        // Shadow map goes to slot 15: guaranteed not to be overwritten by
+        // Mesh::Draw which iterates from slot 0 upward (models rarely exceed 8).
+        glActiveTexture(GL_TEXTURE15);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        shader->setInt("shadowMap", 15);
+
+        // Skybox cubemap for env reflections — slot 14 (safe from Mesh::Draw)
+        glActiveTexture(GL_TEXTURE14);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        shader->setInt("envMap", 14);
+
+        // Scale lights for PBR inverse-square attenuation (same as other PBR shaders)
+        for (int i = 0; i < static_cast<int>(lights.size()); ++i)
+        {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "lights[%d].Color", i);
+            shader->setVec3(buf, glm::vec3(150.0f));
+        }
     }
 
     if (gameObject.shaderName == "water_noG")
@@ -2389,6 +2497,16 @@ void RenderManager::initializeShaders()
                                                        "shaders/proc_terrain.fs",
                                                        "shaders/proc_terrain.gs");
 
+    // ── PBR shader family ─────────────────────────────────────────────────────
+    // pbr_direct   — Cook-Torrance BRDF, material params as uniforms
+    // pbr_textured — same BRDF, material params from texture maps
+    // Both share the same vertex shader (pbr.vs).
+    shaders["pbr_direct"] = std::make_shared<Shader>("shaders/pbr.vs", "shaders/pbr_direct.fs");
+    shaders["pbr_textured"] = std::make_shared<Shader>("shaders/pbr.vs", "shaders/pbr_textured.fs");
+    // Reads embedded model textures (texture_diffuse1 / texture_normal1).
+    // Uses shadow map at slot 15 to avoid collision with Mesh::Draw bindings.
+    shaders["pbr_model_textured"] = std::make_shared<Shader>("shaders/pbr.vs", "shaders/pbr_model_textured.fs");
+
     // Decode terrain textures in parallel (stbi_load is thread-safe); upload on main thread.
     struct RawPixels
     {
@@ -2479,6 +2597,32 @@ void RenderManager::initializeShaders()
     shaders["rain_shader"] = std::make_shared<Shader>("shaders/rain.vs", "shaders/rain.fs");
 
     initRainSystem();
+}
+
+// ── PBR material loader ───────────────────────────────────────────────────────
+// Iterates the serialiser's named material library and uploads every texture
+// map to the GPU.  Maps that are empty strings are skipped (ID stays 0).
+// Already-loaded paths are served from the texture cache, so re-calling this
+// after hot-swap is cheap.
+void RenderManager::loadPBRMaterials(const std::unordered_map<std::string, PBRMaterialDef> &defs)
+{
+    for (const auto &[name, def] : defs)
+    {
+        PBRMaterial mat;
+        auto loadIfPresent = [&](const std::string &path) -> unsigned int
+        {
+            if (path.empty())
+                return 0;
+            return loadAndCacheTexture(path, path);
+        };
+        mat.albedo = loadIfPresent(def.albedo);
+        mat.normal = loadIfPresent(def.normal);
+        mat.metallic = loadIfPresent(def.metallic);
+        mat.roughness = loadIfPresent(def.roughness);
+        mat.ao = loadIfPresent(def.ao);
+        pbrMaterials[name] = mat;
+        std::cout << "PBR material loaded: " << name << std::endl;
+    }
 }
 
 void RenderManager::initializeDepthFBO()
@@ -3216,9 +3360,12 @@ void RenderManager::setUpSkyBox()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
     vector<std::string> faces = {
-        "assets/blue.png", "assets/blue.png",
-        "assets/blue.png", "assets/blue.png",
-        "assets/blue.png", "assets/blue.png"};
+        "assets/skybox/right.jpg",
+        "assets/skybox/left.jpg",
+        "assets/skybox/top.jpg",
+        "assets/skybox/bottom.jpg",
+        "assets/skybox/front.jpg",
+        "assets/skybox/back.jpg"};
     cubemapTexture = loadCubemapForSkyBox(faces);
 }
 
@@ -4118,9 +4265,6 @@ void RenderManager::renderMainPass()
 
     // Ground pass first so it writes depth; water (alpha-blended) sees it beneath.
     renderGroundPass();
-
-    // Procedural terrain: opaque, rendered after ground/tiles, before water.
-    renderProcTerrainPass();
 
     // Render water after all opaque objects so depth test works correctly,
     // and before skybox so the sky cubemap is already bound for reflection.

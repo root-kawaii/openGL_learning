@@ -7,6 +7,7 @@ namespace fs = std::filesystem;
 void LevelEditor::renderImGuiEditor()
 {
     renderTerrainInspector();
+    renderPBRMaterialInspector();
 
     if (ImGui::CollapsingHeader("Levels"))
     {
@@ -181,5 +182,79 @@ void LevelEditor::renderTerrainInspector()
         }
         ImGui::EndChild();
         ImGui::EndPopup();
+    }
+}
+
+// ── PBR material inspector ────────────────────────────────────────────────────
+// Shown for any object whose shader is "pbr_textured".
+// Lets you:
+//   1. See + assign which named material the object uses.
+//   2. Define new named materials (5 texture-path inputs).
+//   3. Load textures into the GPU immediately via loadPBRMaterials().
+
+void LevelEditor::renderPBRMaterialInspector()
+{
+    if (!game || !game->getScene()) return;
+    auto obj = game->getScene()->getSelectedGameObject();
+    if (!obj || obj->shaderName != "pbr_textured") return;
+
+    if (!ImGui::CollapsingHeader("PBR Material", ImGuiTreeNodeFlags_DefaultOpen))
+        return;
+
+    Scene *scene = game->getScene();
+    const auto &mats = scene->getMaterials();
+
+    // ── 1. Assign material to selected object ─────────────────────────────
+    ImGui::Text("Assigned material:  %s",
+                obj->materialName.empty() ? "(none)" : obj->materialName.c_str());
+
+    // Build a list of known material names for the combo
+    std::vector<const char *> matNames;
+    matNames.push_back("(none)");
+    for (const auto &[name, _] : mats)
+        matNames.push_back(name.c_str());
+
+    int current = 0; // default = (none)
+    for (int i = 1; i < static_cast<int>(matNames.size()); ++i)
+        if (obj->materialName == matNames[i]) { current = i; break; }
+
+    if (ImGui::Combo("Material##assign", &current, matNames.data(),
+                     static_cast<int>(matNames.size())))
+    {
+        obj->materialName = (current == 0) ? "" : matNames[current];
+    }
+
+    ImGui::Separator();
+
+    // ── 2. Define a new named material ───────────────────────────────────
+    ImGui::Text("Define new material:");
+    ImGui::InputText("Name##pbrNew",      pbrNewMatName,  sizeof(pbrNewMatName));
+    ImGui::InputText("Albedo##pbrNew",    pbrNewAlbedo,   sizeof(pbrNewAlbedo));
+    ImGui::InputText("Normal##pbrNew",    pbrNewNormal,   sizeof(pbrNewNormal));
+    ImGui::InputText("Metallic##pbrNew",  pbrNewMetallic, sizeof(pbrNewMetallic));
+    ImGui::InputText("Roughness##pbrNew", pbrNewRoughness,sizeof(pbrNewRoughness));
+    ImGui::InputText("AO##pbrNew",        pbrNewAO,       sizeof(pbrNewAO));
+
+    if (ImGui::Button("Add material + upload textures"))
+    {
+        if (pbrNewMatName[0] != '\0')
+        {
+            PBRMaterialDef def;
+            def.albedo    = pbrNewAlbedo;
+            def.normal    = pbrNewNormal;
+            def.metallic  = pbrNewMetallic;
+            def.roughness = pbrNewRoughness;
+            def.ao        = pbrNewAO;
+
+            scene->setMaterial(pbrNewMatName, def);
+
+            // Immediately upload to GPU so objects using it render correctly
+            if (renderManager)
+            {
+                std::unordered_map<std::string, PBRMaterialDef> single;
+                single[pbrNewMatName] = def;
+                renderManager->loadPBRMaterials(single);
+            }
+        }
     }
 }

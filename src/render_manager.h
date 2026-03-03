@@ -11,6 +11,7 @@
 #include "../src/shader_m.h"
 #include "../src/texture.h"
 #include "../src/game_object.h"
+#include "../src/serialization_utilities.h"
 #include "../src/scene.h"
 
 #include <random>
@@ -171,6 +172,19 @@ private:
 
     // Texture cache
     std::unordered_map<std::string, unsigned int> textureCache;
+
+    // ── Named PBR material library (GPU side) ─────────────────────────────────
+    // Mirrors the JSON "materials" section; holds GL texture IDs for each map.
+    // 0 = map not provided (shader falls back to uniform defaults).
+    struct PBRMaterial
+    {
+        unsigned int albedo    = 0;
+        unsigned int normal    = 0;
+        unsigned int metallic  = 0;
+        unsigned int roughness = 0;
+        unsigned int ao        = 0;
+    };
+    std::unordered_map<std::string, PBRMaterial> pbrMaterials;
 
     std::shared_ptr<Model> arrowModel;
     std::shared_ptr<Model> lineModel;
@@ -452,6 +466,10 @@ public:
 
     void initializeShaders();
     void initializeDepthFBO();
+
+    // Load all PBR materials from the serialiser's material library into GPU.
+    // Call this once after Scene::buildFromSerializer().
+    void loadPBRMaterials(const std::unordered_map<std::string, PBRMaterialDef> &defs);
 
     void renderSceneToIDBuffer(std::vector<std::shared_ptr<GameObject>> gameObjects);
     unsigned int getObjectId(int mouseX, int mouseY);

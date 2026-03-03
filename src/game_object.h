@@ -100,6 +100,7 @@ public:
     float ID;
     std::string name;
     std::string gameEntity;
+    std::string materialName; // named PBR material from the level's "materials" section
     int terrainType = 0; // 0=stone, 1=grass, 2=dirt, 3=moss
 
     glm::mat4 getModelMatrix() const

@@ -99,6 +99,12 @@ public:
 
   std::shared_ptr<GameObject> getSelectedGameObject() { return selectedObject; };
 
+  // PBR material library access — delegates to the serializer
+  const std::unordered_map<std::string, PBRMaterialDef> &getMaterials() const
+      { return serializer.getMaterials(); }
+  void setMaterial(const std::string &name, const PBRMaterialDef &def)
+      { serializer.setMaterial(name, def); }
+
   void handleInput(const glm::mat4 &view, const glm::mat4 &projection,
                    RenderManager &renderManager);
   void renderGizmo(const glm::mat4 &view, const glm::mat4 &projection);

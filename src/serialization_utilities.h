@@ -9,12 +9,24 @@
 #include <glm/glm.hpp>
 #include "game_object.h"
 
+// Paths that define a PBR material. Empty string = map not provided.
+// GL texture IDs live in RenderManager::PBRMaterial (GPU side).
+struct PBRMaterialDef
+{
+    std::string albedo;     // sRGB diffuse colour
+    std::string normal;     // tangent-space normal map
+    std::string metallic;   // single-channel metallic
+    std::string roughness;  // single-channel roughness
+    std::string ao;         // single-channel ambient occlusion
+};
+
 struct SceneObject
 {
     std::string id;
     std::string name;
     std::string path;
     std::string shader_name;
+    std::string materialName; // references an entry in the "materials" section
     glm::vec3 color;
     glm::vec3 position;
     glm::vec3 rotation;
@@ -41,6 +53,9 @@ public:
 
     std::vector<SceneObject> getObjects() { return objects; };
     std::vector<Light> getLights() { return lights; };
+
+    const std::unordered_map<std::string, PBRMaterialDef> &getMaterials() const { return materials; }
+    void setMaterial(const std::string &name, const PBRMaterialDef &def) { materials[name] = def; }
 
     SceneObject *getObjectWithId(const std::string &id)
     {
@@ -92,6 +107,23 @@ public:
         objects.clear();
         objectMap.clear();
         lights.clear();
+        materials.clear();
+
+        // Parse the named material library (optional section)
+        if (sceneData.contains("materials") && sceneData["materials"].is_object())
+        {
+            for (const auto &[name, matData] : sceneData["materials"].items())
+            {
+                PBRMaterialDef def;
+                def.albedo    = matData.value("albedo",    "");
+                def.normal    = matData.value("normal",    "");
+                def.metallic  = matData.value("metallic",  "");
+                def.roughness = matData.value("roughness", "");
+                def.ao        = matData.value("ao",        "");
+                materials[name] = def;
+            }
+            std::cout << "Loaded " << materials.size() << " PBR materials." << std::endl;
+        }
 
         for (const auto &objData : sceneData["objects"])
         {
@@ -143,6 +175,10 @@ public:
             if (objData.contains("shader_name"))
             {
                 obj.shader_name = objData["shader_name"];
+            }
+            if (objData.contains("material_name"))
+            {
+                obj.materialName = objData["material_name"];
             }
 
             // Extract position
@@ -253,11 +289,35 @@ public:
         return light;
     }
 
-    bool saveScene(const std::string &filename, const std::vector<std::shared_ptr<GameObject>> &objects, const std::vector<Light> &sceneLights)
+    bool saveScene(const std::string &filename,
+                   const std::vector<std::shared_ptr<GameObject>> &objects,
+                   const std::vector<Light> &sceneLights,
+                   const std::unordered_map<std::string, PBRMaterialDef> &mats = {})
     {
+        // Merge caller-supplied materials with any previously parsed ones
+        for (const auto &[k, v] : mats)
+            materials[k] = v;
+
         try
         {
             nlohmann::json sceneData;
+
+            // ── Material library (written first so it's easy to find in the file)
+            if (!materials.empty())
+            {
+                sceneData["materials"] = nlohmann::json::object();
+                for (const auto &[name, def] : materials)
+                {
+                    nlohmann::json m;
+                    if (!def.albedo.empty())    m["albedo"]    = def.albedo;
+                    if (!def.normal.empty())    m["normal"]    = def.normal;
+                    if (!def.metallic.empty())  m["metallic"]  = def.metallic;
+                    if (!def.roughness.empty()) m["roughness"] = def.roughness;
+                    if (!def.ao.empty())        m["ao"]        = def.ao;
+                    sceneData["materials"][name] = m;
+                }
+            }
+
             sceneData["objects"] = nlohmann::json::array();
 
             for (const auto &objPtr : objects)
@@ -272,9 +332,10 @@ public:
                 nlohmann::json objData;
 
                 objData["id"] = obj.name;
-                // objData["name"] = std::to_string(obj.ID);
                 objData["path"] = obj.modelPath;
                 objData["shader_name"] = obj.shaderName;
+                if (!obj.materialName.empty())
+                    objData["material_name"] = obj.materialName;
                 if (obj.gameEntity != "")
                 {
                     objData["entity"] = obj.gameEntity;
@@ -356,4 +417,5 @@ private:
     std::vector<SceneObject> objects;
     std::unordered_map<std::string, SceneObject *> objectMap;
     std::vector<Light> lights;
+    std::unordered_map<std::string, PBRMaterialDef> materials;
 };

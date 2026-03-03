@@ -63,4 +63,15 @@ private:
     char pickerFilter[128]  = "";
 
     void renderTerrainInspector();
+    void renderPBRMaterialInspector();
+
+    // State for the PBR material picker / editor
+    char pbrPickerFilter[128] = "";
+    char pbrNewMatName[64]    = "new_material";
+    char pbrNewAlbedo[256]    = "";
+    char pbrNewNormal[256]    = "";
+    char pbrNewMetallic[256]  = "";
+    char pbrNewRoughness[256] = "";
+    char pbrNewAO[256]        = "";
+    int  pbrPlaceMatIdx       = 0; // combo index for "place new tile" section
 };
