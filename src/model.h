@@ -22,6 +22,8 @@
 #include <stb_image.h>
 #include <mutex>
 #include <unordered_map>
+#include <cstdint>
+#include <future>
 
 using namespace std;
 
@@ -90,6 +92,17 @@ public:
 
     void Draw(Shader &shader);
 
+    // Call PrepareAnimation() from a background thread before Draw().
+    // RenderManager::prepareAllAnimations() does this in parallel for all models.
+    void PrepareAnimation(float currentFrameTime);
+
+    // Incremented once per frame by RenderManager::prepareAllAnimations() before
+    // dispatching async jobs.  Draw() uses it to detect stale cached transforms.
+    static uint64_t s_FrameGen;
+    static void     BeginFrame() { ++s_FrameGen; }
+
+    bool IsAnimated() const { return m_AnimationsInitialized && !m_BoneInfo.empty(); }
+
     vector<Vertex> GetAllVertices() const;
 
     // Get model statistics for performance debugging
@@ -144,6 +157,10 @@ public:
 private:
     mutable vector<Vertex> allVerticesCache;
     mutable bool verticesCached = false;
+
+    // Pre-computed bone transforms (set by PrepareAnimation, consumed by Draw)
+    mutable vector<glm::mat4> m_CachedTransforms;
+    mutable uint64_t          m_TransformFrame = UINT64_MAX; // invalid until first prepare
 
     // Global bone data for the entire model (shared across all meshes)
     unordered_map<string, unsigned int> m_BoneNameToIndexMap; // O(1) lookup vs map's O(log N)

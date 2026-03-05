@@ -8,6 +8,9 @@
 #include <set>
 #include "../tracy/public/tracy/Tracy.hpp"
 
+// Static frame generation counter — incremented once per frame by BeginFrame().
+uint64_t Model::s_FrameGen = 0;
+
 // Constructor definition
 Model::Model(const string &path, bool gamma)
     : gammaCorrection(gamma), m_LastUpdateTime(0.0f), m_AnimationsInitialized(false)
@@ -46,32 +49,36 @@ Model::Model(std::shared_ptr<Assimp::Importer> preloaded, const string &path, bo
 void Model::Draw(Shader &shader)
 {
     ZoneScoped;
-    static vector<glm::mat4> transforms;
     static glm::mat4 identities[4] = {
         glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
-    float timeSeconds = glfwGetTime();
 
-    // Calculate bone transforms once for the entire model (shared across all meshes)
-    transforms.clear();
+    // Only compute and upload bones if the shader actually uses gBones.
+    // Shaders like depth_pre_pass don't — so shadow pass never touches bone data,
+    // letting PrepareAnimation() jobs run safely in parallel with renderShadowPass().
+    GLint location = shader.getUniformLocation("gBones");
+    if (location >= 0)
     {
-        ZoneScopedN("BoneTransforms");
-        if (enableDebugAnimation)
-            GetBoneTransformsWithDebugAnim(transforms, timeSeconds);
-        else
-            GetBoneTransforms(transforms, timeSeconds);
-    }
-
-    // Upload bone matrices once (applies to all meshes) using cached location
-    {
-        ZoneScopedN("BoneUpload_gBones");
-        GLint location = shader.getUniformLocation("gBones");
-        if (location >= 0)
+        // If PrepareAnimation() wasn't called this frame, fall back to sync compute.
+        if (m_TransformFrame != s_FrameGen)
         {
-            if (!transforms.empty())
-                glUniformMatrix4fv(location, transforms.size(), GL_FALSE, &transforms[0][0][0]);
+            ZoneScopedN("BoneTransforms_sync");
+            float timeSeconds = glfwGetTime();
+            float deltaTime   = timeSeconds - m_LastUpdateTime;
+            m_LastUpdateTime  = timeSeconds;
+            const_cast<Model*>(this)->UpdateAnimationState(deltaTime);
+            m_CachedTransforms.clear();
+            if (enableDebugAnimation)
+                GetBoneTransformsWithDebugAnim(m_CachedTransforms, timeSeconds);
             else
-                glUniformMatrix4fv(location, 4, GL_FALSE, &identities[0][0][0]);
+                GetBoneTransformsInternal(m_CachedTransforms);
+            m_TransformFrame = s_FrameGen;
         }
+
+        ZoneScopedN("BoneUpload_gBones");
+        if (!m_CachedTransforms.empty())
+            glUniformMatrix4fv(location, m_CachedTransforms.size(), GL_FALSE, &m_CachedTransforms[0][0][0]);
+        else
+            glUniformMatrix4fv(location, 4, GL_FALSE, &identities[0][0][0]);
     }
 
     // Draw all meshes
@@ -80,6 +87,21 @@ void Model::Draw(Shader &shader)
         for (unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
     }
+}
+
+void Model::PrepareAnimation(float currentFrameTime)
+{
+    float deltaTime  = currentFrameTime - m_LastUpdateTime;
+    m_LastUpdateTime = currentFrameTime;
+    UpdateAnimationState(deltaTime);
+
+    m_CachedTransforms.clear();
+    if (enableDebugAnimation)
+        GetBoneTransformsWithDebugAnim(m_CachedTransforms, currentFrameTime);
+    else
+        GetBoneTransformsInternal(m_CachedTransforms);
+
+    m_TransformFrame = s_FrameGen;
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.

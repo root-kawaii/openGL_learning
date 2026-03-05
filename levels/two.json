@@ -7550,6 +7550,90 @@
                 "z": 1.8047057892545126e-05
             },
             "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.0,
+                "g": 0.0,
+                "r": 1.0
+            },
+            "id": "mech_drone_red",
+            "path": "assets/mech_drone.glb",
+            "position": {
+                "x": 9.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": -0.984654426574707,
+                "y": -1.4913642406463623,
+                "z": -2.1419358253479004
+            },
+            "scale": {
+                "x": 2.0310491890995763e-05,
+                "y": 1.591724867466837e-05,
+                "z": 1.8047057892545126e-05
+            },
+            "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.0,
+                "g": 0.0,
+                "r": 1.0
+            },
+            "id": "mech_drone_red",
+            "path": "assets/mech_drone.glb",
+            "position": {
+                "x": 9.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": -0.984654426574707,
+                "y": -1.4913642406463623,
+                "z": -2.1419358253479004
+            },
+            "scale": {
+                "x": 2.0310491890995763e-05,
+                "y": 1.591724867466837e-05,
+                "z": 1.8047057892545126e-05
+            },
+            "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.0,
+                "g": 0.0,
+                "r": 1.0
+            },
+            "id": "mech_drone_red",
+            "path": "assets/mech_drone.glb",
+            "position": {
+                "x": 9.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": -0.984654426574707,
+                "y": -1.4913642406463623,
+                "z": -2.1419358253479004
+            },
+            "scale": {
+                "x": 2.0310491890995763e-05,
+                "y": 1.591724867466837e-05,
+                "z": 1.8047057892545126e-05
+            },
+            "shader_name": "pbr_model_textured"
         }
     ]
 }

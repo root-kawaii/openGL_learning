@@ -265,6 +265,9 @@ private:
     std::mt19937 rainRng{123};
     bool rainEnabled = false;
 
+    // Async animation futures — launched by prepareAllAnimations(), consumed by waitForAnimations()
+    std::vector<std::future<void>> m_animFutures;
+
     // ── Tile instancing ────────────────────────────────────────────────────────
     struct TileInstance
     {
@@ -503,6 +506,11 @@ public:
 
     void renderSkyBox();
     void setUpSkyBox();
+
+    // Parallel animation prepare — call once per frame before any render pass.
+    // Runs ComputeBoneTransforms for every animated model on background threads,
+    // then waits.  All Draw() calls this frame will use the cached results.
+    void prepareAllAnimations();
 
     void renderShadowPass();
     void renderMainPass();

@@ -4,6 +4,7 @@
 #include "serialization_utilities.h"
 #include "../tracy/public/tracy/Tracy.hpp"
 #include <future>
+#include <unordered_set>
 #include <../include/stb_image.h>
 
 namespace fs = std::filesystem;
@@ -4055,6 +4056,38 @@ void RenderManager::renderReflectionPass()
     glViewport(0, 0, screenWidth, screenHeight);
 }
 
+void RenderManager::prepareAllAnimations()
+{
+    ZoneScoped;
+    float t = (float)glfwGetTime();
+    // NOTE: BeginFrame() is called in main.cpp AFTER renderShadowPass(), so the
+    // shadow pass reads last frame's cached bone matrices (animated, 1-frame latency).
+    // This function only launches the async jobs for THIS frame's bone computation.
+
+    // Collect unique model pointers that have skeletal animation data.
+    // Multiple GameObjects can share the same Model (e.g. instanced characters).
+    std::vector<Model*> toUpdate;
+    {
+        std::unordered_set<Model*> seen;
+        for (auto& go : currentScene->getGameObjects())
+        {
+            if (!go || !go->model || !go->model->IsAnimated()) continue;
+            Model* m = go->model.get();
+            if (seen.insert(m).second)
+                toUpdate.push_back(m);
+        }
+    }
+
+    // One std::async job per model — returns immediately, jobs run in background.
+    // renderMainPass() waits for completion before any skinned draw.
+    m_animFutures.clear();
+    m_animFutures.reserve(toUpdate.size());
+    for (Model* m : toUpdate)
+        m_animFutures.push_back(std::async(std::launch::async,
+                                           [m, t]{ m->PrepareAnimation(t); }));
+    // Returns immediately.
+}
+
 void RenderManager::renderShadowPass()
 {
     ZoneScoped;
@@ -4103,6 +4136,14 @@ void RenderManager::renderShadowPass()
 void RenderManager::renderMainPass()
 {
     ZoneScoped;
+
+    // Block until all PrepareAnimation() jobs from prepareAllAnimations() finish.
+    // They've been running in parallel with renderShadowPass() — by now most are done.
+    {
+        ZoneScopedN("WaitForAnimations");
+        for (auto& f : m_animFutures) f.get();
+        m_animFutures.clear();
+    }
 
     // Build the planar reflection texture before any objects write to the main
     // depth buffer — the reflection pass needs a clean depth buffer.

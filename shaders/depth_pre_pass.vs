@@ -7,10 +7,18 @@ layout (location = 4) in vec3 aBitangent;
 layout (location = 5) in ivec4 boneIDs;
 layout (location = 6) in vec4 weights;
 
+const int MAX_BONES = 100;
+uniform mat4 gBones[MAX_BONES];
 uniform mat4 lightSpaceMatrix;
 uniform mat4 model;
 
 void main()
 {
-    gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
+    mat4 BoneTransform = gBones[boneIDs[0]] * weights[0];
+    BoneTransform     += gBones[boneIDs[1]] * weights[1];
+    BoneTransform     += gBones[boneIDs[2]] * weights[2];
+    BoneTransform     += gBones[boneIDs[3]] * weights[3];
+
+    vec4 skinnedPos = BoneTransform * vec4(aPos, 1.0);
+    gl_Position = lightSpaceMatrix * model * skinnedPos;
 }

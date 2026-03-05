@@ -196,7 +196,11 @@ int main()
     if (game->getGameMode() != PAUSE)
     {
 
+      // Shadow pass sees last frame's cached bone matrices (animated, 1-frame latency).
       renderManager->renderShadowPass();
+      // Advance frame generation, then launch this frame's bone jobs in parallel with game logic.
+      Model::BeginFrame();
+      renderManager->prepareAllAnimations();
       // 1. geometry pass: render scene's geometry/color data into gbuffer
       glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
