@@ -143,19 +143,21 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
   // Step 1 — fire off one ReadFile thread per unique model path (all in parallel)
   std::unordered_map<std::string, std::future<std::shared_ptr<Assimp::Importer>>> importFutures;
 
-  auto enqueueIfNew = [&](const std::string &path) {
-    if (importFutures.find(path) == importFutures.end()) {
-      importFutures[path] = std::async(std::launch::async, [path]() {
+  auto enqueueIfNew = [&](const std::string &path)
+  {
+    if (importFutures.find(path) == importFutures.end())
+    {
+      importFutures[path] = std::async(std::launch::async, [path]()
+                                       {
         auto imp = std::make_shared<Assimp::Importer>();
         imp->ReadFile(path,
             aiProcess_Triangulate | aiProcess_GenSmoothNormals |
             aiProcess_FlipUVs    | aiProcess_CalcTangentSpace);
-        return imp;
-      });
+        return imp; });
     }
   };
 
-  enqueueIfNew("assets/capsule.obj"); // used for light visualisers
+  enqueueIfNew("assets/torch.glb"); // used for light visualisers
   for (const auto &obj : serializer.getObjects())
     enqueueIfNew(obj.path);
 
@@ -171,9 +173,9 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
   {
     auto go = std::make_shared<GameObject>(
         "Light_" + std::to_string(entityCounter),
-        modelCache.at("assets/capsule.obj"),
-        light.position, glm::vec3(0), glm::vec3(0.5f),
-        0, "simple_color_shader", light.color);
+        modelCache.at("assets/torch.glb"),
+        light.position, glm::vec3(glm::radians(-90.0f), 0.0f, 0.0f), glm::vec3(0.5f),
+        0, "pbr_model_textured", light.color);
     addGameObject(go);
   }
 
@@ -189,13 +191,15 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
         i.collisionRadius, i.shader_name, i.color);
     go->terrainType = i.terrainType;
     go->materialName = i.materialName; // named PBR material reference
-    go->modelPath = i.path; // preserve path so saveScene writes it correctly
+    go->modelPath = i.path;            // preserve path so saveScene writes it correctly
 
     if (i.gameEntity)
     {
       EntityClassType classType = EntityClassType::DEFAULT;
-      if (go->name == "capsule")       classType = EntityClassType::STRIKER;
-      else if (go->name == "capsule2") classType = EntityClassType::DEFENDER;
+      if (go->name == "capsule")
+        classType = EntityClassType::STRIKER;
+      else if (go->name == "capsule2")
+        classType = EntityClassType::DEFENDER;
 
       auto ge = std::make_shared<GameEntity>(std::to_string(entityCounter), go, classType);
       discretizePosition(ge->object->position);
@@ -720,7 +724,7 @@ void Scene::pasteFromClipboard()
 
   // Record in history so Ctrl+Z can remove it
   HistoryCommand cmd;
-  cmd.type        = HistoryCmdType::ADD_OBJECT;
+  cmd.type = HistoryCmdType::ADD_OBJECT;
   cmd.addedObject = pasted;
   history.push(cmd);
 
@@ -732,17 +736,17 @@ void Scene::pasteFromClipboard()
 // ---------------------------------------------------------------------------
 // History helpers
 // ---------------------------------------------------------------------------
-TransformState Scene::captureState(const std::shared_ptr<GameObject>& obj) const
+TransformState Scene::captureState(const std::shared_ptr<GameObject> &obj) const
 {
   TransformState s;
   s.position = obj->position;
   s.rotation = obj->rotation;
-  s.scale    = obj->scale;
-  s.color    = obj->color;
+  s.scale = obj->scale;
+  s.color = obj->color;
   return s;
 }
 
-void Scene::applyState(const std::shared_ptr<GameObject>& obj, const TransformState& s)
+void Scene::applyState(const std::shared_ptr<GameObject> &obj, const TransformState &s)
 {
   obj->SetPosition(s.position);
   obj->SetRotation(s.rotation);
@@ -755,7 +759,8 @@ void Scene::removeGameObjectById(uint32_t id)
   objectsById.erase(id);
   gameObjects.erase(
       std::remove_if(gameObjects.begin(), gameObjects.end(),
-                     [id](const auto& o) { return o->ID == id; }),
+                     [id](const auto &o)
+                     { return o->ID == id; }),
       gameObjects.end());
   if (selectedObject && selectedObject->ID == id)
     selectedObject = nullptr;
@@ -769,27 +774,29 @@ void Scene::reInsertGameObject(std::shared_ptr<GameObject> obj)
 }
 
 void Scene::pushTransformCommand(uint32_t id,
-                                  const TransformState& before,
-                                  const TransformState& after)
+                                 const TransformState &before,
+                                 const TransformState &after)
 {
   HistoryCommand cmd;
-  cmd.type     = HistoryCmdType::TRANSFORM;
+  cmd.type = HistoryCmdType::TRANSFORM;
   cmd.objectId = id;
-  cmd.before   = before;
-  cmd.after    = after;
+  cmd.before = before;
+  cmd.after = after;
   history.push(cmd);
 }
 
 void Scene::undo()
 {
-  if (!history.canUndo()) return;
+  if (!history.canUndo())
+    return;
 
   HistoryCommand cmd = history.popUndo();
 
   if (cmd.type == HistoryCmdType::TRANSFORM)
   {
     auto it = objectsById.find(cmd.objectId);
-    if (it == objectsById.end()) return;
+    if (it == objectsById.end())
+      return;
     // Swap: after → before on object, keep after in cmd for redo
     applyState(it->second, cmd.before);
     selectedObject = it->second;
@@ -805,14 +812,16 @@ void Scene::undo()
 
 void Scene::redo()
 {
-  if (!history.canRedo()) return;
+  if (!history.canRedo())
+    return;
 
   HistoryCommand cmd = history.popRedo();
 
   if (cmd.type == HistoryCmdType::TRANSFORM)
   {
     auto it = objectsById.find(cmd.objectId);
-    if (it == objectsById.end()) return;
+    if (it == objectsById.end())
+      return;
     applyState(it->second, cmd.after);
     selectedObject = it->second;
     history.pushUndo(cmd);

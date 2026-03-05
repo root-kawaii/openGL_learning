@@ -73,7 +73,7 @@ public:
   Scene(std::string level);
   ~Scene();
   uint32_t entityCounter = 1;
-  GameObject *ball;
+  GameObject *ball = nullptr;
   // Pure data operations
   void addGameObject(std::string gameObjectPath);
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);

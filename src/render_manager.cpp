@@ -146,6 +146,7 @@ bool RenderManager::initialize(int width, int height)
     arrowModel = std::make_shared<Model>("assets/arrow.obj");
     lineModel = std::make_shared<Model>("assets/line.obj");
     elModel = std::make_shared<Model>("assets/el.obj");
+    torchModel = std::make_shared<Model>("assets/torch.glb");
     setUpSkyBox();
     // 1500 half-extent covers the full 1000-unit far plane in all directions.
     // Y=-0.5 keeps the water below the tile floor (tiles have centers at Y~0.5)
@@ -1399,29 +1400,33 @@ void RenderManager::drawShadowCaster(GameObject &gameObject, Shader *shader)
 void RenderManager::renderGameObject(GameObject &gameObject, std::vector<glm::vec3> &lightPos, glm::mat4 lightMatrix)
 {
     ZoneScoped;
-    // Fast distance check first
-    if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+    ZoneText(gameObject.name.c_str(), gameObject.name.size());
+
     {
-        return;
+        ZoneScopedN("CullChecks");
+        if (!isInViewDistance(gameObject.position, currentCamera->Position, 1000.0f))
+            return;
+        if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
+            return;
     }
 
-    // Then frustum check
-    if (!isInFrustum(gameObject.position, 1.0f, projectionMatrix * viewMatrix))
     {
-        return;
+        ZoneScopedN("UseShader");
+        Shader *shader = getShader(gameObject.shaderName);
+        useShader(gameObject, shader, lightPos, lightMatrix);
+
+        if (gameObject.shaderName != "pbr_model_textured")
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, depthTexture);
+        }
+
+        {
+            ZoneScopedN("Model::Draw");
+            gameObject.model->Draw(*shader);
+        }
     }
-    // Use pointer instead of copying the entire shader object
-    Shader *shader = getShader(gameObject.shaderName);
-    useShader(gameObject, shader, lightPos, lightMatrix);
-    // pbr_model_textured reads its albedo from the model's embedded texture_diffuse1
-    // which Mesh::Draw binds to slot 0.  Overwriting slot 0 here would make the
-    // shader sample the depth map as albedo, so skip it for that shader.
-    if (gameObject.shaderName != "pbr_model_textured")
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, depthTexture);
-    }
-    gameObject.model->Draw(*shader);
+
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
@@ -1841,27 +1846,31 @@ void RenderManager::useShader(GameObject &gameObject, Shader *shader, std::vecto
         shader->setInt("metallicMap", 3);
         shader->setInt("roughnessMap", 4);
         shader->setInt("aoMap", 5);
-        shader->setFloat("texTiling", 2.0f);
+        shader->setInt("depthMap", 7);
+        shader->setFloat("texTiling", 1.0f);
 
         // Bind PBR textures from the named material library.
-        // If a map is missing (ID == 0) we bind a 1×1 fallback so the shader
-        // doesn't sample garbage.
         auto it = pbrMaterials.find(gameObject.materialName);
         if (it != pbrMaterials.end())
         {
             const PBRMaterial &mat = it->second;
-            auto bindOrWhite = [](unsigned int id, int unit)
+            auto bindTex = [](unsigned int id, int unit)
             {
                 glActiveTexture(GL_TEXTURE0 + unit);
-                // id==0 means the map was not provided; 0 is the default
-                // OpenGL texture which is black — acceptable fallback.
                 glBindTexture(GL_TEXTURE_2D, id);
             };
-            bindOrWhite(mat.albedo, 1);
-            bindOrWhite(mat.normal, 2);
-            bindOrWhite(mat.metallic, 3);
-            bindOrWhite(mat.roughness, 4);
-            bindOrWhite(mat.ao, 5);
+            bindTex(mat.albedo, 1);
+            bindTex(mat.normal, 2);
+            bindTex(mat.metallic, 3);
+            bindTex(mat.roughness, 4);
+            bindTex(mat.ao, 5);
+            bindTex(mat.displacement, 7);
+            // Enable POM only when a displacement map is actually provided.
+            shader->setFloat("heightScale", mat.displacement ? 0.05f : 0.0f);
+        }
+        else
+        {
+            shader->setFloat("heightScale", 0.0f);
         }
 
         // Skybox cubemap for env reflections — slot 6 (above the 5 material maps)
@@ -2620,6 +2629,7 @@ void RenderManager::loadPBRMaterials(const std::unordered_map<std::string, PBRMa
         mat.metallic = loadIfPresent(def.metallic);
         mat.roughness = loadIfPresent(def.roughness);
         mat.ao = loadIfPresent(def.ao);
+        mat.displacement = loadIfPresent(def.displacement);
         pbrMaterials[name] = mat;
         std::cout << "PBR material loaded: " << name << std::endl;
     }
@@ -2920,7 +2930,7 @@ void RenderManager::renderTilesInstanced(
     shader->setMat4("view", viewMatrix);
     shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     shader->setVec4("clipPlane", activeClipPlane);
-    shader->setFloat("texTiling", 0.25f);
+    shader->setFloat("texTiling", 1.0f);
     shader->setInt("shadowMap", 0);
     shader->setVec3("viewPos", currentCamera->Position);
     shader->setInt("numLights", static_cast<int>(lightPos.size()));
@@ -3713,7 +3723,7 @@ void RenderManager::renderGroundPass()
         shader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
     }
 
-    shader->setFloat("texTiling", 4.0f); // repeat texture every 4 world units
+    // shader->setFloat("texTiling", 4.0f); // repeat texture every 4 world units
 
     // Bind ground texture
     auto it = textures.find("ground_tex");
@@ -4255,13 +4265,11 @@ void RenderManager::renderMainPass()
         }
     }
 
-    if (gameInstance->getGameMode() == ENGINE)
-    {
-        for (auto &light : lights)
-        {
-            renderArrow(light.position);
-        }
-    }
+    // if (gameInstance->getGameMode() == ENGINE)
+    // {
+    //     for (auto &light : lights)
+    //         renderArrow(light.position);
+    // }
 
     // Ground pass first so it writes depth; water (alpha-blended) sees it beneath.
     renderGroundPass();

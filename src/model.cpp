@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include "../tracy/public/tracy/Tracy.hpp"
 
 // Constructor definition
 Model::Model(const string &path, bool gamma)
@@ -44,42 +45,40 @@ Model::Model(std::shared_ptr<Assimp::Importer> preloaded, const string &path, bo
 // Draw method definition
 void Model::Draw(Shader &shader)
 {
+    ZoneScoped;
     static vector<glm::mat4> transforms;
     static glm::mat4 identities[4] = {
         glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
-    float timeSeconds = glfwGetTime(); // Get time directly from GLFW
+    float timeSeconds = glfwGetTime();
 
     // Calculate bone transforms once for the entire model (shared across all meshes)
     transforms.clear();
-    if (enableDebugAnimation)
     {
-
-        GetBoneTransformsWithDebugAnim(transforms, timeSeconds);
-    }
-    else
-    {
-        GetBoneTransforms(transforms, timeSeconds);
+        ZoneScopedN("BoneTransforms");
+        if (enableDebugAnimation)
+            GetBoneTransformsWithDebugAnim(transforms, timeSeconds);
+        else
+            GetBoneTransforms(transforms, timeSeconds);
     }
 
     // Upload bone matrices once (applies to all meshes) using cached location
-    GLint location = shader.getUniformLocation("gBones");
-    if (location >= 0)
     {
-        if (!transforms.empty())
+        ZoneScopedN("BoneUpload_gBones");
+        GLint location = shader.getUniformLocation("gBones");
+        if (location >= 0)
         {
-            glUniformMatrix4fv(location, transforms.size(), GL_FALSE, &transforms[0][0][0]);
-        }
-        else
-        {
-            // No bones - upload identity matrices
-            glUniformMatrix4fv(location, 4, GL_FALSE, &identities[0][0][0]);
+            if (!transforms.empty())
+                glUniformMatrix4fv(location, transforms.size(), GL_FALSE, &transforms[0][0][0]);
+            else
+                glUniformMatrix4fv(location, 4, GL_FALSE, &identities[0][0][0]);
         }
     }
 
-    // Draw all meshes (they all use the same global bone array)
-    for (unsigned int i = 0; i < meshes.size(); i++)
+    // Draw all meshes
     {
-        meshes[i].Draw(shader);
+        ZoneScopedN("MeshDraw");
+        for (unsigned int i = 0; i < meshes.size(); i++)
+            meshes[i].Draw(shader);
     }
 }
 
@@ -891,13 +890,55 @@ void Model::InitializeAnimations()
         return;
     }
 
-    // Build name-to-index mapping
+    // Build name-to-index mapping and per-animation channel maps
+    m_AnimChannelMaps.resize(scene->mNumAnimations);
     for (unsigned int i = 0; i < scene->mNumAnimations; ++i) {
-        std::string name(scene->mAnimations[i]->mName.C_Str());
+        const aiAnimation* anim = scene->mAnimations[i];
+        std::string name(anim->mName.C_Str());
         m_AnimationNameToIndexMap[name] = i;
 
-        std::cout << "Registered animation: '" << name << "' (index " << i << ")" << std::endl;
+        auto& channelMap = m_AnimChannelMaps[i];
+        for (unsigned int c = 0; c < anim->mNumChannels; ++c)
+            channelMap[anim->mChannels[c]->mNodeName.C_Str()] = anim->mChannels[c];
+
+        std::cout << "Registered animation: '" << name << "' (index " << i << ", "
+                  << anim->mNumChannels << " channels)" << std::endl;
     }
+
+    // Build flat node list in BFS/DFS order so parentIdx always < childIdx.
+    // This lets the per-frame loop run linearly without recursion or string hashing.
+    unsigned int numAnims = scene->mNumAnimations;
+    m_NodeList.clear();
+    // Use a stack of (aiNode*, parentIdx)
+    std::vector<std::pair<const aiNode*, int>> stack;
+    stack.push_back({scene->mRootNode, -1});
+    while (!stack.empty()) {
+        auto [node, parentIdx] = stack.back();
+        stack.pop_back();
+
+        NodeEntry entry;
+        entry.node      = node;
+        entry.parentIdx = parentIdx;
+        // Resolve bone index once
+        auto boneIt = m_BoneNameToIndexMap.find(node->mName.C_Str());
+        entry.boneIdx = (boneIt != m_BoneNameToIndexMap.end()) ? (int)boneIt->second : -1;
+        // Resolve channel pointer for every animation
+        entry.channels.resize(numAnims, nullptr);
+        for (unsigned int i = 0; i < numAnims; ++i) {
+            auto& cm = m_AnimChannelMaps[i];
+            auto chanIt = cm.find(node->mName.C_Str());
+            if (chanIt != cm.end())
+                entry.channels[i] = chanIt->second;
+        }
+
+        int myIdx = (int)m_NodeList.size();
+        m_NodeList.push_back(std::move(entry));
+
+        // Push children (reverse order to maintain DFS left-to-right)
+        for (int c = (int)node->mNumChildren - 1; c >= 0; --c)
+            stack.push_back({node->mChildren[c], myIdx});
+    }
+    m_GlobalTransforms.resize(m_NodeList.size());
 
     // Set default animation to first one
     m_CurrentAnimation.animationIndex = 0;
@@ -912,7 +953,7 @@ void Model::ReadNodeHierarchyForAnimation(
     vector<BoneInfo>& boneInfo,
     const aiNode* pNode,
     const glm::mat4& ParentTransform,
-    const aiAnimation* pAnimation) const
+    const unordered_map<string, const aiNodeAnim*>& channelMap) const
 {
     string NodeName(pNode->mName.data);
 
@@ -924,85 +965,75 @@ void Model::ReadNodeHierarchyForAnimation(
         aiNodeTransform.c1, aiNodeTransform.c2, aiNodeTransform.c3, aiNodeTransform.c4,
         aiNodeTransform.d1, aiNodeTransform.d2, aiNodeTransform.d3, aiNodeTransform.d4));
 
-    // Check if this node has an animation channel
+    // Fix 1: O(1) channel lookup — channelMap passed directly, no pointer search needed.
     const aiNodeAnim* pNodeAnim = nullptr;
-    for (uint i = 0; i < pAnimation->mNumChannels; i++) {
-        if (string(pAnimation->mChannels[i]->mNodeName.data) == NodeName) {
-            pNodeAnim = pAnimation->mChannels[i];
-            break;
-        }
+    {
+        auto chanIt = channelMap.find(NodeName);
+        if (chanIt != channelMap.end())
+            pNodeAnim = chanIt->second;
     }
+
+    // Helper: binary search for the keyframe just before animTime (Fix 2).
+    // Returns the index of the last key whose time <= animTime.
+    auto findKeyIndex = [](double time, auto* keys, unsigned int count) -> unsigned int {
+        // upper_bound finds first key with .mTime > time; step back one.
+        unsigned int lo = 0, hi = count - 1;
+        while (lo < hi) {
+            unsigned int mid = (lo + hi + 1) / 2;
+            if ((double)keys[mid].mTime <= time)
+                lo = mid;
+            else
+                hi = mid - 1;
+        }
+        return lo;
+    };
 
     // If this node is animated, interpolate between keyframes
     if (pNodeAnim) {
         // Interpolate scaling
         aiVector3D scaling(1, 1, 1);
-        if (pNodeAnim->mNumScalingKeys > 0) {
-            if (pNodeAnim->mNumScalingKeys == 1) {
-                scaling = pNodeAnim->mScalingKeys[0].mValue;
-            } else {
-                uint scalingIndex = 0;
-                for (uint i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
-                    if (animTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
-                        scalingIndex = i;
-                        break;
-                    }
-                }
-                uint nextScalingIndex = (scalingIndex + 1) % pNodeAnim->mNumScalingKeys;
-                float deltaTime = (float)(pNodeAnim->mScalingKeys[nextScalingIndex].mTime -
-                                         pNodeAnim->mScalingKeys[scalingIndex].mTime);
-                float factor = (animTime - (float)pNodeAnim->mScalingKeys[scalingIndex].mTime) / deltaTime;
-                const aiVector3D& start = pNodeAnim->mScalingKeys[scalingIndex].mValue;
-                const aiVector3D& end = pNodeAnim->mScalingKeys[nextScalingIndex].mValue;
-                scaling = start + factor * (end - start);
-            }
+        if (pNodeAnim->mNumScalingKeys == 1) {
+            scaling = pNodeAnim->mScalingKeys[0].mValue;
+        } else if (pNodeAnim->mNumScalingKeys > 1) {
+            uint scalingIndex     = findKeyIndex(animTime, pNodeAnim->mScalingKeys, pNodeAnim->mNumScalingKeys - 1);
+            uint nextScalingIndex = scalingIndex + 1;
+            float deltaTime = (float)(pNodeAnim->mScalingKeys[nextScalingIndex].mTime -
+                                      pNodeAnim->mScalingKeys[scalingIndex].mTime);
+            float factor    = (animTime - (float)pNodeAnim->mScalingKeys[scalingIndex].mTime) / deltaTime;
+            const aiVector3D& start = pNodeAnim->mScalingKeys[scalingIndex].mValue;
+            const aiVector3D& end   = pNodeAnim->mScalingKeys[nextScalingIndex].mValue;
+            scaling = start + factor * (end - start);
         }
 
         // Interpolate rotation
         aiQuaternion rotation(1, 0, 0, 0);
-        if (pNodeAnim->mNumRotationKeys > 0) {
-            if (pNodeAnim->mNumRotationKeys == 1) {
-                rotation = pNodeAnim->mRotationKeys[0].mValue;
-            } else {
-                uint rotationIndex = 0;
-                for (uint i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
-                    if (animTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
-                        rotationIndex = i;
-                        break;
-                    }
-                }
-                uint nextRotationIndex = (rotationIndex + 1) % pNodeAnim->mNumRotationKeys;
-                float deltaTime = (float)(pNodeAnim->mRotationKeys[nextRotationIndex].mTime -
-                                         pNodeAnim->mRotationKeys[rotationIndex].mTime);
-                float factor = (animTime - (float)pNodeAnim->mRotationKeys[rotationIndex].mTime) / deltaTime;
-                const aiQuaternion& start = pNodeAnim->mRotationKeys[rotationIndex].mValue;
-                const aiQuaternion& end = pNodeAnim->mRotationKeys[nextRotationIndex].mValue;
-                aiQuaternion::Interpolate(rotation, start, end, factor);
-                rotation.Normalize();
-            }
+        if (pNodeAnim->mNumRotationKeys == 1) {
+            rotation = pNodeAnim->mRotationKeys[0].mValue;
+        } else if (pNodeAnim->mNumRotationKeys > 1) {
+            uint rotationIndex     = findKeyIndex(animTime, pNodeAnim->mRotationKeys, pNodeAnim->mNumRotationKeys - 1);
+            uint nextRotationIndex = rotationIndex + 1;
+            float deltaTime = (float)(pNodeAnim->mRotationKeys[nextRotationIndex].mTime -
+                                      pNodeAnim->mRotationKeys[rotationIndex].mTime);
+            float factor    = (animTime - (float)pNodeAnim->mRotationKeys[rotationIndex].mTime) / deltaTime;
+            const aiQuaternion& start = pNodeAnim->mRotationKeys[rotationIndex].mValue;
+            const aiQuaternion& end   = pNodeAnim->mRotationKeys[nextRotationIndex].mValue;
+            aiQuaternion::Interpolate(rotation, start, end, factor);
+            rotation.Normalize();
         }
 
         // Interpolate position
         aiVector3D position(0, 0, 0);
-        if (pNodeAnim->mNumPositionKeys > 0) {
-            if (pNodeAnim->mNumPositionKeys == 1) {
-                position = pNodeAnim->mPositionKeys[0].mValue;
-            } else {
-                uint positionIndex = 0;
-                for (uint i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
-                    if (animTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
-                        positionIndex = i;
-                        break;
-                    }
-                }
-                uint nextPositionIndex = (positionIndex + 1) % pNodeAnim->mNumPositionKeys;
-                float deltaTime = (float)(pNodeAnim->mPositionKeys[nextPositionIndex].mTime -
-                                         pNodeAnim->mPositionKeys[positionIndex].mTime);
-                float factor = (animTime - (float)pNodeAnim->mPositionKeys[positionIndex].mTime) / deltaTime;
-                const aiVector3D& start = pNodeAnim->mPositionKeys[positionIndex].mValue;
-                const aiVector3D& end = pNodeAnim->mPositionKeys[nextPositionIndex].mValue;
-                position = start + factor * (end - start);
-            }
+        if (pNodeAnim->mNumPositionKeys == 1) {
+            position = pNodeAnim->mPositionKeys[0].mValue;
+        } else if (pNodeAnim->mNumPositionKeys > 1) {
+            uint positionIndex     = findKeyIndex(animTime, pNodeAnim->mPositionKeys, pNodeAnim->mNumPositionKeys - 1);
+            uint nextPositionIndex = positionIndex + 1;
+            float deltaTime = (float)(pNodeAnim->mPositionKeys[nextPositionIndex].mTime -
+                                      pNodeAnim->mPositionKeys[positionIndex].mTime);
+            float factor    = (animTime - (float)pNodeAnim->mPositionKeys[positionIndex].mTime) / deltaTime;
+            const aiVector3D& start = pNodeAnim->mPositionKeys[positionIndex].mValue;
+            const aiVector3D& end   = pNodeAnim->mPositionKeys[nextPositionIndex].mValue;
+            position = start + factor * (end - start);
         }
 
         // Combine transformations
@@ -1035,7 +1066,7 @@ void Model::ReadNodeHierarchyForAnimation(
     // Recursively process child nodes
     for (uint i = 0; i < pNode->mNumChildren; i++) {
         ReadNodeHierarchyForAnimation(animTime, boneInfo, pNode->mChildren[i],
-                                     GlobalTransformation, pAnimation);
+                                     GlobalTransformation, channelMap);
     }
 }
 
@@ -1050,18 +1081,90 @@ void Model::ComputeBoneTransformsForAnimation(
         return;
     }
 
-    const aiAnimation* pAnimation = scene->mAnimations[animIndex];
+    // Flat linear loop — no recursion, no string hashing, no map lookups per frame.
+    auto findKeyIndex = [](double time, auto* keys, unsigned int count) -> unsigned int {
+        unsigned int lo = 0, hi = count - 1;
+        while (lo < hi) {
+            unsigned int mid = (lo + hi + 1) / 2;
+            if ((double)keys[mid].mTime <= time) lo = mid;
+            else hi = mid - 1;
+        }
+        return lo;
+    };
 
-    // Create a copy of bone info to work with
-    vector<BoneInfo> boneInfo = m_BoneInfo;
+    for (int ni = 0; ni < (int)m_NodeList.size(); ++ni) {
+        const NodeEntry& entry = m_NodeList[ni];
+        const aiNode* pNode   = entry.node;
 
-    // Traverse skeleton hierarchy with this animation
-    ReadNodeHierarchyForAnimation(animTime, boneInfo, scene->mRootNode,
-                                  m_globalInverseTransform, pAnimation);
+        // Static node transform
+        const aiMatrix4x4& t = pNode->mTransformation;
+        glm::mat4 nodeTransform = glm::transpose(glm::mat4(
+            t.a1, t.a2, t.a3, t.a4,
+            t.b1, t.b2, t.b3, t.b4,
+            t.c1, t.c2, t.c3, t.c4,
+            t.d1, t.d2, t.d3, t.d4));
 
-    // Collect transforms
-    for (const auto& bone : boneInfo) {
-        transforms.push_back(bone.FinalTransformation);
+        // Override with animated transform if this node has a channel
+        const aiNodeAnim* ch = entry.channels[animIndex];
+        if (ch) {
+            aiVector3D scaling(1,1,1);
+            if (ch->mNumScalingKeys == 1) {
+                scaling = ch->mScalingKeys[0].mValue;
+            } else if (ch->mNumScalingKeys > 1) {
+                uint si = findKeyIndex(animTime, ch->mScalingKeys, ch->mNumScalingKeys - 1);
+                float dt = (float)(ch->mScalingKeys[si+1].mTime - ch->mScalingKeys[si].mTime);
+                float f  = (animTime - (float)ch->mScalingKeys[si].mTime) / dt;
+                scaling = ch->mScalingKeys[si].mValue + f * (ch->mScalingKeys[si+1].mValue - ch->mScalingKeys[si].mValue);
+            }
+
+            aiQuaternion rotation(1,0,0,0);
+            if (ch->mNumRotationKeys == 1) {
+                rotation = ch->mRotationKeys[0].mValue;
+            } else if (ch->mNumRotationKeys > 1) {
+                uint ri = findKeyIndex(animTime, ch->mRotationKeys, ch->mNumRotationKeys - 1);
+                float dt = (float)(ch->mRotationKeys[ri+1].mTime - ch->mRotationKeys[ri].mTime);
+                float f  = (animTime - (float)ch->mRotationKeys[ri].mTime) / dt;
+                aiQuaternion::Interpolate(rotation, ch->mRotationKeys[ri].mValue, ch->mRotationKeys[ri+1].mValue, f);
+                rotation.Normalize();
+            }
+
+            aiVector3D position(0,0,0);
+            if (ch->mNumPositionKeys == 1) {
+                position = ch->mPositionKeys[0].mValue;
+            } else if (ch->mNumPositionKeys > 1) {
+                uint pi = findKeyIndex(animTime, ch->mPositionKeys, ch->mNumPositionKeys - 1);
+                float dt = (float)(ch->mPositionKeys[pi+1].mTime - ch->mPositionKeys[pi].mTime);
+                float f  = (animTime - (float)ch->mPositionKeys[pi].mTime) / dt;
+                position = ch->mPositionKeys[pi].mValue + f * (ch->mPositionKeys[pi+1].mValue - ch->mPositionKeys[pi].mValue);
+            }
+
+            aiMatrix4x4 ms, mr, mp;
+            aiMatrix4x4::Scaling(scaling, ms);
+            mr = aiMatrix4x4(rotation.GetMatrix());
+            aiMatrix4x4::Translation(position, mp);
+            aiMatrix4x4 ai = mp * mr * ms;
+            nodeTransform = glm::transpose(glm::mat4(
+                ai.a1, ai.a2, ai.a3, ai.a4,
+                ai.b1, ai.b2, ai.b3, ai.b4,
+                ai.c1, ai.c2, ai.c3, ai.c4,
+                ai.d1, ai.d2, ai.d3, ai.d4));
+        }
+
+        glm::mat4 parent = (entry.parentIdx < 0) ? m_globalInverseTransform
+                                                  : m_GlobalTransforms[entry.parentIdx];
+        m_GlobalTransforms[ni] = parent * nodeTransform;
+
+    }
+
+    // Collect bone transforms in boneIdx order — matches what the shader expects.
+    transforms.assign(m_BoneInfo.size(), glm::mat4(1.0f));
+    for (int ni = 0; ni < (int)m_NodeList.size(); ++ni) {
+        const NodeEntry& entry = m_NodeList[ni];
+        if (entry.boneIdx >= 0 && entry.boneIdx < (int)m_BoneInfo.size()) {
+            transforms[entry.boneIdx] = m_globalInverseTransform *
+                                        m_GlobalTransforms[ni] *
+                                        m_BoneInfo[entry.boneIdx].OffsetMatrix;
+        }
     }
 }
 

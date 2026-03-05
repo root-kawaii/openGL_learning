@@ -181,14 +181,16 @@ private:
         unsigned int albedo    = 0;
         unsigned int normal    = 0;
         unsigned int metallic  = 0;
-        unsigned int roughness = 0;
-        unsigned int ao        = 0;
+        unsigned int roughness     = 0;
+        unsigned int ao            = 0;
+        unsigned int displacement  = 0; // height map for POM (slot 7)
     };
     std::unordered_map<std::string, PBRMaterial> pbrMaterials;
 
     std::shared_ptr<Model> arrowModel;
     std::shared_ptr<Model> lineModel;
     std::shared_ptr<Model> elModel;
+    std::shared_ptr<Model> torchModel;
     glm::vec3 linesColor = glm::vec3(1.0f, 1.0f, 0.0f);
 
     unsigned int loadAndCacheTexture(const std::string &name, const std::string &path);

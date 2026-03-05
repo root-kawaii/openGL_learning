@@ -17,7 +17,8 @@ struct PBRMaterialDef
     std::string normal;     // tangent-space normal map
     std::string metallic;   // single-channel metallic
     std::string roughness;  // single-channel roughness
-    std::string ao;         // single-channel ambient occlusion
+    std::string ao;           // single-channel ambient occlusion
+    std::string displacement; // height/depth map for Parallax Occlusion Mapping
 };
 
 struct SceneObject
@@ -119,7 +120,8 @@ public:
                 def.normal    = matData.value("normal",    "");
                 def.metallic  = matData.value("metallic",  "");
                 def.roughness = matData.value("roughness", "");
-                def.ao        = matData.value("ao",        "");
+                def.ao           = matData.value("ao",           "");
+                def.displacement = matData.value("displacement", "");
                 materials[name] = def;
             }
             std::cout << "Loaded " << materials.size() << " PBR materials." << std::endl;
@@ -313,7 +315,8 @@ public:
                     if (!def.normal.empty())    m["normal"]    = def.normal;
                     if (!def.metallic.empty())  m["metallic"]  = def.metallic;
                     if (!def.roughness.empty()) m["roughness"] = def.roughness;
-                    if (!def.ao.empty())        m["ao"]        = def.ao;
+                    if (!def.ao.empty())           m["ao"]           = def.ao;
+                    if (!def.displacement.empty()) m["displacement"] = def.displacement;
                     sceneData["materials"][name] = m;
                 }
             }

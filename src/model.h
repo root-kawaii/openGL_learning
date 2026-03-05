@@ -146,9 +146,26 @@ private:
     mutable bool verticesCached = false;
 
     // Global bone data for the entire model (shared across all meshes)
-    map<string, unsigned int> m_BoneNameToIndexMap;
-    mutable vector<BoneInfo> m_BoneInfo; // mutable because bone transforms are recalculated each frame
+    unordered_map<string, unsigned int> m_BoneNameToIndexMap; // O(1) lookup vs map's O(log N)
+    mutable vector<BoneInfo> m_BoneInfo;       // mutable because bone transforms are recalculated each frame
+    mutable vector<BoneInfo> m_BoneInfoScratch; // reused each frame to avoid per-call allocation
     glm::mat4 m_globalInverseTransform;  // Cached global inverse transform
+
+    // Per-animation channel lookup: m_AnimChannelMaps[animIndex][nodeName] -> aiNodeAnim*
+    // Built once at load time so ReadNodeHierarchyForAnimation does O(1) lookup instead of O(N).
+    std::vector<std::unordered_map<std::string, const aiNodeAnim*>> m_AnimChannelMaps;
+
+    // Flat node list — built once in InitializeAnimations().
+    // Per-frame traversal is a plain loop: no recursion, no string hashing.
+    struct NodeEntry {
+        const aiNode* node;
+        int           parentIdx; // index into m_NodeList; -1 for root
+        int           boneIdx;   // index into m_BoneInfo; -1 if not a bone
+        // channels[animIndex] — nullptr if this node has no channel in that anim
+        std::vector<const aiNodeAnim*> channels;
+    };
+    std::vector<NodeEntry>   m_NodeList;
+    mutable std::vector<glm::mat4> m_GlobalTransforms; // scratch: global transform per node
 
     // Animation system state
     std::map<std::string, unsigned int> m_AnimationNameToIndexMap;
@@ -173,7 +190,7 @@ private:
     void UpdateSingleAnimationTime(AnimationState& animState, float deltaTime);
     void CheckAnimationEvents(float previousTime, float currentTime);
     void ComputeBoneTransformsForAnimation(vector<glm::mat4>& transforms, unsigned int animIndex, float animTime) const;
-    void ReadNodeHierarchyForAnimation(float animTime, vector<BoneInfo>& boneInfo, const aiNode* node, const glm::mat4& parentTransform, const aiAnimation* anim) const;
+    void ReadNodeHierarchyForAnimation(float animTime, vector<BoneInfo>& boneInfo, const aiNode* node, const glm::mat4& parentTransform, const unordered_map<string, const aiNodeAnim*>& channelMap) const;
     void BlendBoneTransforms(const vector<glm::mat4>& t1, const vector<glm::mat4>& t2, float factor, vector<glm::mat4>& out) const;
     void GetBoneTransformsInternal(vector<glm::mat4>& transforms) const;
 };

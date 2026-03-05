@@ -186,7 +186,7 @@ void main()
     // making the ambient respond to the actual sky/environment colours.
     vec3 ambient = vec3(0.03) * albedo * ao;
 
-    vec3 color = ambient + Lo;
+    vec3 color = ambient + Lo * ao;
 
     // ── 5d. Tone mapping ──────────────────────────────────────────────────────
     // PBR lighting works in unbounded HDR (Lo >> 1 is normal near a bright light).

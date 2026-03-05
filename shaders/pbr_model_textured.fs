@@ -171,7 +171,7 @@ void main()
     vec3  envSpecular = kS_env * envColor * (1.0 - roughness);
 
     vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color   = ambient + Lo + envSpecular;
+    vec3 color   = ambient + Lo * ao + envSpecular * ao;
 
     color = color / (color + vec3(1.0));        // Reinhard tone map
     color = pow(color, vec3(1.0 / 2.2));        // gamma encode
