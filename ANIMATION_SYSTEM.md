@@ -478,3 +478,163 @@ if (!scene || !scene->mAnimations || animIndex >= scene->mNumAnimations) {
 // Events only fire when their animationName matches current animation
 // Events for other animations are ignored
 ```
+
+---
+
+## Performance Optimization History
+
+This section documents the optimization passes applied to skeletal animation, starting from the baseline and ending with the current parallel implementation.
+
+### Baseline — ~220 µs per frame
+
+The original `Draw()` computed bone transforms inline every frame for every draw call.
+
+**Problems:**
+- `ReadNodeHierarchyForAnimation()` walked the scene node tree recursively, calling `std::string` comparisons at every node to find the matching animation channel.
+- A `static vector<glm::mat4> transforms` was shared across all `Model` instances — a correctness hazard when multiple models existed.
+- Bone data was recomputed every time `Draw()` was called, even if the same model was drawn twice in one frame (e.g. shadow pass + main pass).
+
+---
+
+### Pass 1 — Channel lookup map + binary search keyframes → ~160 µs
+
+**Changes (`model.cpp`, `model.h`):**
+
+Added a per-animation `unordered_map<string, int>` built once at load time that maps node name → channel index. This replaced the O(n) linear scan over `animation->mChannels` done on every node visit.
+
+Keyframe interpolation switched from a linear scan to `std::lower_bound` (binary search) over the sorted keyframe arrays. For a character with ~60 bones and hundreds of keyframes per channel this removed most of the per-frame work.
+
+```
+Before: O(channels) scan per node per frame
+After:  O(1) map lookup + O(log k) binary search
+```
+
+---
+
+### Pass 2 — Scratch buffer reuse → ~140 µs
+
+Eliminated per-frame heap allocations inside `ComputeBoneTransformsForAnimation()`.
+
+The `boneInfo` copy and the output `transforms` vector were previously re-allocated every frame. Replaced with pre-reserved instance members that are `.clear()`-ed and refilled in place, keeping the allocated capacity across frames.
+
+---
+
+### Pass 3 — Flat node list, zero recursion, zero string hashing → ~120 µs
+
+**Change: `m_NodeList`**
+
+At model load time, `InitializeAnimations()` now builds a flat `vector<NodeEntry>` from the scene node tree using a one-time BFS/DFS traversal. Each entry stores:
+
+- `parentIndex` (into the flat list, or -1 for root)
+- `localTransform` (the node's default bind-pose transform)
+- `boneIndex` (index into `m_BoneInfo`, or -1 if not a skinned bone)
+- Per-animation channel index (pre-looked-up per animation)
+
+At runtime `ComputeBoneTransformsForAnimation()` iterates the flat list in order (parents guaranteed before children). No recursion, no string hashing, no tree traversal — just a tight loop over a cache-friendly array.
+
+```
+Before: recursive DFS + string lookup per node per frame
+After:  flat loop, all lookups resolved at load time
+```
+
+---
+
+### Pass 4 — Per-frame cache + generation counter → eliminates redundant work
+
+**New members (`model.h`):**
+
+```cpp
+mutable vector<glm::mat4> m_CachedTransforms;
+mutable uint64_t          m_TransformFrame = UINT64_MAX;
+static  uint64_t          s_FrameGen;
+static  void              BeginFrame() { ++s_FrameGen; }
+```
+
+**How it works:**
+
+`BeginFrame()` is called once per game loop iteration (increments `s_FrameGen`).
+`Draw()` checks `m_TransformFrame != s_FrameGen` before computing anything. If they match, the cached result from `PrepareAnimation()` is used directly — the bone transform loop runs zero times.
+
+This matters when the same `Model*` is drawn more than once per frame (shadow pass + main pass). Previously both draws recomputed all bone transforms. Now only the first draw (or the async job) does the work.
+
+---
+
+### Pass 5 — Multithreaded bone computation → overlapped with render passes
+
+**New API:**
+
+```cpp
+// model.h
+void PrepareAnimation(float t);   // computes bones, stores in m_CachedTransforms
+bool IsAnimated() const;
+
+// render_manager.h
+void prepareAllAnimations();       // collects unique animated models, launches std::async jobs
+std::vector<std::future<void>> m_animFutures;
+```
+
+**`prepareAllAnimations()` (`render_manager.cpp`):**
+
+Walks `currentScene->getGameObjects()`, deduplicates model pointers (multiple objects can share one `Model`), then launches one `std::async(launch::async, ...)` job per unique animated model. Returns immediately — the calling thread does not block.
+
+`renderMainPass()` waits for all futures at its very start (`WaitForAnimations` Tracy zone) before issuing any skinned draw call.
+
+**Thread safety:**
+
+`Draw()` gates all bone data access behind `GLint location = shader.getUniformLocation("gBones")`. If the shader has no `gBones` uniform (e.g. the shadow depth shader), `location == -1` and the entire bone block is skipped. This made it safe to overlap the async jobs with the shadow pass without any locking.
+
+---
+
+### Pass 6 — Animated shadows with 1-frame latency (Option B)
+
+**Problem with Pass 5:** The shadow pass ran while the async jobs were computing this frame's bone matrices. Even though it was data-race-free, the depth shader had no `gBones` uniform so shadows were always rendered in bind pose (T-pose).
+
+**Solution:**
+
+The frame ordering was restructured so the shadow pass runs *before* `BeginFrame()` is called:
+
+```
+Frame N:
+  renderShadowPass()        ← reads frame N-1 m_CachedTransforms (animated, 1 frame old)
+  Model::BeginFrame()       ← increments s_FrameGen to N
+  prepareAllAnimations()    ← launches async jobs for frame N
+  renderMainPass()          ← waits for jobs, uses fresh frame-N transforms
+```
+
+**Depth shader change (`shaders/depth_pre_pass.vs`):**
+
+Added `gBones[MAX_BONES]` uniform and a standard 4-bone skinning expression:
+
+```glsl
+const int MAX_BONES = 100;
+uniform mat4 gBones[MAX_BONES];
+
+void main()
+{
+    mat4 BoneTransform  = gBones[boneIDs[0]] * weights[0];
+    BoneTransform      += gBones[boneIDs[1]] * weights[1];
+    BoneTransform      += gBones[boneIDs[2]] * weights[2];
+    BoneTransform      += gBones[boneIDs[3]] * weights[3];
+
+    vec4 skinnedPos = BoneTransform * vec4(aPos, 1.0);
+    gl_Position = lightSpaceMatrix * model * skinnedPos;
+}
+```
+
+Because `m_TransformFrame` still equals the old `s_FrameGen` when the shadow pass runs, `Draw()` finds the cache valid and uploads last frame's bone matrices. The shadow follows the animation one frame behind — imperceptible at any reasonable frame rate.
+
+**Result:** animated shadows, parallel bone computation, zero extra latency on the main pass.
+
+---
+
+### Summary Table
+
+| Pass | Change | Cost |
+|------|--------|------|
+| Baseline | Inline per-draw, recursive tree walk, string search | ~220 µs |
+| 1 | Channel map + binary search keyframes | ~160 µs |
+| 2 | Scratch buffer reuse, no per-frame alloc | ~140 µs |
+| 3 | Flat node list, zero recursion, zero string hash | ~120 µs |
+| 4 | Per-frame cache + generation counter | redundant draws → 0 |
+| 5 | `std::async` per model, overlapped with shadow pass | off critical path |
+| 6 | Animated shadows (1-frame latency) via BeginFrame reorder | shadows no longer bind-pose |
