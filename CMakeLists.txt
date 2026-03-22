@@ -44,6 +44,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenAL REQUIRED)
+find_package(Vulkan REQUIRED)
 
 # Try to find FreeType using find_package first
 find_package(Freetype QUIET)
@@ -84,6 +85,9 @@ set(IMGUIZMO_INCLUDE_DIR "${IMGUIZMO_DIR}")
 
 # Tracy
 set(TRACY_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tracy/public")
+
+# vk-bootstrap
+set(VK_BOOTSTRAP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/vk-bootstrap/src")
 
 # --------- ImGui Files ---------
 # Collect ImGui source files
@@ -156,6 +160,16 @@ set(PROJECT_SOURCES
     src/game_entity.cpp
     src/game_manager.cpp
     src/vn_manager.cpp
+    src/vulkan/vk_context.cpp
+    src/vulkan/vk_renderer.cpp
+    src/vulkan/vk_pipeline.cpp
+    src/vulkan/vk_buffer.cpp
+    src/vulkan/vk_mem_alloc_impl.cpp
+)
+
+# --------- vk-bootstrap source ---------
+set(VK_BOOTSTRAP_SOURCES
+    ${VK_BOOTSTRAP_DIR}/VkBootstrap.cpp
 )
 
 # --------- ImGui backend files (only the ones you need) ---------
@@ -172,6 +186,7 @@ add_executable(${PROJECT_NAME}
     ${IMGUI_HEADERS}
     ${IMGUI_BACKEND_SOURCES}
     ${IMGUIZMO_SOURCES}  # Add ImGuizmo sources here
+    ${VK_BOOTSTRAP_SOURCES}
     ${TRACY_PUBLIC_DIR}/TracyClient.cpp
 )
 
@@ -184,6 +199,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${ASSIMP_INCLUDE_DIR}                   # Assimp
     ${FREETYPE_INCLUDE_DIRS}                # FreeType
     ${TRACY_PUBLIC_DIR}                     # Tracy
+    ${Vulkan_INCLUDE_DIRS}                  # Vulkan
+    ${VK_BOOTSTRAP_DIR}                    # vk-bootstrap
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/vma # VMA
 )
 
 # --------- Link directories ---------
@@ -217,6 +235,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${FREETYPE_LIBRARIES}
     OpenAL::OpenAL
     assimp
+    Vulkan::Vulkan
 )
 
 # Add Windows-specific system libraries for FreeType
@@ -237,9 +256,46 @@ if(WIN32)
     )
 endif()
 
+# --------- SPIR-V Shader Compilation ---------
+# Compile GLSL 450 shaders in shaders/vulkan/ to SPIR-V
+set(VULKAN_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/vulkan")
+set(SPIRV_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/vulkan/compiled")
+
+# Create output directory for compiled SPIR-V
+file(MAKE_DIRECTORY ${SPIRV_OUTPUT_DIR})
+
+# Find all Vulkan GLSL shaders
+file(GLOB_RECURSE VULKAN_SHADERS
+    "${VULKAN_SHADER_DIR}/*.vert"
+    "${VULKAN_SHADER_DIR}/*.frag"
+    "${VULKAN_SHADER_DIR}/*.geom"
+    "${VULKAN_SHADER_DIR}/*.comp"
+)
+
+# Compile each shader to SPIR-V
+foreach(SHADER ${VULKAN_SHADERS})
+    get_filename_component(SHADER_NAME ${SHADER} NAME)
+    set(SPIRV_OUTPUT "${SPIRV_OUTPUT_DIR}/${SHADER_NAME}.spv")
+
+    add_custom_command(
+        OUTPUT ${SPIRV_OUTPUT}
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o ${SPIRV_OUTPUT}
+        DEPENDS ${SHADER}
+        COMMENT "Compiling ${SHADER_NAME} to SPIR-V"
+    )
+    list(APPEND SPIRV_BINARIES ${SPIRV_OUTPUT})
+endforeach()
+
+# Custom target to trigger shader compilation
+add_custom_target(compile_shaders DEPENDS ${SPIRV_BINARIES})
+add_dependencies(${PROJECT_NAME} compile_shaders)
+
 # --------- Print debug information ---------
 message(STATUS "FreeType found: ${Freetype_FOUND}")
 message(STATUS "FreeType include dirs: ${FREETYPE_INCLUDE_DIRS}")
 message(STATUS "FreeType libraries: ${FREETYPE_LIBRARIES}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Vulkan found: ${Vulkan_FOUND}")
+message(STATUS "Vulkan include: ${Vulkan_INCLUDE_DIRS}")
+message(STATUS "Vulkan glslc: ${Vulkan_GLSLC_EXECUTABLE}")

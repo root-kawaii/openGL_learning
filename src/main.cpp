@@ -3,8 +3,13 @@
 #include <GLFW/glfw3.h>
 
 // OpenAL headers
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
+#endif
 #include <sndfile.h>
 
 // ImGui headers - before ImGuizmo
@@ -52,6 +57,8 @@
 #include <../src/shader_m.h>
 
 #include "globals.h"
+#include "vulkan/vk_context.h"
+#include "vulkan/vk_renderer.h"
 
 // Note: Uncomment these if needed
 // #include <../src/scene.h>
@@ -94,6 +101,19 @@ int main()
   renderManager->setRes(game->SCR_WIDTH, game->SCR_HEIGHT);
   renderManager->setScene(game->getScene());
   renderManager->initializeDepthFBO();
+
+  // ─── Vulkan setup (runs alongside OpenGL) ───────────────────────────────
+  VulkanContext vulkanContext;
+  VulkanRenderer vulkanRenderer;
+  bool vulkanReady = false;
+  bool useVulkan = false; // Toggle with ImGui checkbox
+
+  if (vulkanContext.init(game->SCR_WIDTH, game->SCR_HEIGHT)) {
+    if (vulkanRenderer.init(&vulkanContext)) {
+      vulkanReady = true;
+      std::cout << "[Vulkan] Ready — toggle with checkbox in ENGINE mode" << std::endl;
+    }
+  }
 
   // configure global opengl state
   // -----------------------------
@@ -176,79 +196,92 @@ int main()
         }
       }
 
+      ImGui::Separator();
+      if (vulkanReady) {
+        bool prev = useVulkan;
+        ImGui::Checkbox("Use Vulkan Renderer", &useVulkan);
+        if (useVulkan != prev) {
+          if (useVulkan) vulkanContext.showWindow();
+          else           vulkanContext.hideWindow();
+        }
+      } else {
+        ImGui::TextDisabled("Vulkan not available");
+      }
+
       levelEditor->renderImGuiEditor();
     }
     verticesDrawn = 0;
     trianglesDrawn = 0;
     drawCalls = 0;
 
-    if (true)
+    if (useVulkan)
     {
-      // std::cout << "msaa enabled" << std::endl;
-      glEnable(GL_MULTISAMPLE);
+      // ─── Vulkan rendering path ─────────────────────────────────────────
+      // For now, just clear the screen. ImGui still renders via OpenGL on top.
+      // Check if user closed the Vulkan window
+      if (glfwWindowShouldClose(vulkanContext.getWindow())) {
+        useVulkan = false;
+        vulkanContext.hideWindow();
+        glfwSetWindowShouldClose(vulkanContext.getWindow(), GLFW_FALSE);
+      } else {
+        if (!vulkanRenderer.drawFrame()) {
+          int w, h;
+          glfwGetFramebufferSize(vulkanContext.getWindow(), &w, &h);
+          if (w > 0 && h > 0) {
+            vulkanRenderer.handleResize(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+          }
+        }
+      }
+
+      // Still clear the OpenGL window so ImGui draws cleanly
+      glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     else
     {
-      // std::cout << "msaa disabled" <<std::endl;
-      glDisable(GL_MULTISAMPLE);
-    }
+      // ─── OpenGL rendering path (original) ──────────────────────────────
+      glEnable(GL_MULTISAMPLE);
 
-    if (game->getGameMode() != PAUSE)
-    {
-
-      // Shadow pass sees last frame's cached bone matrices (animated, 1-frame latency).
-      renderManager->renderShadowPass();
-      // Advance frame generation, then launch this frame's bone jobs in parallel with game logic.
-      Model::BeginFrame();
-      renderManager->prepareAllAnimations();
-      // 1. geometry pass: render scene's geometry/color data into gbuffer
-      glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
-      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      glEnable(GL_DEPTH_TEST); // Re-enable depth testing
-
-      renderManager->renderMainPass(); // work on this
-
-      renderManager->renderRainPass(deltaTime);
-
-      // ///////////
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-      if (game->getGameMode() == ENGINE)
+      if (game->getGameMode() != PAUSE)
       {
-        gridShader2.use();
-        gridShader2.setMat4("projection", projection);
-        gridShader2.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        gridShader2.setMat4("model", model);
-        renderManager->renderInfiniteGrid(view, game->camera.Position,
-                                          gridShader2, 1.0f, 500, 0.02f, 1000);
+        renderManager->renderShadowPass();
+        Model::BeginFrame();
+        renderManager->prepareAllAnimations();
+        glViewport(0, 0, game->SCR_WIDTH, game->SCR_HEIGHT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+
+        renderManager->renderMainPass();
+        renderManager->renderRainPass(deltaTime);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        if (game->getGameMode() == ENGINE)
+        {
+          gridShader2.use();
+          gridShader2.setMat4("projection", projection);
+          gridShader2.setMat4("view", view);
+          model = glm::mat4(1.0f);
+          gridShader2.setMat4("model", model);
+          renderManager->renderInfiniteGrid(view, game->camera.Position,
+                                            gridShader2, 1.0f, 500, 0.02f, 1000);
+        }
+
+        uiManager->renderAllUIElements(game->lastX, game->lastY);
+        if (game->getScene()->ball)
+          renderManager->renderParabolicTrajectory(game->getScene()->ball->position, glm::vec3(5, 5, 5), 200);
       }
-      else
+      else if (game->getGameMode() == PAUSE)
       {
-        // Render arrow above selected game entity in GAME mode
-        auto selected = game->getSelectedEntity();
-        // if (selected && selected->object)
-        // {
-        //   renderManager->renderVerticalArrow(selected->object->position + glm::vec3(0, 4.15, 0));
-        // }
+        uiManager->renderPauseMenu();
       }
 
-      uiManager->renderAllUIElements(game->lastX, game->lastY); // 200 microseconds ????? seems ok actually
-      if (game->getScene()->ball)
-        renderManager->renderParabolicTrajectory(game->getScene()->ball->position, glm::vec3(5, 5, 5), 200);
-    }
-    else if (game->getGameMode() == PAUSE)
-    {
-
-      uiManager->renderPauseMenu();
-    }
-
-    // VN overlay — renders on top of live 3D scene
-    if (game->getGameMode() == VISUAL_NOVEL)
-    {
-      game->getVNManager().render(game->SCR_WIDTH, game->SCR_HEIGHT);
+      if (game->getGameMode() == VISUAL_NOVEL)
+      {
+        game->getVNManager().render(game->SCR_WIDTH, game->SCR_HEIGHT);
+      }
     }
 
     ///////////////////////////////////////////////////
@@ -267,16 +300,23 @@ int main()
       renderManager->checkAndReloadShaders();
     }
 
-    // Render ImGui
+    // Render ImGui (always via OpenGL for now)
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    glfwSwapBuffers(game->getWindow());
+    // Only swap OpenGL backbuffer when OpenGL is rendering.
+    // When Vulkan is active, it presents via its own swapchain.
+    if (!useVulkan) {
+      glfwSwapBuffers(game->getWindow());
+    }
     glfwPollEvents();
     FrameMark;
   }
 
-  //
+  // Vulkan cleanup (before GLFW terminates the window)
+  vulkanRenderer.cleanup();
+  vulkanContext.cleanup();
+
   audioManager->cleanUp();
 
   // optional: de-allocate all resources once they've outlived their purpose:
