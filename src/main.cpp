@@ -112,6 +112,14 @@ int main()
     if (vulkanRenderer.init(&vulkanContext)) {
       vulkanReady = true;
       std::cout << "[Vulkan] Ready — toggle with checkbox in ENGINE mode" << std::endl;
+
+      // Load a model for Vulkan rendering (Phase 5 — RHI verification)
+      static auto vulkanModel = std::make_shared<Model>("assets/backpack/backpack.obj");
+      if (vulkanRenderer.loadModel(vulkanModel.get())) {
+        std::cout << "[Vulkan] Model loaded for Vulkan rendering" << std::endl;
+      } else {
+        std::cerr << "[Vulkan] Failed to load model for Vulkan" << std::endl;
+      }
     }
   }
 

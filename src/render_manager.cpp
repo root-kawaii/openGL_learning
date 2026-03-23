@@ -2799,7 +2799,7 @@ void RenderManager::setupGrassInstancing()
     for (auto &mesh : grassModel->meshes)
     {
         // CRITICAL: Bind the mesh's VAO before setting up attributes
-        glBindVertexArray(mesh.VAO);
+        glBindVertexArray(mesh.glData.VAO);
 
         // Bind instance buffer for this mesh
         glBindBuffer(GL_ARRAY_BUFFER, grassInstanceVBO);
@@ -2870,7 +2870,7 @@ void RenderManager::setupTileBatch(const std::string &modelPath, Model &model, s
 
     for (auto &mesh : model.meshes)
     {
-        glBindVertexArray(mesh.VAO);
+        glBindVertexArray(mesh.glData.VAO);
         glBindBuffer(GL_ARRAY_BUFFER, batch.instanceVBO);
 
         // mat4 instanceModel → locations 7, 8, 9, 10  (one vec4 per column)
@@ -3008,7 +3008,7 @@ void RenderManager::renderTilesInstanced(
         // Draw all meshes of this model in one instanced call
         for (auto &mesh : model->meshes)
         {
-            glBindVertexArray(mesh.VAO);
+            glBindVertexArray(mesh.glData.VAO);
             glDrawElementsInstanced(GL_TRIANGLES,
                                     static_cast<GLsizei>(mesh.indices.size()),
                                     GL_UNSIGNED_INT, 0,
@@ -3143,7 +3143,7 @@ void RenderManager::renderGrass(const glm::vec3 &position, float grassHeight, in
         // Use instanced rendering
         for (auto &mesh : grassModel->meshes)
         {
-            glBindVertexArray(mesh.VAO);
+            glBindVertexArray(mesh.glData.VAO);
             glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(),
                                     GL_UNSIGNED_INT, 0, grassInstances.size());
         }

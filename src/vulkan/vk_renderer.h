@@ -2,14 +2,18 @@
 
 #include "vk_context.h"
 #include "vk_buffer.h"
+#include "vk_texture.h"
+#include "../rhi/vulkan/vk_mesh_data.h"
 #include <vector>
 #include <array>
+#include <memory>
 
 #include <glm/glm.hpp>
 
+// Forward declare — we don't want to pull in the full model.h here
+class Model;
+
 // Maximum number of frames that can be rendered concurrently.
-// While the GPU works on frame N, we prepare frame N+1 on the CPU.
-// This is called "frames in flight" — it prevents CPU/GPU idle time.
 static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 // UBO matching the shader's UniformBufferObject
@@ -17,6 +21,27 @@ struct MVPUniform {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
+};
+
+// ─── VulkanModelData ─────────────────────────────────────────────────────────
+//
+// Holds all Vulkan-side GPU resources for a loaded Model:
+//   - Per-mesh vertex/index buffers (VkMeshData via RHI)
+//   - Per-mesh diffuse textures (VulkanTexture)
+//   - Per-mesh descriptor sets (one per frame in flight)
+//
+// This is separate from the Model itself — Model owns the CPU/GL data,
+// VulkanModelData owns the Vulkan GPU data. This clean separation is the
+// RHI's job: each backend manages its own resources independently.
+
+struct VulkanMeshGPUData {
+    std::unique_ptr<VkMeshData> buffers;
+    VulkanTexture               diffuseTexture{};
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets = {};
+};
+
+struct VulkanModelData {
+    std::vector<VulkanMeshGPUData> meshes;
 };
 
 class VulkanRenderer {
@@ -30,7 +55,10 @@ public:
     // Initialize renderer with an already-initialized VulkanContext
     bool init(VulkanContext* context);
 
-    // Draw a frame — renders the triangle with updated MVP
+    // Upload a Model's mesh/texture data to Vulkan GPU resources
+    bool loadModel(Model* model);
+
+    // Draw a frame — renders the textured quad (or loaded model if available)
     bool drawFrame();
 
     // Handle window resize — recreates swapchain + framebuffers
@@ -51,6 +79,7 @@ private:
     bool createSyncObjects();
     bool createTriangleResources();
     bool createDescriptorSets();
+    bool createModelPipelineAndDescriptors();
 
     void cleanupDepthResources();
     void cleanupFramebuffers();
@@ -77,29 +106,51 @@ private:
     std::array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> commandBuffers = {};
 
     // Sync
+    // imageAvailable + fences: per frame-in-flight (CPU/GPU pacing)
+    // renderFinished: per swapchain image (prevents semaphore reuse before present completes)
     std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> imageAvailableSemaphores = {};
-    std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> renderFinishedSemaphores = {};
+    std::vector<VkSemaphore> renderFinishedSemaphores;   // one per swapchain image
     std::array<VkFence,     MAX_FRAMES_IN_FLIGHT> inFlightFences = {};
     uint32_t currentFrame = 0;
 
     // Clear color
     std::array<float, 4> clearColor = {0.1f, 0.1f, 0.15f, 1.0f};
 
-    // ─── Triangle resources (Phase 3) ────────────────────────────────────────
+    // ─── Quad resources (Phase 3 → Phase 4) ──────────────────────────────────
     VmaAllocator allocator = nullptr;
 
-    // Pipeline
+    // Textured quad pipeline
     VkPipelineLayout pipelineLayout = nullptr;
     VkPipeline       pipeline       = nullptr;
 
-    // Vertex buffer (GPU-local, uploaded via staging)
+    // Vertex + index buffers (GPU-local, uploaded via staging)
     AllocatedBuffer vertexBuffer{};
+    AllocatedBuffer indexBuffer{};
+    uint32_t        indexCount = 0;
 
     // Uniform buffers (one per frame in flight, CPU-visible for easy updates)
     std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> uniformBuffers{};
 
-    // Descriptors
+    // Texture (Phase 4)
+    VulkanTexture texture{};
+
+    // Descriptors (textured quad)
     VkDescriptorSetLayout descriptorSetLayout = nullptr;
     VkDescriptorPool      descriptorPool      = nullptr;
     std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets = {};
+
+    // ─── Model resources (Phase 5 — RHI) ─────────────────────────────────────
+    VkPipelineLayout modelPipelineLayout  = nullptr;
+    VkPipeline       modelPipeline        = nullptr;
+    VkDescriptorSetLayout modelDescriptorSetLayout = nullptr;
+    VkDescriptorPool      modelDescriptorPool      = nullptr;
+    // Per-frame UBOs for model rendering (shared across all meshes)
+    std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> modelUniformBuffers{};
+
+    // Fallback white texture for meshes without a diffuse texture
+    VulkanTexture whiteTexture{};
+
+    // Uploaded model data
+    std::unique_ptr<VulkanModelData> modelData;
+    bool hasModel = false;
 };

@@ -164,6 +164,7 @@ set(PROJECT_SOURCES
     src/vulkan/vk_renderer.cpp
     src/vulkan/vk_pipeline.cpp
     src/vulkan/vk_buffer.cpp
+    src/vulkan/vk_texture.cpp
     src/vulkan/vk_mem_alloc_impl.cpp
 )
 

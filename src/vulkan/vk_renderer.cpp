@@ -1,8 +1,13 @@
+#include <glad/glad.h>   // Must be before GLFW (pulled in by vk_context.h)
 #include "vk_renderer.h"
 #include "vk_pipeline.h"
+#include "vk_texture.h"
+#include "../model.h"
 #include <iostream>
 #include <limits>
 #include <cstring>
+#include <unordered_map>
+#include <set>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,19 +41,47 @@ void VulkanRenderer::cleanup() {
 
     vkDeviceWaitIdle(device);
 
-    // Sync objects
+    // Sync objects — per-swapchain-image renderFinished semaphores
+    for (auto& sem : renderFinishedSemaphores) {
+        if (sem) vkDestroySemaphore(device, sem, nullptr);
+    }
+    renderFinishedSemaphores.clear();
+
+    // Per-frame-in-flight semaphores + fences
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        if (renderFinishedSemaphores[i]) vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         if (imageAvailableSemaphores[i]) vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
         if (inFlightFences[i])           vkDestroyFence(device, inFlightFences[i], nullptr);
-        renderFinishedSemaphores[i] = nullptr;
         imageAvailableSemaphores[i] = nullptr;
         inFlightFences[i] = nullptr;
     }
 
-    // Triangle resources
+    // Model resources (Phase 5)
+    // Textures may be shared across meshes (cache), so deduplicate before destroying
+    if (allocator && modelData) {
+        std::set<VkImage> destroyedImages;
+        for (auto& meshGPU : modelData->meshes) {
+            if (meshGPU.diffuseTexture.image && destroyedImages.find(meshGPU.diffuseTexture.image) == destroyedImages.end()) {
+                destroyedImages.insert(meshGPU.diffuseTexture.image);
+                destroyTexture(allocator, device, meshGPU.diffuseTexture);
+            }
+            // VkMeshData destructor handles buffer cleanup via its unique_ptr
+        }
+        modelData.reset();
+    }
     if (allocator) {
+        destroyTexture(allocator, device, whiteTexture);
+        for (auto& ub : modelUniformBuffers) destroyBuffer(allocator, ub);
+    }
+    if (modelPipeline)       { vkDestroyPipeline(device, modelPipeline, nullptr);             modelPipeline = nullptr; }
+    if (modelPipelineLayout) { vkDestroyPipelineLayout(device, modelPipelineLayout, nullptr); modelPipelineLayout = nullptr; }
+    if (modelDescriptorPool) { vkDestroyDescriptorPool(device, modelDescriptorPool, nullptr); modelDescriptorPool = nullptr; }
+    if (modelDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, modelDescriptorSetLayout, nullptr); modelDescriptorSetLayout = nullptr; }
+
+    // Quad resources
+    if (allocator) {
+        destroyTexture(allocator, device, texture);
         destroyBuffer(allocator, vertexBuffer);
+        destroyBuffer(allocator, indexBuffer);
         for (auto& ub : uniformBuffers) destroyBuffer(allocator, ub);
     }
 
@@ -386,17 +419,29 @@ bool VulkanRenderer::createSyncObjects() {
 
     VkDevice device = ctx->getDevice();
 
+    // Per-frame-in-flight: imageAvailable semaphores + fences
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-            vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
             vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
             std::cerr << "[Vulkan] Failed to create sync objects for frame " << i << std::endl;
             return false;
         }
     }
 
+    // Per-swapchain-image: renderFinished semaphores
+    // This prevents the semaphore reuse issue when swapchain has more images
+    // than frames-in-flight (e.g. 3 images, 2 FIF).
+    uint32_t imageCount = static_cast<uint32_t>(ctx->getSwapchainImages().size());
+    renderFinishedSemaphores.resize(imageCount);
+    for (uint32_t i = 0; i < imageCount; i++) {
+        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to create renderFinished semaphore " << i << std::endl;
+            return false;
+        }
+    }
+
     std::cout << "[Vulkan] Sync objects created (" << MAX_FRAMES_IN_FLIGHT
-              << " frames in flight)" << std::endl;
+              << " frames in flight, " << imageCount << " swapchain images)" << std::endl;
     return true;
 }
 
@@ -461,13 +506,7 @@ bool VulkanRenderer::drawFrame() {
 
     vkCmdBeginRenderPass(cmd, &rpBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    // ── Draw the triangle ────────────────────────────────────────────────
-    // Bind pipeline, set dynamic viewport/scissor, bind vertex buffer,
-    // bind descriptor set (UBO), and draw 3 vertices.
-
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-    // Dynamic viewport and scissor (so we don't need to recreate pipeline on resize)
+    // Dynamic viewport and scissor (shared by both paths)
     VkExtent2D extent = ctx->getSwapchainExtent();
     VkViewport viewport{};
     viewport.x        = 0.0f;
@@ -483,13 +522,47 @@ bool VulkanRenderer::drawFrame() {
     scissor.extent = extent;
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-    // Bind vertex buffer
-    VkBuffer vertexBuffers[] = {vertexBuffer.buffer};
-    VkDeviceSize offsets[]   = {0};
-    vkCmdBindVertexBuffers(cmd, 0, 1, vertexBuffers, offsets);
+    if (hasModel && modelData) {
+        // ── Model rendering path (Phase 5) ──────────────────────────────────
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
 
-    // Update and bind the UBO for this frame
-    {
+        // Update the model UBO
+        float time = static_cast<float>(glfwGetTime());
+        float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+
+        MVPUniform ubo{};
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        ubo.view  = glm::lookAt(glm::vec3(0.0f, 1.0f, 3.0f), glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        ubo.proj  = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+        ubo.proj[1][1] *= -1;
+
+        void* mapped;
+        vmaMapMemory(allocator, modelUniformBuffers[currentFrame].allocation, &mapped);
+        memcpy(mapped, &ubo, sizeof(ubo));
+        vmaUnmapMemory(allocator, modelUniformBuffers[currentFrame].allocation);
+
+        // Draw each mesh with its own descriptor set (different textures)
+        for (auto& meshGPU : modelData->meshes) {
+            VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
+            VkDeviceSize voffsets[] = {0};
+            vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
+            vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                    0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
+
+            vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+        }
+    } else {
+        // ── Textured quad fallback (Phase 4) ────────────────────────────────
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+        VkBuffer quadVBufs[] = {vertexBuffer.buffer};
+        VkDeviceSize quadOffsets[] = {0};
+        vkCmdBindVertexBuffers(cmd, 0, 1, quadVBufs, quadOffsets);
+        vkCmdBindIndexBuffer(cmd, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+
+        // Update quad UBO
         float time = static_cast<float>(glfwGetTime());
         float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
 
@@ -497,25 +570,25 @@ bool VulkanRenderer::drawFrame() {
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.proj  = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
-        ubo.proj[1][1] *= -1; // Vulkan Y is flipped vs OpenGL
+        ubo.proj[1][1] *= -1;
 
         void* mapped;
         vmaMapMemory(allocator, uniformBuffers[currentFrame].allocation, &mapped);
         memcpy(mapped, &ubo, sizeof(ubo));
         vmaUnmapMemory(allocator, uniformBuffers[currentFrame].allocation);
+
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+                                0, 1, &descriptorSets[currentFrame], 0, nullptr);
+
+        vkCmdDrawIndexed(cmd, indexCount, 1, 0, 0, 0);
     }
-
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-                            0, 1, &descriptorSets[currentFrame], 0, nullptr);
-
-    vkCmdDraw(cmd, 3, 1, 0, 0); // 3 vertices, 1 instance
 
     vkCmdEndRenderPass(cmd);
     vkEndCommandBuffer(cmd);
 
     // 4. Submit command buffer
     VkSemaphore waitSemaphores[]   = {imageAvailableSemaphores[currentFrame]};
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
     VkSubmitInfo submitInfo{};
@@ -558,32 +631,57 @@ bool VulkanRenderer::drawFrame() {
 // ─── Resize ──────────────────────────────────────────────────────────────────
 
 bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
-    vkDeviceWaitIdle(ctx->getDevice());
+    VkDevice device = ctx->getDevice();
+    vkDeviceWaitIdle(device);
 
     cleanupFramebuffers();
     cleanupDepthResources();
+
+    // Destroy old per-swapchain-image semaphores before recreating swapchain
+    for (auto& sem : renderFinishedSemaphores) {
+        if (sem) vkDestroySemaphore(device, sem, nullptr);
+    }
+    renderFinishedSemaphores.clear();
 
     if (!ctx->recreateSwapchain(width, height)) return false;
     if (!createDepthResources())                return false;
     if (!createFramebuffers())                  return false;
 
+    // Recreate renderFinished semaphores for new swapchain image count
+    uint32_t imageCount = static_cast<uint32_t>(ctx->getSwapchainImages().size());
+    renderFinishedSemaphores.resize(imageCount);
+    VkSemaphoreCreateInfo semInfo{};
+    semInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    for (uint32_t i = 0; i < imageCount; i++) {
+        if (vkCreateSemaphore(device, &semInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to recreate renderFinished semaphore" << std::endl;
+            return false;
+        }
+    }
+
     std::cout << "[Vulkan] Resized to " << width << "x" << height << std::endl;
     return true;
 }
 
-// ─── Triangle Resources ──────────────────────────────────────────────────────
+// ─── Quad Resources (Phase 4) ────────────────────────────────────────────────
 //
-// This sets up everything needed to draw a colored triangle:
+// This sets up everything needed to draw a textured quad:
 //   - VMA allocator for memory management
-//   - Vertex buffer with 3 colored vertices (uploaded via staging)
+//   - Vertex buffer with 4 vertices (position + UV), uploaded via staging
+//   - Index buffer with 6 indices (2 triangles), uploaded via staging
+//   - Texture loaded from disk (VkImage + VkImageView + VkSampler)
 //   - Uniform buffers for the MVP matrix (one per frame in flight)
-//   - Descriptor set layout, pool, and sets to bind the UBO to the shader
-//   - Graphics pipeline
+//   - Descriptor set layout, pool, and sets to bind UBO + texture to shaders
+//   - Graphics pipeline for textured rendering
+//
+// Index buffers let us reuse vertices. A quad has 4 unique corners but needs
+// 6 vertices (2 triangles). Without an index buffer we'd duplicate 2 vertices.
+// With complex meshes the savings are huge — a cube goes from 36 to 8 vertices.
 
-// Same struct as in vk_pipeline.cpp — must match the shader's vertex input
-struct TriangleVertex {
+// Must match the shader's vertex input and TexturedVertex in vk_pipeline.cpp
+struct QuadVertex {
     glm::vec3 position;
-    glm::vec3 color;
+    glm::vec2 texCoord;
 };
 
 bool VulkanRenderer::createTriangleResources() {
@@ -594,12 +692,13 @@ bool VulkanRenderer::createTriangleResources() {
     if (!allocator) return false;
     std::cout << "[Vulkan] VMA allocator created" << std::endl;
 
-    // 2. Upload triangle vertices via staging buffer
-    //    RGB triangle at the origin
-    TriangleVertex vertices[] = {
-        {{ 0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}}, // bottom — red
-        {{ 0.5f,  0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}}, // right  — green
-        {{-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}, // left   — blue
+    // 2. Upload quad vertices via staging buffer
+    //    A flat quad in the XY plane with UV coordinates
+    QuadVertex vertices[] = {
+        {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}}, // bottom-left
+        {{ 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}}, // bottom-right
+        {{ 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f}}, // top-right
+        {{-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f}}, // top-left
     };
 
     vertexBuffer = createBufferWithStaging(
@@ -608,9 +707,39 @@ bool VulkanRenderer::createTriangleResources() {
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
     if (!vertexBuffer.buffer) return false;
-    std::cout << "[Vulkan] Triangle vertex buffer uploaded" << std::endl;
+    std::cout << "[Vulkan] Quad vertex buffer uploaded" << std::endl;
 
-    // 3. Create uniform buffers (CPU-visible, one per frame in flight)
+    // 3. Upload index buffer via staging
+    //    Two triangles: (0,1,2) and (0,2,3) = bottom-left → bottom-right →
+    //    top-right, then bottom-left → top-right → top-left
+    uint16_t indices[] = {0, 1, 2, 0, 2, 3};
+    indexCount = 6;
+
+    indexBuffer = createBufferWithStaging(
+        allocator, device, commandPool, ctx->getGraphicsQueue(),
+        indices, sizeof(indices),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
+    if (!indexBuffer.buffer) return false;
+    std::cout << "[Vulkan] Quad index buffer uploaded" << std::endl;
+
+    // 4. Load texture from disk
+    texture = loadTexture(
+        allocator, device, ctx->getPhysicalDevice(),
+        commandPool, ctx->getGraphicsQueue(),
+        "assets/wooden_texture.png");
+
+    if (!texture.image) {
+        std::cerr << "[Vulkan] Failed to load texture, falling back to block.png" << std::endl;
+        texture = loadTexture(
+            allocator, device, ctx->getPhysicalDevice(),
+            commandPool, ctx->getGraphicsQueue(),
+            "assets/block.png");
+    }
+
+    if (!texture.image) return false;
+
+    // 5. Create uniform buffers (CPU-visible, one per frame in flight)
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         uniformBuffers[i] = createBuffer(
             allocator, sizeof(MVPUniform),
@@ -641,37 +770,59 @@ bool VulkanRenderer::createTriangleResources() {
 bool VulkanRenderer::createDescriptorSets() {
     VkDevice device = ctx->getDevice();
 
-    // 1. Descriptor set layout — one UBO at binding 0, visible in vertex shader
-    VkDescriptorSetLayoutBinding uboBinding{};
-    uboBinding.binding            = 0;
-    uboBinding.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboBinding.descriptorCount    = 1;
-    uboBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
+    // ── 1. Descriptor set layout ────────────────────────────────────────────
+    //
+    // Now we have TWO bindings:
+    //   binding 0: UBO (MVP matrices) — used by vertex shader
+    //   binding 1: Combined image sampler (texture) — used by fragment shader
+    //
+    // A "combined image sampler" bundles the VkImageView and VkSampler into
+    // one descriptor. This is the most common way to pass textures in Vulkan
+    // (equivalent to a sampler2D uniform in OpenGL/GLSL).
+
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+
+    // Binding 0: UBO
+    bindings[0].binding            = 0;
+    bindings[0].descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[0].descriptorCount    = 1;
+    bindings[0].stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
+
+    // Binding 1: Combined image sampler
+    bindings[1].binding            = 1;
+    bindings[1].descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[1].descriptorCount    = 1;
+    bindings[1].stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings    = &uboBinding;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings    = bindings.data();
 
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         std::cerr << "[Vulkan] Failed to create descriptor set layout" << std::endl;
         return false;
     }
 
-    // 2. Create the graphics pipeline (needs the descriptor set layout)
-    if (!createTrianglePipeline(device, renderPass, descriptorSetLayout, pipelineLayout, pipeline)) {
+    // ── 2. Create the graphics pipeline (needs the descriptor set layout) ───
+    if (!createTexturedPipeline(device, renderPass, descriptorSetLayout, pipelineLayout, pipeline)) {
         return false;
     }
 
-    // 3. Descriptor pool
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
+    // ── 3. Descriptor pool ──────────────────────────────────────────────────
+    //
+    // The pool must have enough capacity for ALL descriptor types we'll use.
+    // We need MAX_FRAMES_IN_FLIGHT UBOs + MAX_FRAMES_IN_FLIGHT samplers.
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+    poolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
+    poolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes    = &poolSize;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes    = poolSizes.data();
     poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -679,7 +830,7 @@ bool VulkanRenderer::createDescriptorSets() {
         return false;
     }
 
-    // 4. Allocate descriptor sets
+    // ── 4. Allocate descriptor sets ─────────────────────────────────────────
     std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
     layouts.fill(descriptorSetLayout);
 
@@ -694,24 +845,357 @@ bool VulkanRenderer::createDescriptorSets() {
         return false;
     }
 
-    // 5. Point each descriptor set at its uniform buffer
+    // ── 5. Update each descriptor set with UBO + texture ────────────────────
+    //
+    // Each frame-in-flight gets its own descriptor set pointing to:
+    //   - Its own uniform buffer (different MVP data per frame)
+    //   - The SAME texture (textures don't change per frame here)
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        // UBO descriptor
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[i].buffer;
         bufferInfo.offset = 0;
         bufferInfo.range  = sizeof(MVPUniform);
 
-        VkWriteDescriptorSet write{};
-        write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet          = descriptorSets[i];
-        write.dstBinding      = 0;
-        write.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write.descriptorCount = 1;
-        write.pBufferInfo     = &bufferInfo;
+        // Texture descriptor — combines the image view and sampler
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView   = texture.imageView;
+        imageInfo.sampler     = texture.sampler;
 
-        vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+        std::array<VkWriteDescriptorSet, 2> writes{};
+
+        // Write 0: UBO at binding 0
+        writes[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[0].dstSet          = descriptorSets[i];
+        writes[0].dstBinding      = 0;
+        writes[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        writes[0].descriptorCount = 1;
+        writes[0].pBufferInfo     = &bufferInfo;
+
+        // Write 1: Texture at binding 1
+        writes[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[1].dstSet          = descriptorSets[i];
+        writes[1].dstBinding      = 1;
+        writes[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writes[1].descriptorCount = 1;
+        writes[1].pImageInfo      = &imageInfo;
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()),
+                               writes.data(), 0, nullptr);
     }
 
-    std::cout << "[Vulkan] Descriptor sets created and bound" << std::endl;
+    std::cout << "[Vulkan] Descriptor sets created (UBO + texture sampler)" << std::endl;
+    return true;
+}
+
+// ─── Model Pipeline & Descriptors (Phase 5) ─────────────────────────────────
+//
+// Creates the model rendering pipeline and a 1x1 white fallback texture.
+// The descriptor pool is sized dynamically based on the model's mesh count
+// in loadModel(). This method sets up everything except per-mesh descriptors.
+
+bool VulkanRenderer::createModelPipelineAndDescriptors() {
+    VkDevice device = ctx->getDevice();
+
+    // Descriptor set layout — same bindings as textured quad (UBO + sampler)
+    // but reused for each mesh with different textures.
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+    bindings[0].binding            = 0;
+    bindings[0].descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[0].descriptorCount    = 1;
+    bindings[0].stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
+    bindings[1].binding            = 1;
+    bindings[1].descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[1].descriptorCount    = 1;
+    bindings[1].stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings    = bindings.data();
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &modelDescriptorSetLayout) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create model descriptor set layout" << std::endl;
+        return false;
+    }
+
+    // Create model pipeline
+    if (!createModelPipeline(device, renderPass, modelDescriptorSetLayout,
+                             modelPipelineLayout, modelPipeline)) {
+        return false;
+    }
+
+    // Create per-frame uniform buffers for model rendering
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        modelUniformBuffers[i] = createBuffer(
+            allocator, sizeof(MVPUniform),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU);
+        if (!modelUniformBuffers[i].buffer) return false;
+    }
+
+    // Create a 1x1 white fallback texture for meshes without a diffuse texture.
+    // This avoids needing a separate "no texture" pipeline — we just bind white.
+    uint8_t whitePixel[] = {255, 255, 255, 255};
+
+    // Create staging buffer with white pixel
+    AllocatedBuffer staging = createBuffer(
+        allocator, 4, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+    void* mapped;
+    vmaMapMemory(allocator, staging.allocation, &mapped);
+    memcpy(mapped, whitePixel, 4);
+    vmaUnmapMemory(allocator, staging.allocation);
+
+    // Create 1x1 VkImage
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent        = {1, 1, 1};
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.format        = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+
+    VmaAllocationCreateInfo allocCreateInfo{};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    vmaCreateImage(allocator, &imageInfo, &allocCreateInfo,
+                   &whiteTexture.image, &whiteTexture.allocation, nullptr);
+    whiteTexture.width = 1;
+    whiteTexture.height = 1;
+
+    // Transition + copy + transition (reuse one-shot command pattern)
+    // UNDEFINED → TRANSFER_DST
+    {
+        VkCommandBuffer cmd;
+        VkCommandBufferAllocateInfo cmdAlloc{};
+        cmdAlloc.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        cmdAlloc.commandPool = commandPool;
+        cmdAlloc.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cmdAlloc.commandBufferCount = 1;
+        vkAllocateCommandBuffers(device, &cmdAlloc, &cmd);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmd, &beginInfo);
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = whiteTexture.image;
+        barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        VkBufferImageCopy region{};
+        region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+        region.imageExtent = {1, 1, 1};
+        vkCmdCopyBufferToImage(cmd, staging.buffer, whiteTexture.image,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        vkEndCommandBuffer(cmd);
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &cmd;
+        vkQueueSubmit(ctx->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(ctx->getGraphicsQueue());
+        vkFreeCommandBuffers(device, commandPool, 1, &cmd);
+    }
+    destroyBuffer(allocator, staging);
+
+    // Image view
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = whiteTexture.image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    viewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    vkCreateImageView(device, &viewInfo, nullptr, &whiteTexture.imageView);
+
+    // Sampler
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_NEAREST;
+    samplerInfo.minFilter = VK_FILTER_NEAREST;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    vkCreateSampler(device, &samplerInfo, nullptr, &whiteTexture.sampler);
+
+    std::cout << "[Vulkan] Model pipeline and white fallback texture created" << std::endl;
+    return true;
+}
+
+// ─── Load Model ──────────────────────────────────────────────────────────────
+//
+// Takes a Model* (already loaded by Assimp with OpenGL textures) and creates
+// Vulkan-side GPU resources for each mesh:
+//   1. Upload vertex/index data to VkBuffers via VkMeshData (RHI)
+//   2. Load diffuse textures as VulkanTexture (or use white fallback)
+//   3. Create per-mesh descriptor sets pointing to UBO + texture
+//
+// This demonstrates the RHI in action: the Model's CPU-side vertex/index
+// data (same std::vectors used by GLMeshData) gets uploaded to Vulkan
+// through VkMeshData. Same data, different backend.
+
+bool VulkanRenderer::loadModel(Model* model) {
+    if (!model || !allocator) {
+        std::cerr << "[Vulkan] loadModel: null model or allocator" << std::endl;
+        return false;
+    }
+    VkDevice device = ctx->getDevice();
+
+    std::cout << "[Vulkan] loadModel: " << model->meshes.size() << " meshes to upload" << std::endl;
+
+    // Create model pipeline if not yet created
+    if (!modelPipeline) {
+        if (!createModelPipelineAndDescriptors()) {
+            std::cerr << "[Vulkan] loadModel: failed to create model pipeline" << std::endl;
+            return false;
+        }
+    }
+
+    modelData = std::make_unique<VulkanModelData>();
+    uint32_t meshCount = static_cast<uint32_t>(model->meshes.size());
+
+    // Create descriptor pool sized for this model
+    // Each mesh needs MAX_FRAMES_IN_FLIGHT descriptor sets (UBO + sampler each)
+    uint32_t totalSets = meshCount * MAX_FRAMES_IN_FLIGHT;
+
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+    poolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = totalSets;
+    poolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = totalSets;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes    = poolSizes.data();
+    poolInfo.maxSets       = totalSets;
+
+    if (modelDescriptorPool) {
+        vkDestroyDescriptorPool(device, modelDescriptorPool, nullptr);
+    }
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &modelDescriptorPool) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create model descriptor pool" << std::endl;
+        return false;
+    }
+
+    modelData->meshes.resize(meshCount);
+
+    // Texture cache — avoid loading the same file multiple times.
+    // Shared textures are cleaned up once via the cache; per-mesh
+    // diffuseTexture fields that reference cached textures are NOT
+    // individually destroyed (see cleanup).
+    std::unordered_map<std::string, VulkanTexture> textureCache;
+
+    for (uint32_t m = 0; m < meshCount; m++) {
+        Mesh& mesh = model->meshes[m];
+        VulkanMeshGPUData& gpuMesh = modelData->meshes[m];
+
+        // 1. Upload mesh buffers via RHI (VkMeshData)
+        gpuMesh.buffers = std::make_unique<VkMeshData>();
+        std::cout << "[Vulkan] Mesh " << m << ": " << mesh.vertices.size()
+                  << " verts, " << mesh.indices.size() << " indices" << std::endl;
+        gpuMesh.buffers->setup(allocator, device, commandPool,
+                               ctx->getGraphicsQueue(),
+                               mesh.vertices, mesh.indices);
+
+        // 2. Load diffuse texture (cached by path to avoid duplicate uploads)
+        bool hasDiffuse = false;
+        for (const auto& tex : mesh.textures) {
+            if (tex.type == "texture_diffuse") {
+                std::string texPath = model->directory + "/" + tex.path;
+                auto it = textureCache.find(texPath);
+                if (it != textureCache.end()) {
+                    gpuMesh.diffuseTexture = it->second;
+                    hasDiffuse = true;
+                } else {
+                    gpuMesh.diffuseTexture = loadTexture(
+                        allocator, device, ctx->getPhysicalDevice(),
+                        commandPool, ctx->getGraphicsQueue(), texPath);
+                    if (gpuMesh.diffuseTexture.image) {
+                        textureCache[texPath] = gpuMesh.diffuseTexture;
+                        hasDiffuse = true;
+                    }
+                }
+                break;
+            }
+        }
+
+        // Determine which texture to use for descriptors
+        VulkanTexture& texToUse = hasDiffuse ? gpuMesh.diffuseTexture : whiteTexture;
+
+        // 3. Allocate and update descriptor sets for this mesh
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+        layouts.fill(modelDescriptorSetLayout);
+
+        VkDescriptorSetAllocateInfo dsAllocInfo{};
+        dsAllocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        dsAllocInfo.descriptorPool     = modelDescriptorPool;
+        dsAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        dsAllocInfo.pSetLayouts        = layouts.data();
+
+        VkResult dsResult = vkAllocateDescriptorSets(device, &dsAllocInfo, gpuMesh.descriptorSets.data());
+        if (dsResult != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to allocate descriptor sets for mesh " << m
+                      << " (result: " << dsResult << ")" << std::endl;
+            return false;
+        }
+        std::cout << "[Vulkan] Mesh " << m << " descriptors allocated" << std::endl;
+
+        for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+            VkDescriptorBufferInfo bufInfo{};
+            bufInfo.buffer = modelUniformBuffers[f].buffer;
+            bufInfo.offset = 0;
+            bufInfo.range  = sizeof(MVPUniform);
+
+            VkDescriptorImageInfo imgInfo{};
+            imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imgInfo.imageView   = texToUse.imageView;
+            imgInfo.sampler     = texToUse.sampler;
+
+            std::array<VkWriteDescriptorSet, 2> writes{};
+            writes[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[0].dstSet          = gpuMesh.descriptorSets[f];
+            writes[0].dstBinding      = 0;
+            writes[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            writes[0].descriptorCount = 1;
+            writes[0].pBufferInfo     = &bufInfo;
+
+            writes[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[1].dstSet          = gpuMesh.descriptorSets[f];
+            writes[1].dstBinding      = 1;
+            writes[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[1].descriptorCount = 1;
+            writes[1].pImageInfo      = &imgInfo;
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()),
+                                   writes.data(), 0, nullptr);
+        }
+    }
+
+    hasModel = true;
+    std::cout << "[Vulkan] Model loaded: " << meshCount << " meshes" << std::endl;
     return true;
 }

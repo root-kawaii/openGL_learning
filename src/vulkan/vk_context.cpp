@@ -72,9 +72,13 @@ bool VulkanContext::init(int width, int height) {
     // based on our requirements (Vulkan 1.2, can present to our surface).
     // On macOS with MoltenVK, the portability subset is auto-enabled.
 
+    VkPhysicalDeviceFeatures requiredFeatures{};
+    requiredFeatures.samplerAnisotropy = VK_TRUE;
+
     auto phys_selector = vkb::PhysicalDeviceSelector(vkb_inst)
         .set_surface(surface)
         .set_minimum_version(1, 2)
+        .set_required_features(requiredFeatures)
         .prefer_gpu_device_type(vkb::PreferredDeviceType::discrete)
         .select();
 
