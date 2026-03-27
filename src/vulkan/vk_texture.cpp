@@ -316,6 +316,190 @@ VulkanTexture loadTexture(
     return texture;
 }
 
+// ─── Cubemap Loading ─────────────────────────────────────────────────────────
+
+VulkanTexture loadCubemap(
+    VmaAllocator allocator,
+    VkDevice device,
+    VkPhysicalDevice physicalDevice,
+    VkCommandPool commandPool,
+    VkQueue queue,
+    const std::array<std::string, 6>& faces)
+{
+    VulkanTexture tex{};
+
+    // 1. Load all 6 faces and verify they have the same dimensions
+    int width = 0, height = 0;
+    std::array<unsigned char*, 6> pixels{};
+
+    for (int i = 0; i < 6; i++) {
+        int w, h, ch;
+        pixels[i] = stbi_load(faces[i].c_str(), &w, &h, &ch, 4); // force RGBA
+        if (!pixels[i]) {
+            std::cerr << "[Vulkan] Failed to load cubemap face: " << faces[i] << std::endl;
+            for (int j = 0; j < i; j++) stbi_image_free(pixels[j]);
+            return tex;
+        }
+        if (i == 0) { width = w; height = h; }
+        else if (w != width || h != height) {
+            std::cerr << "[Vulkan] Cubemap face size mismatch: " << faces[i] << std::endl;
+            for (int j = 0; j <= i; j++) stbi_image_free(pixels[j]);
+            return tex;
+        }
+    }
+
+    tex.width  = static_cast<uint32_t>(width);
+    tex.height = static_cast<uint32_t>(height);
+    VkDeviceSize faceSize  = width * height * 4;
+    VkDeviceSize totalSize = faceSize * 6;
+
+    // 2. Create staging buffer with all 6 faces packed sequentially
+    AllocatedBuffer staging = createBuffer(
+        allocator, totalSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+
+    void* mapped;
+    vmaMapMemory(allocator, staging.allocation, &mapped);
+    for (int i = 0; i < 6; i++) {
+        memcpy(static_cast<char*>(mapped) + i * faceSize, pixels[i], faceSize);
+        stbi_image_free(pixels[i]);
+    }
+    vmaUnmapMemory(allocator, staging.allocation);
+
+    // 3. Create cube image (6 array layers)
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent        = {tex.width, tex.height, 1};
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 6;
+    imageInfo.format        = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.flags         = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+    VmaAllocationCreateInfo allocCreateInfo{};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    if (vmaCreateImage(allocator, &imageInfo, &allocCreateInfo,
+                        &tex.image, &tex.allocation, nullptr) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create cubemap image" << std::endl;
+        destroyBuffer(allocator, staging);
+        return tex;
+    }
+
+    // 4. Transition, copy, transition — all in one command buffer
+    VkCommandBufferAllocateInfo cmdAllocInfo{};
+    cmdAllocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cmdAllocInfo.commandPool        = commandPool;
+    cmdAllocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cmdAllocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmd;
+    vkAllocateCommandBuffers(device, &cmdAllocInfo, &cmd);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &beginInfo);
+
+    // Transition UNDEFINED → TRANSFER_DST (all 6 layers)
+    VkImageMemoryBarrier barrier{};
+    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image                           = tex.image;
+    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel   = 0;
+    barrier.subresourceRange.levelCount     = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount     = 6;
+    barrier.srcAccessMask                   = 0;
+    barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+    vkCmdPipelineBarrier(cmd,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    // Copy each face from staging buffer to the corresponding array layer
+    std::array<VkBufferImageCopy, 6> regions{};
+    for (int i = 0; i < 6; i++) {
+        regions[i].bufferOffset      = i * faceSize;
+        regions[i].bufferRowLength   = 0;
+        regions[i].bufferImageHeight = 0;
+        regions[i].imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        regions[i].imageSubresource.mipLevel       = 0;
+        regions[i].imageSubresource.baseArrayLayer = i;
+        regions[i].imageSubresource.layerCount     = 1;
+        regions[i].imageOffset = {0, 0, 0};
+        regions[i].imageExtent = {tex.width, tex.height, 1};
+    }
+
+    vkCmdCopyBufferToImage(cmd, staging.buffer, tex.image,
+                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                            6, regions.data());
+
+    // Transition TRANSFER_DST → SHADER_READ_ONLY (all 6 layers)
+    barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(cmd,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers    = &cmd;
+    vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(queue);
+
+    vkFreeCommandBuffers(device, commandPool, 1, &cmd);
+    destroyBuffer(allocator, staging);
+
+    // 5. Create cube image view
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image                           = tex.image;
+    viewInfo.viewType                        = VK_IMAGE_VIEW_TYPE_CUBE;
+    viewInfo.format                          = VK_FORMAT_R8G8B8A8_SRGB;
+    viewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel   = 0;
+    viewInfo.subresourceRange.levelCount     = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount     = 6;
+
+    if (vkCreateImageView(device, &viewInfo, nullptr, &tex.imageView) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create cubemap image view" << std::endl;
+        return tex;
+    }
+
+    // 6. Sampler
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter    = VK_FILTER_LINEAR;
+    samplerInfo.minFilter    = VK_FILTER_LINEAR;
+    samplerInfo.mipmapMode   = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &tex.sampler) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create cubemap sampler" << std::endl;
+        return tex;
+    }
+
+    std::cout << "[Vulkan] Cubemap loaded (" << width << "x" << height << ")" << std::endl;
+    return tex;
+}
+
 void destroyTexture(VmaAllocator allocator, VkDevice device, VulkanTexture& texture) {
     if (texture.sampler)   { vkDestroySampler(device, texture.sampler, nullptr);     texture.sampler = VK_NULL_HANDLE; }
     if (texture.imageView) { vkDestroyImageView(device, texture.imageView, nullptr); texture.imageView = VK_NULL_HANDLE; }

@@ -114,7 +114,7 @@ int main()
       std::cout << "[Vulkan] Ready — toggle with checkbox in ENGINE mode" << std::endl;
 
       // Load a model for Vulkan rendering (Phase 5 — RHI verification)
-      static auto vulkanModel = std::make_shared<Model>("assets/backpack/backpack.obj");
+      static auto vulkanModel = std::make_shared<Model>("assets/mech_drone.glb");
       if (vulkanRenderer.loadModel(vulkanModel.get())) {
         std::cout << "[Vulkan] Model loaded for Vulkan rendering" << std::endl;
       } else {
@@ -166,7 +166,7 @@ int main()
     renderManager->setViewMatrix(view);
     renderManager->setProjectionMatrix(projection);
     // audioManager.loopAudio();
-    // Start ImGui frame
+    // Start ImGui frame (OpenGL context — Vulkan has its own in drawFrame)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -232,12 +232,53 @@ int main()
         vulkanContext.hideWindow();
         glfwSetWindowShouldClose(vulkanContext.getWindow(), GLFW_FALSE);
       } else {
+        // Feed camera matrices to Vulkan renderer, with correct aspect ratio
+        vulkanRenderer.setViewMatrix(view);
+        int vkW, vkH;
+        glfwGetFramebufferSize(vulkanContext.getWindow(), &vkW, &vkH);
+        if (vkW > 0 && vkH > 0) {
+          glm::mat4 vkProjection = glm::perspective(
+              glm::radians(game->camera.Zoom),
+              static_cast<float>(vkW) / static_cast<float>(vkH),
+              near_plane, far_plane);
+          vulkanRenderer.setProjectionMatrix(vkProjection);
+        } else {
+          vulkanRenderer.setProjectionMatrix(projection);
+        }
+        // Scale down mech_drone and stand upright
+        glm::mat4 modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        modelTransform = glm::rotate(modelTransform, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        modelTransform = glm::scale(modelTransform, glm::vec3(0.00002f));
+        vulkanRenderer.setModelTransform(modelTransform);
+
         if (!vulkanRenderer.drawFrame()) {
           int w, h;
           glfwGetFramebufferSize(vulkanContext.getWindow(), &w, &h);
           if (w > 0 && h > 0) {
             vulkanRenderer.handleResize(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
           }
+        }
+
+        // Mouse picking on Vulkan window (left click, single-shot)
+        {
+          static bool wasPressed = false;
+          bool isPressed = glfwGetMouseButton(vulkanContext.getWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+          if (isPressed && !wasPressed) {
+            double mx, my;
+            glfwGetCursorPos(vulkanContext.getWindow(), &mx, &my);
+
+            // Scale screen coords → framebuffer pixels (Retina = 2x)
+            int winW, winH;
+            glfwGetWindowSize(vulkanContext.getWindow(), &winW, &winH);
+            float scaleX = static_cast<float>(vkW) / static_cast<float>(winW);
+            float scaleY = static_cast<float>(vkH) / static_cast<float>(winH);
+            int px = static_cast<int>(mx * scaleX);
+            int py = static_cast<int>(my * scaleY);
+
+            uint32_t pickedID = vulkanRenderer.getObjectIdAtPixel(px, py);
+            std::cout << "[Vulkan] Pick at (" << px << "," << py << ") -> ID " << pickedID << std::endl;
+          }
+          wasPressed = isPressed;
         }
       }
 

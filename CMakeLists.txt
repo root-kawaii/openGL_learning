@@ -126,6 +126,8 @@ set(IMGUI_BACKENDS
     "${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
     "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
     "${IMGUI_DIR}/backends/imgui_impl_glfw.h"
+    "${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_vulkan.h"
 )
 
 # Check if backend files exist before adding them
@@ -175,9 +177,9 @@ set(VK_BOOTSTRAP_SOURCES
 
 # --------- ImGui backend files (only the ones you need) ---------
 set(IMGUI_BACKEND_SOURCES
-    # Add these only if you're using ImGui with OpenGL + GLFW
     include/imgui/backends/imgui_impl_opengl3.cpp
     include/imgui/backends/imgui_impl_glfw.cpp
+    include/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 # --------- Add executable ---------

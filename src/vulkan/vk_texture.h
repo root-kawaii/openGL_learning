@@ -47,5 +47,16 @@ VulkanTexture loadTexture(
     VkQueue       queue,
     const std::string& filepath);
 
+// Load a cubemap from 6 face images (right, left, top, bottom, front, back).
+// Creates a VK_IMAGE_TYPE_2D with VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+// 6 array layers, and a VK_IMAGE_VIEW_TYPE_CUBE view.
+VulkanTexture loadCubemap(
+    VmaAllocator  allocator,
+    VkDevice      device,
+    VkPhysicalDevice physicalDevice,
+    VkCommandPool commandPool,
+    VkQueue       queue,
+    const std::array<std::string, 6>& faces);
+
 // Destroy all texture resources
 void destroyTexture(VmaAllocator allocator, VkDevice device, VulkanTexture& texture);
