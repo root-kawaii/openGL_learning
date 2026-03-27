@@ -75,7 +75,7 @@ void Game::update()
     ImGui::Text("FPS %f", 1 / deltaTime);
     lastFrame = currentFrame;
 
-    inputManager.processInput(this, window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
+    inputManager.processInput(this, inputWindow ? inputWindow : window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
 
     // --- Phase 1: Object Movement (pre-collision) ---
     auto gameObjects = scene->getGameObjects();

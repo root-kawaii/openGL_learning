@@ -111,15 +111,15 @@ int main()
   if (vulkanContext.init(game->SCR_WIDTH, game->SCR_HEIGHT)) {
     if (vulkanRenderer.init(&vulkanContext)) {
       vulkanReady = true;
-      std::cout << "[Vulkan] Ready — toggle with checkbox in ENGINE mode" << std::endl;
-
-      // Load a model for Vulkan rendering (Phase 5 — RHI verification)
-      static auto vulkanModel = std::make_shared<Model>("assets/mech_drone.glb");
-      if (vulkanRenderer.loadModel(vulkanModel.get())) {
-        std::cout << "[Vulkan] Model loaded for Vulkan rendering" << std::endl;
-      } else {
-        std::cerr << "[Vulkan] Failed to load model for Vulkan" << std::endl;
-      }
+      useVulkan   = true;  // Start in Vulkan mode immediately
+      vulkanContext.showWindow();
+      glfwHideWindow(game->getWindow());  // OpenGL window hidden — Vulkan is primary
+      // Mirror input callbacks onto the Vulkan window so camera/keys work there
+      game->registerInputCallbacksOnWindow(vulkanContext.getWindow());
+      game->setInputWindow(vulkanContext.getWindow());
+      std::cout << "[Vulkan] Ready — rendering active" << std::endl;
+      // Load the actual game scene into Vulkan
+      vulkanRenderer.loadScene(game->getScene());
     }
   }
 
@@ -149,7 +149,8 @@ int main()
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
-  while (!glfwWindowShouldClose(game->getWindow()))
+  while (!glfwWindowShouldClose(game->getWindow()) &&
+         !(useVulkan && vulkanReady && glfwWindowShouldClose(vulkanContext.getWindow())))
   {
     uiManager->screenHeight = game->SCR_HEIGHT;
     uiManager->screenWidth = game->SCR_WIDTH;
@@ -209,8 +210,17 @@ int main()
         bool prev = useVulkan;
         ImGui::Checkbox("Use Vulkan Renderer", &useVulkan);
         if (useVulkan != prev) {
-          if (useVulkan) vulkanContext.showWindow();
-          else           vulkanContext.hideWindow();
+          if (useVulkan) {
+            vulkanContext.showWindow();
+            glfwHideWindow(game->getWindow());
+            game->registerInputCallbacksOnWindow(vulkanContext.getWindow());
+            game->setInputWindow(vulkanContext.getWindow());
+          } else {
+            vulkanContext.hideWindow();
+            glfwShowWindow(game->getWindow());
+            game->setInputWindow(nullptr);  // Revert to main OpenGL window
+            glfwSetInputMode(game->getWindow(), GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+          }
         }
       } else {
         ImGui::TextDisabled("Vulkan not available");
@@ -225,13 +235,7 @@ int main()
     if (useVulkan)
     {
       // ─── Vulkan rendering path ─────────────────────────────────────────
-      // For now, just clear the screen. ImGui still renders via OpenGL on top.
-      // Check if user closed the Vulkan window
-      if (glfwWindowShouldClose(vulkanContext.getWindow())) {
-        useVulkan = false;
-        vulkanContext.hideWindow();
-        glfwSetWindowShouldClose(vulkanContext.getWindow(), GLFW_FALSE);
-      } else {
+      {
         // Feed camera matrices to Vulkan renderer, with correct aspect ratio
         vulkanRenderer.setViewMatrix(view);
         int vkW, vkH;
@@ -245,18 +249,6 @@ int main()
         } else {
           vulkanRenderer.setProjectionMatrix(projection);
         }
-        // Persistent model transform — initialized once, then owned by the gizmo.
-        // We read it back each frame so the gizmo's changes survive across frames.
-        static bool vulkanModelInitialized = false;
-        if (!vulkanModelInitialized) {
-          glm::mat4 modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-          modelTransform = glm::rotate(modelTransform, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-          modelTransform = glm::scale(modelTransform, glm::vec3(0.00002f));
-          vulkanRenderer.setModelTransform(modelTransform);
-          vulkanModelInitialized = true;
-        }
-        // The gizmo may have modified the transform inside drawFrame — no need to set it again.
-
         if (!vulkanRenderer.drawFrame()) {
           int w, h;
           glfwGetFramebufferSize(vulkanContext.getWindow(), &w, &h);

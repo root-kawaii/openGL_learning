@@ -3,6 +3,7 @@
 #include "vk_pipeline.h"
 #include "vk_texture.h"
 #include "../model.h"
+#include "../scene.h"
 #include <assimp/scene.h>    // aiTexture — for embedded GLB texture access
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -19,6 +20,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "../globals.h"
 
 // Legacy MVP struct used by the textured quad fallback path (Phase 4).
 // Model rendering uses FrameUBO + ModelPushConstant instead (Phase 6).
@@ -84,30 +87,32 @@ void VulkanRenderer::cleanup() {
         inFlightFences[i] = nullptr;
     }
 
-    // Model resources (Phase 5)
-    // Textures may be shared across meshes (cache), so deduplicate before destroying
-    if (allocator && modelData) {
-        std::set<VkImage> destroyedImages;
-        for (auto& meshGPU : modelData->meshes) {
-            if (meshGPU.diffuseTexture.image && destroyedImages.find(meshGPU.diffuseTexture.image) == destroyedImages.end()) {
-                destroyedImages.insert(meshGPU.diffuseTexture.image);
-                destroyTexture(allocator, device, meshGPU.diffuseTexture);
+    // Scene model resources — destroy all uploaded models
+    if (allocator && !sceneModels.empty()) {
+        for (auto& [model, data] : sceneModels) {
+            std::set<VkImage> destroyedImages;
+            for (auto& meshGPU : data->meshes) {
+                if (meshGPU.diffuseTexture.image && destroyedImages.find(meshGPU.diffuseTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.diffuseTexture.image);
+                    destroyTexture(allocator, device, meshGPU.diffuseTexture);
+                }
+                if (meshGPU.normalTexture.image && destroyedImages.find(meshGPU.normalTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.normalTexture.image);
+                    destroyTexture(allocator, device, meshGPU.normalTexture);
+                }
+                if (meshGPU.metallicTexture.image && destroyedImages.find(meshGPU.metallicTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.metallicTexture.image);
+                    destroyTexture(allocator, device, meshGPU.metallicTexture);
+                }
+                if (meshGPU.roughnessTexture.image && destroyedImages.find(meshGPU.roughnessTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.roughnessTexture.image);
+                    destroyTexture(allocator, device, meshGPU.roughnessTexture);
+                }
+                // VkMeshData destructor handles buffer cleanup via its unique_ptr
             }
-            if (meshGPU.normalTexture.image && destroyedImages.find(meshGPU.normalTexture.image) == destroyedImages.end()) {
-                destroyedImages.insert(meshGPU.normalTexture.image);
-                destroyTexture(allocator, device, meshGPU.normalTexture);
-            }
-            if (meshGPU.metallicTexture.image && destroyedImages.find(meshGPU.metallicTexture.image) == destroyedImages.end()) {
-                destroyedImages.insert(meshGPU.metallicTexture.image);
-                destroyTexture(allocator, device, meshGPU.metallicTexture);
-            }
-            if (meshGPU.roughnessTexture.image && destroyedImages.find(meshGPU.roughnessTexture.image) == destroyedImages.end()) {
-                destroyedImages.insert(meshGPU.roughnessTexture.image);
-                destroyTexture(allocator, device, meshGPU.roughnessTexture);
-            }
-            // VkMeshData destructor handles buffer cleanup via its unique_ptr
+            for (auto& buf : data->boneBuffers) destroyBuffer(allocator, buf);
         }
-        modelData.reset();
+        sceneModels.clear();
     }
     if (allocator) {
         destroyTexture(allocator, device, whiteTexture);
@@ -815,6 +820,16 @@ bool VulkanRenderer::createSyncObjects() {
 bool VulkanRenderer::drawFrame() {
     VkDevice device = ctx->getDevice();
 
+    // FPS calculation
+    {
+        double now = glfwGetTime();
+        double dt  = now - lastFrameTime;
+        lastFrameTime = now;
+        displayFPS = (dt > 0.0) ? static_cast<float>(1.0 / dt) : 0.0f;
+    }
+    // Reset per-frame counters (shared globals, same as OpenGL path)
+    vkDrawCalls = 0;
+
     // Apply pending MSAA toggle (safe here — GPU is about to wait on the fence anyway)
     if (pendingMSAAToggle) {
         pendingMSAAToggle = false;
@@ -853,20 +868,19 @@ bool VulkanRenderer::drawFrame() {
     vkBeginCommandBuffer(cmd, &beginInfo);
 
     // ── Bone animation (Phase 10) ──────────────────────────────────────────
-    // Compute bone matrices on CPU, upload to bone UBO for this frame.
-    // Must happen before both shadow and main passes.
-    {
-        BoneUBO boneUbo{};  // zero-initialized — non-animated meshes use totalWeight=0
-        if (loadedModel && loadedModel->IsAnimated()) {
+    // Update per-model bone buffers — must happen before shadow and main passes.
+    for (auto& [model, data] : sceneModels) {
+        BoneUBO boneUbo{};  // zero-initialized = identity, used by static meshes
+        if (model->IsAnimated()) {
             std::vector<glm::mat4> transforms;
-            loadedModel->GetBoneTransforms(transforms, static_cast<float>(glfwGetTime()));
+            model->GetBoneTransforms(transforms, static_cast<float>(glfwGetTime()));
             size_t count = std::min(transforms.size(), static_cast<size_t>(MAX_BONES));
             memcpy(boneUbo.bones, transforms.data(), count * sizeof(glm::mat4));
         }
         void* boneMapped;
-        vmaMapMemory(allocator, boneUniformBuffers[currentFrame].allocation, &boneMapped);
+        vmaMapMemory(allocator, data->boneBuffers[currentFrame].allocation, &boneMapped);
         memcpy(boneMapped, &boneUbo, sizeof(boneUbo));
-        vmaUnmapMemory(allocator, boneUniformBuffers[currentFrame].allocation);
+        vmaUnmapMemory(allocator, data->boneBuffers[currentFrame].allocation);
     }
 
     // ── Shadow pass (Phase 7) ───────────────────────────────────────────────
@@ -881,7 +895,7 @@ bool VulkanRenderer::drawFrame() {
     glm::mat4 lightView       = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
-    if (hasModel && modelData && shadowRenderPass) {
+    if (!sceneModels.empty() && shadowRenderPass && currentScene) {
         // Update shadow UBO
         LightUBO lightUbo{};
         lightUbo.lightSpaceMatrix = lightSpaceMatrix;
@@ -918,21 +932,32 @@ bool VulkanRenderer::drawFrame() {
         vkCmdSetScissor(cmd, 0, 1, &shadowScissor);
 
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+        // Shadow descriptor sets use renderer-level boneUniformBuffers (identity bones)
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout,
                                 0, 1, &shadowDescriptorSets[currentFrame], 0, nullptr);
 
-        // Push model matrix and draw all meshes
-        ModelPushConstant shadowPush{};
-        shadowPush.model = currentModel;
-        vkCmdPushConstants(cmd, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                           0, sizeof(ModelPushConstant), &shadowPush);
+        // Draw all scene objects
+        for (auto& obj : currentScene->getGameObjects()) {
+            if (!obj->model) continue;
+            auto it = sceneModels.find(obj->model.get());
+            if (it == sceneModels.end()) {
+                loadModel(obj->model.get());
+                it = sceneModels.find(obj->model.get());
+                if (it == sceneModels.end()) continue;
+            }
 
-        for (auto& meshGPU : modelData->meshes) {
-            VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
-            VkDeviceSize voffs[] = {0};
-            vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
-            vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+            ModelPushConstant shadowPush{};
+            shadowPush.model = obj->getModelMatrix();
+            vkCmdPushConstants(cmd, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                               0, sizeof(ModelPushConstant), &shadowPush);
+
+            for (auto& meshGPU : it->second->meshes) {
+                VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
+                VkDeviceSize voffs[] = {0};
+                vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
+                vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+            }
         }
 
         // Ground plane in shadow pass (identity transform)
@@ -1007,8 +1032,8 @@ bool VulkanRenderer::drawFrame() {
     scissor.extent = extent;
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-    if (hasModel && modelData) {
-        // ── Model rendering path (Phase 6 / Phase 14) ───────────────────────
+    if (!sceneModels.empty() && currentScene) {
+        // ── Scene rendering path ─────────────────────────────────────────────
         // Update per-frame UBO (view, proj, light data, camera position)
         FrameUBO frameUbo{};
         frameUbo.view             = currentView;
@@ -1019,52 +1044,66 @@ bool VulkanRenderer::drawFrame() {
         // Camera position in world space = last column of inverse view
         frameUbo.viewPos = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
 
-        // Point lights around the model to showcase PBR (Phase 14)
-        frameUbo.numPointLights = 4;
-        frameUbo.pointLights[0] = { glm::vec4(-3.0f, 2.0f,  0.0f, 0.0f), glm::vec4(1.0f, 0.3f, 0.3f, 8.0f) }; // red left
-        frameUbo.pointLights[1] = { glm::vec4( 3.0f, 2.0f,  0.0f, 0.0f), glm::vec4(0.3f, 0.6f, 1.0f, 8.0f) }; // blue right
-        frameUbo.pointLights[2] = { glm::vec4( 0.0f, 2.0f, -3.0f, 0.0f), glm::vec4(0.3f, 1.0f, 0.4f, 6.0f) }; // green front
-        frameUbo.pointLights[3] = { glm::vec4( 0.0f, 4.0f,  3.0f, 0.0f), glm::vec4(1.0f, 0.9f, 0.5f, 5.0f) }; // warm back
+        // Scene lights
+        frameUbo.numPointLights = 0;
 
         void* mapped;
         vmaMapMemory(allocator, modelUniformBuffers[currentFrame].allocation, &mapped);
         memcpy(mapped, &frameUbo, sizeof(frameUbo));
         vmaUnmapMemory(allocator, modelUniformBuffers[currentFrame].allocation);
 
-        // Draw each mesh — choose PBR or simple pipeline per mesh
-        for (auto& meshGPU : modelData->meshes) {
-            VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
-            VkDeviceSize voffsets[] = {0};
-            vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
-            vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-            if (meshGPU.hasPBR && pbrPipeline && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
-                // PBR path
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
-                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
-                                        0, 1, &meshGPU.pbrDescriptorSets[currentFrame], 0, nullptr);
-
-                PBRPushConstant pbrPush{};
-                pbrPush.model        = currentModel;
-                pbrPush.metallicVal  = 1.0f;
-                pbrPush.roughnessVal = 1.0f;
-                pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
-                vkCmdPushConstants(cmd, pbrPipelineLayout,
-                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                   0, sizeof(PBRPushConstant), &pbrPush);
-            } else {
-                // Simple diffuse path
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
-                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
-                                        0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
-
-                ModelPushConstant push{};
-                push.model = currentModel;
-                vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                                   0, sizeof(ModelPushConstant), &push);
+        // Draw all scene objects
+        for (auto& obj : currentScene->getGameObjects()) {
+            if (!obj->model) continue;
+            auto it = sceneModels.find(obj->model.get());
+            if (it == sceneModels.end()) {
+                loadModel(obj->model.get());
+                it = sceneModels.find(obj->model.get());
+                if (it == sceneModels.end()) continue;
             }
-            vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
-        }
+
+            glm::mat4 objTransform = obj->getModelMatrix();
+
+            // Draw each mesh — choose PBR or simple pipeline per mesh
+            for (auto& meshGPU : it->second->meshes) {
+                VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
+                VkDeviceSize voffsets[] = {0};
+                vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
+                vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+                if (meshGPU.hasPBR && pbrPipeline && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
+                    // PBR path
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
+                                            0, 1, &meshGPU.pbrDescriptorSets[currentFrame], 0, nullptr);
+
+                    PBRPushConstant pbrPush{};
+                    pbrPush.model        = objTransform;
+                    pbrPush.metallicVal  = 1.0f;
+                    pbrPush.roughnessVal = 1.0f;
+                    pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
+                    vkCmdPushConstants(cmd, pbrPipelineLayout,
+                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                       0, sizeof(PBRPushConstant), &pbrPush);
+                } else {
+                    // Simple diffuse path
+                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                            0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
+
+                    ModelPushConstant push{};
+                    push.model = objTransform;
+                    vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                                       0, sizeof(ModelPushConstant), &push);
+                }
+                uint32_t ic = meshGPU.buffers->getIndexCount();
+                vkCmdDrawIndexed(cmd, ic, 1, 0, 0, 0);
+                vkDrawCalls++;
+                drawCalls++;
+                trianglesDrawn += ic / 3;
+                verticesDrawn  += ic;
+            }
+        }  // end obj loop
 
         // Ground plane — always simple pipeline
         if (groundVertexBuffer.buffer) {
@@ -1188,14 +1227,10 @@ bool VulkanRenderer::drawFrame() {
 
     // ── ID debug overlay (Phase 11, Part 2) ──────────────────────────────────
     // Re-renders all objects with semi-transparent false colors based on object ID
-    if (showIDDebugOverlay && hasModel && modelData) {
+    if (showIDDebugOverlay && !sceneModels.empty() && currentScene) {
         // Lazy-create the debug pipeline if needed
         if (!idDebugPipeline) {
-            // Reuse the ID descriptor set layout (FrameUBO + BoneUBO)
-            if (!idDescriptorSetLayout) {
-                // Need to create ID resources first for the descriptor layout
-                createIDBufferResources();
-            }
+            if (!idDescriptorSetLayout) createIDBufferResources();
             if (idDescriptorSetLayout) {
                 createIDDebugPipeline(ctx->getDevice(), renderPass, idDescriptorSetLayout,
                                       idDebugPipelineLayout, idDebugPipeline, msaaSamples);
@@ -1207,22 +1242,27 @@ bool VulkanRenderer::drawFrame() {
             vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, idDebugPipelineLayout,
                                     0, 1, &idDescriptorSets[currentFrame], 0, nullptr);
 
-            // Draw model meshes (ID = mesh index + 2)
-            for (uint32_t m = 0; m < static_cast<uint32_t>(modelData->meshes.size()); m++) {
-                auto& meshGPU = modelData->meshes[m];
+            uint32_t objIdx = 0;
+            for (auto& obj : currentScene->getGameObjects()) {
+                if (!obj->model) { objIdx++; continue; }
+                auto it = sceneModels.find(obj->model.get());
+                if (it == sceneModels.end()) { objIdx++; continue; }
 
-                IDPushConstant idPush{};
-                idPush.model    = currentModel;
-                idPush.objectID = m + 2;
-                vkCmdPushConstants(cmd, idDebugPipelineLayout,
-                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                   0, sizeof(IDPushConstant), &idPush);
+                for (auto& meshGPU : it->second->meshes) {
+                    IDPushConstant idPush{};
+                    idPush.model    = obj->getModelMatrix();
+                    idPush.objectID = objIdx + 2;
+                    vkCmdPushConstants(cmd, idDebugPipelineLayout,
+                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                       0, sizeof(IDPushConstant), &idPush);
 
-                VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
-                VkDeviceSize voffs[] = {0};
-                vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
-                vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-                vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+                    VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
+                    VkDeviceSize voffs[] = {0};
+                    vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
+                    vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+                    vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+                }
+                objIdx++;
             }
 
             // Draw ground plane (ID = 1)
@@ -1265,6 +1305,16 @@ bool VulkanRenderer::drawFrame() {
 
         ImGui::Begin("Vulkan Info");
         ImGui::Text("Renderer: Vulkan");
+
+        // ── Performance stats ───────────────────────────────────────────────
+        ImGui::Separator();
+        ImGui::Text("FPS: %.1f  (%.2f ms)", displayFPS, displayFPS > 0 ? 1000.0f / displayFPS : 0.0f);
+        ImGui::Text("Draw calls: %u", vkDrawCalls);
+        ImGui::Text("Triangles:  %u", trianglesDrawn);
+        ImGui::Text("Vertices:   %u", verticesDrawn);
+
+        // ── MSAA ───────────────────────────────────────────────────────────
+        ImGui::Separator();
         {
             bool msaaOn = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
             if (ImGui::Checkbox("MSAA", &msaaOn))
@@ -1272,23 +1322,18 @@ bool VulkanRenderer::drawFrame() {
             ImGui::SameLine();
             ImGui::Text("(%dx)", static_cast<int>(msaaSamples));
         }
-        ImGui::Text("Frame: %u", currentFrame);
-        if (loadedModel) {
-            ImGui::Text("Model: %s", loadedModel->IsAnimated() ? "Animated" : "Static");
-        }
-        // PBR status per mesh
-        if (hasModel && modelData) {
+
+        // ── Scene stats ────────────────────────────────────────────────────
+        if (!sceneModels.empty()) {
             ImGui::Separator();
-            int pbrCount = 0, simpleCount = 0;
-            for (const auto& m : modelData->meshes)
-                m.hasPBR ? ++pbrCount : ++simpleCount;
-            if (pbrCount > 0)
-                ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "PBR: %d meshes", pbrCount);
-            else
-                ImGui::TextColored({1.0f,0.6f,0.2f,1.0f}, "Simple diffuse: %d meshes", simpleCount);
-            if (simpleCount > 0 && pbrCount > 0)
-                ImGui::TextColored({1.0f,0.6f,0.2f,1.0f}, "Simple fallback: %d meshes", simpleCount);
+            int totalMeshes = 0, pbrCount = 0;
+            for (auto& [model, data] : sceneModels)
+                for (const auto& m : data->meshes) { totalMeshes++; if (m.hasPBR) pbrCount++; }
+            ImGui::Text("Models: %zu  Meshes: %d  PBR: %d", sceneModels.size(), totalMeshes, pbrCount);
+            ImGui::Text("Scene objects: %zu", currentScene ? currentScene->getGameObjects().size() : 0);
         }
+
+        // ── Scene toggles ──────────────────────────────────────────────────
         ImGui::Separator();
         ImGui::Checkbox("Show Grid", &showGrid);
         ImGui::Checkbox("Show Grass", &showGrass);
@@ -1298,54 +1343,47 @@ bool VulkanRenderer::drawFrame() {
             ImGui::TextColored({1.0f,0.4f,0.4f,1.0f}, "Grass: pipeline NULL");
         ImGui::Checkbox("Show Water", &showWater);
         ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
-        ImGui::Text("ID Buffer: Click to pick");
-        ImGui::Text("Last picked ID: %u", lastPickedID);
-        if (lastPickedID == 0)      ImGui::Text("  -> Background");
-        else if (lastPickedID == 1) ImGui::Text("  -> Ground plane");
-        else                        ImGui::Text("  -> Mesh %u", lastPickedID - 2);
 
-        // Gizmo operation + mode selector
+        // ── Picking + gizmo ────────────────────────────────────────────────
         ImGui::Separator();
-        ImGui::Text("Gizmo:");
-        ImGui::SameLine();
-        if (ImGui::RadioButton("T##vk", gizmoOp == GizmoOp::Translate)) gizmoOp = GizmoOp::Translate;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("R##vk", gizmoOp == GizmoOp::Rotate))    gizmoOp = GizmoOp::Rotate;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("S##vk", gizmoOp == GizmoOp::Scale))     gizmoOp = GizmoOp::Scale;
-        ImGui::SameLine();
-        ImGui::Text("|");
-        ImGui::SameLine();
-        if (ImGui::RadioButton("World##vk", gizmoWorld))  gizmoWorld = true;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Local##vk", !gizmoWorld)) gizmoWorld = false;
+        ImGui::Text("Click to pick entity");
+        if (selectedObjectIndex >= 0) {
+            ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Selected: obj %d", selectedObjectIndex);
+            // Gizmo operation selector
+            if (ImGui::RadioButton("Translate", gizmoOp == GizmoOp::Translate)) gizmoOp = GizmoOp::Translate;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Rotate",    gizmoOp == GizmoOp::Rotate))    gizmoOp = GizmoOp::Rotate;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Scale",     gizmoOp == GizmoOp::Scale))     gizmoOp = GizmoOp::Scale;
+            if (ImGui::RadioButton("World",     gizmoWorld))  gizmoWorld = true;
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Local",     !gizmoWorld)) gizmoWorld = false;
+        } else {
+            ImGui::TextDisabled("No entity selected");
+        }
+
         ImGui::End();
 
-        // ── ImGuizmo: manipulate model transform ─────────────────────────
-        if (hasModel) {
-            ImGuizmo::OPERATION op =
-                (gizmoOp == GizmoOp::Rotate) ? ImGuizmo::ROTATE :
-                (gizmoOp == GizmoOp::Scale)  ? ImGuizmo::SCALE  :
-                                                ImGuizmo::TRANSLATE;
-            ImGuizmo::MODE mode = gizmoWorld ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+        // ── ImGuizmo entity manipulation ───────────────────────────────────
+        if (selectedObjectIndex >= 0 && currentScene) {
+            auto objs = currentScene->getGameObjects();
+            if (selectedObjectIndex < static_cast<int>(objs.size())) {
+                auto& obj = objs[selectedObjectIndex];
 
-            // currentProj is OpenGL-convention (no Y-flip) — exactly what ImGuizmo expects
-            float viewArr[16], projArr[16], modelArr[16];
-            memcpy(viewArr,  glm::value_ptr(currentView),  sizeof(viewArr));
-            memcpy(projArr,  glm::value_ptr(currentProj),  sizeof(projArr));
-            memcpy(modelArr, glm::value_ptr(currentModel), sizeof(modelArr));
+                float view[16], proj[16], objMatrix[16];
+                memcpy(view, glm::value_ptr(currentView), sizeof(view));
+                memcpy(proj, glm::value_ptr(currentProj), sizeof(proj));
+                obj->GetTransformFloat16(objMatrix);
 
-            ImGuizmo::Manipulate(viewArr, projArr, op, mode, modelArr);
+                ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
+                if (gizmoOp == GizmoOp::Rotate) op = ImGuizmo::ROTATE;
+                if (gizmoOp == GizmoOp::Scale)  op = ImGuizmo::SCALE;
+                ImGuizmo::MODE mode = gizmoWorld ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
-            bool isUsingNow = ImGuizmo::IsUsing();
-            if (isUsingNow) {
-                // Decompose → recompose to keep matrix well-formed (avoids drift)
-                float translation[3], rotation[3], scale[3];
-                ImGuizmo::DecomposeMatrixToComponents(modelArr, translation, rotation, scale);
-                ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, modelArr);
-                memcpy(glm::value_ptr(currentModel), modelArr, sizeof(modelArr));
+                if (ImGuizmo::Manipulate(view, proj, op, mode, objMatrix)) {
+                    obj->SetTransformFromFloat16(objMatrix);
+                }
             }
-            gizmoWasUsing = isUsingNow;
         }
 
         ImGui::Render();
@@ -1439,7 +1477,7 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
 
     if (!createGridResources())                 return false;
     if (!createUIResources())                   return false;
-    if (hasModel && modelUniformBuffers[0].buffer) {
+    if (modelUniformBuffers[0].buffer) {
         if (waterIndexCount == 0)       createWaterResources();
         if (grassBladeIndexCount == 0)  createGrassResources();
     }
@@ -1843,6 +1881,27 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     vkCreateSampler(device, &samplerInfo, nullptr, &whiteTexture.sampler);
 
+    // Pre-allocate a large descriptor pool shared by all scene models.
+    // 2000 sets is enough for hundreds of objects with multi-mesh models.
+    if (!modelDescriptorPool) {
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 4000;  // FrameUBO + BoneUBO across all sets
+        poolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4000;  // diffuse + shadow across all sets
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes    = poolSizes.data();
+        poolInfo.maxSets       = 2000;
+
+        if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &modelDescriptorPool) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to create model descriptor pool" << std::endl;
+            return false;
+        }
+    }
+
     std::cout << "[Vulkan] Model pipeline and white fallback texture created" << std::endl;
     return true;
 }
@@ -2007,6 +2066,26 @@ bool VulkanRenderer::createPBRPipelineAndDescriptors() {
         uint8_t blackPixel[] = {0, 0, 0, 255};
         if (!createFallbackTexture(blackTexture, blackPixel, VK_FORMAT_R8G8B8A8_UNORM)) {
             std::cerr << "[Vulkan] Failed to create black fallback texture" << std::endl;
+            return false;
+        }
+    }
+
+    // Pre-allocate large PBR descriptor pool shared by all scene models
+    if (!pbrDescriptorPool) {
+        std::array<VkDescriptorPoolSize, 2> pbrPoolSizes{};
+        pbrPoolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        pbrPoolSizes[0].descriptorCount = 4000;  // FrameUBO + BoneUBO
+        pbrPoolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        pbrPoolSizes[1].descriptorCount = 10000; // albedo+normal+metallic+roughness+shadow
+
+        VkDescriptorPoolCreateInfo pbrPoolInfo{};
+        pbrPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pbrPoolInfo.poolSizeCount = static_cast<uint32_t>(pbrPoolSizes.size());
+        pbrPoolInfo.pPoolSizes    = pbrPoolSizes.data();
+        pbrPoolInfo.maxSets       = 2000;
+
+        if (vkCreateDescriptorPool(device, &pbrPoolInfo, nullptr, &pbrDescriptorPool) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to create PBR descriptor pool" << std::endl;
             return false;
         }
     }
@@ -3831,7 +3910,7 @@ void VulkanRenderer::cleanupIDBufferResources() {
 //   mesh index + 2 = model meshes (so mesh 0 = ID 2, mesh 1 = ID 3, etc.)
 
 uint32_t VulkanRenderer::getObjectIdAtPixel(int x, int y) {
-    if (!hasModel || !modelData) return 0;
+    if (sceneModels.empty() || !currentScene) return 0;
 
     // Lazy-create ID buffer resources on first use
     if (!idRenderPass) {
@@ -3911,22 +3990,28 @@ uint32_t VulkanRenderer::getObjectIdAtPixel(int x, int y) {
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, idPipelineLayout,
                             0, 1, &idDescriptorSets[currentFrame], 0, nullptr);
 
-    // Draw model meshes (ID = mesh index + 2)
-    for (uint32_t m = 0; m < static_cast<uint32_t>(modelData->meshes.size()); m++) {
-        auto& meshGPU = modelData->meshes[m];
+    // Draw all scene objects (ID = scene object index + 2)
+    uint32_t objIdx = 0;
+    for (auto& obj : currentScene->getGameObjects()) {
+        if (!obj->model) { objIdx++; continue; }
+        auto it = sceneModels.find(obj->model.get());
+        if (it == sceneModels.end()) { objIdx++; continue; }
 
-        IDPushConstant push{};
-        push.model    = currentModel;
-        push.objectID = m + 2;
-        vkCmdPushConstants(cmd, idPipelineLayout,
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                           0, sizeof(IDPushConstant), &push);
+        for (auto& meshGPU : it->second->meshes) {
+            IDPushConstant push{};
+            push.model    = obj->getModelMatrix();
+            push.objectID = objIdx + 2;
+            vkCmdPushConstants(cmd, idPipelineLayout,
+                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                               0, sizeof(IDPushConstant), &push);
 
-        VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
-        VkDeviceSize voffs[] = {0};
-        vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
-        vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+            VkBuffer vbufs[] = {meshGPU.buffers->vertexBuffer.buffer};
+            VkDeviceSize voffs[] = {0};
+            vkCmdBindVertexBuffers(cmd, 0, 1, vbufs, voffs);
+            vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+        }
+        objIdx++;
     }
 
     // Draw ground plane (ID = 1)
@@ -3981,6 +4066,8 @@ uint32_t VulkanRenderer::getObjectIdAtPixel(int x, int y) {
     vmaUnmapMemory(allocator, idStagingBuffer.allocation);
 
     lastPickedID = pickedID;
+    // Update entity selection: IDs 2+ map to scene object indices (0-based)
+    selectedObjectIndex = (pickedID >= 2) ? static_cast<int>(pickedID - 2) : -1;
     return pickedID;
 }
 
@@ -4001,79 +4088,35 @@ bool VulkanRenderer::loadModel(Model* model) {
         std::cerr << "[Vulkan] loadModel: null model or allocator" << std::endl;
         return false;
     }
+    // Skip if already uploaded
+    if (sceneModels.count(model)) return true;
+
     VkDevice device = ctx->getDevice();
 
     std::cout << "[Vulkan] loadModel: " << model->meshes.size() << " meshes to upload" << std::endl;
 
-    // Create PBR pipeline if not yet created
-    if (!pbrPipeline) {
-        if (!createPBRPipelineAndDescriptors()) {
-            std::cerr << "[Vulkan] loadModel: failed to create PBR pipeline" << std::endl;
-            // Non-fatal — fall back to simple pipeline
-        }
-    }
-
-    // Create model pipeline if not yet created
-    if (!modelPipeline) {
-        if (!createModelPipelineAndDescriptors()) {
-            std::cerr << "[Vulkan] loadModel: failed to create model pipeline" << std::endl;
-            return false;
-        }
-        // modelUniformBuffers are now created — create water and grass resources (need UBOs)
-        if (!waterPipeline)  createWaterResources();
-        if (!grassPipeline)  createGrassResources();
-
-        // modelUniformBuffers are now created — update grid descriptors if grid is ready
-        if (gridDescriptorPool) {
-            for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-                VkDescriptorBufferInfo bufInfo{};
-                bufInfo.buffer = modelUniformBuffers[i].buffer;
-                bufInfo.offset = 0;
-                bufInfo.range  = sizeof(FrameUBO);
-
-                VkWriteDescriptorSet write{};
-                write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write.dstSet          = gridDescriptorSets[i];
-                write.dstBinding      = 0;
-                write.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                write.descriptorCount = 1;
-                write.pBufferInfo     = &bufInfo;
-
-                vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
-            }
-        }
-    }
-
-    modelData = std::make_unique<VulkanModelData>();
-    uint32_t meshCount = static_cast<uint32_t>(model->meshes.size());
-
-    // Create descriptor pool sized for this model + ground plane
-    // Each mesh needs MAX_FRAMES_IN_FLIGHT descriptor sets
-    // Each set has: 2 UBOs (frame + bone) + 2 samplers (diffuse + shadow) = 4 descriptors
-    // +MAX_FRAMES_IN_FLIGHT for the ground plane
-    uint32_t totalSets = (meshCount + 1) * MAX_FRAMES_IN_FLIGHT;
-
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = totalSets * 2;  // FrameUBO + BoneUBO per set
-    poolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = totalSets * 2;  // diffuse + shadow per set
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes    = poolSizes.data();
-    poolInfo.maxSets       = totalSets;
-
-    if (modelDescriptorPool) {
-        vkDestroyDescriptorPool(device, modelDescriptorPool, nullptr);
-    }
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &modelDescriptorPool) != VK_SUCCESS) {
-        std::cerr << "[Vulkan] Failed to create model descriptor pool" << std::endl;
+    // Ensure pipelines and pools exist (no-ops if already created)
+    if (!modelPipeline && !createModelPipelineAndDescriptors()) {
+        std::cerr << "[Vulkan] loadModel: failed to create model pipeline" << std::endl;
         return false;
     }
+    if (!pbrPipeline) createPBRPipelineAndDescriptors();  // non-fatal
 
-    modelData->meshes.resize(meshCount);
+    auto& newData = *(sceneModels[model] = std::make_unique<VulkanModelData>());
+    uint32_t meshCount = static_cast<uint32_t>(model->meshes.size());
+
+    // Per-model bone buffers (one per frame in flight)
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        newData.boneBuffers[i] = createBuffer(allocator, sizeof(BoneUBO),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        if (!newData.boneBuffers[i].buffer) {
+            std::cerr << "[Vulkan] Failed to create per-model bone buffer" << std::endl;
+            sceneModels.erase(model);
+            return false;
+        }
+    }
+
+    newData.meshes.resize(meshCount);
 
     // Texture cache — avoid loading the same texture twice.
     std::unordered_map<std::string, VulkanTexture> textureCache;
@@ -4136,7 +4179,7 @@ bool VulkanRenderer::loadModel(Model* model) {
 
     for (uint32_t m = 0; m < meshCount; m++) {
         Mesh& mesh = model->meshes[m];
-        VulkanMeshGPUData& gpuMesh = modelData->meshes[m];
+        VulkanMeshGPUData& gpuMesh = newData.meshes[m];
 
         // 1. Upload mesh buffers via RHI (VkMeshData)
         gpuMesh.buffers = std::make_unique<VkMeshData>();
@@ -4211,7 +4254,7 @@ bool VulkanRenderer::loadModel(Model* model) {
             shadowImgInfo.sampler     = shadowSampler;
 
             VkDescriptorBufferInfo boneInfo{};
-            boneInfo.buffer = boneUniformBuffers[f].buffer;
+            boneInfo.buffer = newData.boneBuffers[f].buffer;
             boneInfo.offset = 0;
             boneInfo.range  = sizeof(BoneUBO);
 
@@ -4249,29 +4292,8 @@ bool VulkanRenderer::loadModel(Model* model) {
         }
 
         // Allocate PBR descriptor sets if PBR pipeline is available
-        if (gpuMesh.hasPBR && pbrDescriptorSetLayout) {
-            // Create PBR descriptor pool if it doesn't exist yet
-            if (!pbrDescriptorPool) {
-                uint32_t pbrTotalSets = meshCount * MAX_FRAMES_IN_FLIGHT;
-                std::array<VkDescriptorPoolSize, 2> pbrPoolSizes{};
-                pbrPoolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                pbrPoolSizes[0].descriptorCount = pbrTotalSets * 2;  // FrameUBO + BoneUBO
-                pbrPoolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                pbrPoolSizes[1].descriptorCount = pbrTotalSets * 5;  // albedo+normal+metallic+roughness+shadow
-
-                VkDescriptorPoolCreateInfo pbrPoolInfo{};
-                pbrPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-                pbrPoolInfo.poolSizeCount = static_cast<uint32_t>(pbrPoolSizes.size());
-                pbrPoolInfo.pPoolSizes    = pbrPoolSizes.data();
-                pbrPoolInfo.maxSets       = pbrTotalSets;
-
-                if (vkCreateDescriptorPool(device, &pbrPoolInfo, nullptr, &pbrDescriptorPool) != VK_SUCCESS) {
-                    std::cerr << "[Vulkan] Failed to create PBR descriptor pool" << std::endl;
-                    gpuMesh.hasPBR = false;
-                }
-            }
-
-            if (gpuMesh.hasPBR && pbrDescriptorPool) {
+        if (gpuMesh.hasPBR && pbrDescriptorSetLayout && pbrDescriptorPool) {
+            {
                 std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> pbrLayouts;
                 pbrLayouts.fill(pbrDescriptorSetLayout);
 
@@ -4323,7 +4345,7 @@ bool VulkanRenderer::loadModel(Model* model) {
                         shadowInfo.sampler     = shadowSampler;
 
                         VkDescriptorBufferInfo boneInfo{};
-                        boneInfo.buffer = boneUniformBuffers[f].buffer;
+                        boneInfo.buffer = newData.boneBuffers[f].buffer;
                         boneInfo.offset = 0;
                         boneInfo.range  = sizeof(BoneUBO);
 
@@ -4385,107 +4407,126 @@ bool VulkanRenderer::loadModel(Model* model) {
         }
     }
 
-    // ── Ground plane (shadow receiver) ────────────────────────────────────
-    {
-        // 20x20 quad at Y=0
-        Vertex groundVerts[4];
-        memset(groundVerts, 0, sizeof(groundVerts));
-        groundVerts[0].Position = {-10.0f, 0.0f, -10.0f}; groundVerts[0].Normal = {0,1,0}; groundVerts[0].TexCoords = {0,0};
-        groundVerts[1].Position = { 10.0f, 0.0f, -10.0f}; groundVerts[1].Normal = {0,1,0}; groundVerts[1].TexCoords = {1,0};
-        groundVerts[2].Position = { 10.0f, 0.0f,  10.0f}; groundVerts[2].Normal = {0,1,0}; groundVerts[2].TexCoords = {1,1};
-        groundVerts[3].Position = {-10.0f, 0.0f,  10.0f}; groundVerts[3].Normal = {0,1,0}; groundVerts[3].TexCoords = {0,1};
+    std::cout << "[Vulkan] Model loaded: " << meshCount << " meshes"
+              << (model->IsAnimated() ? " (animated)" : " (static)") << std::endl;
+    return true;
+}
 
-        uint32_t groundIndices[] = {0, 2, 1, 0, 3, 2};
+// ─── Ground Plane ─────────────────────────────────────────────────────────────
+// 20x20 quad at Y=0, acts as shadow receiver. Created once by loadScene().
 
-        std::vector<Vertex> gv(groundVerts, groundVerts + 4);
-        std::vector<unsigned int> gi(groundIndices, groundIndices + 6);
+bool VulkanRenderer::createGroundPlane() {
+    if (groundVertexBuffer.buffer) return true;  // already created
+    VkDevice device = ctx->getDevice();
 
-        // Upload via staging
-        VkDeviceSize vSize = gv.size() * sizeof(Vertex);
-        VkDeviceSize iSize = gi.size() * sizeof(unsigned int);
+    Vertex groundVerts[4];
+    memset(groundVerts, 0, sizeof(groundVerts));
+    groundVerts[0].Position = {-10.0f, 0.0f, -10.0f}; groundVerts[0].Normal = {0,1,0}; groundVerts[0].TexCoords = {0,0};
+    groundVerts[1].Position = { 10.0f, 0.0f, -10.0f}; groundVerts[1].Normal = {0,1,0}; groundVerts[1].TexCoords = {1,0};
+    groundVerts[2].Position = { 10.0f, 0.0f,  10.0f}; groundVerts[2].Normal = {0,1,0}; groundVerts[2].TexCoords = {1,1};
+    groundVerts[3].Position = {-10.0f, 0.0f,  10.0f}; groundVerts[3].Normal = {0,1,0}; groundVerts[3].TexCoords = {0,1};
+    uint32_t groundIndices[] = {0, 2, 1, 0, 3, 2};
 
-        groundVertexBuffer = createBufferWithStaging(
-            allocator, device, commandPool, ctx->getGraphicsQueue(),
-            gv.data(), vSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-        groundIndexBuffer = createBufferWithStaging(
-            allocator, device, commandPool, ctx->getGraphicsQueue(),
-            gi.data(), iSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    std::vector<Vertex> gv(groundVerts, groundVerts + 4);
+    std::vector<unsigned int> gi(groundIndices, groundIndices + 6);
 
-        // Allocate ground descriptor sets
-        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> gndLayouts;
-        gndLayouts.fill(modelDescriptorSetLayout);
+    groundVertexBuffer = createBufferWithStaging(allocator, device, commandPool, ctx->getGraphicsQueue(),
+        gv.data(), gv.size() * sizeof(Vertex), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    groundIndexBuffer  = createBufferWithStaging(allocator, device, commandPool, ctx->getGraphicsQueue(),
+        gi.data(), gi.size() * sizeof(unsigned int), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-        VkDescriptorSetAllocateInfo gndAllocInfo{};
-        gndAllocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        gndAllocInfo.descriptorPool     = modelDescriptorPool;
-        gndAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
-        gndAllocInfo.pSetLayouts        = gndLayouts.data();
+    std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> gndLayouts;
+    gndLayouts.fill(modelDescriptorSetLayout);
 
-        if (vkAllocateDescriptorSets(device, &gndAllocInfo, groundDescriptorSets.data()) != VK_SUCCESS) {
-            std::cerr << "[Vulkan] Failed to allocate ground descriptor sets" << std::endl;
-            return false;
-        }
+    VkDescriptorSetAllocateInfo gndAllocInfo{};
+    gndAllocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    gndAllocInfo.descriptorPool     = modelDescriptorPool;
+    gndAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    gndAllocInfo.pSetLayouts        = gndLayouts.data();
 
-        for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+    if (vkAllocateDescriptorSets(device, &gndAllocInfo, groundDescriptorSets.data()) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to allocate ground descriptor sets" << std::endl;
+        return false;
+    }
+
+    for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+        VkDescriptorBufferInfo bufInfo{};
+        bufInfo.buffer = modelUniformBuffers[f].buffer;
+        bufInfo.offset = 0;
+        bufInfo.range  = sizeof(FrameUBO);
+
+        VkDescriptorImageInfo imgInfo{};
+        imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgInfo.imageView   = whiteTexture.imageView;
+        imgInfo.sampler     = whiteTexture.sampler;
+
+        VkDescriptorImageInfo shadowImgInfo{};
+        shadowImgInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        shadowImgInfo.imageView   = shadowImageView;
+        shadowImgInfo.sampler     = shadowSampler;
+
+        VkDescriptorBufferInfo boneInfo{};
+        boneInfo.buffer = boneUniformBuffers[f].buffer;  // identity — ground never animates
+        boneInfo.offset = 0;
+        boneInfo.range  = sizeof(BoneUBO);
+
+        std::array<VkWriteDescriptorSet, 4> writes{};
+        writes[0] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, groundDescriptorSets[f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         nullptr, &bufInfo,       nullptr};
+        writes[1] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, groundDescriptorSets[f], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &imgInfo,       nullptr, nullptr};
+        writes[2] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, groundDescriptorSets[f], 2, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowImgInfo, nullptr, nullptr};
+        writes[3] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, groundDescriptorSets[f], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         nullptr, &boneInfo,      nullptr};
+
+        vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+    }
+    std::cout << "[Vulkan] Ground plane created" << std::endl;
+    return true;
+}
+
+// ─── Scene loading ────────────────────────────────────────────────────────────
+
+bool VulkanRenderer::loadScene(Scene* scene) {
+    if (!scene) return false;
+    currentScene = scene;
+
+    // Ensure model pipeline, pools, and UBOs exist
+    if (!modelPipeline && !createModelPipelineAndDescriptors()) return false;
+    if (!pbrPipeline) createPBRPipelineAndDescriptors();
+
+    // Update grid descriptor sets now that modelUniformBuffers exist
+    if (gridDescriptorPool && modelUniformBuffers[0].buffer) {
+        VkDevice device = ctx->getDevice();
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VkDescriptorBufferInfo bufInfo{};
-            bufInfo.buffer = modelUniformBuffers[f].buffer;
+            bufInfo.buffer = modelUniformBuffers[i].buffer;
             bufInfo.offset = 0;
             bufInfo.range  = sizeof(FrameUBO);
 
-            VkDescriptorImageInfo imgInfo{};
-            imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imgInfo.imageView   = whiteTexture.imageView;
-            imgInfo.sampler     = whiteTexture.sampler;
+            VkWriteDescriptorSet write{};
+            write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.dstSet          = gridDescriptorSets[i];
+            write.dstBinding      = 0;
+            write.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write.descriptorCount = 1;
+            write.pBufferInfo     = &bufInfo;
 
-            VkDescriptorImageInfo shadowImgInfo{};
-            shadowImgInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            shadowImgInfo.imageView   = shadowImageView;
-            shadowImgInfo.sampler     = shadowSampler;
-
-            VkDescriptorBufferInfo boneInfo{};
-            boneInfo.buffer = boneUniformBuffers[f].buffer;
-            boneInfo.offset = 0;
-            boneInfo.range  = sizeof(BoneUBO);
-
-            std::array<VkWriteDescriptorSet, 4> writes{};
-            writes[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writes[0].dstSet          = groundDescriptorSets[f];
-            writes[0].dstBinding      = 0;
-            writes[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            writes[0].descriptorCount = 1;
-            writes[0].pBufferInfo     = &bufInfo;
-
-            writes[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writes[1].dstSet          = groundDescriptorSets[f];
-            writes[1].dstBinding      = 1;
-            writes[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            writes[1].descriptorCount = 1;
-            writes[1].pImageInfo      = &imgInfo;
-
-            writes[2].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writes[2].dstSet          = groundDescriptorSets[f];
-            writes[2].dstBinding      = 2;
-            writes[2].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            writes[2].descriptorCount = 1;
-            writes[2].pImageInfo      = &shadowImgInfo;
-
-            writes[3].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writes[3].dstSet          = groundDescriptorSets[f];
-            writes[3].dstBinding      = 3;
-            writes[3].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            writes[3].descriptorCount = 1;
-            writes[3].pBufferInfo     = &boneInfo;
-
-            vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()),
-                                   writes.data(), 0, nullptr);
+            vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
         }
-        std::cout << "[Vulkan] Ground plane created" << std::endl;
     }
 
-    loadedModel = model;
-    hasModel = true;
-    std::cout << "[Vulkan] Model loaded: " << meshCount << " meshes"
-              << (model->IsAnimated() ? " (animated)" : " (static)") << std::endl;
+    if (!waterPipeline)  createWaterResources();
+    if (!grassPipeline)  createGrassResources();
+
+    // Ground plane (once)
+    createGroundPlane();
+
+    // Upload unique models
+    for (auto& obj : scene->getGameObjects()) {
+        if (obj->model && !sceneModels.count(obj->model.get()))
+            loadModel(obj->model.get());
+    }
+
+    std::cout << "[Vulkan] Scene loaded: " << sceneModels.size()
+              << " unique models, " << scene->getGameObjects().size() << " objects" << std::endl;
     return true;
 }
 
@@ -4499,6 +4540,3 @@ void VulkanRenderer::setProjectionMatrix(const glm::mat4& proj) {
     currentProj = proj;
 }
 
-void VulkanRenderer::setModelTransform(const glm::mat4& model) {
-    currentModel = model;
-}

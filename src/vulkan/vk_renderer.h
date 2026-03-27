@@ -7,14 +7,16 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 
 // Forward declarations
 class Model;
+class Scene;
 struct ImGuiContext;
 
-// ImGuizmo operation enum (mirrors ImGuizmo::OPERATION to avoid including header here)
+// Gizmo operation enum (used by Vulkan ImGuizmo panel)
 enum class GizmoOp { Translate, Rotate, Scale };
 
 // Maximum number of frames that can be rendered concurrently.
@@ -96,6 +98,7 @@ struct VulkanMeshGPUData {
 
 struct VulkanModelData {
     std::vector<VulkanMeshGPUData> meshes;
+    std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> boneBuffers{};
 };
 
 class VulkanRenderer {
@@ -112,15 +115,18 @@ public:
     // Upload a Model's mesh/texture data to Vulkan GPU resources
     bool loadModel(Model* model);
 
+    // Upload all unique models from a scene and set the active scene for rendering
+    bool loadScene(Scene* scene);
+
+    // Swap active scene pointer without re-uploading models
+    void setScene(Scene* scene) { currentScene = scene; }
+
     // Draw a frame — renders the textured quad (or loaded model if available)
     bool drawFrame();
 
     // Set camera matrices for the next frame (call before drawFrame)
     void setViewMatrix(const glm::mat4& view);
     void setProjectionMatrix(const glm::mat4& proj);
-    void setModelTransform(const glm::mat4& model);
-    // Read back the model transform (may have been modified by the gizmo)
-    glm::mat4 getModelTransform() const { return currentModel; }
 
     // Handle window resize — recreates swapchain + framebuffers
     bool handleResize(uint32_t width, uint32_t height);
@@ -165,6 +171,7 @@ private:
     bool createGrassResources();
     bool createWaterResources();
     bool createUIResources();
+    bool createGroundPlane();
 
     void cleanupDepthResources();
     void cleanupIDBufferResources();
@@ -251,12 +258,11 @@ private:
     // Fallback white texture for meshes without a diffuse texture
     VulkanTexture whiteTexture{};
 
-    // Uploaded model data
-    std::unique_ptr<VulkanModelData> modelData;
-    Model* loadedModel = nullptr;
-    bool hasModel = false;
+    // Scene and multi-model GPU data (keyed by Model*)
+    std::unordered_map<Model*, std::unique_ptr<VulkanModelData>> sceneModels;
+    Scene* currentScene = nullptr;
 
-    // Bone animation (Phase 10)
+    // Bone animation (Phase 10) — renderer-level UBO for shadow/ID descriptor sets (identity)
     std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> boneUniformBuffers{};
 
     // Ground plane (shadow receiver)
@@ -407,17 +413,21 @@ private:
     int       glyphCellH  = 0;  // atlas cell height in pixels
     bool      hasUIResources = false;
 
-    // ─── Gizmo state (Phase 13) ──────────────────────────────────────────────
-    GizmoOp gizmoOp   = GizmoOp::Translate;
-    bool    gizmoWorld = true;   // true = WORLD, false = LOCAL
-    bool    gizmoWasUsing = false;
-
     // ─── ImGui resources (Phase 11) ──────────────────────────────────────────
     ImGuiContext* imguiContext = nullptr;
     bool imguiInitialized = false;
 
+    // ─── Frame timing (FPS display) ───────────────────────────────────────────
+    double lastFrameTime = 0.0;
+    float  displayFPS    = 0.0f;
+    uint32_t vkDrawCalls = 0;  // reset and counted each frame
+
+    // ─── Scene entity selection + gizmo (re-added with real functionality) ───
+    int     selectedObjectIndex = -1;  // index into currentScene->getGameObjects()
+    GizmoOp gizmoOp    = GizmoOp::Translate;
+    bool    gizmoWorld = true;
+
     // Camera state (set by main loop each frame)
     glm::mat4 currentView  = glm::mat4(1.0f);
     glm::mat4 currentProj  = glm::mat4(1.0f);
-    glm::mat4 currentModel = glm::mat4(1.0f);
 };

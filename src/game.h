@@ -96,6 +96,7 @@ private:
 
     // Window/context
     GLFWwindow *window;
+    GLFWwindow *inputWindow = nullptr;  // Active input window (Vulkan window when in Vulkan mode)
     std::shared_ptr<Scene> scene;
 
     glm::vec3 engineCameraPos;
@@ -151,6 +152,20 @@ public:
     InputManager *getInputManager() { return &inputManager; };
     GameManager *getGameManager() { return &gameManager; };
     std::shared_ptr<UIManager> getUIManager() { return uiManager; };
+
+    // Register mouse/scroll callbacks on any GLFW window (used to mirror input to Vulkan window)
+    void registerInputCallbacksOnWindow(GLFWwindow* w) {
+        glfwSetWindowUserPointer(w, this);
+        glfwSetCursorPosCallback(w, mouse_callback);
+        glfwSetScrollCallback(w, scroll_callback);
+        glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+    }
+
+    // Switch which window keyboard polling and cursor reads come from
+    void setInputWindow(GLFWwindow* w) {
+        inputWindow = w;
+        firstMouse = true;  // Reset mouse delta on window switch to avoid jump
+    }
 
     // System accessors
     // EntityManager& getEntityManager() { return entityManager; }
