@@ -47,6 +47,19 @@ VulkanTexture loadTexture(
     VkQueue       queue,
     const std::string& filepath);
 
+// Load a texture from compressed image bytes already in memory (e.g. embedded GLB textures).
+// data / dataSize are the raw PNG/JPG bytes from aiTexture::pcData / aiTexture::mWidth.
+// srgb = true for albedo/diffuse, false for normal/metallic/roughness maps.
+VulkanTexture loadTextureFromMemory(
+    VmaAllocator  allocator,
+    VkDevice      device,
+    VkPhysicalDevice physicalDevice,
+    VkCommandPool commandPool,
+    VkQueue       queue,
+    const unsigned char* data,
+    uint32_t dataSize,
+    bool srgb = true);
+
 // Load a cubemap from 6 face images (right, left, top, bottom, front, back).
 // Creates a VK_IMAGE_TYPE_2D with VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
 // 6 array layers, and a VK_IMAGE_VIEW_TYPE_CUBE view.

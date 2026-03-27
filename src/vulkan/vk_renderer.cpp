@@ -3,9 +3,13 @@
 #include "vk_pipeline.h"
 #include "vk_texture.h"
 #include "../model.h"
+#include <assimp/scene.h>    // aiTexture — for embedded GLB texture access
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_vulkan.h>
+#include <ImGuizmo/ImGuizmo.h>
 #include <iostream>
 #include <limits>
 #include <cstring>
@@ -14,6 +18,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // Legacy MVP struct used by the textured quad fallback path (Phase 4).
 // Model rendering uses FrameUBO + ModelPushConstant instead (Phase 6).
@@ -32,17 +37,27 @@ VulkanRenderer::~VulkanRenderer() {
 bool VulkanRenderer::init(VulkanContext* context) {
     ctx = context;
 
-    if (!createRenderPass())      return false;
-    if (!createDepthResources())  return false;
-    if (!createFramebuffers())    return false;
-    if (!createCommandPool())     return false;
-    if (!createCommandBuffers())  return false;
+    // Must happen before createRenderPass() + createDepthResources() which
+    // read msaaSamples. VMA allocator is created later in createTriangleResources(),
+    // so createMSAAResources() is deferred until after that.
+    msaaMaxSamples = getMaxUsableSampleCount();
+    msaaSamples    = msaaMaxSamples;
+
+    if (!createRenderPass())         return false;
+    if (!createMSAAResources())      return false;  // needs no VMA — runs before framebuffers
+    if (!createDepthResources())     return false;
+    if (!createFramebuffers())       return false;
+    if (!createCommandPool())        return false;
+    if (!createCommandBuffers())     return false;
     if (!createSyncObjects())        return false;
     if (!createTriangleResources())  return false;
     if (!createDescriptorSets())     return false;
     if (!createShadowResources())    return false;
     if (!createSkyboxResources())    return false;
+    if (!createGridResources())      return false;
+    if (!createUIResources())        return false;
     if (!initImGui())                return false;
+    // Water deferred: needs modelUniformBuffers, created in loadModel()/createModelPipelineAndDescriptors()
 
     std::cout << "[Vulkan] Renderer initialized" << std::endl;
     return true;
@@ -78,6 +93,18 @@ void VulkanRenderer::cleanup() {
                 destroyedImages.insert(meshGPU.diffuseTexture.image);
                 destroyTexture(allocator, device, meshGPU.diffuseTexture);
             }
+            if (meshGPU.normalTexture.image && destroyedImages.find(meshGPU.normalTexture.image) == destroyedImages.end()) {
+                destroyedImages.insert(meshGPU.normalTexture.image);
+                destroyTexture(allocator, device, meshGPU.normalTexture);
+            }
+            if (meshGPU.metallicTexture.image && destroyedImages.find(meshGPU.metallicTexture.image) == destroyedImages.end()) {
+                destroyedImages.insert(meshGPU.metallicTexture.image);
+                destroyTexture(allocator, device, meshGPU.metallicTexture);
+            }
+            if (meshGPU.roughnessTexture.image && destroyedImages.find(meshGPU.roughnessTexture.image) == destroyedImages.end()) {
+                destroyedImages.insert(meshGPU.roughnessTexture.image);
+                destroyTexture(allocator, device, meshGPU.roughnessTexture);
+            }
             // VkMeshData destructor handles buffer cleanup via its unique_ptr
         }
         modelData.reset();
@@ -93,6 +120,28 @@ void VulkanRenderer::cleanup() {
     if (modelPipelineLayout) { vkDestroyPipelineLayout(device, modelPipelineLayout, nullptr); modelPipelineLayout = nullptr; }
     if (modelDescriptorPool) { vkDestroyDescriptorPool(device, modelDescriptorPool, nullptr); modelDescriptorPool = nullptr; }
     if (modelDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, modelDescriptorSetLayout, nullptr); modelDescriptorSetLayout = nullptr; }
+
+    // PBR resources (Phase 14)
+    if (allocator) {
+        destroyTexture(allocator, device, flatNormalTexture);
+        destroyTexture(allocator, device, blackTexture);
+    }
+    if (pbrPipeline)            { vkDestroyPipeline(device, pbrPipeline, nullptr);             pbrPipeline = nullptr; }
+    if (pbrPipelineLayout)      { vkDestroyPipelineLayout(device, pbrPipelineLayout, nullptr); pbrPipelineLayout = nullptr; }
+    if (pbrDescriptorPool)      { vkDestroyDescriptorPool(device, pbrDescriptorPool, nullptr); pbrDescriptorPool = nullptr; }
+    if (pbrDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, pbrDescriptorSetLayout, nullptr); pbrDescriptorSetLayout = nullptr; }
+
+    // Grid resources (Phase 12)
+    cleanupGridResources();
+
+    // Grass resources (Phase 17)
+    cleanupGrassResources();
+
+    // Water resources (Phase 16)
+    cleanupWaterResources();
+
+    // UI text + sprite resources (Phase 15)
+    cleanupUIResources();
 
     // ImGui resources (Phase 11)
     cleanupImGui();
@@ -126,6 +175,7 @@ void VulkanRenderer::cleanup() {
 
     cleanupFramebuffers();
     cleanupDepthResources();
+    cleanupMSAAResources();
 
     if (renderPass) {
         vkDestroyRenderPass(device, renderPass, nullptr);
@@ -156,50 +206,11 @@ void VulkanRenderer::setClearColor(float r, float g, float b, float a) {
 
 bool VulkanRenderer::createRenderPass() {
     depthFormat = findDepthFormat();
+    const bool msaa = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
 
-    // Color attachment — the swapchain image
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format         = ctx->getSwapchainFormat();
-    colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;     // Clear at start
-    colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;    // Keep result for present
-    colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;       // Don't care about previous content
-    colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // Ready for presentation after pass
-
-    // Depth attachment
-    VkAttachmentDescription depthAttachment{};
-    depthAttachment.format         = depthFormat;
-    depthAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE; // We don't need depth after pass
-    depthAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    // Subpass — references into the attachment array above
-    VkAttachmentReference colorRef{};
-    colorRef.attachment = 0; // Index into the attachment descriptions array
-    colorRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference depthRef{};
-    depthRef.attachment = 1;
-    depthRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount    = 1;
-    subpass.pColorAttachments       = &colorRef;
-    subpass.pDepthStencilAttachment = &depthRef;
-
-    // Subpass dependency — ensures the image is transitioned before we write to it.
-    // Without this, the render pass might start before the image is acquired from
-    // the swapchain, causing visual corruption.
     VkSubpassDependency dependency{};
-    dependency.srcSubpass    = VK_SUBPASS_EXTERNAL; // Operations before the render pass
-    dependency.dstSubpass    = 0;                    // Our subpass
+    dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass    = 0;
     dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
                                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependency.srcAccessMask = 0;
@@ -208,23 +219,114 @@ bool VulkanRenderer::createRenderPass() {
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+    if (!msaa) {
+        // ── Non-MSAA path (1-sample): color + depth ──────────────────────────
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format         = ctx->getSwapchainFormat();
+        colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-    renderPassInfo.pAttachments    = attachments.data();
-    renderPassInfo.subpassCount    = 1;
-    renderPassInfo.pSubpasses      = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies   = &dependency;
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format         = depthFormat;
+        depthAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    if (vkCreateRenderPass(ctx->getDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-        std::cerr << "[Vulkan] Failed to create render pass" << std::endl;
-        return false;
+        VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference depthRef{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount    = 1;
+        subpass.pColorAttachments       = &colorRef;
+        subpass.pDepthStencilAttachment = &depthRef;
+
+        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkRenderPassCreateInfo rpInfo{};
+        rpInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        rpInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        rpInfo.pAttachments    = attachments.data();
+        rpInfo.subpassCount    = 1;
+        rpInfo.pSubpasses      = &subpass;
+        rpInfo.dependencyCount = 1;
+        rpInfo.pDependencies   = &dependency;
+
+        if (vkCreateRenderPass(ctx->getDevice(), &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to create render pass" << std::endl;
+            return false;
+        }
+    } else {
+        // ── MSAA path: MSAA color (0) + MSAA depth (1) + resolve (2) ─────────
+        // Attachment 0: MSAA color buffer (rendered into, then resolved)
+        VkAttachmentDescription msaaColor{};
+        msaaColor.format         = ctx->getSwapchainFormat();
+        msaaColor.samples        = msaaSamples;
+        msaaColor.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        msaaColor.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE; // discarded after resolve
+        msaaColor.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        msaaColor.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        msaaColor.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        msaaColor.finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        // Attachment 1: MSAA depth buffer
+        VkAttachmentDescription msaaDepth{};
+        msaaDepth.format         = depthFormat;
+        msaaDepth.samples        = msaaSamples;
+        msaaDepth.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        msaaDepth.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        msaaDepth.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        msaaDepth.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        msaaDepth.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        msaaDepth.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        // Attachment 2: resolve target — 1-sample swapchain image for presentation
+        VkAttachmentDescription resolve{};
+        resolve.format         = ctx->getSwapchainFormat();
+        resolve.samples        = VK_SAMPLE_COUNT_1_BIT;
+        resolve.loadOp         = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        resolve.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+        resolve.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        resolve.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        resolve.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorRef  {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference depthRef  {1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference resolveRef{2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount    = 1;
+        subpass.pColorAttachments       = &colorRef;
+        subpass.pDepthStencilAttachment = &depthRef;
+        subpass.pResolveAttachments     = &resolveRef;
+
+        std::array<VkAttachmentDescription, 3> attachments = {msaaColor, msaaDepth, resolve};
+        VkRenderPassCreateInfo rpInfo{};
+        rpInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        rpInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        rpInfo.pAttachments    = attachments.data();
+        rpInfo.subpassCount    = 1;
+        rpInfo.pSubpasses      = &subpass;
+        rpInfo.dependencyCount = 1;
+        rpInfo.pDependencies   = &dependency;
+
+        if (vkCreateRenderPass(ctx->getDevice(), &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
+            std::cerr << "[Vulkan] Failed to create MSAA render pass" << std::endl;
+            return false;
+        }
     }
 
-    std::cout << "[Vulkan] Render pass created" << std::endl;
+    std::cout << "[Vulkan] Render pass created (samples=" << msaaSamples << ")" << std::endl;
     return true;
 }
 
@@ -282,7 +384,7 @@ bool VulkanRenderer::createDepthResources() {
     imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage         = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.samples       = msaaSamples;
     imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
 
     if (vkCreateImage(device, &imageInfo, nullptr, &depthImage) != VK_SUCCESS) {
@@ -336,6 +438,217 @@ void VulkanRenderer::cleanupDepthResources() {
     if (depthImageMemory) { vkFreeMemory(device, depthImageMemory, nullptr);       depthImageMemory = nullptr; }
 }
 
+// ─── MSAA Resources ───────────────────────────────────────────────────────────
+
+VkSampleCountFlagBits VulkanRenderer::getMaxUsableSampleCount() {
+    VkPhysicalDeviceProperties props;
+    vkGetPhysicalDeviceProperties(ctx->getPhysicalDevice(), &props);
+
+    VkSampleCountFlags counts = props.limits.framebufferColorSampleCounts &
+                                props.limits.framebufferDepthSampleCounts;
+
+    // Cap at 4x — 8x/16x give diminishing returns and cost more memory/bandwidth
+    if (counts & VK_SAMPLE_COUNT_4_BIT) return VK_SAMPLE_COUNT_4_BIT;
+    if (counts & VK_SAMPLE_COUNT_2_BIT) return VK_SAMPLE_COUNT_2_BIT;
+    return VK_SAMPLE_COUNT_1_BIT;
+}
+
+bool VulkanRenderer::createMSAAResources() {
+    if (msaaSamples == VK_SAMPLE_COUNT_1_BIT) return true;
+
+    VkDevice   device = ctx->getDevice();
+    VkExtent2D extent = ctx->getSwapchainExtent();
+    VkFormat   format = ctx->getSwapchainFormat();
+
+    // Plain vkCreateImage — no VMA needed, so this can run before createTriangleResources()
+    VkImageCreateInfo imgInfo{};
+    imgInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imgInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imgInfo.format        = format;
+    imgInfo.extent        = {extent.width, extent.height, 1};
+    imgInfo.mipLevels     = 1;
+    imgInfo.arrayLayers   = 1;
+    imgInfo.samples       = msaaSamples;
+    imgInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imgInfo.usage         = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                            VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+    imgInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+    imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    if (vkCreateImage(device, &imgInfo, nullptr, &msaaColorImage) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create MSAA color image" << std::endl;
+        return false;
+    }
+
+    VkMemoryRequirements memReqs;
+    vkGetImageMemoryRequirements(device, msaaColorImage, &memReqs);
+
+    // Prefer lazily-allocated memory (Metal tile memory on Apple Silicon)
+    VkMemoryPropertyFlags preferred = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT |
+                                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    VkMemoryPropertyFlags fallback  = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    VkPhysicalDeviceMemoryProperties memProps;
+    vkGetPhysicalDeviceMemoryProperties(ctx->getPhysicalDevice(), &memProps);
+
+    auto findMemType = [&](VkMemoryPropertyFlags flags) -> uint32_t {
+        for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
+            if ((memReqs.memoryTypeBits & (1u << i)) &&
+                (memProps.memoryTypes[i].propertyFlags & flags) == flags)
+                return i;
+        }
+        return UINT32_MAX;
+    };
+
+    uint32_t memIdx = findMemType(preferred);
+    if (memIdx == UINT32_MAX) memIdx = findMemType(fallback);
+    if (memIdx == UINT32_MAX) {
+        std::cerr << "[Vulkan] No suitable memory type for MSAA image" << std::endl;
+        return false;
+    }
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize  = memReqs.size;
+    allocInfo.memoryTypeIndex = memIdx;
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &msaaColorMemory) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to allocate MSAA color memory" << std::endl;
+        return false;
+    }
+    vkBindImageMemory(device, msaaColorImage, msaaColorMemory, 0);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image                           = msaaColorImage;
+    viewInfo.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format                          = format;
+    viewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel   = 0;
+    viewInfo.subresourceRange.levelCount     = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount     = 1;
+
+    if (vkCreateImageView(device, &viewInfo, nullptr, &msaaColorView) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create MSAA color image view" << std::endl;
+        return false;
+    }
+
+    std::cout << "[Vulkan] MSAA color image created (" << msaaSamples << "x)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupMSAAResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+    if (msaaColorView)   { vkDestroyImageView(device, msaaColorView, nullptr);  msaaColorView   = nullptr; }
+    if (msaaColorImage)  { vkDestroyImage(device, msaaColorImage, nullptr);     msaaColorImage  = nullptr; }
+    if (msaaColorMemory) { vkFreeMemory(device, msaaColorMemory, nullptr);      msaaColorMemory = nullptr; }
+}
+
+// ─── Live MSAA toggle ─────────────────────────────────────────────────────────
+//
+// Rebuilds: render pass → MSAA image → depth → framebuffers → all main-pass pipelines.
+// Shadow and ID pipelines keep their own render passes and stay 1-sample.
+
+bool VulkanRenderer::recreateForMSAAChange(VkSampleCountFlagBits newSamples) {
+    VkDevice device = ctx->getDevice();
+    vkDeviceWaitIdle(device);
+
+    // ── Tear down render-pass dependents ─────────────────────────────────────
+    cleanupFramebuffers();
+    cleanupDepthResources();
+    cleanupMSAAResources();
+    if (renderPass) { vkDestroyRenderPass(device, renderPass, nullptr); renderPass = nullptr; }
+
+    // ── Destroy all main-pass VkPipeline + VkPipelineLayout objects ──────────
+    auto destroyPL = [&](VkPipeline& p, VkPipelineLayout& l) {
+        if (p) { vkDestroyPipeline(device, p, nullptr); p = nullptr; }
+        if (l) { vkDestroyPipelineLayout(device, l, nullptr); l = nullptr; }
+    };
+    destroyPL(pipeline,         pipelineLayout);
+    destroyPL(modelPipeline,    modelPipelineLayout);
+    destroyPL(pbrPipeline,      pbrPipelineLayout);
+    destroyPL(skyboxPipeline,   skyboxPipelineLayout);
+    destroyPL(idDebugPipeline,  idDebugPipelineLayout);
+    destroyPL(gridPipeline,     gridPipelineLayout);
+    destroyPL(grassPipeline,    grassPipelineLayout);
+    destroyPL(waterPipeline,    waterPipelineLayout);
+    destroyPL(uiTextPipeline,   uiTextPipelineLayout);
+    destroyPL(uiSpritePipeline, uiSpritePipelineLayout);
+
+    // ── Apply new sample count and rebuild ────────────────────────────────────
+    msaaSamples = newSamples;
+
+    if (!createRenderPass())    return false;
+    if (!createMSAAResources()) return false;
+    if (!createDepthResources()) return false;
+    if (!createFramebuffers())  return false;
+
+    // Recreate pipelines that have valid descriptor set layouts
+    if (descriptorSetLayout)
+        createTexturedPipeline(device, renderPass, descriptorSetLayout,
+                               pipelineLayout, pipeline, msaaSamples);
+    if (modelDescriptorSetLayout)
+        createModelPipeline(device, renderPass, modelDescriptorSetLayout,
+                            modelPipelineLayout, modelPipeline, msaaSamples);
+    if (pbrDescriptorSetLayout)
+        createPBRPipeline(device, renderPass, pbrDescriptorSetLayout,
+                          pbrPipelineLayout, pbrPipeline, msaaSamples);
+    if (skyboxDescriptorSetLayout)
+        createSkyboxPipeline(device, renderPass, skyboxDescriptorSetLayout,
+                             skyboxPipelineLayout, skyboxPipeline, msaaSamples);
+    if (idDescriptorSetLayout)
+        createIDDebugPipeline(device, renderPass, idDescriptorSetLayout,
+                              idDebugPipelineLayout, idDebugPipeline, msaaSamples);
+    if (gridDescriptorSetLayout)
+        createGridPipeline(device, renderPass, gridDescriptorSetLayout,
+                           gridPipelineLayout, gridPipeline, msaaSamples);
+    if (grassDescriptorSetLayout)
+        createGrassPipeline(device, renderPass, grassDescriptorSetLayout,
+                            grassPipelineLayout, grassPipeline, msaaSamples);
+    if (waterDescriptorSetLayout)
+        createWaterPipeline(device, renderPass, waterDescriptorSetLayout,
+                            waterPipelineLayout, waterPipeline, msaaSamples);
+    if (uiDescriptorSetLayout) {
+        createUITextPipeline(device, renderPass, uiDescriptorSetLayout,
+                             uiTextPipelineLayout, uiTextPipeline, msaaSamples);
+        createUISpritePipeline(device, renderPass, uiDescriptorSetLayout,
+                               uiSpritePipelineLayout, uiSpritePipeline, msaaSamples);
+    }
+
+    // ImGui render pass must match — reinit only the Vulkan backend.
+    // The ImGuiContext and the GLFW backend stay alive; only the Vk renderer
+    // pipeline (which depends on the render pass) needs to be rebuilt.
+    if (imguiInitialized) {
+        ImGuiContext* prevCtx = ImGui::GetCurrentContext();
+        ImGui::SetCurrentContext(imguiContext);
+
+        ImGui_ImplVulkan_Shutdown();  // destroys Vulkan pipeline + descriptor pool
+
+        ImGui_ImplVulkan_InitInfo initInfo{};
+        initInfo.ApiVersion       = VK_API_VERSION_1_0;
+        initInfo.Instance         = ctx->getInstance();
+        initInfo.PhysicalDevice   = ctx->getPhysicalDevice();
+        initInfo.Device           = device;
+        initInfo.QueueFamily      = ctx->getGraphicsQueueFamily();
+        initInfo.Queue            = ctx->getGraphicsQueue();
+        initInfo.DescriptorPool   = VK_NULL_HANDLE; // backend creates its own
+        initInfo.DescriptorPoolSize = 1000;
+        initInfo.RenderPass       = renderPass;
+        initInfo.MinImageCount    = 2;
+        initInfo.ImageCount       = static_cast<uint32_t>(ctx->getSwapchainImages().size());
+        initInfo.MSAASamples      = VK_SAMPLE_COUNT_1_BIT;
+        initInfo.Subpass          = 0;
+        ImGui_ImplVulkan_Init(&initInfo);
+
+        ImGui::SetCurrentContext(prevCtx);
+    }
+
+    std::cout << "[Vulkan] MSAA changed to " << msaaSamples << "x" << std::endl;
+    return true;
+}
+
 // ─── Framebuffers ────────────────────────────────────────────────────────────
 //
 // A framebuffer binds actual images (VkImageView) to a render pass's attachment
@@ -345,23 +658,35 @@ void VulkanRenderer::cleanupDepthResources() {
 bool VulkanRenderer::createFramebuffers() {
     const auto& imageViews = ctx->getSwapchainImageViews();
     VkExtent2D extent = ctx->getSwapchainExtent();
+    const bool msaa = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
 
     framebuffers.resize(imageViews.size());
 
     for (size_t i = 0; i < imageViews.size(); i++) {
-        std::array<VkImageView, 2> attachments = {
-            imageViews[i],  // color (attachment 0)
-            depthImageView  // depth (attachment 1)
-        };
-
         VkFramebufferCreateInfo fbInfo{};
-        fbInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        fbInfo.renderPass      = renderPass;
-        fbInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        fbInfo.pAttachments    = attachments.data();
-        fbInfo.width           = extent.width;
-        fbInfo.height          = extent.height;
-        fbInfo.layers          = 1;
+        fbInfo.sType      = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        fbInfo.renderPass = renderPass;
+        fbInfo.width      = extent.width;
+        fbInfo.height     = extent.height;
+        fbInfo.layers     = 1;
+
+        if (msaa) {
+            // MSAA: attachment 0=MSAA color, 1=MSAA depth, 2=resolve (swapchain)
+            std::array<VkImageView, 3> attachments = {
+                msaaColorView,  // attachment 0 — MSAA color
+                depthImageView, // attachment 1 — MSAA depth
+                imageViews[i],  // attachment 2 — resolve target
+            };
+            fbInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            fbInfo.pAttachments    = attachments.data();
+        } else {
+            std::array<VkImageView, 2> attachments = {
+                imageViews[i],  // attachment 0 — color
+                depthImageView, // attachment 1 — depth
+            };
+            fbInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            fbInfo.pAttachments    = attachments.data();
+        }
 
         if (vkCreateFramebuffer(ctx->getDevice(), &fbInfo, nullptr, &framebuffers[i]) != VK_SUCCESS) {
             std::cerr << "[Vulkan] Failed to create framebuffer " << i << std::endl;
@@ -489,6 +814,14 @@ bool VulkanRenderer::createSyncObjects() {
 
 bool VulkanRenderer::drawFrame() {
     VkDevice device = ctx->getDevice();
+
+    // Apply pending MSAA toggle (safe here — GPU is about to wait on the fence anyway)
+    if (pendingMSAAToggle) {
+        pendingMSAAToggle = false;
+        VkSampleCountFlagBits next = (msaaSamples == VK_SAMPLE_COUNT_1_BIT)
+                                     ? msaaMaxSamples : VK_SAMPLE_COUNT_1_BIT;
+        if (next != msaaSamples) recreateForMSAAChange(next);
+    }
 
     // 1. Wait for previous frame using this slot
     vkWaitForFences(device, 1, &inFlightFences[currentFrame],
@@ -619,6 +952,28 @@ bool VulkanRenderer::drawFrame() {
         vkCmdEndRenderPass(cmd);
     }
 
+    // ── Reflection clear pass (Phase 16) ────────────────────────────────────
+    // Begin + immediately end the reflection render pass so the image gets
+    // cleared to sky-blue and transitioned to SHADER_READ_ONLY_OPTIMAL.
+    // A full scene re-render into reflectionFramebuffer would go here.
+    if (showWater && reflectionRenderPass && reflectionFramebuffer) {
+        VkExtent2D refExt = { std::max(1u, ctx->getSwapchainExtent().width  / 2),
+                              std::max(1u, ctx->getSwapchainExtent().height / 2) };
+        std::array<VkClearValue, 2> refClear{};
+        refClear[0].color        = {{ 0.53f, 0.81f, 0.92f, 1.0f }};  // sky blue
+        refClear[1].depthStencil = { 1.0f, 0 };
+
+        VkRenderPassBeginInfo refBegin{};
+        refBegin.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        refBegin.renderPass        = reflectionRenderPass;
+        refBegin.framebuffer       = reflectionFramebuffer;
+        refBegin.renderArea.extent = refExt;
+        refBegin.clearValueCount   = 2;
+        refBegin.pClearValues      = refClear.data();
+        vkCmdBeginRenderPass(cmd, &refBegin, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdEndRenderPass(cmd);  // just clears and transitions the image
+    }
+
     // ── Main render pass ────────────────────────────────────────────────────
     // Begin render pass with clear values
     std::array<VkClearValue, 2> clearValues{};
@@ -653,51 +1008,73 @@ bool VulkanRenderer::drawFrame() {
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
     if (hasModel && modelData) {
-        // ── Model rendering path (Phase 6) ──────────────────────────────────
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
-
-        // Update per-frame UBO (view, proj, light data)
+        // ── Model rendering path (Phase 6 / Phase 14) ───────────────────────
+        // Update per-frame UBO (view, proj, light data, camera position)
         FrameUBO frameUbo{};
         frameUbo.view             = currentView;
         frameUbo.proj             = currentProj;
         frameUbo.proj[1][1]      *= -1; // Vulkan NDC Y-flip
         frameUbo.lightSpaceMatrix = lightSpaceMatrix;
         frameUbo.lightPos         = glm::vec4(lightPos, 1.0f);
+        // Camera position in world space = last column of inverse view
+        frameUbo.viewPos = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
+
+        // Point lights around the model to showcase PBR (Phase 14)
+        frameUbo.numPointLights = 4;
+        frameUbo.pointLights[0] = { glm::vec4(-3.0f, 2.0f,  0.0f, 0.0f), glm::vec4(1.0f, 0.3f, 0.3f, 8.0f) }; // red left
+        frameUbo.pointLights[1] = { glm::vec4( 3.0f, 2.0f,  0.0f, 0.0f), glm::vec4(0.3f, 0.6f, 1.0f, 8.0f) }; // blue right
+        frameUbo.pointLights[2] = { glm::vec4( 0.0f, 2.0f, -3.0f, 0.0f), glm::vec4(0.3f, 1.0f, 0.4f, 6.0f) }; // green front
+        frameUbo.pointLights[3] = { glm::vec4( 0.0f, 4.0f,  3.0f, 0.0f), glm::vec4(1.0f, 0.9f, 0.5f, 5.0f) }; // warm back
 
         void* mapped;
         vmaMapMemory(allocator, modelUniformBuffers[currentFrame].allocation, &mapped);
         memcpy(mapped, &frameUbo, sizeof(frameUbo));
         vmaUnmapMemory(allocator, modelUniformBuffers[currentFrame].allocation);
 
-        // Push per-object model matrix
-        ModelPushConstant push{};
-        push.model = currentModel;
-        vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                           0, sizeof(ModelPushConstant), &push);
-
-        // Draw each mesh with its own descriptor set (different textures)
+        // Draw each mesh — choose PBR or simple pipeline per mesh
         for (auto& meshGPU : modelData->meshes) {
             VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
             VkDeviceSize voffsets[] = {0};
             vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
             vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
-                                    0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
+            if (meshGPU.hasPBR && pbrPipeline && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
+                // PBR path
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
+                                        0, 1, &meshGPU.pbrDescriptorSets[currentFrame], 0, nullptr);
 
+                PBRPushConstant pbrPush{};
+                pbrPush.model        = currentModel;
+                pbrPush.metallicVal  = 1.0f;
+                pbrPush.roughnessVal = 1.0f;
+                pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
+                vkCmdPushConstants(cmd, pbrPipelineLayout,
+                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                   0, sizeof(PBRPushConstant), &pbrPush);
+            } else {
+                // Simple diffuse path
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                        0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
+
+                ModelPushConstant push{};
+                push.model = currentModel;
+                vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                                   0, sizeof(ModelPushConstant), &push);
+            }
             vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
         }
 
-        // Draw ground plane
+        // Ground plane — always simple pipeline
         if (groundVertexBuffer.buffer) {
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
             ModelPushConstant groundPush{};
             groundPush.model = glm::mat4(1.0f);
             vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
                                0, sizeof(ModelPushConstant), &groundPush);
-
             vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
                                     0, 1, &groundDescriptorSets[currentFrame], 0, nullptr);
-
             VkBuffer gvb[] = {groundVertexBuffer.buffer};
             VkDeviceSize gvo[] = {0};
             vkCmdBindVertexBuffers(cmd, 0, 1, gvb, gvo);
@@ -755,6 +1132,60 @@ bool VulkanRenderer::drawFrame() {
         vkCmdDraw(cmd, 36, 1, 0, 0);
     }
 
+    // ── Grass field (Phase 17) ───────────────────────────────────────────────
+    if (showGrass && grassPipeline && grassBladeVertexBuffer.buffer && grassInstanceCount > 0) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, grassPipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, grassPipelineLayout,
+                                0, 1, &grassDescriptorSets[currentFrame], 0, nullptr);
+
+        struct GrassPush { float time, windStrength, windSpeed, grassHeight; } gp;
+        static float grassTime = 0.0f;
+        grassTime += 0.016f;
+        gp = { grassTime, 0.3f, 1.2f, 0.0f };
+        vkCmdPushConstants(cmd, grassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(gp), &gp);
+
+        VkBuffer     vbufs[2]  = { grassBladeVertexBuffer.buffer, grassInstanceBuffer.buffer };
+        VkDeviceSize offsets[2] = { 0, 0 };
+        vkCmdBindVertexBuffers(cmd, 0, 2, vbufs, offsets);
+        vkCmdBindIndexBuffer(cmd, grassBladeIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, grassBladeIndexCount, grassInstanceCount, 0, 0, 0);
+    }
+
+    // ── Water surface (Phase 16) ─────────────────────────────────────────────
+    if (showWater && waterPipeline && waterVertexBuffer.buffer) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, waterPipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, waterPipelineLayout,
+                                0, 1, &waterDescriptorSets[currentFrame], 0, nullptr);
+
+        struct WaterPush { float time; float waveHeight; float waveSpeed; float waterLevel; } wp;
+        static float waterTime = 0.0f;
+        waterTime += 0.016f;  // ~60fps accumulation; real dt could be passed instead
+        wp = { waterTime, 0.4f, 0.3f, -1.5f };  // waterLevel=-1.5 keeps water below ground/grass
+        vkCmdPushConstants(cmd, waterPipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(wp), &wp);
+
+        VkBuffer wb = waterVertexBuffer.buffer;
+        VkDeviceSize woff = 0;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &wb, &woff);
+        vkCmdBindIndexBuffer(cmd, waterIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, waterIndexCount, 1, 0, 0, 0);
+    }
+
+    // ── Infinite grid (Phase 12) ─────────────────────────────────────────────
+    if (showGrid && gridPipeline) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, gridPipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, gridPipelineLayout,
+                                0, 1, &gridDescriptorSets[currentFrame], 0, nullptr);
+
+        // Push camera position as vec4 (16 bytes)
+        glm::vec4 camPos = glm::inverse(currentView) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        vkCmdPushConstants(cmd, gridPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(glm::vec4), &camPos);
+
+        vkCmdDraw(cmd, 3, 1, 0, 0);  // Fullscreen triangle, no vertex buffer
+    }
+
     // ── ID debug overlay (Phase 11, Part 2) ──────────────────────────────────
     // Re-renders all objects with semi-transparent false colors based on object ID
     if (showIDDebugOverlay && hasModel && modelData) {
@@ -767,7 +1198,7 @@ bool VulkanRenderer::drawFrame() {
             }
             if (idDescriptorSetLayout) {
                 createIDDebugPipeline(ctx->getDevice(), renderPass, idDescriptorSetLayout,
-                                      idDebugPipelineLayout, idDebugPipeline);
+                                      idDebugPipelineLayout, idDebugPipeline, msaaSamples);
             }
         }
 
@@ -812,7 +1243,12 @@ bool VulkanRenderer::drawFrame() {
         }
     }
 
-    // ── ImGui overlay (Phase 11) ────────────────────────────────────────────
+    // ── UI text overlay (Phase 15) ───────────────────────────────────────────
+    if (hasUIResources) {
+        renderText(cmd, "Hephaestus Engine", 12.0f, 28.0f, 0.45f, glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
+    }
+
+    // ── ImGui + ImGuizmo overlay (Phase 11 / Phase 13) ─────────────────────
     if (imguiInitialized) {
         ImGuiContext* prevCtx = ImGui::GetCurrentContext();
         ImGui::SetCurrentContext(imguiContext);
@@ -820,21 +1256,97 @@ bool VulkanRenderer::drawFrame() {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
+
+        // Set gizmo rect to full window
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+        ImGuizmo::SetOrthographic(false);
 
         ImGui::Begin("Vulkan Info");
         ImGui::Text("Renderer: Vulkan");
+        {
+            bool msaaOn = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
+            if (ImGui::Checkbox("MSAA", &msaaOn))
+                pendingMSAAToggle = true;
+            ImGui::SameLine();
+            ImGui::Text("(%dx)", static_cast<int>(msaaSamples));
+        }
         ImGui::Text("Frame: %u", currentFrame);
         if (loadedModel) {
             ImGui::Text("Model: %s", loadedModel->IsAnimated() ? "Animated" : "Static");
         }
+        // PBR status per mesh
+        if (hasModel && modelData) {
+            ImGui::Separator();
+            int pbrCount = 0, simpleCount = 0;
+            for (const auto& m : modelData->meshes)
+                m.hasPBR ? ++pbrCount : ++simpleCount;
+            if (pbrCount > 0)
+                ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "PBR: %d meshes", pbrCount);
+            else
+                ImGui::TextColored({1.0f,0.6f,0.2f,1.0f}, "Simple diffuse: %d meshes", simpleCount);
+            if (simpleCount > 0 && pbrCount > 0)
+                ImGui::TextColored({1.0f,0.6f,0.2f,1.0f}, "Simple fallback: %d meshes", simpleCount);
+        }
         ImGui::Separator();
+        ImGui::Checkbox("Show Grid", &showGrid);
+        ImGui::Checkbox("Show Grass", &showGrass);
+        if (grassPipeline)
+            ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Grass: %u inst, %u idx", grassInstanceCount, grassBladeIndexCount);
+        else
+            ImGui::TextColored({1.0f,0.4f,0.4f,1.0f}, "Grass: pipeline NULL");
+        ImGui::Checkbox("Show Water", &showWater);
         ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
         ImGui::Text("ID Buffer: Click to pick");
         ImGui::Text("Last picked ID: %u", lastPickedID);
         if (lastPickedID == 0)      ImGui::Text("  -> Background");
         else if (lastPickedID == 1) ImGui::Text("  -> Ground plane");
         else                        ImGui::Text("  -> Mesh %u", lastPickedID - 2);
+
+        // Gizmo operation + mode selector
+        ImGui::Separator();
+        ImGui::Text("Gizmo:");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("T##vk", gizmoOp == GizmoOp::Translate)) gizmoOp = GizmoOp::Translate;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("R##vk", gizmoOp == GizmoOp::Rotate))    gizmoOp = GizmoOp::Rotate;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("S##vk", gizmoOp == GizmoOp::Scale))     gizmoOp = GizmoOp::Scale;
+        ImGui::SameLine();
+        ImGui::Text("|");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("World##vk", gizmoWorld))  gizmoWorld = true;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Local##vk", !gizmoWorld)) gizmoWorld = false;
         ImGui::End();
+
+        // ── ImGuizmo: manipulate model transform ─────────────────────────
+        if (hasModel) {
+            ImGuizmo::OPERATION op =
+                (gizmoOp == GizmoOp::Rotate) ? ImGuizmo::ROTATE :
+                (gizmoOp == GizmoOp::Scale)  ? ImGuizmo::SCALE  :
+                                                ImGuizmo::TRANSLATE;
+            ImGuizmo::MODE mode = gizmoWorld ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+
+            // currentProj is OpenGL-convention (no Y-flip) — exactly what ImGuizmo expects
+            float viewArr[16], projArr[16], modelArr[16];
+            memcpy(viewArr,  glm::value_ptr(currentView),  sizeof(viewArr));
+            memcpy(projArr,  glm::value_ptr(currentProj),  sizeof(projArr));
+            memcpy(modelArr, glm::value_ptr(currentModel), sizeof(modelArr));
+
+            ImGuizmo::Manipulate(viewArr, projArr, op, mode, modelArr);
+
+            bool isUsingNow = ImGuizmo::IsUsing();
+            if (isUsingNow) {
+                // Decompose → recompose to keep matrix well-formed (avoids drift)
+                float translation[3], rotation[3], scale[3];
+                ImGuizmo::DecomposeMatrixToComponents(modelArr, translation, rotation, scale);
+                ImGuizmo::RecomposeMatrixFromComponents(translation, rotation, scale, modelArr);
+                memcpy(glm::value_ptr(currentModel), modelArr, sizeof(modelArr));
+            }
+            gizmoWasUsing = isUsingNow;
+        }
 
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
@@ -895,7 +1407,12 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
 
     cleanupFramebuffers();
     cleanupDepthResources();
+    cleanupMSAAResources();
     cleanupIDBufferResources();  // Recreated lazily at new size
+    cleanupGridResources();
+    cleanupGrassResources();
+    cleanupWaterResources();
+    cleanupUIResources();
 
     // Destroy old per-swapchain-image semaphores before recreating swapchain
     for (auto& sem : renderFinishedSemaphores) {
@@ -904,6 +1421,7 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
     renderFinishedSemaphores.clear();
 
     if (!ctx->recreateSwapchain(width, height)) return false;
+    if (!createMSAAResources())                 return false;  // before depth + framebuffers
     if (!createDepthResources())                return false;
     if (!createFramebuffers())                  return false;
 
@@ -917,6 +1435,13 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
             std::cerr << "[Vulkan] Failed to recreate renderFinished semaphore" << std::endl;
             return false;
         }
+    }
+
+    if (!createGridResources())                 return false;
+    if (!createUIResources())                   return false;
+    if (hasModel && modelUniformBuffers[0].buffer) {
+        if (waterIndexCount == 0)       createWaterResources();
+        if (grassBladeIndexCount == 0)  createGrassResources();
     }
 
     std::cout << "[Vulkan] Resized to " << width << "x" << height << std::endl;
@@ -1065,7 +1590,7 @@ bool VulkanRenderer::createDescriptorSets() {
     }
 
     // ── 2. Create the graphics pipeline (needs the descriptor set layout) ───
-    if (!createTexturedPipeline(device, renderPass, descriptorSetLayout, pipelineLayout, pipeline)) {
+    if (!createTexturedPipeline(device, renderPass, descriptorSetLayout, pipelineLayout, pipeline, msaaSamples)) {
         return false;
     }
 
@@ -1193,7 +1718,7 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
 
     // Create model pipeline
     if (!createModelPipeline(device, renderPass, modelDescriptorSetLayout,
-                             modelPipelineLayout, modelPipeline)) {
+                             modelPipelineLayout, modelPipeline, msaaSamples)) {
         return false;
     }
 
@@ -1319,6 +1844,174 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
     vkCreateSampler(device, &samplerInfo, nullptr, &whiteTexture.sampler);
 
     std::cout << "[Vulkan] Model pipeline and white fallback texture created" << std::endl;
+    return true;
+}
+
+// ─── PBR Pipeline and Descriptors (Phase 14) ─────────────────────────────────
+//
+// Creates the PBR pipeline, descriptor set layout, and fallback textures
+// (flat normal map and black metallic/roughness).
+
+bool VulkanRenderer::createPBRPipelineAndDescriptors() {
+    VkDevice device = ctx->getDevice();
+
+    // Descriptor layout:
+    //   binding 0 = FrameUBO (vert+frag)
+    //   binding 1 = albedo sampler (frag)
+    //   binding 2 = normal map (frag)
+    //   binding 3 = metallic map (frag)
+    //   binding 4 = roughness map (frag)
+    //   binding 5 = shadow map (frag)
+    //   binding 6 = BoneUBO (vert)
+    std::array<VkDescriptorSetLayoutBinding, 7> bindings{};
+    bindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[1] = {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[2] = {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[3] = {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[4] = {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[5] = {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    bindings[6] = {6, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_VERTEX_BIT,   nullptr};
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings    = bindings.data();
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &pbrDescriptorSetLayout) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create PBR descriptor set layout" << std::endl;
+        return false;
+    }
+
+    if (!createPBRPipeline(device, renderPass, pbrDescriptorSetLayout, pbrPipelineLayout, pbrPipeline, msaaSamples)) {
+        return false;
+    }
+
+    // Helper lambda: create a 1x1 fallback texture from 4 bytes, with a given format.
+    // Uses the same one-shot command buffer pattern as whiteTexture in createModelPipelineAndDescriptors.
+    auto createFallbackTexture = [&](VulkanTexture& tex, const uint8_t* pixel, VkFormat format) -> bool {
+        AllocatedBuffer staging = createBuffer(allocator, 4, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+        void* mapped;
+        vmaMapMemory(allocator, staging.allocation, &mapped);
+        memcpy(mapped, pixel, 4);
+        vmaUnmapMemory(allocator, staging.allocation);
+
+        VkImageCreateInfo imgInfo{};
+        imgInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imgInfo.imageType     = VK_IMAGE_TYPE_2D;
+        imgInfo.extent        = {1, 1, 1};
+        imgInfo.mipLevels     = 1;
+        imgInfo.arrayLayers   = 1;
+        imgInfo.format        = format;
+        imgInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+        imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgInfo.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imgInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+        imgInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+
+        VmaAllocationCreateInfo vmaInfo{};
+        vmaInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+        if (vmaCreateImage(allocator, &imgInfo, &vmaInfo, &tex.image, &tex.allocation, nullptr) != VK_SUCCESS) {
+            destroyBuffer(allocator, staging);
+            return false;
+        }
+        tex.width  = 1;
+        tex.height = 1;
+
+        // Transition + copy + transition (same pattern as whiteTexture)
+        {
+            VkCommandBuffer cmd;
+            VkCommandBufferAllocateInfo cmdAlloc{};
+            cmdAlloc.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            cmdAlloc.commandPool        = commandPool;
+            cmdAlloc.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            cmdAlloc.commandBufferCount = 1;
+            vkAllocateCommandBuffers(device, &cmdAlloc, &cmd);
+
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            vkBeginCommandBuffer(cmd, &beginInfo);
+
+            VkImageMemoryBarrier barrier{};
+            barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout           = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image               = tex.image;
+            barrier.subresourceRange    = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+            barrier.srcAccessMask       = 0;
+            barrier.dstAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+            VkBufferImageCopy region{};
+            region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+            region.imageExtent      = {1, 1, 1};
+            vkCmdCopyBufferToImage(cmd, staging.buffer, tex.image,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+            barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+            vkEndCommandBuffer(cmd);
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers    = &cmd;
+            vkQueueSubmit(ctx->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(ctx->getGraphicsQueue());
+            vkFreeCommandBuffers(device, commandPool, 1, &cmd);
+        }
+        destroyBuffer(allocator, staging);
+
+        // Image view
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image            = tex.image;
+        viewInfo.viewType         = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format           = format;
+        viewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        vkCreateImageView(device, &viewInfo, nullptr, &tex.imageView);
+
+        // Sampler
+        VkSamplerCreateInfo sampInfo{};
+        sampInfo.sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampInfo.magFilter    = VK_FILTER_LINEAR;
+        sampInfo.minFilter    = VK_FILTER_LINEAR;
+        sampInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampInfo.mipmapMode   = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        vkCreateSampler(device, &sampInfo, nullptr, &tex.sampler);
+
+        return true;
+    };
+
+    // 1x1 flat normal texture: RGB = (128, 128, 255) = tangent-space up in UNORM
+    {
+        uint8_t flatNormal[] = {128, 128, 255, 255};
+        if (!createFallbackTexture(flatNormalTexture, flatNormal, VK_FORMAT_R8G8B8A8_UNORM)) {
+            std::cerr << "[Vulkan] Failed to create flat normal fallback texture" << std::endl;
+            return false;
+        }
+    }
+
+    // 1x1 black texture: for metallic/roughness fallback (value = 0.0)
+    {
+        uint8_t blackPixel[] = {0, 0, 0, 255};
+        if (!createFallbackTexture(blackTexture, blackPixel, VK_FORMAT_R8G8B8A8_UNORM)) {
+            std::cerr << "[Vulkan] Failed to create black fallback texture" << std::endl;
+            return false;
+        }
+    }
+
+    std::cout << "[Vulkan] PBR pipeline and fallback textures created" << std::endl;
     return true;
 }
 
@@ -1639,7 +2332,7 @@ bool VulkanRenderer::createSkyboxResources() {
 
     // 4. Create pipeline
     if (!createSkyboxPipeline(device, renderPass, skyboxDescriptorSetLayout,
-                              skyboxPipelineLayout, skyboxPipeline)) {
+                              skyboxPipelineLayout, skyboxPipeline, msaaSamples)) {
         std::cerr << "[Vulkan] Failed to create skybox pipeline" << std::endl;
         return false;
     }
@@ -1761,6 +2454,1085 @@ void VulkanRenderer::cleanupImGui() {
         ImGui::SetCurrentContext(prevCtx);
         imguiInitialized = false;
     }
+}
+
+// ─── Grid Resources (Phase 12 — Infinite Grid) ───────────────────────────────
+//
+// Creates resources for the infinite grid overlay:
+//   - Descriptor set layout: FrameUBO at binding 0
+//   - Descriptor pool + sets (one per frame in flight)
+//   - Grid pipeline (grid.vert + grid.frag, alpha blending, no vertex input)
+//
+// The grid is drawn as a fullscreen triangle; the fragment shader does
+// ray-plane intersection against Y=0 and discards rays that miss or are
+// too far away. Camera position is supplied via a 16-byte push constant.
+
+bool VulkanRenderer::createGridResources() {
+    VkDevice device = ctx->getDevice();
+
+    // Descriptor set layout: just FrameUBO at binding 0 (fragment stage)
+    VkDescriptorSetLayoutBinding uboBinding{};
+    uboBinding.binding            = 0;
+    uboBinding.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboBinding.descriptorCount    = 1;
+    uboBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings    = &uboBinding;
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &gridDescriptorSetLayout) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create grid descriptor set layout" << std::endl;
+        return false;
+    }
+
+    if (!createGridPipeline(device, renderPass, gridDescriptorSetLayout,
+                            gridPipelineLayout, gridPipeline, msaaSamples)) {
+        std::cerr << "[Vulkan] Failed to create grid pipeline" << std::endl;
+        return false;
+    }
+
+    // Descriptor pool
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes    = &poolSize;
+    poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
+
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &gridDescriptorPool) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create grid descriptor pool" << std::endl;
+        return false;
+    }
+
+    // Allocate descriptor sets
+    std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+    layouts.fill(gridDescriptorSetLayout);
+
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool     = gridDescriptorPool;
+    allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    allocInfo.pSetLayouts        = layouts.data();
+
+    if (vkAllocateDescriptorSets(device, &allocInfo, gridDescriptorSets.data()) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to allocate grid descriptor sets" << std::endl;
+        return false;
+    }
+
+    // Update descriptor sets if modelUniformBuffers are already created (may be called after loadModel).
+    // If not yet created, updateGridDescriptorSets() will be called from loadModel().
+    if (modelUniformBuffers[0].buffer) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorBufferInfo bufInfo{};
+            bufInfo.buffer = modelUniformBuffers[i].buffer;
+            bufInfo.offset = 0;
+            bufInfo.range  = sizeof(FrameUBO);
+
+            VkWriteDescriptorSet write{};
+            write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.dstSet          = gridDescriptorSets[i];
+            write.dstBinding      = 0;
+            write.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write.descriptorCount = 1;
+            write.pBufferInfo     = &bufInfo;
+
+            vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+        }
+    }
+
+    std::cout << "[Vulkan] Grid resources created" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupGridResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+
+    if (gridPipeline)            { vkDestroyPipeline(device, gridPipeline, nullptr);                       gridPipeline = nullptr; }
+    if (gridPipelineLayout)      { vkDestroyPipelineLayout(device, gridPipelineLayout, nullptr);           gridPipelineLayout = nullptr; }
+    if (gridDescriptorPool)      { vkDestroyDescriptorPool(device, gridDescriptorPool, nullptr);           gridDescriptorPool = nullptr; }
+    if (gridDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, gridDescriptorSetLayout, nullptr); gridDescriptorSetLayout = nullptr; }
+}
+
+// ─── Grass Resources (Phase 17) ───────────────────────────────────────────────
+//
+// Generates a single grass blade mesh (8 quads tapered toward the tip) on the CPU,
+// uploads it once, then renders up to MAX_GRASS_INSTANCES copies via instancing.
+// No geometry shader needed — the blade is pre-expanded.
+
+bool VulkanRenderer::createGrassResources() {
+    VkDevice device = ctx->getDevice();
+    VkQueue  queue  = ctx->getGraphicsQueue();
+
+    // ── 1. Generate blade mesh ────────────────────────────────────────────────
+    // Cross-shaped blade: two perpendicular flat quads so blades are visible
+    // from all camera angles regardless of rotation. Each quad is SEGMENTS rows.
+    // Vertex layout: vec3 pos, vec3 normal, vec2 uv
+    {
+        const int   SEGMENTS  = 4;
+        const float HEIGHT    = 1.5f;   // taller blades
+        const float WIDTH     = 0.25f;  // wide enough to see from a distance
+
+        struct BladeVert { float x, y, z, nx, ny, nz, u, v; };
+        std::vector<BladeVert> verts;
+        std::vector<uint32_t>  indices;
+
+        // Helper: add one flat quad strip (in XY or ZY plane) with given normal
+        auto addQuad = [&](float dx, float dz, float nx, float nz) {
+            uint32_t base = (uint32_t)verts.size();
+            for (int seg = 0; seg <= SEGMENTS; ++seg) {
+                float t = (float)seg / SEGMENTS;
+                float y = t * HEIGHT;
+                float w = WIDTH * (1.0f - t * 0.7f);  // taper toward tip
+                verts.push_back({ -w * dx, y, -w * dz, nx, 0.0f, nz, 0.0f, t });
+                verts.push_back({  w * dx, y,  w * dz, nx, 0.0f, nz, 1.0f, t });
+            }
+            for (int seg = 0; seg < SEGMENTS; ++seg) {
+                uint32_t bl = base + seg * 2;
+                indices.insert(indices.end(), { bl, bl+1, bl+2, bl+2, bl+1, bl+3 });
+            }
+        };
+
+        addQuad(1.0f, 0.0f,  0.0f, 1.0f);  // XY plane quad (faces +Z)
+        addQuad(0.0f, 1.0f,  1.0f, 0.0f);  // ZY plane quad (faces +X)
+
+        grassBladeIndexCount = (uint32_t)indices.size();
+
+        // Upload helper lambda (reuse from water pattern)
+        auto upload = [&](void* data, VkDeviceSize size, VkBufferUsageFlagBits usage, AllocatedBuffer& dst) {
+            VkBufferCreateInfo stagingInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT };
+            VmaAllocationCreateInfo sai{}; sai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+            VkBuffer sb; VmaAllocation sa;
+            vmaCreateBuffer(allocator, &stagingInfo, &sai, &sb, &sa, nullptr);
+            void* mapped; vmaMapMemory(allocator, sa, &mapped); memcpy(mapped, data, size); vmaUnmapMemory(allocator, sa);
+
+            VkBufferCreateInfo gpuInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, size, (VkBufferUsageFlags)(VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage) };
+            VmaAllocationCreateInfo gai{}; gai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+            vmaCreateBuffer(allocator, &gpuInfo, &gai, &dst.buffer, &dst.allocation, nullptr);
+
+            VkCommandBufferAllocateInfo cbA{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1 };
+            VkCommandBuffer cb; vkAllocateCommandBuffers(device, &cbA, &cb);
+            VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr };
+            vkBeginCommandBuffer(cb, &bi);
+            VkBufferCopy cp{ 0, 0, size }; vkCmdCopyBuffer(cb, sb, dst.buffer, 1, &cp);
+            vkEndCommandBuffer(cb);
+            VkSubmitInfo si{ VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &cb, 0, nullptr };
+            vkQueueSubmit(queue, 1, &si, VK_NULL_HANDLE); vkQueueWaitIdle(queue);
+            vkFreeCommandBuffers(device, commandPool, 1, &cb);
+            vmaDestroyBuffer(allocator, sb, sa);
+        };
+
+        upload(verts.data(),   verts.size()   * sizeof(BladeVert), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, grassBladeVertexBuffer);
+        upload(indices.data(), indices.size()  * sizeof(uint32_t),  VK_BUFFER_USAGE_INDEX_BUFFER_BIT,  grassBladeIndexBuffer);
+    }
+
+    // ── 2. Instance buffer (CPU-visible, populated with random placement) ────
+    {
+        // Matches pipeline binding 1 stride = 9 floats (36 bytes):
+        //   vec3 pos(12) + float rot(4) + float scale(4) + float heightVar(4) + vec3 tint(12) = 36
+        struct GI { float px, py, pz, rot, scale, hv, tr, tg, tb; };
+        static_assert(sizeof(GI) == sizeof(float) * 9, "GI must be 36 bytes");
+
+        VkDeviceSize bufSize = MAX_GRASS_INSTANCES * sizeof(GI);
+        VkBufferCreateInfo bufInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, bufSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT };
+        VmaAllocationCreateInfo ai{}; ai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; ai.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        vmaCreateBuffer(allocator, &bufInfo, &ai, &grassInstanceBuffer.buffer, &grassInstanceBuffer.allocation, nullptr);
+
+        // Populate with random instances on a 60m×60m patch centered at origin
+        void* mapped; vmaMapMemory(allocator, grassInstanceBuffer.allocation, &mapped);
+        GI* instances = (GI*)mapped;
+
+        srand(42);
+        auto rnd = [&](float lo, float hi) { return lo + (float)rand() / RAND_MAX * (hi - lo); };
+
+        grassInstanceCount = 0;
+        for (uint32_t i = 0; i < MAX_GRASS_INSTANCES; ++i) {
+            float x = rnd(-30.0f, 30.0f);
+            float z = rnd(-30.0f, 30.0f);
+            if (x * x + z * z < 9.0f) continue;  // exclusion under model
+            instances[grassInstanceCount++] = {
+                x, 0.01f, z,   // tiny Y offset avoids Z-fight with ground plane
+                rnd(0.0f, 6.28f),
+                rnd(0.8f, 1.5f),
+                rnd(0.0f, 0.5f),
+                rnd(0.25f, 0.55f), rnd(0.5f, 0.85f), rnd(0.15f, 0.35f)
+            };
+            if (grassInstanceCount >= MAX_GRASS_INSTANCES) break;
+        }
+        vmaUnmapMemory(allocator, grassInstanceBuffer.allocation);
+    }
+
+    // ── 3. Grass texture ─────────────────────────────────────────────────────
+    {
+        const char* texPath = "assets/grass.png";
+        FILE* f = fopen(texPath, "rb");
+        if (f) {
+            fclose(f);
+            grassTexture = loadTexture(allocator, device, ctx->getPhysicalDevice(),
+                                       commandPool, queue, texPath);
+        } else {
+            // Fallback: 1×1 green pixel
+            uint8_t px[4] = { 80, 140, 60, 255 };
+            VkBufferCreateInfo si{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, 4, VK_BUFFER_USAGE_TRANSFER_SRC_BIT };
+            VmaAllocationCreateInfo sai{}; sai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+            VkBuffer sb; VmaAllocation sa;
+            vmaCreateBuffer(allocator, &si, &sai, &sb, &sa, nullptr);
+            void* mp; vmaMapMemory(allocator, sa, &mp); memcpy(mp, px, 4); vmaUnmapMemory(allocator, sa);
+
+            VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+            ii.imageType = VK_IMAGE_TYPE_2D; ii.extent = { 1, 1, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
+            ii.format = VK_FORMAT_R8G8B8A8_SRGB; ii.tiling = VK_IMAGE_TILING_OPTIMAL;
+            ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            ii.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            ii.samples = VK_SAMPLE_COUNT_1_BIT;
+            VmaAllocationCreateInfo gai{}; gai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+            vmaCreateImage(allocator, &ii, &gai, &grassTexture.image, &grassTexture.allocation, nullptr);
+            grassTexture.width = grassTexture.height = 1;
+
+            VkCommandBufferAllocateInfo cba{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1 };
+            VkCommandBuffer cb; vkAllocateCommandBuffers(device, &cba, &cb);
+            VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr };
+            vkBeginCommandBuffer(cb, &bi);
+            VkImageMemoryBarrier bar{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+            bar.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; bar.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            bar.srcQueueFamilyIndex = bar.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            bar.image = grassTexture.image; bar.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            bar.srcAccessMask = 0; bar.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+            VkBufferImageCopy reg{}; reg.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 }; reg.imageExtent = { 1, 1, 1 };
+            vkCmdCopyBufferToImage(cb, sb, grassTexture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &reg);
+            bar.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; bar.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            bar.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; bar.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+            vkEndCommandBuffer(cb);
+            VkSubmitInfo subInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &cb, 0, nullptr };
+            vkQueueSubmit(queue, 1, &subInfo, VK_NULL_HANDLE); vkQueueWaitIdle(queue);
+            vkFreeCommandBuffers(device, commandPool, 1, &cb);
+            vmaDestroyBuffer(allocator, sb, sa);
+
+            VkImageViewCreateInfo vi{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+            vi.image = grassTexture.image; vi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            vi.format = VK_FORMAT_R8G8B8A8_SRGB; vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            vkCreateImageView(device, &vi, nullptr, &grassTexture.imageView);
+            VkSamplerCreateInfo sampI{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+            sampI.magFilter = sampI.minFilter = VK_FILTER_LINEAR;
+            sampI.addressModeU = sampI.addressModeV = sampI.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            vkCreateSampler(device, &sampI, nullptr, &grassTexture.sampler);
+        }
+    }
+
+    // ── 4. Descriptor set layout: FrameUBO (0) + grass texture (1) ───────────
+    {
+        VkDescriptorSetLayoutBinding bindings[2] = {};
+        bindings[0] = { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_VERTEX_BIT,   nullptr };
+        bindings[1] = { 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
+
+        VkDescriptorSetLayoutCreateInfo li{};
+        li.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        li.bindingCount = 2; li.pBindings = bindings;
+        vkCreateDescriptorSetLayout(device, &li, nullptr, &grassDescriptorSetLayout);
+
+        VkDescriptorPoolSize sizes[2] = {
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         MAX_FRAMES_IN_FLIGHT },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT }
+        };
+        VkDescriptorPoolCreateInfo pi{};
+        pi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pi.poolSizeCount = 2; pi.pPoolSizes = sizes; pi.maxSets = MAX_FRAMES_IN_FLIGHT;
+        vkCreateDescriptorPool(device, &pi, nullptr, &grassDescriptorPool);
+
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+        layouts.fill(grassDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo ai{};
+        ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        ai.descriptorPool = grassDescriptorPool; ai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; ai.pSetLayouts = layouts.data();
+        vkAllocateDescriptorSets(device, &ai, grassDescriptorSets.data());
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            VkDescriptorBufferInfo uboInfo{ modelUniformBuffers[i].buffer, 0, sizeof(FrameUBO) };
+            VkDescriptorImageInfo  imgInfo{ grassTexture.sampler, grassTexture.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            VkWriteDescriptorSet writes[2] = {};
+            writes[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, grassDescriptorSets[i], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         nullptr, &uboInfo, nullptr };
+            writes[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, grassDescriptorSets[i], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &imgInfo, nullptr, nullptr };
+            vkUpdateDescriptorSets(device, 2, writes, 0, nullptr);
+        }
+    }
+
+    // ── 5. Pipeline ──────────────────────────────────────────────────────────
+    // Note: pipeline binding stride must match GI struct size (10 floats = 40 bytes).
+    // createGrassPipeline uses stride=8 — we patch it by creating the pipeline ourselves.
+    if (!createGrassPipeline(device, renderPass, grassDescriptorSetLayout,
+                              grassPipelineLayout, grassPipeline, msaaSamples))
+        return false;
+
+    std::cout << "[Vulkan] Grass resources created ("
+              << grassInstanceCount << " instances, "
+              << grassBladeIndexCount << " blade indices)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupGrassResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+
+    if (grassPipeline)            { vkDestroyPipeline(device, grassPipeline, nullptr);             grassPipeline = nullptr; }
+    if (grassPipelineLayout)      { vkDestroyPipelineLayout(device, grassPipelineLayout, nullptr); grassPipelineLayout = nullptr; }
+    if (grassDescriptorPool)      { vkDestroyDescriptorPool(device, grassDescriptorPool, nullptr); grassDescriptorPool = nullptr; }
+    if (grassDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, grassDescriptorSetLayout, nullptr); grassDescriptorSetLayout = nullptr; }
+    if (grassBladeVertexBuffer.buffer) { vmaDestroyBuffer(allocator, grassBladeVertexBuffer.buffer, grassBladeVertexBuffer.allocation); grassBladeVertexBuffer = {}; }
+    if (grassBladeIndexBuffer.buffer)  { vmaDestroyBuffer(allocator, grassBladeIndexBuffer.buffer,  grassBladeIndexBuffer.allocation);  grassBladeIndexBuffer  = {}; }
+    if (grassInstanceBuffer.buffer)    { vmaDestroyBuffer(allocator, grassInstanceBuffer.buffer,    grassInstanceBuffer.allocation);    grassInstanceBuffer    = {}; }
+    grassBladeIndexCount = 0;
+    grassInstanceCount   = 0;
+    destroyTexture(allocator, device, grassTexture);
+    showGrass = false;
+}
+
+// ─── Water Resources (Phase 16) ───────────────────────────────────────────────
+//
+// Creates:
+//   - Flat XZ grid mesh (200×200 quads), uploaded as vertex/index buffers
+//   - Reflection offscreen image (half swapchain size) + render pass + framebuffer
+//   - Water descriptor set: FrameUBO (0), normal map (1), reflection texture (2)
+//   - Water pipeline
+
+bool VulkanRenderer::createWaterResources() {
+    VkDevice device = ctx->getDevice();
+    VkExtent2D extent = ctx->getSwapchainExtent();
+
+    // ── 1. Generate water mesh (XZ grid centered at origin) ─────────────────
+    {
+        const int   GRID     = 100;       // quads per side
+        const float SIZE     = 40.0f;     // half-size (total 80m×80m)
+        const float STEP     = (SIZE * 2.0f) / GRID;
+
+        struct WaterVertex { float x, y, z, u, v; };
+        std::vector<WaterVertex> verts;
+        std::vector<uint32_t>    indices;
+        verts.reserve((GRID + 1) * (GRID + 1));
+        indices.reserve(GRID * GRID * 6);
+
+        for (int row = 0; row <= GRID; ++row) {
+            for (int col = 0; col <= GRID; ++col) {
+                float x = -SIZE + col * STEP;
+                float z = -SIZE + row * STEP;
+                float u = (float)col / GRID;
+                float v = (float)row / GRID;
+                verts.push_back({ x, 0.0f, z, u, v });
+            }
+        }
+
+        for (int row = 0; row < GRID; ++row) {
+            for (int col = 0; col < GRID; ++col) {
+                uint32_t tl = row * (GRID + 1) + col;
+                uint32_t tr = tl + 1;
+                uint32_t bl = tl + (GRID + 1);
+                uint32_t br = bl + 1;
+                indices.insert(indices.end(), { tl, bl, tr, tr, bl, br });
+            }
+        }
+        waterIndexCount = (uint32_t)indices.size();
+
+        // Upload via staging buffers
+        auto uploadBuffer = [&](void* data, VkDeviceSize size, VkBufferUsageFlagBits usage, AllocatedBuffer& dst) {
+            VkBufferCreateInfo stagingInfo{};
+            stagingInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            stagingInfo.size  = size;
+            stagingInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            VmaAllocationCreateInfo stagingAlloc{};
+            stagingAlloc.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+            VkBuffer stagingBuf; VmaAllocation stagingAllocation;
+            vmaCreateBuffer(allocator, &stagingInfo, &stagingAlloc, &stagingBuf, &stagingAllocation, nullptr);
+            void* mapped; vmaMapMemory(allocator, stagingAllocation, &mapped);
+            memcpy(mapped, data, size); vmaUnmapMemory(allocator, stagingAllocation);
+
+            VkBufferCreateInfo gpuInfo{};
+            gpuInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            gpuInfo.size  = size;
+            gpuInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;
+            VmaAllocationCreateInfo gpuAlloc{};
+            gpuAlloc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+            vmaCreateBuffer(allocator, &gpuInfo, &gpuAlloc, &dst.buffer, &dst.allocation, nullptr);
+
+            VkCommandBufferAllocateInfo cbAlloc{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                nullptr, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1 };
+            VkCommandBuffer cb;
+            vkAllocateCommandBuffers(device, &cbAlloc, &cb);
+            VkCommandBufferBeginInfo beg{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr };
+            vkBeginCommandBuffer(cb, &beg);
+            VkBufferCopy copy{ 0, 0, size };
+            vkCmdCopyBuffer(cb, stagingBuf, dst.buffer, 1, &copy);
+            vkEndCommandBuffer(cb);
+            VkSubmitInfo sub{ VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &cb, 0, nullptr };
+            vkQueueSubmit(ctx->getGraphicsQueue(), 1, &sub, VK_NULL_HANDLE);
+            vkQueueWaitIdle(ctx->getGraphicsQueue());
+            vkFreeCommandBuffers(device, commandPool, 1, &cb);
+            vmaDestroyBuffer(allocator, stagingBuf, stagingAllocation);
+        };
+
+        uploadBuffer(verts.data(),   verts.size()   * sizeof(WaterVertex),  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, waterVertexBuffer);
+        uploadBuffer(indices.data(), indices.size()  * sizeof(uint32_t),     VK_BUFFER_USAGE_INDEX_BUFFER_BIT,  waterIndexBuffer);
+    }
+
+    // ── 2. Reflection offscreen image (half swapchain resolution) ────────────
+    {
+        uint32_t rW = std::max(1u, extent.width  / 2);
+        uint32_t rH = std::max(1u, extent.height / 2);
+
+        // Color image
+        VkImageCreateInfo imgInfo{};
+        imgInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imgInfo.imageType     = VK_IMAGE_TYPE_2D;
+        imgInfo.extent        = { rW, rH, 1 };
+        imgInfo.mipLevels     = 1;
+        imgInfo.arrayLayers   = 1;
+        imgInfo.format        = VK_FORMAT_R8G8B8A8_SRGB;
+        imgInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+        imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgInfo.usage         = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imgInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+        VmaAllocationCreateInfo gpuAlloc{}; gpuAlloc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        vmaCreateImage(allocator, &imgInfo, &gpuAlloc, &reflectionImage, &reflectionAllocation, nullptr);
+
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image            = reflectionImage;
+        viewInfo.viewType         = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format           = VK_FORMAT_R8G8B8A8_SRGB;
+        viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        vkCreateImageView(device, &viewInfo, nullptr, &reflectionImageView);
+
+        VkSamplerCreateInfo sampInfo{};
+        sampInfo.sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampInfo.magFilter    = VK_FILTER_LINEAR;
+        sampInfo.minFilter    = VK_FILTER_LINEAR;
+        sampInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        vkCreateSampler(device, &sampInfo, nullptr, &reflectionSampler);
+
+        // Depth image
+        VkImageCreateInfo depthInfo = imgInfo;
+        depthInfo.format = depthFormat;
+        depthInfo.usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        vmaCreateImage(allocator, &depthInfo, &gpuAlloc, &reflectionDepthImage, &reflectionDepthAlloc, nullptr);
+        VkImageViewCreateInfo dvInfo = viewInfo;
+        dvInfo.image  = reflectionDepthImage;
+        dvInfo.format = depthFormat;
+        dvInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        vkCreateImageView(device, &dvInfo, nullptr, &reflectionDepthView);
+
+        // Reflection render pass (color + depth, renders mirrored scene)
+        VkAttachmentDescription colorAtt{};
+        colorAtt.format         = VK_FORMAT_R8G8B8A8_SRGB;
+        colorAtt.samples        = VK_SAMPLE_COUNT_1_BIT;
+        colorAtt.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAtt.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAtt.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAtt.finalLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkAttachmentDescription depthAtt{};
+        depthAtt.format         = depthFormat;
+        depthAtt.samples        = VK_SAMPLE_COUNT_1_BIT;
+        depthAtt.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAtt.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAtt.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAtt.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference colorRef{ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+        VkAttachmentReference depthRef{ 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount    = 1;
+        subpass.pColorAttachments       = &colorRef;
+        subpass.pDepthStencilAttachment = &depthRef;
+
+        VkSubpassDependency dep{};
+        dep.srcSubpass    = VK_SUBPASS_EXTERNAL;
+        dep.dstSubpass    = 0;
+        dep.srcStageMask  = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dep.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dep.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkAttachmentDescription atts[2] = { colorAtt, depthAtt };
+        VkRenderPassCreateInfo rpInfo{};
+        rpInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        rpInfo.attachmentCount = 2;
+        rpInfo.pAttachments    = atts;
+        rpInfo.subpassCount    = 1;
+        rpInfo.pSubpasses      = &subpass;
+        rpInfo.dependencyCount = 1;
+        rpInfo.pDependencies   = &dep;
+        vkCreateRenderPass(device, &rpInfo, nullptr, &reflectionRenderPass);
+
+        VkImageView fbAtts[2] = { reflectionImageView, reflectionDepthView };
+        VkFramebufferCreateInfo fbInfo{};
+        fbInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        fbInfo.renderPass      = reflectionRenderPass;
+        fbInfo.attachmentCount = 2;
+        fbInfo.pAttachments    = fbAtts;
+        fbInfo.width           = rW;
+        fbInfo.height          = rH;
+        fbInfo.layers          = 1;
+        vkCreateFramebuffer(device, &fbInfo, nullptr, &reflectionFramebuffer);
+    }
+
+    // ── 3. Water normal map (try disk, fallback to flat normal) ──────────────
+    {
+        const char* normalPath = "assets/water_normal.png";
+        FILE* f = fopen(normalPath, "rb");
+        if (f) {
+            fclose(f);
+            waterNormalTexture = loadTexture(allocator, device, ctx->getPhysicalDevice(),
+                                             commandPool, ctx->getGraphicsQueue(), normalPath);
+        } else {
+            // Create a 1×1 flat normal (0.5, 0.5, 1.0) in UNORM8
+            uint8_t px[4] = { 128, 128, 255, 255 };
+            VkBufferCreateInfo stagingInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, 4, VK_BUFFER_USAGE_TRANSFER_SRC_BIT };
+            VmaAllocationCreateInfo stagingAlloc{}; stagingAlloc.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+            VkBuffer stagingBuf; VmaAllocation stagingAllocation;
+            vmaCreateBuffer(allocator, &stagingInfo, &stagingAlloc, &stagingBuf, &stagingAllocation, nullptr);
+            void* mapped; vmaMapMemory(allocator, stagingAllocation, &mapped);
+            memcpy(mapped, px, 4); vmaUnmapMemory(allocator, stagingAllocation);
+
+            VkImageCreateInfo imgInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+            imgInfo.imageType = VK_IMAGE_TYPE_2D; imgInfo.extent = { 1, 1, 1 };
+            imgInfo.mipLevels = 1; imgInfo.arrayLayers = 1;
+            imgInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+            imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imgInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            VmaAllocationCreateInfo gpuAlloc{}; gpuAlloc.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+            vmaCreateImage(allocator, &imgInfo, &gpuAlloc, &waterNormalTexture.image, &waterNormalTexture.allocation, nullptr);
+            waterNormalTexture.width = waterNormalTexture.height = 1;
+
+            VkCommandBufferAllocateInfo cbAlloc{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1 };
+            VkCommandBuffer cb; vkAllocateCommandBuffers(device, &cbAlloc, &cb);
+            VkCommandBufferBeginInfo beg{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr };
+            vkBeginCommandBuffer(cb, &beg);
+            VkImageMemoryBarrier bar{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+            bar.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; bar.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            bar.srcQueueFamilyIndex = bar.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            bar.image = waterNormalTexture.image; bar.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            bar.srcAccessMask = 0; bar.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+            VkBufferImageCopy reg{}; reg.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 }; reg.imageExtent = { 1, 1, 1 };
+            vkCmdCopyBufferToImage(cb, stagingBuf, waterNormalTexture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &reg);
+            bar.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; bar.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            bar.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; bar.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+            vkEndCommandBuffer(cb);
+            VkSubmitInfo sub{ VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &cb, 0, nullptr };
+            vkQueueSubmit(ctx->getGraphicsQueue(), 1, &sub, VK_NULL_HANDLE);
+            vkQueueWaitIdle(ctx->getGraphicsQueue());
+            vkFreeCommandBuffers(device, commandPool, 1, &cb);
+            vmaDestroyBuffer(allocator, stagingBuf, stagingAllocation);
+
+            VkImageViewCreateInfo viewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+            viewInfo.image = waterNormalTexture.image; viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM; viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            vkCreateImageView(device, &viewInfo, nullptr, &waterNormalTexture.imageView);
+
+            VkSamplerCreateInfo sampInfo{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+            sampInfo.magFilter = sampInfo.minFilter = VK_FILTER_LINEAR;
+            sampInfo.addressModeU = sampInfo.addressModeV = sampInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            vkCreateSampler(device, &sampInfo, nullptr, &waterNormalTexture.sampler);
+        }
+    }
+
+    // ── 4. Descriptor set layout: FrameUBO (0), normalMap (1), reflectionTex (2)
+    {
+        VkDescriptorSetLayoutBinding bindings[3] = {};
+        bindings[0].binding         = 0;
+        bindings[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        bindings[0].descriptorCount = 1;
+        bindings[0].stageFlags      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings[1].binding         = 1;
+        bindings[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[1].descriptorCount = 1;
+        bindings[1].stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings[2].binding         = 2;
+        bindings[2].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[2].descriptorCount = 1;
+        bindings[2].stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 3;
+        layoutInfo.pBindings    = bindings;
+        vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &waterDescriptorSetLayout);
+
+        VkDescriptorPoolSize poolSizes[2] = {
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         MAX_FRAMES_IN_FLIGHT },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT * 2 }
+        };
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 2;
+        poolInfo.pPoolSizes    = poolSizes;
+        poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
+        vkCreateDescriptorPool(device, &poolInfo, nullptr, &waterDescriptorPool);
+
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+        layouts.fill(waterDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool     = waterDescriptorPool;
+        allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        allocInfo.pSetLayouts        = layouts.data();
+        vkAllocateDescriptorSets(device, &allocInfo, waterDescriptorSets.data());
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            VkDescriptorBufferInfo uboInfo{};
+            uboInfo.buffer = modelUniformBuffers[i].buffer;
+            uboInfo.offset = 0;
+            uboInfo.range  = sizeof(FrameUBO);
+
+            VkDescriptorImageInfo normalInfo{};
+            normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            normalInfo.imageView   = waterNormalTexture.imageView;
+            normalInfo.sampler     = waterNormalTexture.sampler;
+
+            VkDescriptorImageInfo reflInfo{};
+            reflInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            reflInfo.imageView   = reflectionImageView;
+            reflInfo.sampler     = reflectionSampler;
+
+            VkWriteDescriptorSet writes[3] = {};
+            writes[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[0].dstSet          = waterDescriptorSets[i];
+            writes[0].dstBinding      = 0;
+            writes[0].descriptorCount = 1;
+            writes[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            writes[0].pBufferInfo     = &uboInfo;
+            writes[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[1].dstSet          = waterDescriptorSets[i];
+            writes[1].dstBinding      = 1;
+            writes[1].descriptorCount = 1;
+            writes[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[1].pImageInfo      = &normalInfo;
+            writes[2].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[2].dstSet          = waterDescriptorSets[i];
+            writes[2].dstBinding      = 2;
+            writes[2].descriptorCount = 1;
+            writes[2].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[2].pImageInfo      = &reflInfo;
+            vkUpdateDescriptorSets(device, 3, writes, 0, nullptr);
+        }
+    }
+
+    // ── 5. Water pipeline ────────────────────────────────────────────────────
+    if (!createWaterPipeline(device, renderPass, waterDescriptorSetLayout,
+                              waterPipelineLayout, waterPipeline, msaaSamples))
+        return false;
+
+    std::cout << "[Vulkan] Water resources created (" << waterIndexCount << " indices)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupWaterResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+
+    if (waterPipeline)            { vkDestroyPipeline(device, waterPipeline, nullptr);             waterPipeline = nullptr; }
+    if (waterPipelineLayout)      { vkDestroyPipelineLayout(device, waterPipelineLayout, nullptr); waterPipelineLayout = nullptr; }
+    if (waterDescriptorPool)      { vkDestroyDescriptorPool(device, waterDescriptorPool, nullptr); waterDescriptorPool = nullptr; }
+    if (waterDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, waterDescriptorSetLayout, nullptr); waterDescriptorSetLayout = nullptr; }
+    if (waterVertexBuffer.buffer) { vmaDestroyBuffer(allocator, waterVertexBuffer.buffer, waterVertexBuffer.allocation); waterVertexBuffer = {}; }
+    if (waterIndexBuffer.buffer)  { vmaDestroyBuffer(allocator, waterIndexBuffer.buffer,  waterIndexBuffer.allocation);  waterIndexBuffer  = {}; }
+    waterIndexCount = 0;
+
+    // Reflection image
+    if (reflectionFramebuffer) { vkDestroyFramebuffer(device, reflectionFramebuffer, nullptr);    reflectionFramebuffer = nullptr; }
+    if (reflectionRenderPass)  { vkDestroyRenderPass(device, reflectionRenderPass, nullptr);       reflectionRenderPass  = nullptr; }
+    if (reflectionDepthView)   { vkDestroyImageView(device, reflectionDepthView, nullptr);         reflectionDepthView   = nullptr; }
+    if (reflectionDepthImage)  { vmaDestroyImage(allocator, reflectionDepthImage, reflectionDepthAlloc); reflectionDepthImage = nullptr; reflectionDepthAlloc = nullptr; }
+    if (reflectionSampler)     { vkDestroySampler(device, reflectionSampler, nullptr);             reflectionSampler    = nullptr; }
+    if (reflectionImageView)   { vkDestroyImageView(device, reflectionImageView, nullptr);         reflectionImageView   = nullptr; }
+    if (reflectionImage)       { vmaDestroyImage(allocator, reflectionImage, reflectionAllocation); reflectionImage = nullptr; reflectionAllocation = nullptr; }
+
+    destroyTexture(allocator, device, waterNormalTexture);
+}
+
+// ─── UI Text + Sprite Resources (Phase 15) ───────────────────────────────────
+//
+// Builds a glyph atlas texture from ASCII 32-126 using FreeType, then creates:
+//   - R8_UNORM VkImage (atlas)                   — for text rendering
+//   - Dynamic CPU-visible vertex buffer           — quad data rebuilt per renderText() call
+//   - Shared descriptor set layout (1 sampler)   — used by both text and sprite pipelines
+//   - uiTextPipeline / uiSpritePipeline
+//
+// Atlas layout: 16 columns × 6 rows, cell size = glyphCellW × glyphCellH.
+// Each character occupies one cell; UVs are stored per-glyph in glyphs[].
+
+bool VulkanRenderer::createUIResources() {
+    VkDevice         device = ctx->getDevice();
+    VkQueue          queue  = ctx->getGraphicsQueue();
+
+    // ── 1. FreeType glyph atlas ───────────────────────────────────────────────
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft)) {
+        std::cerr << "[UI] FreeType init failed" << std::endl;
+        return false;
+    }
+
+    FT_Face face;
+    const char* fontPath = "assets/fonts/BodoniXT.ttf";
+    if (FT_New_Face(ft, fontPath, 0, &face)) {
+        std::cerr << "[UI] Failed to load font: " << fontPath << std::endl;
+        FT_Done_FreeType(ft);
+        return false;
+    }
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    // Measure the largest glyph to set atlas cell size
+    glyphCellW = 0;
+    glyphCellH = 0;
+    for (unsigned char c = 32; c < 127; ++c) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) continue;
+        glyphCellW = std::max(glyphCellW, (int)face->glyph->bitmap.width + 2);
+        glyphCellH = std::max(glyphCellH, (int)face->glyph->bitmap.rows  + 2);
+    }
+    if (glyphCellW == 0) glyphCellW = 32;
+    if (glyphCellH == 0) glyphCellH = 48;
+
+    // Atlas: 16 columns × 6 rows = 96 chars (covers ASCII 32–127)
+    const int COLS      = 16;
+    const int ROWS      = 6;
+    const int atlasW    = COLS * glyphCellW;
+    const int atlasH    = ROWS * glyphCellH;
+
+    // CPU buffer for atlas pixels (R8)
+    std::vector<uint8_t> atlasPixels(atlasW * atlasH, 0);
+
+    for (unsigned char c = 32; c < 127; ++c) {
+        int idx = c - 32;
+        int col = idx % COLS;
+        int row = idx / COLS;
+
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) continue;
+
+        FT_GlyphSlot g  = face->glyph;
+        int bw          = (int)g->bitmap.width;
+        int bh          = (int)g->bitmap.rows;
+        int xOff        = col * glyphCellW;
+        int yOff        = row * glyphCellH;
+
+        // Blit glyph bitmap into atlas
+        for (int y = 0; y < bh; ++y)
+            for (int x = 0; x < bw; ++x)
+                atlasPixels[(yOff + y) * atlasW + (xOff + x)] = g->bitmap.buffer[y * bw + x];
+
+        // Store normalized UVs and metrics
+        glyphs[c].u0       = (float)xOff        / atlasW;
+        glyphs[c].v0       = (float)yOff        / atlasH;
+        glyphs[c].u1       = (float)(xOff + bw) / atlasW;
+        glyphs[c].v1       = (float)(yOff + bh) / atlasH;
+        glyphs[c].bearingX = g->bitmap_left;
+        glyphs[c].bearingY = g->bitmap_top;
+        glyphs[c].advance  = (int)(g->advance.x >> 6);
+        glyphs[c].width    = bw;
+        glyphs[c].height   = bh;
+    }
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+    // ── 2. Upload atlas to GPU (R8_UNORM VkImage via staging buffer) ─────────
+    {
+        VkDeviceSize size = atlasW * atlasH;
+
+        // Staging buffer
+        VkBufferCreateInfo stagingBufInfo{};
+        stagingBufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        stagingBufInfo.size  = size;
+        stagingBufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        VmaAllocationCreateInfo stagingAllocInfo{};
+        stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+        VkBuffer      stagingBuf;
+        VmaAllocation stagingAlloc;
+        vmaCreateBuffer(allocator, &stagingBufInfo, &stagingAllocInfo, &stagingBuf, &stagingAlloc, nullptr);
+
+        void* mapped;
+        vmaMapMemory(allocator, stagingAlloc, &mapped);
+        memcpy(mapped, atlasPixels.data(), size);
+        vmaUnmapMemory(allocator, stagingAlloc);
+
+        // Create R8_UNORM image
+        VkImageCreateInfo imgInfo{};
+        imgInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imgInfo.imageType     = VK_IMAGE_TYPE_2D;
+        imgInfo.extent        = { (uint32_t)atlasW, (uint32_t)atlasH, 1 };
+        imgInfo.mipLevels     = 1;
+        imgInfo.arrayLayers   = 1;
+        imgInfo.format        = VK_FORMAT_R8_UNORM;
+        imgInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+        imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgInfo.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imgInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+        VmaAllocationCreateInfo gpuAllocInfo{};
+        gpuAllocInfo.usage    = VMA_MEMORY_USAGE_GPU_ONLY;
+
+        vmaCreateImage(allocator, &imgInfo, &gpuAllocInfo,
+                       &glyphAtlasTexture.image, &glyphAtlasTexture.allocation, nullptr);
+        glyphAtlasTexture.width  = atlasW;
+        glyphAtlasTexture.height = atlasH;
+
+        // One-shot command buffer: transition → copy → transition
+        VkCommandBufferAllocateInfo cbAlloc{};
+        cbAlloc.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        cbAlloc.commandPool        = commandPool;
+        cbAlloc.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cbAlloc.commandBufferCount = 1;
+        VkCommandBuffer cb;
+        vkAllocateCommandBuffers(device, &cbAlloc, &cb);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cb, &beginInfo);
+
+        // UNDEFINED → TRANSFER_DST
+        VkImageMemoryBarrier barrier{};
+        barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout           = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image               = glyphAtlasTexture.image;
+        barrier.subresourceRange    = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        barrier.srcAccessMask       = 0;
+        barrier.dstAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier(cb,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        VkBufferImageCopy region{};
+        region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+        region.imageExtent      = { (uint32_t)atlasW, (uint32_t)atlasH, 1 };
+        vkCmdCopyBufferToImage(cb, stagingBuf, glyphAtlasTexture.image,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        // TRANSFER_DST → SHADER_READ_ONLY
+        barrier.oldLayout    = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout    = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(cb,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        vkEndCommandBuffer(cb);
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers    = &cb;
+        vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(queue);
+        vkFreeCommandBuffers(device, commandPool, 1, &cb);
+
+        vmaDestroyBuffer(allocator, stagingBuf, stagingAlloc);
+
+        // Image view
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image                           = glyphAtlasTexture.image;
+        viewInfo.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format                          = VK_FORMAT_R8_UNORM;
+        viewInfo.subresourceRange                = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        vkCreateImageView(device, &viewInfo, nullptr, &glyphAtlasTexture.imageView);
+
+        // Sampler (linear, clamp)
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter    = VK_FILTER_LINEAR;
+        samplerInfo.minFilter    = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.borderColor  = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        vkCreateSampler(device, &samplerInfo, nullptr, &glyphAtlasTexture.sampler);
+    }
+
+    // ── 3. Descriptor set layout: binding 0 = combined image sampler ─────────
+    {
+        VkDescriptorSetLayoutBinding samplerBinding{};
+        samplerBinding.binding         = 0;
+        samplerBinding.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerBinding.descriptorCount = 1;
+        samplerBinding.stageFlags      = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings    = &samplerBinding;
+        vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &uiDescriptorSetLayout);
+
+        // Pool: 2 sets (atlas + potential sprite), 2 samplers
+        VkDescriptorPoolSize poolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8 };
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes    = &poolSize;
+        poolInfo.maxSets       = 8;
+        vkCreateDescriptorPool(device, &poolInfo, nullptr, &uiDescriptorPool);
+
+        // Allocate descriptor set for the glyph atlas
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool     = uiDescriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts        = &uiDescriptorSetLayout;
+        vkAllocateDescriptorSets(device, &allocInfo, &glyphAtlasDescriptorSet);
+
+        VkDescriptorImageInfo imgInfo{};
+        imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgInfo.imageView   = glyphAtlasTexture.imageView;
+        imgInfo.sampler     = glyphAtlasTexture.sampler;
+
+        VkWriteDescriptorSet write{};
+        write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet          = glyphAtlasDescriptorSet;
+        write.dstBinding      = 0;
+        write.descriptorCount = 1;
+        write.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.pImageInfo      = &imgInfo;
+        vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+    }
+
+    // ── 4. Pipelines ─────────────────────────────────────────────────────────
+    if (!createUITextPipeline(device, renderPass, uiDescriptorSetLayout,
+                              uiTextPipelineLayout, uiTextPipeline, msaaSamples))
+        return false;
+
+    if (!createUISpritePipeline(device, renderPass, uiDescriptorSetLayout,
+                                uiSpritePipelineLayout, uiSpritePipeline, msaaSamples))
+        return false;
+
+    // ── 5. Dynamic vertex buffer (CPU-visible, updated each renderText call) ──
+    {
+        // 6 vertices per quad (2 triangles), 4 floats each (x,y,u,v)
+        VkDeviceSize bufSize = UI_MAX_QUADS * 6 * sizeof(float) * 4;
+
+        VkBufferCreateInfo bufInfo{};
+        bufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufInfo.size  = bufSize;
+        bufInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        vmaCreateBuffer(allocator, &bufInfo, &allocInfo,
+                        &uiVertexBuffer.buffer, &uiVertexBuffer.allocation, nullptr);
+    }
+
+    hasUIResources = true;
+    std::cout << "[Vulkan] UI resources created (atlas " << COLS * glyphCellW << "x"
+              << ROWS * glyphCellH << " px)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupUIResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+
+    if (uiVertexBuffer.buffer) {
+        vmaDestroyBuffer(allocator, uiVertexBuffer.buffer, uiVertexBuffer.allocation);
+        uiVertexBuffer = {};
+    }
+    if (uiTextPipeline)            { vkDestroyPipeline(device, uiTextPipeline, nullptr);             uiTextPipeline = nullptr; }
+    if (uiTextPipelineLayout)      { vkDestroyPipelineLayout(device, uiTextPipelineLayout, nullptr); uiTextPipelineLayout = nullptr; }
+    if (uiSpritePipeline)          { vkDestroyPipeline(device, uiSpritePipeline, nullptr);           uiSpritePipeline = nullptr; }
+    if (uiSpritePipelineLayout)    { vkDestroyPipelineLayout(device, uiSpritePipelineLayout, nullptr); uiSpritePipelineLayout = nullptr; }
+    if (uiDescriptorPool)          { vkDestroyDescriptorPool(device, uiDescriptorPool, nullptr);     uiDescriptorPool = nullptr; }
+    if (uiDescriptorSetLayout)     { vkDestroyDescriptorSetLayout(device, uiDescriptorSetLayout, nullptr); uiDescriptorSetLayout = nullptr; }
+    destroyTexture(allocator, device, glyphAtlasTexture);
+    hasUIResources = false;
+}
+
+// ─── renderText ───────────────────────────────────────────────────────────────
+// Builds a quad batch in uiVertexBuffer and issues a single draw call.
+// Must be called inside an active render pass (main pass, after 3D content).
+void VulkanRenderer::renderText(VkCommandBuffer cmd, const std::string& text,
+                                float x, float y, float scale, glm::vec4 color)
+{
+    if (!hasUIResources || !uiTextPipeline) return;
+    if (text.empty()) return;
+
+    VkExtent2D extent = ctx->getSwapchainExtent();
+
+    // Build quad vertices (x,y,u,v per vertex, 6 vertices per char)
+    std::vector<float> verts;
+    verts.reserve(text.size() * 6 * 4);
+
+    float cursorX = x;
+    uint32_t quadCount = 0;
+
+    for (char c : text) {
+        if ((unsigned char)c < 32 || (unsigned char)c > 126) { cursorX += glyphCellW * scale * 0.5f; continue; }
+        const GlyphInfo& g = glyphs[(unsigned char)c];
+        if (g.width == 0) { cursorX += g.advance * scale; continue; }
+
+        float xPos = cursorX + g.bearingX * scale;
+        float yPos = y       - g.bearingY * scale;  // top-left origin
+        float w    = g.width  * scale;
+        float h    = g.height * scale;
+
+        // Two triangles forming a quad (top-left origin, Y down)
+        float quad[6][4] = {
+            { xPos,     yPos,     g.u0, g.v0 },
+            { xPos,     yPos + h, g.u0, g.v1 },
+            { xPos + w, yPos + h, g.u1, g.v1 },
+            { xPos,     yPos,     g.u0, g.v0 },
+            { xPos + w, yPos + h, g.u1, g.v1 },
+            { xPos + w, yPos,     g.u1, g.v0 },
+        };
+        for (auto& v : quad)
+            verts.insert(verts.end(), v, v + 4);
+
+        cursorX += g.advance * scale;
+        if (++quadCount >= UI_MAX_QUADS) break;
+    }
+
+    if (verts.empty()) return;
+
+    // Upload to mapped vertex buffer
+    void* mapped = nullptr;
+    vmaMapMemory(allocator, uiVertexBuffer.allocation, &mapped);
+    memcpy(mapped, verts.data(), verts.size() * sizeof(float));
+    vmaUnmapMemory(allocator, uiVertexBuffer.allocation);
+
+    // Orthographic projection for Vulkan: (0,0) top-left, (width,height) bottom-right.
+    // glm::ortho(l,r,bottom,top): bottom→NDC -1, top→NDC +1.
+    // In Vulkan NDC y=-1 is the top of the screen, so bottom=0, top=height maps
+    // screen y=0 to NDC y=-1 (Vulkan top) and screen y=height to NDC y=+1 (bottom).
+    glm::mat4 ortho = glm::ortho(0.0f, (float)extent.width,
+                                  0.0f, (float)extent.height,
+                                  -1.0f, 1.0f);
+
+    // Push constant: mat4 ortho (64 bytes) + vec4 color (16 bytes)
+    struct UIPush { glm::mat4 ortho; glm::vec4 color; } push{ ortho, color };
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, uiTextPipeline);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            uiTextPipelineLayout, 0, 1, &glyphAtlasDescriptorSet, 0, nullptr);
+    vkCmdPushConstants(cmd, uiTextPipelineLayout,
+                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                       0, sizeof(push), &push);
+
+    VkBuffer     vbuf   = uiVertexBuffer.buffer;
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(cmd, 0, 1, &vbuf, &offset);
+    vkCmdDraw(cmd, quadCount * 6, 1, 0, 0);
 }
 
 // ─── ID Buffer Resources (Phase 11, Part 2 — Mouse Picking) ──────────────
@@ -2233,11 +4005,42 @@ bool VulkanRenderer::loadModel(Model* model) {
 
     std::cout << "[Vulkan] loadModel: " << model->meshes.size() << " meshes to upload" << std::endl;
 
+    // Create PBR pipeline if not yet created
+    if (!pbrPipeline) {
+        if (!createPBRPipelineAndDescriptors()) {
+            std::cerr << "[Vulkan] loadModel: failed to create PBR pipeline" << std::endl;
+            // Non-fatal — fall back to simple pipeline
+        }
+    }
+
     // Create model pipeline if not yet created
     if (!modelPipeline) {
         if (!createModelPipelineAndDescriptors()) {
             std::cerr << "[Vulkan] loadModel: failed to create model pipeline" << std::endl;
             return false;
+        }
+        // modelUniformBuffers are now created — create water and grass resources (need UBOs)
+        if (!waterPipeline)  createWaterResources();
+        if (!grassPipeline)  createGrassResources();
+
+        // modelUniformBuffers are now created — update grid descriptors if grid is ready
+        if (gridDescriptorPool) {
+            for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+                VkDescriptorBufferInfo bufInfo{};
+                bufInfo.buffer = modelUniformBuffers[i].buffer;
+                bufInfo.offset = 0;
+                bufInfo.range  = sizeof(FrameUBO);
+
+                VkWriteDescriptorSet write{};
+                write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstSet          = gridDescriptorSets[i];
+                write.dstBinding      = 0;
+                write.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                write.descriptorCount = 1;
+                write.pBufferInfo     = &bufInfo;
+
+                vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+            }
         }
     }
 
@@ -2272,11 +4075,64 @@ bool VulkanRenderer::loadModel(Model* model) {
 
     modelData->meshes.resize(meshCount);
 
-    // Texture cache — avoid loading the same file multiple times.
-    // Shared textures are cleaned up once via the cache; per-mesh
-    // diffuseTexture fields that reference cached textures are NOT
-    // individually destroyed (see cleanup).
+    // Texture cache — avoid loading the same texture twice.
     std::unordered_map<std::string, VulkanTexture> textureCache;
+
+    // Helper: load a texture by Mesh_Texture path, handling both disk files
+    // and embedded GLB textures (path starts with '*').
+    // srgb = true for albedo, false for normal/metallic/roughness.
+    auto resolveTexture = [&](const std::string& texPath, bool srgb) -> VulkanTexture {
+        auto it = textureCache.find(texPath);
+        if (it != textureCache.end()) return it->second;
+
+        VulkanTexture result{};
+
+        if (!texPath.empty() && texPath[0] == '*') {
+            // Embedded texture — index encoded as "*N"
+            int idx = std::atoi(texPath.c_str() + 1);
+            if (model->scene && idx >= 0 &&
+                idx < static_cast<int>(model->scene->mNumTextures)) {
+                const aiTexture* ait = model->scene->mTextures[idx];
+                if (ait->mHeight == 0) {
+                    // Compressed (PNG/JPG) — mWidth is byte count
+                    result = loadTextureFromMemory(
+                        allocator, device, ctx->getPhysicalDevice(),
+                        commandPool, ctx->getGraphicsQueue(),
+                        reinterpret_cast<const unsigned char*>(ait->pcData),
+                        ait->mWidth, srgb);
+                } else {
+                    // Raw ARGB8888 — rare but handle it
+                    // aiTexel is BGRA, stb_image not needed — upload directly
+                    // Convert BGRA → RGBA on the fly
+                    std::vector<uint8_t> rgba(ait->mWidth * ait->mHeight * 4);
+                    for (uint32_t i = 0; i < ait->mWidth * ait->mHeight; i++) {
+                        rgba[i*4+0] = ait->pcData[i].r;
+                        rgba[i*4+1] = ait->pcData[i].g;
+                        rgba[i*4+2] = ait->pcData[i].b;
+                        rgba[i*4+3] = ait->pcData[i].a;
+                    }
+                    // Pack back as PNG bytes via stb — simplest path for raw texels
+                    // For now treat as pre-decoded and upload directly
+                    VkDeviceSize imgSize = rgba.size();
+                    AllocatedBuffer staging = createBuffer(allocator, imgSize,
+                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+                    void* mapped; vmaMapMemory(allocator, staging.allocation, &mapped);
+                    memcpy(mapped, rgba.data(), imgSize); vmaUnmapMemory(allocator, staging.allocation);
+                    // (reuse loadTextureFromMemory internals — just note this path is rare)
+                    destroyBuffer(allocator, staging);
+                    std::cerr << "[Vulkan] Raw aiTexture not yet supported, skipping" << std::endl;
+                }
+            }
+        } else {
+            // Disk file
+            std::string fullPath = model->directory + "/" + texPath;
+            result = loadTexture(allocator, device, ctx->getPhysicalDevice(),
+                                 commandPool, ctx->getGraphicsQueue(), fullPath);
+        }
+
+        if (result.image) textureCache[texPath] = result;
+        return result;
+    };
 
     for (uint32_t m = 0; m < meshCount; m++) {
         Mesh& mesh = model->meshes[m];
@@ -2290,27 +4146,32 @@ bool VulkanRenderer::loadModel(Model* model) {
                                ctx->getGraphicsQueue(),
                                mesh.vertices, mesh.indices);
 
-        // 2. Load diffuse texture (cached by path to avoid duplicate uploads)
-        bool hasDiffuse = false;
+        // 2. Load textures — handles both disk paths and embedded '*N' paths
+        bool hasDiffuse = false, hasNormal = false, hasMetallic = false, hasRoughness = false;
+
         for (const auto& tex : mesh.textures) {
-            if (tex.type == "texture_diffuse") {
-                std::string texPath = model->directory + "/" + tex.path;
-                auto it = textureCache.find(texPath);
-                if (it != textureCache.end()) {
-                    gpuMesh.diffuseTexture = it->second;
-                    hasDiffuse = true;
-                } else {
-                    gpuMesh.diffuseTexture = loadTexture(
-                        allocator, device, ctx->getPhysicalDevice(),
-                        commandPool, ctx->getGraphicsQueue(), texPath);
-                    if (gpuMesh.diffuseTexture.image) {
-                        textureCache[texPath] = gpuMesh.diffuseTexture;
-                        hasDiffuse = true;
-                    }
-                }
-                break;
+            if (tex.type == "texture_diffuse" && !hasDiffuse) {
+                gpuMesh.diffuseTexture = resolveTexture(tex.path, true);
+                hasDiffuse = gpuMesh.diffuseTexture.image != VK_NULL_HANDLE;
+            } else if (tex.type == "texture_normal" && !hasNormal) {
+                gpuMesh.normalTexture = resolveTexture(tex.path, false);
+                hasNormal = gpuMesh.normalTexture.image != VK_NULL_HANDLE;
+            } else if (tex.type == "texture_metallic" && !hasMetallic) {
+                gpuMesh.metallicTexture = resolveTexture(tex.path, false);
+                hasMetallic = gpuMesh.metallicTexture.image != VK_NULL_HANDLE;
+            } else if (tex.type == "texture_roughness" && !hasRoughness) {
+                gpuMesh.roughnessTexture = resolveTexture(tex.path, false);
+                hasRoughness = gpuMesh.roughnessTexture.image != VK_NULL_HANDLE;
             }
         }
+
+        std::cout << "[Vulkan] Mesh " << m << " textures:"
+                  << " diffuse=" << hasDiffuse
+                  << " normal=" << hasNormal
+                  << " metallic=" << hasMetallic
+                  << " roughness=" << hasRoughness << std::endl;
+
+        gpuMesh.hasPBR = pbrPipeline != nullptr && (hasDiffuse || hasNormal || hasMetallic || hasRoughness);
 
         // Determine which texture to use for descriptors
         VulkanTexture& texToUse = hasDiffuse ? gpuMesh.diffuseTexture : whiteTexture;
@@ -2385,6 +4246,142 @@ bool VulkanRenderer::loadModel(Model* model) {
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()),
                                    writes.data(), 0, nullptr);
+        }
+
+        // Allocate PBR descriptor sets if PBR pipeline is available
+        if (gpuMesh.hasPBR && pbrDescriptorSetLayout) {
+            // Create PBR descriptor pool if it doesn't exist yet
+            if (!pbrDescriptorPool) {
+                uint32_t pbrTotalSets = meshCount * MAX_FRAMES_IN_FLIGHT;
+                std::array<VkDescriptorPoolSize, 2> pbrPoolSizes{};
+                pbrPoolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                pbrPoolSizes[0].descriptorCount = pbrTotalSets * 2;  // FrameUBO + BoneUBO
+                pbrPoolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                pbrPoolSizes[1].descriptorCount = pbrTotalSets * 5;  // albedo+normal+metallic+roughness+shadow
+
+                VkDescriptorPoolCreateInfo pbrPoolInfo{};
+                pbrPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+                pbrPoolInfo.poolSizeCount = static_cast<uint32_t>(pbrPoolSizes.size());
+                pbrPoolInfo.pPoolSizes    = pbrPoolSizes.data();
+                pbrPoolInfo.maxSets       = pbrTotalSets;
+
+                if (vkCreateDescriptorPool(device, &pbrPoolInfo, nullptr, &pbrDescriptorPool) != VK_SUCCESS) {
+                    std::cerr << "[Vulkan] Failed to create PBR descriptor pool" << std::endl;
+                    gpuMesh.hasPBR = false;
+                }
+            }
+
+            if (gpuMesh.hasPBR && pbrDescriptorPool) {
+                std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> pbrLayouts;
+                pbrLayouts.fill(pbrDescriptorSetLayout);
+
+                VkDescriptorSetAllocateInfo pbrAllocInfo{};
+                pbrAllocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                pbrAllocInfo.descriptorPool     = pbrDescriptorPool;
+                pbrAllocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+                pbrAllocInfo.pSetLayouts        = pbrLayouts.data();
+
+                if (vkAllocateDescriptorSets(device, &pbrAllocInfo, gpuMesh.pbrDescriptorSets.data()) != VK_SUCCESS) {
+                    std::cerr << "[Vulkan] Failed to allocate PBR descriptor sets for mesh " << m << std::endl;
+                    gpuMesh.hasPBR = false;
+                } else {
+                    // Pick actual textures or fallbacks
+                    VulkanTexture& albedo    = hasDiffuse   ? gpuMesh.diffuseTexture   : whiteTexture;
+                    VulkanTexture& normalTex = hasNormal    ? gpuMesh.normalTexture     : flatNormalTexture;
+                    VulkanTexture& metalTex  = hasMetallic  ? gpuMesh.metallicTexture   : whiteTexture;
+                    VulkanTexture& roughTex  = hasRoughness ? gpuMesh.roughnessTexture  : whiteTexture;
+
+                    for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                        VkDescriptorBufferInfo frameInfo{};
+                        frameInfo.buffer = modelUniformBuffers[f].buffer;
+                        frameInfo.offset = 0;
+                        frameInfo.range  = sizeof(FrameUBO);
+
+                        VkDescriptorImageInfo albedoInfo{};
+                        albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        albedoInfo.imageView   = albedo.imageView;
+                        albedoInfo.sampler     = albedo.sampler;
+
+                        VkDescriptorImageInfo normalInfo{};
+                        normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        normalInfo.imageView   = normalTex.imageView;
+                        normalInfo.sampler     = normalTex.sampler;
+
+                        VkDescriptorImageInfo metalInfo{};
+                        metalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        metalInfo.imageView   = metalTex.imageView;
+                        metalInfo.sampler     = metalTex.sampler;
+
+                        VkDescriptorImageInfo roughInfo{};
+                        roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        roughInfo.imageView   = roughTex.imageView;
+                        roughInfo.sampler     = roughTex.sampler;
+
+                        VkDescriptorImageInfo shadowInfo{};
+                        shadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                        shadowInfo.imageView   = shadowImageView;
+                        shadowInfo.sampler     = shadowSampler;
+
+                        VkDescriptorBufferInfo boneInfo{};
+                        boneInfo.buffer = boneUniformBuffers[f].buffer;
+                        boneInfo.offset = 0;
+                        boneInfo.range  = sizeof(BoneUBO);
+
+                        std::array<VkWriteDescriptorSet, 7> pbrWrites{};
+                        pbrWrites[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[0].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[0].dstBinding      = 0;
+                        pbrWrites[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        pbrWrites[0].descriptorCount = 1;
+                        pbrWrites[0].pBufferInfo     = &frameInfo;
+
+                        pbrWrites[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[1].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[1].dstBinding      = 1;
+                        pbrWrites[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        pbrWrites[1].descriptorCount = 1;
+                        pbrWrites[1].pImageInfo      = &albedoInfo;
+
+                        pbrWrites[2].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[2].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[2].dstBinding      = 2;
+                        pbrWrites[2].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        pbrWrites[2].descriptorCount = 1;
+                        pbrWrites[2].pImageInfo      = &normalInfo;
+
+                        pbrWrites[3].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[3].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[3].dstBinding      = 3;
+                        pbrWrites[3].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        pbrWrites[3].descriptorCount = 1;
+                        pbrWrites[3].pImageInfo      = &metalInfo;
+
+                        pbrWrites[4].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[4].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[4].dstBinding      = 4;
+                        pbrWrites[4].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        pbrWrites[4].descriptorCount = 1;
+                        pbrWrites[4].pImageInfo      = &roughInfo;
+
+                        pbrWrites[5].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[5].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[5].dstBinding      = 5;
+                        pbrWrites[5].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        pbrWrites[5].descriptorCount = 1;
+                        pbrWrites[5].pImageInfo      = &shadowInfo;
+
+                        pbrWrites[6].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                        pbrWrites[6].dstSet          = gpuMesh.pbrDescriptorSets[f];
+                        pbrWrites[6].dstBinding      = 6;
+                        pbrWrites[6].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        pbrWrites[6].descriptorCount = 1;
+                        pbrWrites[6].pBufferInfo     = &boneInfo;
+
+                        vkUpdateDescriptorSets(device, static_cast<uint32_t>(pbrWrites.size()),
+                                               pbrWrites.data(), 0, nullptr);
+                    }
+                }
+            }
         }
     }
 

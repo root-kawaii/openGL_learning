@@ -245,11 +245,17 @@ int main()
         } else {
           vulkanRenderer.setProjectionMatrix(projection);
         }
-        // Scale down mech_drone and stand upright
-        glm::mat4 modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        modelTransform = glm::rotate(modelTransform, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        modelTransform = glm::scale(modelTransform, glm::vec3(0.00002f));
-        vulkanRenderer.setModelTransform(modelTransform);
+        // Persistent model transform — initialized once, then owned by the gizmo.
+        // We read it back each frame so the gizmo's changes survive across frames.
+        static bool vulkanModelInitialized = false;
+        if (!vulkanModelInitialized) {
+          glm::mat4 modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+          modelTransform = glm::rotate(modelTransform, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+          modelTransform = glm::scale(modelTransform, glm::vec3(0.00002f));
+          vulkanRenderer.setModelTransform(modelTransform);
+          vulkanModelInitialized = true;
+        }
+        // The gizmo may have modified the transform inside drawFrame — no need to set it again.
 
         if (!vulkanRenderer.drawFrame()) {
           int w, h;

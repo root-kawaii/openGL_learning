@@ -14,15 +14,30 @@
 class Model;
 struct ImGuiContext;
 
+// ImGuizmo operation enum (mirrors ImGuizmo::OPERATION to avoid including header here)
+enum class GizmoOp { Translate, Rotate, Scale };
+
 // Maximum number of frames that can be rendered concurrently.
 static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 // Per-frame UBO — updated once per frame, shared across all meshes
+struct PointLight {
+    glm::vec4 position;  // xyz = world position, w = unused
+    glm::vec4 color;     // xyz = RGB color, w = intensity
+};
+
+static constexpr int MAX_POINT_LIGHTS = 4;
+
 struct FrameUBO {
-    glm::mat4 view;
-    glm::mat4 proj;
-    glm::mat4 lightSpaceMatrix;
-    glm::vec4 lightPos;  // xyz = position, w = unused
+    glm::mat4  view;
+    glm::mat4  proj;
+    glm::mat4  lightSpaceMatrix;
+    glm::vec4  lightPos;   // xyz = shadow-casting directional light, w = unused
+    glm::vec4  viewPos;    // xyz = camera position, w = unused
+    // Extra point lights for PBR (trailing fields — ignored by non-PBR shaders)
+    PointLight pointLights[MAX_POINT_LIGHTS];
+    int        numPointLights;
+    float      _pad[3];
 };
 
 // Shadow pass UBO — light-space matrix only
@@ -39,6 +54,15 @@ struct ModelPushConstant {
 struct IDPushConstant {
     glm::mat4 model;
     uint32_t  objectID;
+};
+
+// PBR push constant — model matrix + material scalars (Phase 14)
+struct PBRPushConstant {
+    glm::mat4 model;
+    float     metallicVal;
+    float     roughnessVal;
+    uint32_t  hasNormalMap;
+    uint32_t  _pad;
 };
 
 // Bone matrices UBO — one per skeleton, shared across all meshes of a model
@@ -62,6 +86,12 @@ struct VulkanMeshGPUData {
     std::unique_ptr<VkMeshData> buffers;
     VulkanTexture               diffuseTexture{};
     std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets = {};
+    // PBR textures (Phase 14)
+    VulkanTexture               normalTexture{};
+    VulkanTexture               metallicTexture{};
+    VulkanTexture               roughnessTexture{};
+    bool                        hasPBR = false;
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> pbrDescriptorSets = {};
 };
 
 struct VulkanModelData {
@@ -89,9 +119,17 @@ public:
     void setViewMatrix(const glm::mat4& view);
     void setProjectionMatrix(const glm::mat4& proj);
     void setModelTransform(const glm::mat4& model);
+    // Read back the model transform (may have been modified by the gizmo)
+    glm::mat4 getModelTransform() const { return currentModel; }
 
     // Handle window resize — recreates swapchain + framebuffers
     bool handleResize(uint32_t width, uint32_t height);
+
+    // Render text during an active frame (call between beginFrame / drawFrame helpers, or from ImGui section).
+    // x, y are screen pixels (top-left origin). scale=1.0 = native atlas size.
+    // color is RGBA 0-1.
+    void renderText(VkCommandBuffer cmd, const std::string& text,
+                    float x, float y, float scale, glm::vec4 color);
 
     // Cleanup
     void cleanup();
@@ -108,16 +146,25 @@ private:
     bool createRenderPass();
     bool createDepthResources();
     bool createFramebuffers();
+    bool createMSAAResources();
+    void cleanupMSAAResources();
+    VkSampleCountFlagBits getMaxUsableSampleCount();
+    bool recreateForMSAAChange(VkSampleCountFlagBits newSamples);
     bool createCommandPool();
     bool createCommandBuffers();
     bool createSyncObjects();
     bool createTriangleResources();
     bool createDescriptorSets();
     bool createModelPipelineAndDescriptors();
+    bool createPBRPipelineAndDescriptors();
     bool createShadowResources();
     bool createSkyboxResources();
     bool initImGui();
     bool createIDBufferResources();
+    bool createGridResources();
+    bool createGrassResources();
+    bool createWaterResources();
+    bool createUIResources();
 
     void cleanupDepthResources();
     void cleanupIDBufferResources();
@@ -125,11 +172,23 @@ private:
     void cleanupSkyboxResources();
     void cleanupImGui();
     void cleanupFramebuffers();
+    void cleanupGridResources();
+    void cleanupGrassResources();
+    void cleanupWaterResources();
+    void cleanupUIResources();
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     VkFormat findDepthFormat();
 
     VulkanContext* ctx = nullptr;
+
+    // MSAA
+    VkSampleCountFlagBits msaaSamples          = VK_SAMPLE_COUNT_1_BIT;
+    VkSampleCountFlagBits msaaMaxSamples       = VK_SAMPLE_COUNT_1_BIT; // queried once at init
+    bool                  pendingMSAAToggle    = false;
+    VkImage               msaaColorImage    = nullptr;
+    VkDeviceMemory        msaaColorMemory   = nullptr;
+    VkImageView           msaaColorView     = nullptr;
 
     // Render pass
     VkRenderPass renderPass = nullptr;
@@ -252,6 +311,106 @@ private:
     VkPipelineLayout idDebugPipelineLayout = nullptr;
     VkPipeline       idDebugPipeline       = nullptr;
     bool             showIDDebugOverlay    = false;
+
+    // ─── PBR pipeline resources (Phase 14) ───────────────────────────────────
+    VkPipelineLayout      pbrPipelineLayout       = nullptr;
+    VkPipeline            pbrPipeline             = nullptr;
+    VkDescriptorSetLayout pbrDescriptorSetLayout  = nullptr;
+    VkDescriptorPool      pbrDescriptorPool       = nullptr;
+    // 1x1 flat normal map fallback (0.5, 0.5, 1.0 = tangent-space up)
+    VulkanTexture         flatNormalTexture{};
+    // 1x1 metallic fallback (black = 0.0)
+    VulkanTexture         blackTexture{};
+
+    // ─── Grid resources (Phase 12) ───────────────────────────────────────────
+    VkPipelineLayout gridPipelineLayout          = nullptr;
+    VkPipeline       gridPipeline                = nullptr;
+    VkDescriptorSetLayout gridDescriptorSetLayout = nullptr;
+    VkDescriptorPool      gridDescriptorPool      = nullptr;
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> gridDescriptorSets = {};
+    bool showGrid = true;
+
+    // ─── Grass resources (Phase 17) ──────────────────────────────────────────
+    VkPipelineLayout      grassPipelineLayout      = nullptr;
+    VkPipeline            grassPipeline            = nullptr;
+    VkDescriptorSetLayout grassDescriptorSetLayout = nullptr;
+    VkDescriptorPool      grassDescriptorPool      = nullptr;
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> grassDescriptorSets = {};
+
+    // Pre-built blade mesh (single blade, shared across all instances)
+    AllocatedBuffer grassBladeVertexBuffer{};
+    AllocatedBuffer grassBladeIndexBuffer{};
+    uint32_t        grassBladeIndexCount = 0;
+
+    // Per-instance data buffer (CPU-visible, updated each frame for culling)
+    static constexpr uint32_t MAX_GRASS_INSTANCES = 20000;
+    AllocatedBuffer grassInstanceBuffer{};
+    uint32_t        grassInstanceCount = 0;
+
+    // Grass texture (fallback to solid green if missing)
+    VulkanTexture   grassTexture{};
+    bool            showGrass = false;
+
+    // ─── Water resources (Phase 16) ──────────────────────────────────────────
+    VkPipelineLayout      waterPipelineLayout      = nullptr;
+    VkPipeline            waterPipeline            = nullptr;
+    VkDescriptorSetLayout waterDescriptorSetLayout = nullptr;
+    VkDescriptorPool      waterDescriptorPool      = nullptr;
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> waterDescriptorSets = {};
+    AllocatedBuffer       waterVertexBuffer{};
+    AllocatedBuffer       waterIndexBuffer{};
+    uint32_t              waterIndexCount = 0;
+    bool                  showWater       = false;  // toggled via ImGui
+
+    // Reflection offscreen image (half-res, captures scene without water)
+    VkImage        reflectionImage        = nullptr;
+    VmaAllocation  reflectionAllocation   = nullptr;
+    VkImageView    reflectionImageView    = nullptr;
+    VkSampler      reflectionSampler      = nullptr;
+    VkImage        reflectionDepthImage   = nullptr;
+    VmaAllocation  reflectionDepthAlloc   = nullptr;
+    VkImageView    reflectionDepthView    = nullptr;
+    VkRenderPass   reflectionRenderPass   = nullptr;
+    VkFramebuffer  reflectionFramebuffer  = nullptr;
+
+    // Fallback 1×1 blue-ish texture used when no water normal map is on disk
+    VulkanTexture  waterNormalTexture{};
+
+    // ─── UI text + sprite resources (Phase 15) ───────────────────────────────
+    // Both text and sprite share the same descriptor set layout (one sampler2D binding).
+    VkDescriptorSetLayout uiDescriptorSetLayout = nullptr;
+    VkDescriptorPool      uiDescriptorPool      = nullptr;
+
+    // Text pipeline (R8 glyph atlas)
+    VkPipelineLayout uiTextPipelineLayout = nullptr;
+    VkPipeline       uiTextPipeline       = nullptr;
+    VulkanTexture    glyphAtlasTexture{};
+    VkDescriptorSet  glyphAtlasDescriptorSet = VK_NULL_HANDLE;
+
+    // Sprite pipeline (RGBA texture)
+    VkPipelineLayout uiSpritePipelineLayout = nullptr;
+    VkPipeline       uiSpritePipeline       = nullptr;
+
+    // Dynamic vertex buffer for UI quads (updated per-frame, CPU-visible)
+    static constexpr uint32_t UI_MAX_QUADS = 4096;
+    AllocatedBuffer uiVertexBuffer{};
+
+    // Glyph metrics cached from FreeType atlas build
+    struct GlyphInfo {
+        float u0, v0, u1, v1;  // UV coords in atlas (normalized 0-1)
+        int   bearingX, bearingY;
+        int   advance;
+        int   width, height;
+    };
+    GlyphInfo glyphs[128] = {};
+    int       glyphCellW  = 0;  // atlas cell width in pixels
+    int       glyphCellH  = 0;  // atlas cell height in pixels
+    bool      hasUIResources = false;
+
+    // ─── Gizmo state (Phase 13) ──────────────────────────────────────────────
+    GizmoOp gizmoOp   = GizmoOp::Translate;
+    bool    gizmoWorld = true;   // true = WORLD, false = LOCAL
+    bool    gizmoWasUsing = false;
 
     // ─── ImGui resources (Phase 11) ──────────────────────────────────────────
     ImGuiContext* imguiContext = nullptr;

@@ -316,6 +316,121 @@ VulkanTexture loadTexture(
     return texture;
 }
 
+// ─── Load Texture From Memory ────────────────────────────────────────────────
+// Handles embedded GLB textures (aiTexture::pcData with mHeight == 0).
+// Identical upload path to loadTexture() but decodes from a memory buffer.
+
+VulkanTexture loadTextureFromMemory(
+    VmaAllocator  allocator,
+    VkDevice      device,
+    VkPhysicalDevice physicalDevice,
+    VkCommandPool commandPool,
+    VkQueue       queue,
+    const unsigned char* data,
+    uint32_t dataSize,
+    bool srgb)
+{
+    VulkanTexture texture{};
+
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels = stbi_load_from_memory(
+        data, static_cast<int>(dataSize),
+        &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+    if (!pixels) {
+        std::cerr << "[Vulkan] Failed to decode embedded texture: " << stbi_failure_reason() << std::endl;
+        return texture;
+    }
+
+    texture.width  = static_cast<uint32_t>(texWidth);
+    texture.height = static_cast<uint32_t>(texHeight);
+    VkDeviceSize imageSize = texture.width * texture.height * 4;
+
+    AllocatedBuffer staging = createBuffer(
+        allocator, imageSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY);
+
+    void* mapped;
+    vmaMapMemory(allocator, staging.allocation, &mapped);
+    memcpy(mapped, pixels, static_cast<size_t>(imageSize));
+    vmaUnmapMemory(allocator, staging.allocation);
+    stbi_image_free(pixels);
+
+    VkFormat format = srgb ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent        = {texture.width, texture.height, 1};
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.format        = format;
+    imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    if (vmaCreateImage(allocator, &imageInfo, &allocInfo,
+                       &texture.image, &texture.allocation, nullptr) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create embedded texture image" << std::endl;
+        destroyBuffer(allocator, staging);
+        return texture;
+    }
+
+    transitionImageLayout(device, commandPool, queue, texture.image,
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(device, commandPool, queue,
+        staging.buffer, texture.image, texture.width, texture.height);
+    transitionImageLayout(device, commandPool, queue, texture.image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    destroyBuffer(allocator, staging);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image                           = texture.image;
+    viewInfo.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format                          = format;
+    viewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel   = 0;
+    viewInfo.subresourceRange.levelCount     = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount     = 1;
+
+    if (vkCreateImageView(device, &viewInfo, nullptr, &texture.imageView) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create embedded texture image view" << std::endl;
+        return texture;
+    }
+
+    VkPhysicalDeviceProperties deviceProps;
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProps);
+
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter        = VK_FILTER_LINEAR;
+    samplerInfo.minFilter        = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy    = deviceProps.limits.maxSamplerAnisotropy;
+    samplerInfo.mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &texture.sampler) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create embedded texture sampler" << std::endl;
+        return texture;
+    }
+
+    std::cout << "[Vulkan] Embedded texture ready ("
+              << texture.width << "x" << texture.height << ")" << std::endl;
+    return texture;
+}
+
 // ─── Cubemap Loading ─────────────────────────────────────────────────────────
 
 VulkanTexture loadCubemap(
