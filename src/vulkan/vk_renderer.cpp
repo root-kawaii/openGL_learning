@@ -60,6 +60,7 @@ bool VulkanRenderer::init(VulkanContext* context) {
     if (!createGridResources())      return false;
     if (!createUIResources())        return false;
     if (!initImGui())                return false;
+    if (!createPixelArtResources())  return false;
     // Water deferred: needs modelUniformBuffers, created in loadModel()/createModelPipelineAndDescriptors()
 
     std::cout << "[Vulkan] Renderer initialized" << std::endl;
@@ -110,10 +111,14 @@ void VulkanRenderer::cleanup() {
                 }
                 // VkMeshData destructor handles buffer cleanup via its unique_ptr
             }
-            for (auto& buf : data->boneBuffers) destroyBuffer(allocator, buf);
         }
         sceneModels.clear();
     }
+    // Per-instance bone buffers (descriptor sets freed when pool is destroyed)
+    for (auto& [idx, inst] : instanceData)
+        for (auto& buf : inst->boneBuffers) destroyBuffer(allocator, buf);
+    instanceData.clear();
+
     if (allocator) {
         destroyTexture(allocator, device, whiteTexture);
         for (auto& ub : modelUniformBuffers) destroyBuffer(allocator, ub);
@@ -147,6 +152,9 @@ void VulkanRenderer::cleanup() {
 
     // UI text + sprite resources (Phase 15)
     cleanupUIResources();
+
+    // Pixel art post-process
+    cleanupPixelArtResources();
 
     // ImGui resources (Phase 11)
     cleanupImGui();
@@ -561,6 +569,7 @@ bool VulkanRenderer::recreateForMSAAChange(VkSampleCountFlagBits newSamples) {
     vkDeviceWaitIdle(device);
 
     // ── Tear down render-pass dependents ─────────────────────────────────────
+    cleanupPixelArtResources();
     cleanupFramebuffers();
     cleanupDepthResources();
     cleanupMSAAResources();
@@ -649,6 +658,8 @@ bool VulkanRenderer::recreateForMSAAChange(VkSampleCountFlagBits newSamples) {
 
         ImGui::SetCurrentContext(prevCtx);
     }
+
+    createPixelArtResources();
 
     std::cout << "[Vulkan] MSAA changed to " << msaaSamples << "x" << std::endl;
     return true;
@@ -817,7 +828,7 @@ bool VulkanRenderer::createSyncObjects() {
 // The semaphores ensure GPU-side ordering (acquire → render → present).
 // The fence ensures the CPU doesn't overwrite a command buffer still in use.
 
-bool VulkanRenderer::drawFrame() {
+bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     VkDevice device = ctx->getDevice();
 
     // FPS calculation
@@ -867,20 +878,29 @@ bool VulkanRenderer::drawFrame() {
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     vkBeginCommandBuffer(cmd, &beginInfo);
 
-    // ── Bone animation (Phase 10) ──────────────────────────────────────────
-    // Update per-model bone buffers — must happen before shadow and main passes.
-    for (auto& [model, data] : sceneModels) {
-        BoneUBO boneUbo{};  // zero-initialized = identity, used by static meshes
-        if (model->IsAnimated()) {
-            std::vector<glm::mat4> transforms;
-            model->GetBoneTransforms(transforms, static_cast<float>(glfwGetTime()));
-            size_t count = std::min(transforms.size(), static_cast<size_t>(MAX_BONES));
-            memcpy(boneUbo.bones, transforms.data(), count * sizeof(glm::mat4));
+    // ── Bone animation — per-instance ────────────────────────────────────────
+    // Each animated scene object has its own VulkanInstanceData with bone UBOs,
+    // so two characters sharing the same .glb can play independent animation
+    // states (different start times, speeds, etc. in the future).
+    if (currentScene) {
+        auto objs = currentScene->getGameObjects();
+        for (auto& [objIdx, inst] : instanceData) {
+            if (objIdx >= static_cast<int>(objs.size())) continue;
+            auto& obj = objs[objIdx];
+            if (!obj->model) continue;
+
+            BoneUBO boneUbo{};
+            if (obj->model->IsAnimated()) {
+                std::vector<glm::mat4> transforms;
+                obj->model->GetBoneTransforms(transforms, static_cast<float>(glfwGetTime()));
+                size_t count = std::min(transforms.size(), static_cast<size_t>(MAX_BONES));
+                memcpy(boneUbo.bones, transforms.data(), count * sizeof(glm::mat4));
+            }
+            void* boneMapped;
+            vmaMapMemory(allocator, inst->boneBuffers[currentFrame].allocation, &boneMapped);
+            memcpy(boneMapped, &boneUbo, sizeof(boneUbo));
+            vmaUnmapMemory(allocator, inst->boneBuffers[currentFrame].allocation);
         }
-        void* boneMapped;
-        vmaMapMemory(allocator, data->boneBuffers[currentFrame].allocation, &boneMapped);
-        memcpy(boneMapped, &boneUbo, sizeof(boneUbo));
-        vmaUnmapMemory(allocator, data->boneBuffers[currentFrame].allocation);
     }
 
     // ── Shadow pass (Phase 7) ───────────────────────────────────────────────
@@ -937,13 +957,26 @@ bool VulkanRenderer::drawFrame() {
                                 0, 1, &shadowDescriptorSets[currentFrame], 0, nullptr);
 
         // Draw all scene objects
+        int shadowObjIdx = 0;
         for (auto& obj : currentScene->getGameObjects()) {
-            if (!obj->model) continue;
+            if (!obj->model) { shadowObjIdx++; continue; }
             auto it = sceneModels.find(obj->model.get());
             if (it == sceneModels.end()) {
                 loadModel(obj->model.get());
                 it = sceneModels.find(obj->model.get());
-                if (it == sceneModels.end()) continue;
+                if (it == sceneModels.end()) { shadowObjIdx++; continue; }
+            }
+
+            // For animated objects, rebind the per-instance shadow desc set so the
+            // shadow vertex shader uses the current-frame bone transforms instead of
+            // the zero-initialized renderer-level buffer (which collapses all vertices).
+            auto instIt = instanceData.find(shadowObjIdx);
+            if (instIt != instanceData.end() && instIt->second->shadowDescSets[currentFrame] != VK_NULL_HANDLE) {
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout,
+                                        0, 1, &instIt->second->shadowDescSets[currentFrame], 0, nullptr);
+            } else {
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout,
+                                        0, 1, &shadowDescriptorSets[currentFrame], 0, nullptr);
             }
 
             ModelPushConstant shadowPush{};
@@ -958,6 +991,7 @@ bool VulkanRenderer::drawFrame() {
                 vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
                 vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
             }
+            shadowObjIdx++;
         }
 
         // Ground plane in shadow pass (identity transform)
@@ -999,37 +1033,48 @@ bool VulkanRenderer::drawFrame() {
         vkCmdEndRenderPass(cmd);  // just clears and transitions the image
     }
 
-    // ── Main render pass ────────────────────────────────────────────────────
-    // Begin render pass with clear values
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {{clearColor[0], clearColor[1], clearColor[2], clearColor[3]}};
+    // ── Scene render pass ────────────────────────────────────────────────────
+    // Pixel art ON:  draw scene into paScenePass at 1/pixelArtScale resolution.
+    //               Then a second blit pass upscales to the swapchain with NEAREST.
+    // Pixel art OFF: draw scene directly into renderPass (swapchain).
+    VkExtent2D extent = ctx->getSwapchainExtent();
+    const bool pxArt  = pixelArtEnabled && paScenePass && paFramebuffer && blitPipeline;
+    const bool msaa   = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
+
+    VkExtent2D sceneExt = pxArt ?
+        VkExtent2D{ std::max(1u, extent.width  / static_cast<uint32_t>(pixelArtScale)),
+                    std::max(1u, extent.height / static_cast<uint32_t>(pixelArtScale)) }
+        : extent;
+
+    // Clear values array (always 3 slots; only [0..1] used for non-MSAA)
+    std::array<VkClearValue, 3> clearValues{};
+    clearValues[0].color        = {{clearColor[0], clearColor[1], clearColor[2], clearColor[3]}};
     clearValues[1].depthStencil = {1.0f, 0};
 
     VkRenderPassBeginInfo rpBeginInfo{};
     rpBeginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rpBeginInfo.renderPass        = renderPass;
-    rpBeginInfo.framebuffer       = framebuffers[imageIndex];
+    rpBeginInfo.renderPass        = pxArt ? paScenePass : renderPass;
+    rpBeginInfo.framebuffer       = pxArt ? paFramebuffer : framebuffers[imageIndex];
     rpBeginInfo.renderArea.offset = {0, 0};
-    rpBeginInfo.renderArea.extent = ctx->getSwapchainExtent();
-    rpBeginInfo.clearValueCount   = static_cast<uint32_t>(clearValues.size());
+    rpBeginInfo.renderArea.extent = sceneExt;
+    rpBeginInfo.clearValueCount   = msaa ? 3u : 2u;
     rpBeginInfo.pClearValues      = clearValues.data();
 
     vkCmdBeginRenderPass(cmd, &rpBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    // Dynamic viewport and scissor (shared by both paths)
-    VkExtent2D extent = ctx->getSwapchainExtent();
+    // Viewport + scissor sized to the scene render target
     VkViewport viewport{};
     viewport.x        = 0.0f;
     viewport.y        = 0.0f;
-    viewport.width    = static_cast<float>(extent.width);
-    viewport.height   = static_cast<float>(extent.height);
+    viewport.width    = static_cast<float>(sceneExt.width);
+    viewport.height   = static_cast<float>(sceneExt.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(cmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = extent;
+    scissor.extent = sceneExt;
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
     if (!sceneModels.empty() && currentScene) {
@@ -1053,18 +1098,23 @@ bool VulkanRenderer::drawFrame() {
         vmaUnmapMemory(allocator, modelUniformBuffers[currentFrame].allocation);
 
         // Draw all scene objects
+        int objIdx = 0;
         for (auto& obj : currentScene->getGameObjects()) {
-            if (!obj->model) continue;
+            if (!obj->model) { objIdx++; continue; }
             auto it = sceneModels.find(obj->model.get());
             if (it == sceneModels.end()) {
                 loadModel(obj->model.get());
                 it = sceneModels.find(obj->model.get());
-                if (it == sceneModels.end()) continue;
+                if (it == sceneModels.end()) { objIdx++; continue; }
+                if (obj->model->IsAnimated() && !instanceData.count(objIdx))
+                    createInstanceData(objIdx, obj->model.get());
             }
 
             glm::mat4 objTransform = obj->getModelMatrix();
+            auto instIt = instanceData.find(objIdx);
 
             // Draw each mesh — choose PBR or simple pipeline per mesh
+            uint32_t meshIdx = 0;
             for (auto& meshGPU : it->second->meshes) {
                 VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
                 VkDeviceSize voffsets[] = {0};
@@ -1072,10 +1122,14 @@ bool VulkanRenderer::drawFrame() {
                 vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
                 if (meshGPU.hasPBR && pbrPipeline && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
-                    // PBR path
+                    // PBR path — use per-instance desc set if available
                     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+                    VkDescriptorSet pbrDS = (instIt != instanceData.end() &&
+                                            meshIdx < instIt->second->pbrDescSets.size())
+                        ? instIt->second->pbrDescSets[meshIdx][currentFrame]
+                        : meshGPU.pbrDescriptorSets[currentFrame];
                     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
-                                            0, 1, &meshGPU.pbrDescriptorSets[currentFrame], 0, nullptr);
+                                            0, 1, &pbrDS, 0, nullptr);
 
                     PBRPushConstant pbrPush{};
                     pbrPush.model        = objTransform;
@@ -1086,10 +1140,14 @@ bool VulkanRenderer::drawFrame() {
                                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(PBRPushConstant), &pbrPush);
                 } else {
-                    // Simple diffuse path
+                    // Simple diffuse path — use per-instance desc set if available
                     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
+                    VkDescriptorSet ds = (instIt != instanceData.end() &&
+                                         meshIdx < instIt->second->meshDescSets.size())
+                        ? instIt->second->meshDescSets[meshIdx][currentFrame]
+                        : meshGPU.descriptorSets[currentFrame];
                     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
-                                            0, 1, &meshGPU.descriptorSets[currentFrame], 0, nullptr);
+                                            0, 1, &ds, 0, nullptr);
 
                     ModelPushConstant push{};
                     push.model = objTransform;
@@ -1102,7 +1160,9 @@ bool VulkanRenderer::drawFrame() {
                 drawCalls++;
                 trianglesDrawn += ic / 3;
                 verticesDrawn  += ic;
+                meshIdx++;
             }
+            objIdx++;
         }  // end obj loop
 
         // Ground plane — always simple pipeline
@@ -1283,6 +1343,51 @@ bool VulkanRenderer::drawFrame() {
         }
     }
 
+    // ── End scene pass; begin full-res blit pass (pixel art mode only) ───────
+    // Non-pixel-art: renderPass stays open through UI text + ImGui below.
+    // Pixel art: close the low-res scene pass, blit to swapchain, reopen.
+    if (pxArt) {
+        vkCmdEndRenderPass(cmd);
+        // Memory barrier: ensure paColorImage color write is visible to the
+        // fragment shader that samples it in the blit pass.
+        VkImageMemoryBarrier paBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        paBarrier.srcAccessMask       = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        paBarrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
+        paBarrier.oldLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        paBarrier.newLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        paBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        paBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        paBarrier.image               = paColorImage;
+        paBarrier.subresourceRange    = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        vkCmdPipelineBarrier(cmd,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0, 0, nullptr, 0, nullptr, 1, &paBarrier);
+
+        // Begin full-res swapchain pass for blit quad + UI text + ImGui
+        VkRenderPassBeginInfo blitBegin{};
+        blitBegin.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        blitBegin.renderPass        = renderPass;
+        blitBegin.framebuffer       = framebuffers[imageIndex];
+        blitBegin.renderArea.extent = extent;
+        blitBegin.clearValueCount   = msaa ? 3u : 2u;
+        blitBegin.pClearValues      = clearValues.data();
+        vkCmdBeginRenderPass(cmd, &blitBegin, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport blitVP{ 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
+        VkRect2D   blitSc{ {0,0}, extent };
+        vkCmdSetViewport(cmd, 0, 1, &blitVP);
+        vkCmdSetScissor(cmd,  0, 1, &blitSc);
+
+        // Upscale pixel art image with NEAREST + posterize
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, blitPipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, blitPipelineLayout,
+                                0, 1, &blitDescSets[currentFrame], 0, nullptr);
+        vkCmdPushConstants(cmd, blitPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(float), &paletteSize);
+        vkCmdDraw(cmd, 3, 1, 0, 0);  // fullscreen triangle — no vertex buffer needed
+    }
+
     // ── UI text overlay (Phase 15) ───────────────────────────────────────────
     if (hasUIResources) {
         renderText(cmd, "Hephaestus Engine", 12.0f, 28.0f, 0.45f, glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
@@ -1344,6 +1449,15 @@ bool VulkanRenderer::drawFrame() {
         ImGui::Checkbox("Show Water", &showWater);
         ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
 
+        // ── Pixel art ──────────────────────────────────────────────────────
+        ImGui::Separator();
+        ImGui::Checkbox("Pixel Art", &pixelArtEnabled);
+        if (pixelArtEnabled) {
+            ImGui::SameLine();
+            ImGui::Text("(%dx)", pixelArtScale);
+            ImGui::SliderFloat("Palette", &paletteSize, 4.0f, 64.0f, "%.0f");
+        }
+
         // ── Picking + gizmo ────────────────────────────────────────────────
         ImGui::Separator();
         ImGui::Text("Click to pick entity");
@@ -1363,6 +1477,9 @@ bool VulkanRenderer::drawFrame() {
         }
 
         ImGui::End();
+
+        // ── External ENGINE / UI / pause content from main.cpp ────────────
+        if (engineCallback) engineCallback();
 
         // ── ImGuizmo entity manipulation ───────────────────────────────────
         if (selectedObjectIndex >= 0 && currentScene) {
@@ -1451,6 +1568,7 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
     cleanupGrassResources();
     cleanupWaterResources();
     cleanupUIResources();
+    cleanupPixelArtResources();
 
     // Destroy old per-swapchain-image semaphores before recreating swapchain
     for (auto& sem : renderFinishedSemaphores) {
@@ -1481,6 +1599,7 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
         if (waterIndexCount == 0)       createWaterResources();
         if (grassBladeIndexCount == 0)  createGrassResources();
     }
+    createPixelArtResources();
 
     std::cout << "[Vulkan] Resized to " << width << "x" << height << std::endl;
     return true;
@@ -2256,16 +2375,20 @@ bool VulkanRenderer::createShadowResources() {
         if (!shadowUniformBuffers[i].buffer) return false;
     }
 
-    // 9. Descriptor pool + sets for shadow pass (light UBO + bone UBO per frame)
+    // 9. Descriptor pool + sets for shadow pass.
+    // Base: MAX_FRAMES_IN_FLIGHT renderer-level sets (1 light UBO + 1 bone UBO each).
+    // Extra: up to 200 animated objects × MAX_FRAMES_IN_FLIGHT per-instance sets.
+    static constexpr int SHADOW_MAX_ANIMATED = 200;
+    uint32_t shadowTotalSets = MAX_FRAMES_IN_FLIGHT * (1 + SHADOW_MAX_ANIMATED);
     VkDescriptorPoolSize shadowPoolSize{};
     shadowPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    shadowPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT * 2;  // light + bone per frame
+    shadowPoolSize.descriptorCount = shadowTotalSets * 2; // light + bone per set
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes    = &shadowPoolSize;
-    poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
+    poolInfo.maxSets       = shadowTotalSets;
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &shadowDescriptorPool) != VK_SUCCESS) {
         std::cerr << "[Vulkan] Failed to create shadow descriptor pool" << std::endl;
@@ -2876,6 +2999,251 @@ void VulkanRenderer::cleanupGrassResources() {
 //
 // Creates:
 //   - Flat XZ grid mesh (200×200 quads), uploaded as vertex/index buffers
+// ─── Pixel Art Post-Process Resources ────────────────────────────────────────
+//
+// Renders the entire scene at 1/pixelArtScale resolution into paColorImage,
+// then upscales to the swapchain with NEAREST filter + posterization in the
+// blit pass. ImGui / UI text remain at full resolution.
+//
+// paScenePass is structurally identical to renderPass (same format + samples)
+// so all existing pipelines are render-pass compatible — no pipeline recreation.
+// The only difference: finalLayout = SHADER_READ_ONLY_OPTIMAL for color/resolve.
+
+bool VulkanRenderer::createPixelArtResources() {
+    VkDevice   device    = ctx->getDevice();
+    VkExtent2D extent    = ctx->getSwapchainExtent();
+    VkFormat   colorFmt  = ctx->getSwapchainFormat();
+    const bool msaa      = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
+
+    uint32_t rW = std::max(1u, extent.width  / static_cast<uint32_t>(pixelArtScale));
+    uint32_t rH = std::max(1u, extent.height / static_cast<uint32_t>(pixelArtScale));
+
+    VmaAllocationCreateInfo gpuOnly{}; gpuOnly.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    // ── 1. Low-res 1-sample color image (SAMPLED_BIT — blit source) ──────────
+    {
+        VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+        ii.imageType = VK_IMAGE_TYPE_2D; ii.extent = { rW, rH, 1 };
+        ii.mipLevels = 1; ii.arrayLayers = 1; ii.format = colorFmt;
+        ii.tiling = VK_IMAGE_TILING_OPTIMAL; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        ii.usage   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        ii.samples = VK_SAMPLE_COUNT_1_BIT;
+        vmaCreateImage(allocator, &ii, &gpuOnly, &paColorImage, &paColorAlloc, nullptr);
+
+        VkImageViewCreateInfo vi{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        vi.image = paColorImage; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format = colorFmt;
+        vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        vkCreateImageView(device, &vi, nullptr, &paColorView);
+    }
+
+    // ── 2. Low-res MSAA color (only when MSAA is active) ─────────────────────
+    if (msaa) {
+        VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+        ii.imageType = VK_IMAGE_TYPE_2D; ii.extent = { rW, rH, 1 };
+        ii.mipLevels = 1; ii.arrayLayers = 1; ii.format = colorFmt;
+        ii.tiling = VK_IMAGE_TILING_OPTIMAL; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        ii.usage   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+        ii.samples = msaaSamples;
+        vmaCreateImage(allocator, &ii, &gpuOnly, &paMsaaImage, &paMsaaAlloc, nullptr);
+
+        VkImageViewCreateInfo vi{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        vi.image = paMsaaImage; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format = colorFmt;
+        vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        vkCreateImageView(device, &vi, nullptr, &paMsaaView);
+    }
+
+    // ── 3. Low-res depth image ────────────────────────────────────────────────
+    {
+        VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+        ii.imageType = VK_IMAGE_TYPE_2D; ii.extent = { rW, rH, 1 };
+        ii.mipLevels = 1; ii.arrayLayers = 1; ii.format = depthFormat;
+        ii.tiling = VK_IMAGE_TILING_OPTIMAL; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        ii.usage   = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        ii.samples = msaaSamples;
+        vmaCreateImage(allocator, &ii, &gpuOnly, &paDepthImage, &paDepthAlloc, nullptr);
+
+        VkImageViewCreateInfo vi{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        vi.image = paDepthImage; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format = depthFormat;
+        vi.subresourceRange = { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 };
+        vkCreateImageView(device, &vi, nullptr, &paDepthView);
+    }
+
+    // ── 4. paScenePass — identical to renderPass, SHADER_READ_ONLY final ──────
+    // Per Vulkan spec, render pass compatibility only checks attachment format +
+    // sample count, not initial/final layouts — so all existing pipelines work.
+    {
+        VkSubpassDependency dep{};
+        dep.srcSubpass    = VK_SUBPASS_EXTERNAL; dep.dstSubpass = 0;
+        dep.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dep.srcAccessMask = 0;
+        dep.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+        if (!msaa) {
+            VkAttachmentDescription colorAtt{};
+            colorAtt.format = colorFmt; colorAtt.samples = VK_SAMPLE_COUNT_1_BIT;
+            colorAtt.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; colorAtt.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            colorAtt.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            colorAtt.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            colorAtt.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            colorAtt.finalLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            VkAttachmentDescription depthAtt{};
+            depthAtt.format = depthFormat; depthAtt.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthAtt.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; depthAtt.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAtt.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAtt.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAtt.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depthAtt.finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+            VkAttachmentReference depthRef{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+            VkSubpassDescription subpass{};
+            subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+            subpass.colorAttachmentCount = 1; subpass.pColorAttachments = &colorRef;
+            subpass.pDepthStencilAttachment = &depthRef;
+
+            VkAttachmentDescription atts[2] = { colorAtt, depthAtt };
+            VkRenderPassCreateInfo rpInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+            rpInfo.attachmentCount = 2; rpInfo.pAttachments = atts;
+            rpInfo.subpassCount = 1; rpInfo.pSubpasses = &subpass;
+            rpInfo.dependencyCount = 1; rpInfo.pDependencies = &dep;
+            vkCreateRenderPass(device, &rpInfo, nullptr, &paScenePass);
+        } else {
+            VkAttachmentDescription msaaColor{};
+            msaaColor.format = colorFmt; msaaColor.samples = msaaSamples;
+            msaaColor.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; msaaColor.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            msaaColor.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            msaaColor.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            msaaColor.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            msaaColor.finalLayout   = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            VkAttachmentDescription msaaDepth{};
+            msaaDepth.format = depthFormat; msaaDepth.samples = msaaSamples;
+            msaaDepth.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; msaaDepth.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            msaaDepth.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            msaaDepth.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            msaaDepth.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            msaaDepth.finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            VkAttachmentDescription resolve{};
+            resolve.format = colorFmt; resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+            resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            resolve.finalLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            VkAttachmentReference colorRef  {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+            VkAttachmentReference depthRef  {1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+            VkAttachmentReference resolveRef{2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+            VkSubpassDescription subpass{};
+            subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+            subpass.colorAttachmentCount = 1; subpass.pColorAttachments = &colorRef;
+            subpass.pDepthStencilAttachment = &depthRef;
+            subpass.pResolveAttachments = &resolveRef;
+
+            VkAttachmentDescription atts[3] = { msaaColor, msaaDepth, resolve };
+            VkRenderPassCreateInfo rpInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+            rpInfo.attachmentCount = 3; rpInfo.pAttachments = atts;
+            rpInfo.subpassCount = 1; rpInfo.pSubpasses = &subpass;
+            rpInfo.dependencyCount = 1; rpInfo.pDependencies = &dep;
+            vkCreateRenderPass(device, &rpInfo, nullptr, &paScenePass);
+        }
+    }
+
+    // ── 5. paFramebuffer (low-res) ────────────────────────────────────────────
+    {
+        VkFramebufferCreateInfo fbInfo{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+        fbInfo.renderPass = paScenePass;
+        fbInfo.width = rW; fbInfo.height = rH; fbInfo.layers = 1;
+        if (!msaa) {
+            VkImageView atts[2] = { paColorView, paDepthView };
+            fbInfo.attachmentCount = 2; fbInfo.pAttachments = atts;
+        } else {
+            // MSAA: [0]=msaa color, [1]=msaa depth, [2]=resolve(=paColorImage)
+            VkImageView atts[3] = { paMsaaView, paDepthView, paColorView };
+            fbInfo.attachmentCount = 3; fbInfo.pAttachments = atts;
+        }
+        vkCreateFramebuffer(device, &fbInfo, nullptr, &paFramebuffer);
+    }
+
+    // ── 6. NEAREST sampler ────────────────────────────────────────────────────
+    {
+        VkSamplerCreateInfo si{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+        si.magFilter = VK_FILTER_NEAREST; si.minFilter = VK_FILTER_NEAREST;
+        si.addressModeU = si.addressModeV = si.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        vkCreateSampler(device, &si, nullptr, &pixelArtSampler);
+    }
+
+    // ── 7. Blit descriptor layout + pool + sets ───────────────────────────────
+    {
+        VkDescriptorSetLayoutBinding b{};
+        b.binding = 0; b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        b.descriptorCount = 1; b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutCreateInfo li{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+        li.bindingCount = 1; li.pBindings = &b;
+        vkCreateDescriptorSetLayout(device, &li, nullptr, &blitDescLayout);
+
+        VkDescriptorPoolSize ps{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT };
+        VkDescriptorPoolCreateInfo pi{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+        pi.poolSizeCount = 1; pi.pPoolSizes = &ps; pi.maxSets = MAX_FRAMES_IN_FLIGHT;
+        vkCreateDescriptorPool(device, &pi, nullptr, &blitDescPool);
+
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+        layouts.fill(blitDescLayout);
+        VkDescriptorSetAllocateInfo ai{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+        ai.descriptorPool = blitDescPool; ai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        ai.pSetLayouts = layouts.data();
+        vkAllocateDescriptorSets(device, &ai, blitDescSets.data());
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorImageInfo imgInfo{};
+            imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imgInfo.imageView   = paColorView;
+            imgInfo.sampler     = pixelArtSampler;
+            VkWriteDescriptorSet w{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+            w.dstSet = blitDescSets[i]; w.dstBinding = 0;
+            w.descriptorCount = 1; w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            w.pImageInfo = &imgInfo;
+            vkUpdateDescriptorSets(device, 1, &w, 0, nullptr);
+        }
+    }
+
+    // ── 8. Blit pipeline (uses renderPass for compatibility with ImGui) ───────
+    // The blit draws inside renderPass so ImGui can follow in the same pass.
+    if (!createQuadPipeline(device, renderPass, blitDescLayout,
+                            blitPipelineLayout, blitPipeline, msaaSamples))
+        return false;
+
+    std::cout << "[Vulkan] Pixel art resources created ("
+              << rW << "x" << rH << " → "
+              << extent.width << "x" << extent.height << ", palette=" << paletteSize << ")" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupPixelArtResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+
+    if (blitPipeline)       { vkDestroyPipeline(device, blitPipeline, nullptr);             blitPipeline = nullptr; }
+    if (blitPipelineLayout) { vkDestroyPipelineLayout(device, blitPipelineLayout, nullptr); blitPipelineLayout = nullptr; }
+    if (blitDescPool)       { vkDestroyDescriptorPool(device, blitDescPool, nullptr);       blitDescPool = nullptr; }
+    if (blitDescLayout)     { vkDestroyDescriptorSetLayout(device, blitDescLayout, nullptr); blitDescLayout = nullptr; }
+    if (pixelArtSampler)    { vkDestroySampler(device, pixelArtSampler, nullptr);           pixelArtSampler = nullptr; }
+    if (paFramebuffer)      { vkDestroyFramebuffer(device, paFramebuffer, nullptr);         paFramebuffer = nullptr; }
+    if (paScenePass)        { vkDestroyRenderPass(device, paScenePass, nullptr);            paScenePass = nullptr; }
+    if (paDepthView)        { vkDestroyImageView(device, paDepthView, nullptr);             paDepthView = nullptr; }
+    if (paDepthImage)       { vmaDestroyImage(allocator, paDepthImage, paDepthAlloc);       paDepthImage = nullptr; paDepthAlloc = nullptr; }
+    if (paMsaaView)         { vkDestroyImageView(device, paMsaaView, nullptr);              paMsaaView = nullptr; }
+    if (paMsaaImage)        { vmaDestroyImage(allocator, paMsaaImage, paMsaaAlloc);         paMsaaImage = nullptr; paMsaaAlloc = nullptr; }
+    if (paColorView)        { vkDestroyImageView(device, paColorView, nullptr);             paColorView = nullptr; }
+    if (paColorImage)       { vmaDestroyImage(allocator, paColorImage, paColorAlloc);       paColorImage = nullptr; paColorAlloc = nullptr; }
+}
+
 //   - Reflection offscreen image (half swapchain size) + render pass + framebuffer
 //   - Water descriptor set: FrameUBO (0), normal map (1), reflection texture (2)
 //   - Water pipeline
@@ -3802,16 +4170,19 @@ bool VulkanRenderer::createIDBufferResources() {
         return false;
     }
 
-    // 7. Descriptor pool + sets
+    // 7. Descriptor pool + sets.
+    // Extra capacity for per-instance animated-bone sets (same cap as shadow pool).
+    static constexpr int ID_MAX_ANIMATED = 200;
+    uint32_t idTotalSets = MAX_FRAMES_IN_FLIGHT * (1 + ID_MAX_ANIMATED);
     VkDescriptorPoolSize poolSize{};
     poolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT * 2;  // FrameUBO + BoneUBO per frame
+    poolSize.descriptorCount = idTotalSets * 2;  // FrameUBO + BoneUBO per set
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes    = &poolSize;
-    poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
+    poolInfo.maxSets       = idTotalSets;
 
     if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &idDescriptorPool) != VK_SUCCESS) {
         std::cerr << "[Vulkan] Failed to create ID descriptor pool" << std::endl;
@@ -3860,6 +4231,29 @@ bool VulkanRenderer::createIDBufferResources() {
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(writes.size()),
                                writes.data(), 0, nullptr);
+    }
+
+    // Back-fill per-instance ID desc sets for any animated objects already loaded.
+    // (ID resources are lazy-created, so instances may exist before this runs.)
+    for (auto& [idx, inst] : instanceData) {
+        if (inst->idDescSets[0] != VK_NULL_HANDLE) continue; // already allocated
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> iLays;
+        iLays.fill(idDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo iai{};
+        iai.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        iai.descriptorPool     = idDescriptorPool;
+        iai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        iai.pSetLayouts        = iLays.data();
+        if (vkAllocateDescriptorSets(device, &iai, inst->idDescSets.data()) == VK_SUCCESS) {
+            for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                VkDescriptorBufferInfo frameInfo{ modelUniformBuffers[f].buffer, 0, sizeof(FrameUBO) };
+                VkDescriptorBufferInfo boneInfo { inst->boneBuffers[f].buffer,   0, sizeof(BoneUBO)  };
+                std::array<VkWriteDescriptorSet, 2> iw{};
+                iw[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst->idDescSets[f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &frameInfo, nullptr };
+                iw[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst->idDescSets[f], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &boneInfo,  nullptr };
+                vkUpdateDescriptorSets(device, 2, iw.data(), 0, nullptr);
+            }
+        }
     }
 
     // 8. Staging buffer for single-pixel readback (4 bytes = 1 uint32_t)
@@ -3997,6 +4391,17 @@ uint32_t VulkanRenderer::getObjectIdAtPixel(int x, int y) {
         auto it = sceneModels.find(obj->model.get());
         if (it == sceneModels.end()) { objIdx++; continue; }
 
+        // Rebind per-instance desc set for animated objects so bone transforms
+        // are correct; fall back to the shared identity set for static objects.
+        auto instIt = instanceData.find((int)objIdx);
+        if (instIt != instanceData.end() && instIt->second->idDescSets[currentFrame] != VK_NULL_HANDLE) {
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, idPipelineLayout,
+                                    0, 1, &instIt->second->idDescSets[currentFrame], 0, nullptr);
+        } else {
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, idPipelineLayout,
+                                    0, 1, &idDescriptorSets[currentFrame], 0, nullptr);
+        }
+
         for (auto& meshGPU : it->second->meshes) {
             IDPushConstant push{};
             push.model    = obj->getModelMatrix();
@@ -4105,17 +4510,8 @@ bool VulkanRenderer::loadModel(Model* model) {
     auto& newData = *(sceneModels[model] = std::make_unique<VulkanModelData>());
     uint32_t meshCount = static_cast<uint32_t>(model->meshes.size());
 
-    // Per-model bone buffers (one per frame in flight)
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        newData.boneBuffers[i] = createBuffer(allocator, sizeof(BoneUBO),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-        if (!newData.boneBuffers[i].buffer) {
-            std::cerr << "[Vulkan] Failed to create per-model bone buffer" << std::endl;
-            sceneModels.erase(model);
-            return false;
-        }
-    }
-
+    // Bone buffers are now per-instance (see createInstanceData).
+    // Model descriptor sets use the renderer-level identity boneUniformBuffers.
     newData.meshes.resize(meshCount);
 
     // Texture cache — avoid loading the same texture twice.
@@ -4254,7 +4650,7 @@ bool VulkanRenderer::loadModel(Model* model) {
             shadowImgInfo.sampler     = shadowSampler;
 
             VkDescriptorBufferInfo boneInfo{};
-            boneInfo.buffer = newData.boneBuffers[f].buffer;
+            boneInfo.buffer = boneUniformBuffers[f].buffer;
             boneInfo.offset = 0;
             boneInfo.range  = sizeof(BoneUBO);
 
@@ -4345,7 +4741,7 @@ bool VulkanRenderer::loadModel(Model* model) {
                         shadowInfo.sampler     = shadowSampler;
 
                         VkDescriptorBufferInfo boneInfo{};
-                        boneInfo.buffer = newData.boneBuffers[f].buffer;
+                        boneInfo.buffer = boneUniformBuffers[f].buffer;
                         boneInfo.offset = 0;
                         boneInfo.range  = sizeof(BoneUBO);
 
@@ -4482,6 +4878,162 @@ bool VulkanRenderer::createGroundPlane() {
     return true;
 }
 
+// ─── Per-instance data ────────────────────────────────────────────────────────
+//
+// Creates bone UBOs and descriptor sets for one animated scene object.
+// The descriptor sets are identical to the model's except binding 3 (regular)
+// or binding 6 (PBR) points to THIS instance's bone buffer instead of the
+// shared identity buffer, enabling independent animation state per object.
+
+bool VulkanRenderer::createInstanceData(int objIdx, Model* model) {
+    auto modelIt = sceneModels.find(model);
+    if (modelIt == sceneModels.end()) return false;
+
+    VkDevice device = ctx->getDevice();
+    auto& inst = *(instanceData[objIdx] = std::make_unique<VulkanInstanceData>());
+
+    // Per-instance bone buffers
+    for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+        inst.boneBuffers[f] = createBuffer(allocator, sizeof(BoneUBO),
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        if (!inst.boneBuffers[f].buffer) {
+            instanceData.erase(objIdx);
+            return false;
+        }
+        // Initialize to identity matrices so the first frame before the bone update
+        // renders the bind pose rather than collapsing all vertices to the origin.
+        BoneUBO identityBones{};
+        for (int b = 0; b < MAX_BONES; b++) identityBones.bones[b] = glm::mat4(1.0f);
+        void* mapped; vmaMapMemory(allocator, inst.boneBuffers[f].allocation, &mapped);
+        memcpy(mapped, &identityBones, sizeof(BoneUBO));
+        vmaUnmapMemory(allocator, inst.boneBuffers[f].allocation);
+    }
+
+    uint32_t meshCount = static_cast<uint32_t>(modelIt->second->meshes.size());
+    inst.meshDescSets.resize(meshCount);
+    inst.pbrDescSets.resize(meshCount);
+
+    for (uint32_t m = 0; m < meshCount; m++) {
+        auto& gpuMesh = modelIt->second->meshes[m];
+
+        // ── Regular descriptor sets ──────────────────────────────────────────
+        {
+            std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+            layouts.fill(modelDescriptorSetLayout);
+            VkDescriptorSetAllocateInfo ai{};
+            ai.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            ai.descriptorPool     = modelDescriptorPool;
+            ai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+            ai.pSetLayouts        = layouts.data();
+            if (vkAllocateDescriptorSets(device, &ai, inst.meshDescSets[m].data()) != VK_SUCCESS) {
+                instanceData.erase(objIdx); return false;
+            }
+            for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                VkDescriptorBufferInfo frameInfo{ modelUniformBuffers[f].buffer, 0, sizeof(FrameUBO) };
+                VulkanTexture& tex = gpuMesh.diffuseTexture.imageView ? gpuMesh.diffuseTexture : whiteTexture;
+                VkDescriptorImageInfo imgInfo{ tex.sampler, tex.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+                VkDescriptorImageInfo shadowInfo{ shadowSampler, shadowImageView, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+                VkDescriptorBufferInfo boneInfo{ inst.boneBuffers[f].buffer, 0, sizeof(BoneUBO) };
+
+                std::array<VkWriteDescriptorSet, 4> w{};
+                w[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.meshDescSets[m][f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          nullptr,    &frameInfo,  nullptr };
+                w[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.meshDescSets[m][f], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &imgInfo,    nullptr,     nullptr };
+                w[2] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.meshDescSets[m][f], 2, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowInfo, nullptr,     nullptr };
+                w[3] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.meshDescSets[m][f], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          nullptr,    &boneInfo,   nullptr };
+                vkUpdateDescriptorSets(device, 4, w.data(), 0, nullptr);
+            }
+        }
+
+        // ── PBR descriptor sets (only if this mesh has PBR) ─────────────────
+        if (gpuMesh.hasPBR && pbrDescriptorSetLayout && pbrDescriptorPool) {
+            std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> pbrLayouts;
+            pbrLayouts.fill(pbrDescriptorSetLayout);
+            VkDescriptorSetAllocateInfo ai{};
+            ai.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            ai.descriptorPool     = pbrDescriptorPool;
+            ai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+            ai.pSetLayouts        = pbrLayouts.data();
+            if (vkAllocateDescriptorSets(device, &ai, inst.pbrDescSets[m].data()) != VK_SUCCESS) {
+                inst.pbrDescSets[m].fill(VK_NULL_HANDLE);
+            } else {
+                VulkanTexture& albedo   = gpuMesh.diffuseTexture.imageView   ? gpuMesh.diffuseTexture   : whiteTexture;
+                VulkanTexture& normalT  = gpuMesh.normalTexture.imageView     ? gpuMesh.normalTexture     : flatNormalTexture;
+                VulkanTexture& metalT   = gpuMesh.metallicTexture.imageView   ? gpuMesh.metallicTexture   : whiteTexture;
+                VulkanTexture& roughT   = gpuMesh.roughnessTexture.imageView  ? gpuMesh.roughnessTexture  : whiteTexture;
+                for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                    VkDescriptorBufferInfo frameInfo{ modelUniformBuffers[f].buffer, 0, sizeof(FrameUBO) };
+                    VkDescriptorImageInfo albedoInfo{ albedo.sampler,  albedo.imageView,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+                    VkDescriptorImageInfo normInfo  { normalT.sampler, normalT.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+                    VkDescriptorImageInfo metInfo   { metalT.sampler,  metalT.imageView,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+                    VkDescriptorImageInfo roughInfo { roughT.sampler,  roughT.imageView,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+                    VkDescriptorImageInfo shadowInfo{ shadowSampler,   shadowImageView,   VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+                    VkDescriptorBufferInfo boneInfo { inst.boneBuffers[f].buffer, 0, sizeof(BoneUBO) };
+
+                    std::array<VkWriteDescriptorSet, 7> pw{};
+                    pw[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          nullptr,     &frameInfo, nullptr };
+                    pw[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &albedoInfo,  nullptr,    nullptr };
+                    pw[2] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 2, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &normInfo,    nullptr,    nullptr };
+                    pw[3] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 3, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &metInfo,     nullptr,    nullptr };
+                    pw[4] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 4, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &roughInfo,   nullptr,    nullptr };
+                    pw[5] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 5, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowInfo,  nullptr,    nullptr };
+                    pw[6] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.pbrDescSets[m][f], 6, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          nullptr,     &boneInfo,  nullptr };
+                    vkUpdateDescriptorSets(device, 7, pw.data(), 0, nullptr);
+                }
+            }
+        }
+    }
+
+    // ── ID-pass descriptor sets (same pattern as shadow) ─────────────────────
+    // Only allocated if ID resources already exist (they're lazy-created on first
+    // click; if not yet created, createIDBufferResources back-fills on first use).
+    if (idDescriptorPool && idDescriptorSetLayout) {
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> iLays;
+        iLays.fill(idDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo iai{};
+        iai.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        iai.descriptorPool     = idDescriptorPool;
+        iai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        iai.pSetLayouts        = iLays.data();
+        if (vkAllocateDescriptorSets(device, &iai, inst.idDescSets.data()) == VK_SUCCESS) {
+            for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                VkDescriptorBufferInfo frameInfo{ modelUniformBuffers[f].buffer, 0, sizeof(FrameUBO) };
+                VkDescriptorBufferInfo boneInfo { inst.boneBuffers[f].buffer,    0, sizeof(BoneUBO)  };
+                std::array<VkWriteDescriptorSet, 2> iw{};
+                iw[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.idDescSets[f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &frameInfo, nullptr };
+                iw[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.idDescSets[f], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &boneInfo,  nullptr };
+                vkUpdateDescriptorSets(device, 2, iw.data(), 0, nullptr);
+            }
+        }
+    }
+
+    // ── Shadow descriptor sets (per-instance bone buffer for shadow pass) ────
+    // The shadow vertex shader uses bone matrices — with zeroed renderer-level
+    // buffers, animated objects produce degenerate geometry and cast no shadow.
+    // Each instance gets its own shadow desc set pointing to its bone buffer so
+    // the shadow matches the current animation pose.
+    if (shadowDescriptorPool && shadowDescriptorSetLayout) {
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> sLayouts;
+        sLayouts.fill(shadowDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo sai{};
+        sai.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        sai.descriptorPool     = shadowDescriptorPool;
+        sai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        sai.pSetLayouts        = sLayouts.data();
+        if (vkAllocateDescriptorSets(device, &sai, inst.shadowDescSets.data()) == VK_SUCCESS) {
+            for (int f = 0; f < MAX_FRAMES_IN_FLIGHT; f++) {
+                VkDescriptorBufferInfo lightInfo{ shadowUniformBuffers[f].buffer, 0, sizeof(LightUBO) };
+                VkDescriptorBufferInfo boneInfo { inst.boneBuffers[f].buffer,    0, sizeof(BoneUBO)  };
+                std::array<VkWriteDescriptorSet, 2> sw{};
+                sw[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.shadowDescSets[f], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightInfo, nullptr };
+                sw[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, inst.shadowDescSets[f], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &boneInfo,  nullptr };
+                vkUpdateDescriptorSets(device, 2, sw.data(), 0, nullptr);
+            }
+        }
+    }
+
+    return true;
+}
+
 // ─── Scene loading ────────────────────────────────────────────────────────────
 
 bool VulkanRenderer::loadScene(Scene* scene) {
@@ -4519,14 +5071,21 @@ bool VulkanRenderer::loadScene(Scene* scene) {
     // Ground plane (once)
     createGroundPlane();
 
-    // Upload unique models
+    // Upload unique models and create per-instance data for animated objects
+    int idx = 0;
     for (auto& obj : scene->getGameObjects()) {
-        if (obj->model && !sceneModels.count(obj->model.get()))
-            loadModel(obj->model.get());
+        if (obj->model) {
+            if (!sceneModels.count(obj->model.get()))
+                loadModel(obj->model.get());
+            if (obj->model->IsAnimated() && !instanceData.count(idx))
+                createInstanceData(idx, obj->model.get());
+        }
+        idx++;
     }
 
     std::cout << "[Vulkan] Scene loaded: " << sceneModels.size()
-              << " unique models, " << scene->getGameObjects().size() << " objects" << std::endl;
+              << " unique models, " << scene->getGameObjects().size()
+              << " objects, " << instanceData.size() << " animated instances" << std::endl;
     return true;
 }
 

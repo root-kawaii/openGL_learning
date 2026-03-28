@@ -150,6 +150,7 @@ public:
     void buildBottomCenterMenu();
     void renderAllUIElements(float mouseX, float mouseY);
     void clearUIElements();
+    const std::vector<UIElement>& getUIElements() const { return uiElements; }
 
     // Legacy standalone render functions
     void renderGameMenu();

@@ -27,50 +27,34 @@ layout(push_constant) uniform WaterPush {
     float waterLevel;
 } push;
 
-// ── FBM wave displacement ─────────────────────────────────────────────────────
-float hash(vec2 p) {
-    p = fract(p * vec2(234.34, 435.345));
-    p += dot(p, p + 34.23);
-    return fract(p.x * p.y);
-}
+// ── Sine × sine wave displacement ───────────────────────────────────────────
+// Two perpendicular sine waves multiplied together create a natural ebb-and-flow
+// motion: peaks and troughs move in a cross pattern, matching pixel art ocean style.
 
-float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1,0)), u.x),
-               mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x), u.y);
-}
-
-float fbm(vec2 p) {
-    float v = 0.0, a = 0.5;
-    for (int i = 0; i < 4; i++) {
-        v += a * noise(p);
-        p  = p * 2.1 + vec2(1.3, 1.7);
-        a *= 0.5;
-    }
-    return v;
-}
-
-float waveY(vec2 xz) {
-    vec2 animated = xz * 0.3 + push.time * push.waveSpeed * vec2(0.7, 0.5);
-    return fbm(animated) * push.waveHeight + push.waterLevel;
+float waveDisp(vec2 xz) {
+    float t     = push.time * push.waveSpeed;
+    float freq  = 0.8;
+    float wave1 = sin(xz.x * freq        + t);
+    float wave2 = sin(xz.y * freq * 0.9  + t * 1.1);
+    return wave1 * wave2 * push.waveHeight;
 }
 
 void main() {
     vec2 xz  = inPosition.xz;
-    float eps = 0.2;
+    float eps = 0.3;
 
-    float hC = waveY(xz);
-    float hL = waveY(xz + vec2(-eps, 0.0));
-    float hR = waveY(xz + vec2( eps, 0.0));
-    float hD = waveY(xz + vec2(0.0, -eps));
-    float hU = waveY(xz + vec2(0.0,  eps));
+    float hC = waveDisp(xz);
+    float hL = waveDisp(xz + vec2(-eps, 0.0));
+    float hR = waveDisp(xz + vec2( eps, 0.0));
+    float hD = waveDisp(xz + vec2(0.0, -eps));
+    float hU = waveDisp(xz + vec2(0.0,  eps));
 
-    // Analytical normal from finite differences
-    vec3 N = normalize(vec3(hL - hR, 2.0 * eps, hD - hU));
+    // Normal from finite differences of the displacement function
+    vec3 N = normalize(vec3((hL - hR) / (2.0 * eps),
+                            1.0,
+                            (hD - hU) / (2.0 * eps)));
 
-    vec3 worldPos = vec3(xz.x, hC, xz.y);
+    vec3 worldPos = vec3(xz.x, push.waterLevel + hC, xz.y);
 
     fragWorldPos  = worldPos;
     fragNormal    = N;

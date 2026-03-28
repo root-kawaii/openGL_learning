@@ -8,6 +8,7 @@
 #include <array>
 #include <memory>
 #include <unordered_map>
+#include <functional>
 
 #include <glm/glm.hpp>
 
@@ -98,7 +99,23 @@ struct VulkanMeshGPUData {
 
 struct VulkanModelData {
     std::vector<VulkanMeshGPUData> meshes;
+    // NOTE: boneBuffers moved to VulkanInstanceData (per-instance, not per-model)
+};
+
+// Per-instance GPU data — owns bone UBOs and per-mesh descriptor sets that
+// reference this instance's bones. Created for every animated scene object so
+// two characters with the same .glb play independent animation states.
+struct VulkanInstanceData {
     std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> boneBuffers{};
+    // Per-mesh, per-frame descriptor sets (regular + PBR) using instance bones
+    std::vector<std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT>> meshDescSets;
+    std::vector<std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT>> pbrDescSets;
+    // Shadow-pass descriptor sets — bind instance bone buffer so animated objects
+    // cast shadows matching their current animation pose (not the zero/T-pose).
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> shadowDescSets = {};
+    // ID-pass descriptor sets — same reason: animated objects need live bones
+    // or their vertices collapse to the origin and the pixel returns 0 (miss).
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> idDescSets = {};
 };
 
 class VulkanRenderer {
@@ -121,8 +138,13 @@ public:
     // Swap active scene pointer without re-uploading models
     void setScene(Scene* scene) { currentScene = scene; }
 
-    // Draw a frame — renders the textured quad (or loaded model if available)
-    bool drawFrame();
+    // Draw a frame. Optional callback is invoked inside the Vulkan ImGui frame
+    // so callers (e.g. main.cpp) can push ENGINE panels, level editor, pause
+    // menu etc. into the Vulkan window without needing a separate context switch.
+    bool drawFrame(std::function<void()> engineCallback = nullptr);
+
+    // Expose the Vulkan ImGui context so external code can push content into it
+    ImGuiContext* getImGuiContext() const { return imguiContext; }
 
     // Set camera matrices for the next frame (call before drawFrame)
     void setViewMatrix(const glm::mat4& view);
@@ -172,6 +194,9 @@ private:
     bool createWaterResources();
     bool createUIResources();
     bool createGroundPlane();
+    bool createPixelArtResources();
+    // Create per-instance bone buffers + descriptor sets for an animated object
+    bool createInstanceData(int objIdx, Model* model);
 
     void cleanupDepthResources();
     void cleanupIDBufferResources();
@@ -183,6 +208,7 @@ private:
     void cleanupGrassResources();
     void cleanupWaterResources();
     void cleanupUIResources();
+    void cleanupPixelArtResources();
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     VkFormat findDepthFormat();
@@ -208,6 +234,37 @@ private:
 
     // Framebuffers
     std::vector<VkFramebuffer> framebuffers;
+
+    // ─── Pixel art post-process ───────────────────────────────────────────────
+    // Renders the scene at 1/pixelArtScale resolution into paColorImage, then
+    // upscales to the swapchain with NEAREST filter + posterization blit.
+    // ImGui/UI text stay at full resolution in the normal renderPass.
+    bool  pixelArtEnabled  = true;
+    int   pixelArtScale    = 4;     // render at 1/4 resolution
+    float paletteSize      = 12.0f; // color quantization steps per channel
+
+    // Low-res 1-sample color image (SAMPLED_BIT — blit source)
+    VkImage        paColorImage   = nullptr;
+    VmaAllocation  paColorAlloc   = nullptr;
+    VkImageView    paColorView    = nullptr;
+    // Low-res MSAA color (only created when msaaSamples > 1)
+    VkImage        paMsaaImage    = nullptr;
+    VmaAllocation  paMsaaAlloc    = nullptr;
+    VkImageView    paMsaaView     = nullptr;
+    // Low-res depth (msaaSamples)
+    VkImage        paDepthImage   = nullptr;
+    VmaAllocation  paDepthAlloc   = nullptr;
+    VkImageView    paDepthView    = nullptr;
+    // Render pass: same structure as renderPass, finalLayout=SHADER_READ_ONLY
+    VkRenderPass   paScenePass    = nullptr;
+    VkFramebuffer  paFramebuffer  = nullptr;
+    // NEAREST sampler + blit descriptor/pipeline (draws paColorImage → swapchain)
+    VkSampler      pixelArtSampler     = nullptr;
+    VkDescriptorSetLayout blitDescLayout = nullptr;
+    VkDescriptorPool      blitDescPool   = nullptr;
+    std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> blitDescSets = {};
+    VkPipelineLayout blitPipelineLayout = nullptr;
+    VkPipeline       blitPipeline       = nullptr;
 
     // Commands
     VkCommandPool commandPool = nullptr;
@@ -262,7 +319,12 @@ private:
     std::unordered_map<Model*, std::unique_ptr<VulkanModelData>> sceneModels;
     Scene* currentScene = nullptr;
 
-    // Bone animation (Phase 10) — renderer-level UBO for shadow/ID descriptor sets (identity)
+    // Per-instance GPU data (keyed by scene object index).
+    // Only animated objects get an entry; static objects use the model's
+    // identity-bone descriptor sets.
+    std::unordered_map<int, std::unique_ptr<VulkanInstanceData>> instanceData;
+
+    // Bone animation (Phase 10) — renderer-level UBO for ground/shadow/ID descriptor sets (identity)
     std::array<AllocatedBuffer, MAX_FRAMES_IN_FLIGHT> boneUniformBuffers{};
 
     // Ground plane (shadow receiver)

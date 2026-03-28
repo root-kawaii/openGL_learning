@@ -15,10 +15,14 @@ public:
     VulkanContext(const VulkanContext&) = delete;
     VulkanContext& operator=(const VulkanContext&) = delete;
 
-    // Initialize the full Vulkan context.
-    // Creates its own GLFW window (GLFW_NO_API) since Vulkan can't share
-    // a window that has an active OpenGL context.
+    // Initialize the full Vulkan context, creating its own GLFW window.
     bool init(int width, int height);
+
+    // Initialize using an existing GLFW window (window unification).
+    // Caller retains ownership — cleanup() will NOT destroy the window.
+    // On macOS/MoltenVK, Metal and OpenGL use separate layers on the NSView,
+    // so this works even if the window already has an OpenGL context.
+    bool initFromExistingWindow(GLFWwindow* window, int width, int height);
 
     // Recreate swapchain (e.g. on window resize)
     bool recreateSwapchain(uint32_t width, uint32_t height);
@@ -26,10 +30,11 @@ public:
     // Cleanup
     void cleanup();
 
-    // Show/hide the Vulkan window
+    // Show/hide — no-op when using an externally owned window
     void showWindow();
     void hideWindow();
     GLFWwindow* getWindow() const { return vulkanWindow; }
+    bool ownsWindow() const { return ownsWindow_; }
 
     // Accessors
     VkInstance       getInstance()       const { return instance; }
@@ -54,6 +59,7 @@ private:
     void cleanupSwapchain();
 
     GLFWwindow* vulkanWindow = nullptr;
+    bool        ownsWindow_  = true;   // false when using initFromExistingWindow
 
     // Vulkan handles
     VkInstance               instance       = nullptr;

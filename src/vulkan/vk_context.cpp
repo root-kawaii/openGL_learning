@@ -11,19 +11,12 @@ VulkanContext::~VulkanContext() {
     cleanup();
 }
 
+// Shared initialization logic starting after the window is set.
+// Extracts instance, surface, device, swapchain creation so both init()
+// and initFromExistingWindow() can reuse the same code.
 bool VulkanContext::init(int width, int height) {
-    std::cout << "[Vulkan] Starting initialization..." << std::endl;
+    std::cout << "[Vulkan] Starting initialization (own window)..." << std::endl;
 
-    // ── 1. Create Instance ──────────────────────────────────────────────────
-    //
-    // VkInstance is the connection between your app and the Vulkan library.
-    // Validation layers are debug-only error checkers that catch API misuse.
-    // The debug messenger routes validation messages to stderr.
-
-    // We create our own GLFW window with GLFW_NO_API because Vulkan needs
-    // exclusive access to the window surface — it can't share with OpenGL.
-    // During the migration, this window shows Vulkan output while the OpenGL
-    // window stays available for toggling back.
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     vulkanWindow = glfwCreateWindow(width, height, "Hephaestus [Vulkan]", nullptr, nullptr);
@@ -31,7 +24,8 @@ bool VulkanContext::init(int width, int height) {
         std::cerr << "[Vulkan] Failed to create GLFW window" << std::endl;
         return false;
     }
-    glfwHideWindow(vulkanWindow); // Start hidden, show when toggled on
+    glfwHideWindow(vulkanWindow);
+    ownsWindow_ = true;
 
     auto inst_builder = vkb::InstanceBuilder()
         .set_app_name("Hephaestus")
@@ -140,6 +134,72 @@ bool VulkanContext::init(int width, int height) {
     return true;
 }
 
+bool VulkanContext::initFromExistingWindow(GLFWwindow* window, int width, int height) {
+    std::cout << "[Vulkan] Starting initialization (shared window)..." << std::endl;
+    vulkanWindow = window;
+    ownsWindow_  = false;
+    // Fall through to the same instance/surface/device/swapchain setup.
+    // Everything from here is identical to init() after window creation.
+    auto inst_builder = vkb::InstanceBuilder()
+        .set_app_name("Hephaestus")
+        .set_engine_name("Hephaestus Engine")
+        .require_api_version(1, 2, 0)
+        .request_validation_layers()
+        .use_default_debug_messenger()
+        .build();
+    if (!inst_builder) {
+        std::cerr << "[Vulkan] Failed to create instance: " << inst_builder.error().message() << std::endl;
+        return false;
+    }
+    vkb::Instance vkb_inst = inst_builder.value();
+    instance       = vkb_inst.instance;
+    debugMessenger = vkb_inst.debug_messenger;
+
+    VkResult surfaceResult = glfwCreateWindowSurface(instance, vulkanWindow, nullptr, &surface);
+    if (surfaceResult != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create surface on shared window (VkResult " << surfaceResult << ")" << std::endl;
+        return false;
+    }
+
+    VkPhysicalDeviceFeatures requiredFeatures{};
+    requiredFeatures.samplerAnisotropy = VK_TRUE;
+    auto phys_selector = vkb::PhysicalDeviceSelector(vkb_inst)
+        .set_surface(surface).set_minimum_version(1, 2)
+        .set_required_features(requiredFeatures)
+        .prefer_gpu_device_type(vkb::PreferredDeviceType::discrete)
+        .select();
+    if (!phys_selector) {
+        std::cerr << "[Vulkan] Failed to select GPU: " << phys_selector.error().message() << std::endl;
+        return false;
+    }
+    vkb::PhysicalDevice vkb_phys = phys_selector.value();
+    physicalDevice = vkb_phys.physical_device;
+    std::cout << "[Vulkan] Selected GPU: " << vkb_phys.name << std::endl;
+
+    auto dev_builder = vkb::DeviceBuilder(vkb_phys).build();
+    if (!dev_builder) {
+        std::cerr << "[Vulkan] Failed to create device: " << dev_builder.error().message() << std::endl;
+        return false;
+    }
+    vkb::Device vkb_dev = dev_builder.value();
+    device = vkb_dev.device;
+    auto gq = vkb_dev.get_queue(vkb::QueueType::graphics);
+    auto pq = vkb_dev.get_queue(vkb::QueueType::present);
+    auto gqi = vkb_dev.get_queue_index(vkb::QueueType::graphics);
+    auto pqi = vkb_dev.get_queue_index(vkb::QueueType::present);
+    if (!gq || !pq || !gqi || !pqi) { std::cerr << "[Vulkan] Failed to get queues" << std::endl; return false; }
+    graphicsQueue = gq.value(); presentQueue = pq.value();
+    graphicsQueueFamily = gqi.value(); presentQueueFamily = pqi.value();
+
+    int fbW, fbH;
+    glfwGetFramebufferSize(vulkanWindow, &fbW, &fbH);
+    if (!createSwapchain(static_cast<uint32_t>(fbW), static_cast<uint32_t>(fbH))) return false;
+
+    printDeviceInfo();
+    std::cout << "[Vulkan] Window unification: Vulkan surface created on the main game window." << std::endl;
+    return true;
+}
+
 void VulkanContext::cleanup() {
     if (device != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(device);
@@ -165,18 +225,18 @@ void VulkanContext::cleanup() {
         vkDestroyInstance(instance, nullptr);
         instance = VK_NULL_HANDLE;
     }
-    if (vulkanWindow) {
+    if (ownsWindow_ && vulkanWindow) {
         glfwDestroyWindow(vulkanWindow);
         vulkanWindow = nullptr;
     }
 }
 
 void VulkanContext::showWindow() {
-    if (vulkanWindow) glfwShowWindow(vulkanWindow);
+    if (ownsWindow_ && vulkanWindow) glfwShowWindow(vulkanWindow);
 }
 
 void VulkanContext::hideWindow() {
-    if (vulkanWindow) glfwHideWindow(vulkanWindow);
+    if (ownsWindow_ && vulkanWindow) glfwHideWindow(vulkanWindow);
 }
 
 // ─── Swapchain ───────────────────────────────────────────────────────────────
