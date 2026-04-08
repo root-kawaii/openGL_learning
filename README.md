@@ -1,3 +1,9 @@
+## Project Docs
+
+- `docs/ARCHITECTURE.md`
+- `docs/VULKAN_REWRITE_PLAYBOOK.md`
+- `docs/SCENE_AND_LEVELS.md`
+
 ## Psyducking
 
 Refactor everything to order things

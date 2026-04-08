@@ -16,6 +16,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <set>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -1085,12 +1086,30 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         frameUbo.proj             = currentProj;
         frameUbo.proj[1][1]      *= -1; // Vulkan NDC Y-flip
         frameUbo.lightSpaceMatrix = lightSpaceMatrix;
-        frameUbo.lightPos         = glm::vec4(lightPos, 1.0f);
+        frameUbo.lightPos         = glm::vec4(lightPos, directionalLightEnabled ? 1.0f : 0.0f);
         // Camera position in world space = last column of inverse view
         frameUbo.viewPos = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
+        frameUbo.viewPos.w = ambientStrength;
 
         // Scene lights
         frameUbo.numPointLights = 0;
+        auto sceneLights = currentScene->getLights();
+        const glm::vec3 cameraWorldPos(frameUbo.viewPos);
+        std::sort(sceneLights.begin(), sceneLights.end(),
+                  [&cameraWorldPos](const Light& a, const Light& b) {
+                      const glm::vec3 deltaA = a.position - cameraWorldPos;
+                      const glm::vec3 deltaB = b.position - cameraWorldPos;
+                      return glm::dot(deltaA, deltaA) < glm::dot(deltaB, deltaB);
+                  });
+        for (const auto& light : sceneLights) {
+            if (frameUbo.numPointLights >= MAX_POINT_LIGHTS) {
+                break;
+            }
+
+            PointLight& pointLight = frameUbo.pointLights[frameUbo.numPointLights++];
+            pointLight.position = glm::vec4(light.position, 1.0f);
+            pointLight.color = glm::vec4(light.color, light.intensity);
+        }
 
         void* mapped;
         vmaMapMemory(allocator, modelUniformBuffers[currentFrame].allocation, &mapped);
@@ -1211,7 +1230,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     }
 
     // ── Skybox (Phase 9) — drawn last, depth test LEQUAL culls behind geometry ─
-    if (hasSkybox && skyboxPipeline) {
+    if (skyboxVisibleInCurrentMode && hasSkybox && skyboxPipeline) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline);
 
         // Push viewProj with translation removed from view matrix
@@ -1272,7 +1291,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     }
 
     // ── Infinite grid (Phase 12) ─────────────────────────────────────────────
-    if (showGrid && gridPipeline) {
+    if (gridVisibleInCurrentMode && showGrid && gridPipeline) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, gridPipeline);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, gridPipelineLayout,
                                 0, 1, &gridDescriptorSets[currentFrame], 0, nullptr);
@@ -5098,4 +5117,3 @@ void VulkanRenderer::setViewMatrix(const glm::mat4& view) {
 void VulkanRenderer::setProjectionMatrix(const glm::mat4& proj) {
     currentProj = proj;
 }
-

@@ -28,6 +28,7 @@
 
 #include <chrono>
 #include <thread>
+#include <optional>
 
 #include <../src/raycast.h>
 
@@ -108,8 +109,28 @@ private:
 
     bool MULTISAMPLE = true;
 
+    bool  firstPersonEnabled = false;
+    bool  firstPersonGrounded = false;
+    float firstPersonVerticalVelocity = 0.0f;
+    float firstPersonEyeHeight = 2.0f;
+    float firstPersonRadius = 0.35f;
+    float firstPersonHeight = 2.0f;
+    float firstPersonJumpVelocity = 5.75f;
+    float firstPersonGravity = 18.0f;
+    float firstPersonMoveSpeed = 5.5f;
+    float firstPersonStepHeight = 0.6f;
+    float firstPersonGroundSnap = 0.15f;
+
     void handleInput();
     void loadSettings();
+    void enterFirstPersonGameMode();
+    void updateFirstPersonController();
+    glm::vec3 resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
+                                           const glm::vec3 &currentCameraPos,
+                                           bool &grounded,
+                                           float &groundHeight) const;
+    std::optional<glm::vec3> findGameplaySpawnPoint() const;
+    bool isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const;
 
     int turn = 0;
     // int turnClock = 0; // from 0 to 24
@@ -178,20 +199,33 @@ public:
 
     void setGameMode(GameModeEnum modeEnum)
     {
+        GameModeEnum previousMode = mode;
         mode = modeEnum;
         if (modeEnum == GAME)
         {
             camera.gameMode = true;
-            // engineCameraPos = camera.Position;
-            // engineCameraFront = camera.Front;
-            // camera.Position = glm::vec3(0, 10, 0);
-            // camera.Front = glm::vec3(0, -1, 0);
+            if (previousMode == PAUSE)
+            {
+                firstPersonEnabled = true;
+                GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+                if (activeWindow)
+                    glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            }
+            else
+            {
+                enterFirstPersonGameMode();
+            }
         }
         if (modeEnum == ENGINE)
         {
             camera.gameMode = false;
-            // camera.Position = engineCameraPos;
-            // camera.Front = engineCameraFront;
+            firstPersonEnabled = false;
+            firstPersonGrounded = false;
+            firstPersonVerticalVelocity = 0.0f;
+        }
+        if (modeEnum == PAUSE)
+        {
+            firstPersonVerticalVelocity = 0.0f;
         }
     };
     GameModeEnum getGameMode() { return mode; };

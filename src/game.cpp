@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <cmath>
+#include <limits>
 #include <../json/single_include/nlohmann/json.hpp>
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
@@ -23,6 +25,227 @@ Game::Game()
 Game::~Game()
 {
     cleanup();
+}
+
+bool Game::isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const
+{
+    if (!obj)
+        return false;
+
+    if (obj->name.rfind("Light_", 0) == 0)
+        return false;
+
+    if (obj->name == "ball")
+        return false;
+
+    AABB aabb = obj->GetWorldAABB();
+    if (!aabb.IsValid())
+        return false;
+
+    glm::vec3 size = aabb.GetSize();
+    return size.x > 0.05f && size.y > 0.05f && size.z > 0.05f;
+}
+
+std::optional<glm::vec3> Game::findGameplaySpawnPoint() const
+{
+    if (!scene)
+        return std::nullopt;
+
+    // Main gameplay spawn for the current default dungeon level.
+    return glm::vec3(0.0f, 2.0f, 0.0f);
+}
+
+void Game::enterFirstPersonGameMode()
+{
+    firstPersonEnabled = true;
+    firstPersonGrounded = false;
+    firstPersonVerticalVelocity = 0.0f;
+
+    if (auto spawn = findGameplaySpawnPoint())
+    {
+        camera.Position = *spawn;
+    }
+
+    camera.Yaw = -90.0f;
+    camera.Pitch = 0.0f;
+    camera.ProcessMouseMovement(0.0f, 0.0f);
+    firstMouse = true;
+
+    GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+    if (activeWindow)
+        glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+}
+
+glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
+                                             const glm::vec3 &currentCameraPos,
+                                             bool &grounded,
+                                             float &groundHeight) const
+{
+    glm::vec3 resolved = targetCameraPos;
+    grounded = false;
+    groundHeight = -std::numeric_limits<float>::infinity();
+
+    if (!scene)
+        return resolved;
+
+    float feet = resolved.y - firstPersonEyeHeight;
+    float head = feet + firstPersonHeight;
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!isFirstPersonSolid(obj))
+            continue;
+
+        AABB aabb = obj->GetWorldAABB();
+
+        bool overlapsBodyVertically = head > aabb.min.y && feet < aabb.max.y;
+        bool shouldResolveSides = overlapsBodyVertically &&
+                                  feet < (aabb.max.y - firstPersonGroundSnap);
+
+        if (shouldResolveSides)
+        {
+            float closestX = std::max(aabb.min.x, std::min(resolved.x, aabb.max.x));
+            float closestZ = std::max(aabb.min.z, std::min(resolved.z, aabb.max.z));
+            glm::vec2 delta(resolved.x - closestX, resolved.z - closestZ);
+            float distSq = glm::dot(delta, delta);
+            float radiusSq = firstPersonRadius * firstPersonRadius;
+
+            if (distSq < radiusSq)
+            {
+                if (distSq > 1e-6f)
+                {
+                    float dist = std::sqrt(distSq);
+                    float push = firstPersonRadius - dist;
+                    delta /= dist;
+                    resolved.x += delta.x * push;
+                    resolved.z += delta.y * push;
+                }
+                else
+                {
+                    float pushLeft = std::abs(resolved.x - aabb.min.x);
+                    float pushRight = std::abs(aabb.max.x - resolved.x);
+                    float pushBack = std::abs(resolved.z - aabb.min.z);
+                    float pushFront = std::abs(aabb.max.z - resolved.z);
+
+                    float minPush = pushLeft;
+                    resolved.x = aabb.min.x - firstPersonRadius;
+
+                    if (pushRight < minPush)
+                    {
+                        minPush = pushRight;
+                        resolved.x = aabb.max.x + firstPersonRadius;
+                    }
+                    if (pushBack < minPush)
+                    {
+                        minPush = pushBack;
+                        resolved.x = targetCameraPos.x;
+                        resolved.z = aabb.min.z - firstPersonRadius;
+                    }
+                    if (pushFront < minPush)
+                    {
+                        resolved.x = targetCameraPos.x;
+                        resolved.z = aabb.max.z + firstPersonRadius;
+                    }
+                }
+            }
+        }
+
+        float expandedMinX = aabb.min.x - firstPersonRadius;
+        float expandedMaxX = aabb.max.x + firstPersonRadius;
+        float expandedMinZ = aabb.min.z - firstPersonRadius;
+        float expandedMaxZ = aabb.max.z + firstPersonRadius;
+
+        if (resolved.x >= expandedMinX && resolved.x <= expandedMaxX &&
+            resolved.z >= expandedMinZ && resolved.z <= expandedMaxZ)
+        {
+            float top = aabb.max.y;
+            if (feet >= top - firstPersonGroundSnap &&
+                feet <= top + firstPersonStepHeight &&
+                top > groundHeight)
+            {
+                groundHeight = top;
+                grounded = true;
+            }
+
+            if (currentCameraPos.y > resolved.y && feet < top && head > top)
+            {
+                resolved.y = top + firstPersonEyeHeight;
+            }
+
+            float ceiling = aabb.min.y;
+            if (currentCameraPos.y < resolved.y &&
+                head > ceiling && feet < ceiling &&
+                ceiling > groundHeight)
+            {
+                resolved.y = ceiling - firstPersonHeight + firstPersonEyeHeight;
+            }
+        }
+    }
+
+    if (grounded)
+        resolved.y = groundHeight + firstPersonEyeHeight;
+
+    return resolved;
+}
+
+void Game::updateFirstPersonController()
+{
+    if (!firstPersonEnabled || mode != GAME)
+        return;
+
+    GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+    if (!activeWindow)
+        return;
+
+    glm::vec3 flatFront(camera.Front.x, 0.0f, camera.Front.z);
+    if (glm::length(flatFront) < 1e-4f)
+        flatFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    else
+        flatFront = glm::normalize(flatFront);
+
+    glm::vec3 flatRight = glm::normalize(glm::cross(flatFront, glm::vec3(0.0f, 1.0f, 0.0f)));
+    glm::vec3 moveDir(0.0f);
+
+    if (glfwGetKey(activeWindow, GLFW_KEY_W) == GLFW_PRESS)
+        moveDir += flatFront;
+    if (glfwGetKey(activeWindow, GLFW_KEY_S) == GLFW_PRESS)
+        moveDir -= flatFront;
+    if (glfwGetKey(activeWindow, GLFW_KEY_D) == GLFW_PRESS)
+        moveDir += flatRight;
+    if (glfwGetKey(activeWindow, GLFW_KEY_A) == GLFW_PRESS)
+        moveDir -= flatRight;
+
+    if (glm::length(moveDir) > 1e-4f)
+        moveDir = glm::normalize(moveDir);
+
+    float speed = firstPersonMoveSpeed;
+    if (glfwGetKey(activeWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+        glfwGetKey(activeWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)
+    {
+        speed *= 1.35f;
+    }
+
+    if (firstPersonGrounded && glfwGetKey(activeWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        firstPersonVerticalVelocity = firstPersonJumpVelocity;
+        firstPersonGrounded = false;
+    }
+
+    firstPersonVerticalVelocity -= firstPersonGravity * deltaTime;
+
+    glm::vec3 target = camera.Position;
+    target += moveDir * speed * deltaTime;
+    target.y += firstPersonVerticalVelocity * deltaTime;
+
+    bool grounded = false;
+    float groundHeight = -std::numeric_limits<float>::infinity();
+    glm::vec3 resolved = resolveFirstPersonCollisions(target, camera.Position, grounded, groundHeight);
+
+    if (grounded && firstPersonVerticalVelocity <= 0.0f)
+        firstPersonVerticalVelocity = 0.0f;
+
+    firstPersonGrounded = grounded;
+    camera.Position = resolved;
 }
 
 bool Game::initialize()
@@ -76,6 +299,7 @@ void Game::update()
     lastFrame = currentFrame;
 
     inputManager.processInput(this, inputWindow ? inputWindow : window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
+    updateFirstPersonController();
 
     // --- Phase 1: Object Movement (pre-collision) ---
     auto gameObjects = scene->getGameObjects();

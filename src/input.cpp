@@ -24,6 +24,26 @@ bool shadowsKeyPressed = false;
 
 void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, float deltaTime, bool &shadows, float &seed, RenderManager *renderManager)
 {
+    if (game->getGameMode() == GAME)
+    {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);
+
+        if (wasKeyJustPressed(GLFW_KEY_M, window))
+        {
+            game->setGameMode(ENGINE);
+            return;
+        }
+
+        if (wasKeyJustPressed(GLFW_KEY_P, window))
+        {
+            game->setGameMode(PAUSE);
+            return;
+        }
+
+        return;
+    }
+
     if (!gameMode)
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)

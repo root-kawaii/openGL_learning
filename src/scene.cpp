@@ -8,6 +8,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
+namespace
+{
+const char *kDefaultLevelFile = "levels/dungeon.json";
+}
+
 void discretizePosition(glm::vec3 &position)
 {
   position.x = std::floor(position.x) + 0.5f;
@@ -230,13 +235,13 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
 
 Scene::Scene()
 {
-  buildFromSerializer("levels/two.json", false);
+  buildFromSerializer(kDefaultLevelFile, false);
 }
 
 Scene::Scene(RenderManager *renderMgr)
 {
   renderManager = renderMgr;
-  buildFromSerializer("levels/two.json", true);
+  buildFromSerializer(kDefaultLevelFile, true);
 }
 
 Scene::Scene(std::string level)

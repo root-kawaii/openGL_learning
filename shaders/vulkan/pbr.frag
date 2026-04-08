@@ -22,7 +22,7 @@ layout(set = 0, binding = 0) uniform FrameUBO {
     mat4       lightSpaceMatrix;
     vec4       lightPos;
     vec4       viewPos;
-    PointLight pointLights[4];
+    PointLight pointLights[16];
     int        numPointLights;
 } frame;
 
@@ -130,7 +130,7 @@ void main() {
         vec3 L      = normalize(frame.lightPos.xyz - fragWorldPos);
         float shadow = calcShadow(fragPosLightSpace, N, L);
         Lo += evalLight(N, V, F0, albedo, metallic, roughness,
-                        frame.lightPos.xyz, vec3(8.0)) * (1.0 - shadow);
+                        frame.lightPos.xyz, vec3(8.0 * frame.lightPos.w)) * (1.0 - shadow);
     }
 
     // ── Extra point lights ────────────────────────────────────────────────
@@ -141,7 +141,7 @@ void main() {
         Lo += evalLight(N, V, F0, albedo, metallic, roughness, lPos, lColor);
     }
 
-    vec3 ambient = vec3(0.03) * albedo;
+    vec3 ambient = vec3(frame.viewPos.w) * albedo;
     vec3 color   = ambient + Lo;
 
     // Reinhard tone map + gamma encode

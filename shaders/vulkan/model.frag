@@ -9,11 +9,19 @@ layout(location = 2) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
 // ── Descriptors ─────────────────────────────────────────────────────────────
+struct PointLight {
+    vec4 position;   // xyz = world pos
+    vec4 color;      // xyz = RGB, w = intensity
+};
+
 layout(set = 0, binding = 0) uniform FrameUBO {
     mat4 view;
     mat4 proj;
     mat4 lightSpaceMatrix;
-    vec4 lightPos;       // xyz = position, w = unused
+    vec4 lightPos;       // xyz = position, w = intensity
+    vec4 viewPos;        // xyz = camera position, w = ambient intensity
+    PointLight pointLights[16];
+    int  numPointLights;
 } frame;
 
 layout(set = 0, binding = 1) uniform sampler2D diffuseTexture;
@@ -51,16 +59,27 @@ float calcShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
 void main() {
     vec3 lightDir = normalize(frame.lightPos.xyz - fragWorldPos);
     vec3 normal   = normalize(fragNormal);
+    vec3 texColor = texture(diffuseTexture, fragTexCoord).rgb;
 
     // Shadow
     vec4 fragPosLightSpace = frame.lightSpaceMatrix * vec4(fragWorldPos, 1.0);
     float shadow = calcShadow(fragPosLightSpace, normal, lightDir);
 
-    // Lighting
-    float ambient = 0.15;
-    float diff    = max(dot(normal, lightDir), 0.0);
-    float light   = ambient + (1.0 - shadow) * diff * 0.85;
+    vec3 lighting = vec3(frame.viewPos.w);
 
-    vec4 texColor = texture(diffuseTexture, fragTexCoord);
-    outColor = vec4(texColor.rgb * light, texColor.a);
+    if (frame.lightPos.w > 0.0) {
+        float diff = max(dot(normal, lightDir), 0.0);
+        lighting += vec3((1.0 - shadow) * diff * (0.85 * frame.lightPos.w));
+    }
+
+    for (int i = 0; i < frame.numPointLights; i++) {
+        vec3 lightVector = frame.pointLights[i].position.xyz - fragWorldPos;
+        float distanceSq = max(dot(lightVector, lightVector), 0.25);
+        vec3 pointDir = normalize(lightVector);
+        float diffuse = max(dot(normal, pointDir), 0.0);
+        vec3 pointColor = frame.pointLights[i].color.xyz * frame.pointLights[i].color.w;
+        lighting += (pointColor / distanceSq) * diffuse;
+    }
+
+    outColor = vec4(texColor * lighting, 1.0);
 }

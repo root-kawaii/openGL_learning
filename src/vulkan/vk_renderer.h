@@ -29,14 +29,14 @@ struct PointLight {
     glm::vec4 color;     // xyz = RGB color, w = intensity
 };
 
-static constexpr int MAX_POINT_LIGHTS = 4;
+static constexpr int MAX_POINT_LIGHTS = 16;
 
 struct FrameUBO {
     glm::mat4  view;
     glm::mat4  proj;
     glm::mat4  lightSpaceMatrix;
-    glm::vec4  lightPos;   // xyz = shadow-casting directional light, w = unused
-    glm::vec4  viewPos;    // xyz = camera position, w = unused
+    glm::vec4  lightPos;   // xyz = shadow-casting directional light, w = intensity
+    glm::vec4  viewPos;    // xyz = camera position, w = ambient intensity
     // Extra point lights for PBR (trailing fields — ignored by non-PBR shaders)
     PointLight pointLights[MAX_POINT_LIGHTS];
     int        numPointLights;
@@ -149,6 +149,10 @@ public:
     // Set camera matrices for the next frame (call before drawFrame)
     void setViewMatrix(const glm::mat4& view);
     void setProjectionMatrix(const glm::mat4& proj);
+    void setGridVisible(bool visible) { gridVisibleInCurrentMode = visible; }
+    void setSkyboxVisible(bool visible) { skyboxVisibleInCurrentMode = visible; }
+    void setDirectionalLightEnabled(bool enabled) { directionalLightEnabled = enabled; }
+    void setAmbientStrength(float ambient) { ambientStrength = ambient; }
 
     // Handle window resize — recreates swapchain + framebuffers
     bool handleResize(uint32_t width, uint32_t height);
@@ -397,6 +401,10 @@ private:
     VkDescriptorPool      gridDescriptorPool      = nullptr;
     std::array<VkDescriptorSet, MAX_FRAMES_IN_FLIGHT> gridDescriptorSets = {};
     bool showGrid = true;
+    bool gridVisibleInCurrentMode = true;
+    bool skyboxVisibleInCurrentMode = true;
+    bool directionalLightEnabled = true;
+    float ambientStrength = 0.03f;
 
     // ─── Grass resources (Phase 17) ──────────────────────────────────────────
     VkPipelineLayout      grassPipelineLayout      = nullptr;

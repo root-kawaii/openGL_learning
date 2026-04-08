@@ -135,7 +135,7 @@ public:
 
   void setRenderManager(RenderManager *renderManager)
   {
-    renderManager = renderManager;
+    this->renderManager = renderManager;
   }
 
   void setGame(Game *game) { gameInstance = game; }

@@ -428,6 +428,15 @@ int main()
         } else {
           vulkanRenderer.setProjectionMatrix(projection);
         }
+        const bool isEngineMode = game->getGameMode() == ENGINE;
+        vulkanRenderer.setGridVisible(game->getGameMode() == ENGINE);
+        vulkanRenderer.setSkyboxVisible(isEngineMode);
+        vulkanRenderer.setDirectionalLightEnabled(isEngineMode);
+        vulkanRenderer.setAmbientStrength(isEngineMode ? 0.03f : 0.005f);
+        vulkanRenderer.setClearColor(isEngineMode ? 0.1f : 0.0f,
+                                     isEngineMode ? 0.1f : 0.0f,
+                                     isEngineMode ? 0.15f : 0.0f,
+                                     1.0f);
         if (!vulkanRenderer.drawFrame(vulkanEngineCallback)) {
           int w, h;
           glfwGetFramebufferSize(vulkanContext.getWindow(), &w, &h);
