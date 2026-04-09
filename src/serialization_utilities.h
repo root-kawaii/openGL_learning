@@ -325,7 +325,9 @@ public:
 
             for (const auto &objPtr : objects)
             {
-                if (!objPtr || objPtr->name.rfind("Light_", 0) == 0)
+                if (!objPtr ||
+                    objPtr->name.rfind("Light_", 0) == 0 ||
+                    objPtr->name.rfind("__runtime_", 0) == 0)
                 {
                     std::cerr << "Warning: skipping null GameObject in saveScene\n";
                     continue; // prevent crash

@@ -45,6 +45,14 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(SNDFILE QUIET sndfile)
+endif()
+if(NOT SNDFILE_FOUND)
+    find_path(SNDFILE_INCLUDE_DIR sndfile.h PATHS /opt/homebrew/include /usr/local/include)
+    find_library(SNDFILE_LIBRARY sndfile PATHS /opt/homebrew/lib /usr/local/lib)
+endif()
 
 # Try to find FreeType using find_package first
 find_package(Freetype QUIET)
@@ -148,14 +156,19 @@ set(PROJECT_SOURCES
     src/input.cpp
     src/model.cpp
     src/raycast.cpp
+    src/ascii_level_utils.cpp
     src/game_object.cpp
     src/glad.c
     src/stb_image.cpp
     src/scene.cpp
     src/game.cpp
+    src/projectile_bounce_utils.cpp
     src/render_manager.cpp
     src/texture.cpp
+    src/audio_clip.cpp
+    src/audio_listener_3d.cpp
     src/audio_manager.cpp
+    src/audio_source_3d.cpp
     src/sphere_collision.cpp
     src/ui.cpp
     src/level_editor.cpp
@@ -205,6 +218,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${Vulkan_INCLUDE_DIRS}                  # Vulkan
     ${VK_BOOTSTRAP_DIR}                    # vk-bootstrap
     ${CMAKE_CURRENT_SOURCE_DIR}/include/vma # VMA
+    ${SNDFILE_INCLUDE_DIRS}
+    ${SNDFILE_INCLUDE_DIR}
 )
 
 # --------- Link directories ---------
@@ -237,6 +252,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
     ${FREETYPE_LIBRARIES}
     OpenAL::OpenAL
+    ${SNDFILE_LIBRARIES}
+    ${SNDFILE_LIBRARY}
     assimp
     Vulkan::Vulkan
 )

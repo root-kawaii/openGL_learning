@@ -79,6 +79,7 @@ public:
   uint32_t addGameObject(std::shared_ptr<GameObject> gameObject);
   uint32_t duplicateGameObject(uint32_t originalId);
   void destroyGameObject(GameObject *obj);
+  void removeGameObject(uint32_t id) { removeGameObjectById(id); }
   std::shared_ptr<GameObject> findObjectByName(const std::string &name);
   std::shared_ptr<GameObject> findObjectById(uint32_t id);
 

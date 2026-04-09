@@ -960,6 +960,10 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         // Draw all scene objects
         int shadowObjIdx = 0;
         for (auto& obj : currentScene->getGameObjects()) {
+            if (obj->name.rfind("__runtime_", 0) == 0) {
+                shadowObjIdx++;
+                continue;
+            }
             if (!obj->model) { shadowObjIdx++; continue; }
             auto it = sceneModels.find(obj->model.get());
             if (it == sceneModels.end()) {
@@ -1911,6 +1915,73 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VMA_MEMORY_USAGE_CPU_TO_GPU);
         if (!boneUniformBuffers[i].buffer) return false;
+    }
+
+    // Shadow/ID resources can be created earlier during renderer init, before the
+    // renderer-level bone buffers exist. Refresh those descriptor sets now that
+    // modelUniformBuffers/boneUniformBuffers are valid.
+    if (shadowDescriptorSets[0] != VK_NULL_HANDLE) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorBufferInfo lightInfo{};
+            lightInfo.buffer = shadowUniformBuffers[i].buffer;
+            lightInfo.offset = 0;
+            lightInfo.range  = sizeof(LightUBO);
+
+            VkDescriptorBufferInfo boneInfo{};
+            boneInfo.buffer = boneUniformBuffers[i].buffer;
+            boneInfo.offset = 0;
+            boneInfo.range  = sizeof(BoneUBO);
+
+            std::array<VkWriteDescriptorSet, 2> shadowWrites{};
+            shadowWrites[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            shadowWrites[0].dstSet          = shadowDescriptorSets[i];
+            shadowWrites[0].dstBinding      = 0;
+            shadowWrites[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            shadowWrites[0].descriptorCount = 1;
+            shadowWrites[0].pBufferInfo     = &lightInfo;
+
+            shadowWrites[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            shadowWrites[1].dstSet          = shadowDescriptorSets[i];
+            shadowWrites[1].dstBinding      = 1;
+            shadowWrites[1].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            shadowWrites[1].descriptorCount = 1;
+            shadowWrites[1].pBufferInfo     = &boneInfo;
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(shadowWrites.size()),
+                                   shadowWrites.data(), 0, nullptr);
+        }
+    }
+
+    if (idDescriptorSets[0] != VK_NULL_HANDLE) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkDescriptorBufferInfo frameInfo{};
+            frameInfo.buffer = modelUniformBuffers[i].buffer;
+            frameInfo.offset = 0;
+            frameInfo.range  = sizeof(FrameUBO);
+
+            VkDescriptorBufferInfo boneInfo{};
+            boneInfo.buffer = boneUniformBuffers[i].buffer;
+            boneInfo.offset = 0;
+            boneInfo.range  = sizeof(BoneUBO);
+
+            std::array<VkWriteDescriptorSet, 2> idWrites{};
+            idWrites[0].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            idWrites[0].dstSet          = idDescriptorSets[i];
+            idWrites[0].dstBinding      = 0;
+            idWrites[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            idWrites[0].descriptorCount = 1;
+            idWrites[0].pBufferInfo     = &frameInfo;
+
+            idWrites[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            idWrites[1].dstSet          = idDescriptorSets[i];
+            idWrites[1].dstBinding      = 1;
+            idWrites[1].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            idWrites[1].descriptorCount = 1;
+            idWrites[1].pBufferInfo     = &boneInfo;
+
+            vkUpdateDescriptorSets(device, static_cast<uint32_t>(idWrites.size()),
+                                   idWrites.data(), 0, nullptr);
+        }
     }
 
     // Create a 1x1 white fallback texture for meshes without a diffuse texture.

@@ -38,6 +38,7 @@
 #include "../src/audio_manager.h"
 #include "../src/sphere_collision.h"
 #include "../src/collision_system.h"
+#include "../src/projectile_bounce_utils.h"
 #include "game_manager.h"
 #include "ui.h"
 #include "player.h"
@@ -111,6 +112,7 @@ private:
 
     bool  firstPersonEnabled = false;
     bool  firstPersonGrounded = false;
+    bool  firstPersonJumpPressedLastFrame = false;
     float firstPersonVerticalVelocity = 0.0f;
     float firstPersonEyeHeight = 2.0f;
     float firstPersonRadius = 0.35f;
@@ -120,11 +122,49 @@ private:
     float firstPersonMoveSpeed = 5.5f;
     float firstPersonStepHeight = 0.6f;
     float firstPersonGroundSnap = 0.15f;
+    float firstPersonAimBlend = 0.0f;
+    float firstPersonShootCooldown = 0.0f;
+    float firstPersonShootAnimTime = 0.0f;
+    float firstPersonWeaponBobTime = 0.0f;
+    std::shared_ptr<GameObject> firstPersonWeaponObject;
+    std::shared_ptr<Model> firstPersonProjectileModel;
+    std::shared_ptr<AudioClip> firstPersonShotClip;
+    std::shared_ptr<AudioClip> torchAmbientClip;
+    uint32_t firstPersonProjectileCounter = 0;
+    glm::vec3 previousAudioListenerPosition = glm::vec3(0.0f);
+    bool audioListenerPrimed = false;
+
+    struct TorchAudioEmitter
+    {
+        std::weak_ptr<GameObject> object;
+        std::shared_ptr<AudioSource3D> source;
+    };
+    std::vector<TorchAudioEmitter> torchAudioEmitters;
+
+    struct FirstPersonProjectile
+    {
+        std::shared_ptr<GameObject> object;
+        glm::vec3 velocity = glm::vec3(0.0f);
+        float lifetime = 0.0f;
+        bool impacted = false;
+        int remainingBounces = 0;
+    };
+    std::vector<FirstPersonProjectile> firstPersonProjectiles;
 
     void handleInput();
     void loadSettings();
     void enterFirstPersonGameMode();
     void updateFirstPersonController();
+    void createFirstPersonWeapon();
+    void spawnFirstPersonProjectile(const glm::vec3 &origin, const glm::vec3 &velocity);
+    void updateFirstPersonProjectiles();
+    void clearFirstPersonProjectiles();
+    void updateFirstPersonWeapon();
+    void hideFirstPersonWeapon();
+    void rebuildTorchAudioEmitters();
+    void updateTorchAudioEmitters();
+    void clearTorchAudioEmitters();
+    bool shouldAttachTorchAudio(const std::shared_ptr<GameObject> &obj) const;
     glm::vec3 resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
                                            const glm::vec3 &currentCameraPos,
                                            bool &grounded,
@@ -221,7 +261,13 @@ public:
             camera.gameMode = false;
             firstPersonEnabled = false;
             firstPersonGrounded = false;
+            firstPersonJumpPressedLastFrame = false;
             firstPersonVerticalVelocity = 0.0f;
+            firstPersonAimBlend = 0.0f;
+            firstPersonShootCooldown = 0.0f;
+            firstPersonShootAnimTime = 0.0f;
+            hideFirstPersonWeapon();
+            clearFirstPersonProjectiles();
         }
         if (modeEnum == PAUSE)
         {

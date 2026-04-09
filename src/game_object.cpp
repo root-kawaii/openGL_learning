@@ -80,7 +80,9 @@ GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
       ,
       texture(gameObject->texture) // Copy texture
       ,
-      vertexCount(gameObject->vertexCount) // Copy vertex count
+      vertexCount(gameObject->vertexCount), // Copy vertex count
+      transformOverride(gameObject->transformOverride),
+      useTransformOverride(gameObject->useTransformOverride)
 {
   // Note: This is a shallow copy - both objects will share the same OpenGL resources
   // This is usually fine for bullets since they share the same mesh/texture data
@@ -92,6 +94,11 @@ GameObject::~GameObject()
 
 glm::mat4 GameObject::GetTransform() const
 {
+  if (useTransformOverride)
+  {
+    return transformOverride;
+  }
+
   // Create transformation matrix: T * R * S
   glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
 
@@ -108,6 +115,9 @@ glm::mat4 GameObject::GetTransform() const
 
 void GameObject::SetTransform(const glm::mat4 &transform)
 {
+  useTransformOverride = false;
+  transformOverride = glm::mat4(1.0f);
+
   // Extract translation (last column)
   position = glm::vec3(transform[3]);
 

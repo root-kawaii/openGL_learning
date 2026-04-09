@@ -4039,6 +4039,8 @@ void RenderManager::renderReflectionPass()
 
     for (auto &obj : currentScene->getGameObjects())
     {
+        if (obj->name.rfind("__runtime_", 0) == 0)
+            continue;
         if (obj->shaderName == "terrain_tile_shader")
             continue;
         if (obj->name == "dune")
@@ -4123,6 +4125,8 @@ void RenderManager::renderShadowPass()
 
     for (auto &i : currentScene->getGameObjects())
     {
+        if (i->name.rfind("__runtime_", 0) == 0)
+            continue;
         // Light-space frustum cull: skip objects outside the shadow map region.
         // We do NOT camera-cull here — see drawShadowCaster for explanation.
         if (isInLightFrustum(i->position, 2.0f, lightProjection, lightView))

@@ -1,153 +1,234 @@
 #include "audio_manager.h"
 
-namespace fs = std::filesystem;
-
-bool loadWavFile(const char *filename, ALuint &buffer, ALenum &format, ALsizei &freq);
+AudioManager::AudioManager()
+{
+    initialize();
+}
 
 AudioManager::~AudioManager()
 {
+    cleanUp();
 }
 
-AudioManager::AudioManager()
+bool AudioManager::initialize()
 {
-    device = alcOpenDevice(nullptr); // nullptr for default device
-    if (!device)
+    if (initialized_)
+        return true;
+
+    device_ = alcOpenDevice(nullptr);
+    if (!device_)
+        return false;
+
+    context_ = alcCreateContext(device_, nullptr);
+    if (!context_)
     {
-        // Handle error
+        alcCloseDevice(device_);
+        device_ = nullptr;
+        return false;
     }
 
-    context = alcCreateContext(device, nullptr);
-    if (!context)
+    alcMakeContextCurrent(context_);
+    alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+    listener_.setTransform(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    listener_.apply();
+    setMasterVolume(1.0f);
+
+    initialized_ = true;
+    return true;
+}
+
+void AudioManager::setMasterVolume(float volume)
+{
+    masterVolume_ = volume;
+    if (initialized_)
+        alListenerf(AL_GAIN, masterVolume_);
+}
+
+void AudioManager::updateListener(const glm::vec3 &position,
+                                  const glm::vec3 &forward,
+                                  const glm::vec3 &velocity,
+                                  const glm::vec3 &up)
+{
+    if (!initialized_)
+        return;
+
+    listener_.setTransform(position, forward, velocity, up);
+    listener_.apply();
+}
+
+std::shared_ptr<AudioClip> AudioManager::loadClip(const std::filesystem::path &path)
+{
+    if (!initialize())
+        return nullptr;
+
+    const auto normalized = std::filesystem::absolute(path).lexically_normal().string() + "|stereo";
+    auto found = clipCache_.find(normalized);
+    if (found != clipCache_.end())
     {
-        // Handle error
+        if (auto cached = found->second.lock())
+            return cached;
     }
-    alcMakeContextCurrent(context);
-    ALfloat listenerPos[] = {0.0f, 0.0f, 0.0f};
-    ALfloat listenerVel[] = {0.0f, 0.0f, 0.0f};
-    ALfloat listenerOri[] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f}; // Forward and Up vectors
 
-    alListenerfv(AL_POSITION, listenerPos);
-    alListenerfv(AL_VELOCITY, listenerVel);
-    alListenerfv(AL_ORIENTATION, listenerOri);
+    auto clip = AudioClip::loadFromFile(path);
+    if (!clip)
+        return nullptr;
 
-    alGenBuffers(1, &buffer);
+    clipCache_[normalized] = clip;
+    return clip;
+}
 
-    loadWavFile(fs::path("assets/audio_2.wav").c_str(), buffer, format, freq);
+std::shared_ptr<AudioClip> AudioManager::loadClipMono(const std::filesystem::path &path)
+{
+    if (!initialize())
+        return nullptr;
 
-    alGenSources(1, &source);
+    const auto normalized = std::filesystem::absolute(path).lexically_normal().string() + "|mono";
+    auto found = clipCache_.find(normalized);
+    if (found != clipCache_.end())
+    {
+        if (auto cached = found->second.lock())
+            return cached;
+    }
 
-    alSourcei(source, AL_BUFFER, buffer);
+    auto clip = AudioClip::loadMonoFromFile(path);
+    if (!clip)
+        return nullptr;
 
-    alSourcef(source, AL_PITCH, 1.0f);
-    alSourcef(source, AL_GAIN, 1.0f);
-    alSource3f(source, AL_POSITION, 5.0f, 0.0f, 0.0f); // Position in 3D space
-    alSourcei(source, AL_LOOPING, AL_FALSE);
+    clipCache_[normalized] = clip;
+    return clip;
+}
+
+std::shared_ptr<AudioSource3D> AudioManager::createSource(const std::shared_ptr<AudioClip> &clip)
+{
+    if (!initialize())
+        return nullptr;
+
+    auto source = std::make_shared<AudioSource3D>();
+    if (!source->isValid())
+        return nullptr;
+
+    if (clip)
+        source->setClip(clip);
+
+    sources_.push_back(source);
+    return source;
+}
+
+std::shared_ptr<AudioSource3D> AudioManager::createSpatialSource(const std::shared_ptr<AudioClip> &clip,
+                                                                 const glm::vec3 &position,
+                                                                 const AudioAttenuationSettings &attenuation)
+{
+    auto source = createSource(clip);
+    if (!source)
+        return nullptr;
+
+    source->setPosition(position);
+    source->setAttenuation(attenuation);
+    return source;
+}
+
+std::shared_ptr<AudioSource3D> AudioManager::createDirectionalSource(const std::shared_ptr<AudioClip> &clip,
+                                                                     const glm::vec3 &position,
+                                                                     const glm::vec3 &direction,
+                                                                     const AudioAttenuationSettings &attenuation,
+                                                                     const AudioDirectionalCone &cone)
+{
+    auto source = createSpatialSource(clip, position, attenuation);
+    if (!source)
+        return nullptr;
+
+    source->setDirection(direction);
+    source->setDirectionalCone(cone);
+    return source;
 }
 
 void AudioManager::playSource()
 {
-    alSourcePlay(source);
+    if (!initialize())
+        return;
+
+    if (!defaultClip_)
+        defaultClip_ = loadClip("assets/audio_2.wav");
+    if (!defaultSource_)
+        defaultSource_ = createSpatialSource(defaultClip_, glm::vec3(5.0f, 0.0f, 0.0f));
+
+    if (!defaultSource_)
+        return;
+
+    defaultSource_->setLooping(false);
+    defaultSource_->play();
 }
 
 void AudioManager::playSource(char *filename)
 {
-    loadWavFile(filename, buffer, format, freq);
+    if (!filename || !initialize())
+        return;
 
-    alGenSources(1, &source);
+    defaultClip_ = loadClip(filename);
+    if (!defaultClip_)
+        return;
 
-    alSourcei(source, AL_BUFFER, buffer);
+    if (!defaultSource_)
+        defaultSource_ = createSpatialSource(defaultClip_, glm::vec3(5.0f, 0.0f, 0.0f));
+    else
+        defaultSource_->setClip(defaultClip_);
 
-    alSourcef(source, AL_PITCH, 1.0f);
-    alSourcef(source, AL_GAIN, 1.0f);
-    alSource3f(source, AL_POSITION, 5.0f, 0.0f, 0.0f); // Position in 3D space
-    alSourcei(source, AL_LOOPING, AL_FALSE);
-    alSourcePlay(source);
+    if (!defaultSource_)
+        return;
+
+    defaultSource_->setLooping(false);
+    defaultSource_->play();
 }
 
 void AudioManager::loopAudio()
 {
-    alGetSourcei(source, AL_SOURCE_STATE, &state);
-    if (state == AL_PLAYING)
-    {
-        // Still playing
-    }
-    else if (state == AL_STOPPED)
-    {
-        playSource();
-        // Finished
-    }
+    if (defaultSource_ && defaultSource_->isStopped())
+        defaultSource_->play();
+}
+
+void AudioManager::update(float)
+{
+    if (!initialized_)
+        return;
+
+    pruneStoppedTransientSources();
+}
+
+void AudioManager::pruneStoppedTransientSources()
+{
+    sources_.erase(
+        std::remove_if(
+            sources_.begin(),
+            sources_.end(),
+            [](const std::shared_ptr<AudioSource3D> &source)
+            {
+                return !source || (source->shouldAutoDestroy() && source->isStopped());
+            }),
+        sources_.end());
 }
 
 void AudioManager::cleanUp()
 {
-    alDeleteSources(1, &source);
-    alDeleteBuffers(1, &buffer);
+    if (!device_ && !context_ && !initialized_)
+        return;
 
-    alcDestroyContext(context);
-    alcCloseDevice(device);
-}
+    defaultSource_.reset();
+    sources_.clear();
+    defaultClip_.reset();
+    clipCache_.clear();
 
-// Very basic WAV loader (uncompressed PCM only)
-bool loadWavFile(const char *filename, ALuint &buffer, ALenum &format, ALsizei &freq)
-{
-    std::ifstream file(filename, std::ios::binary);
-    if (!file)
-        return false;
-
-    char riff[4];
-    file.read(riff, 4); // "RIFF"
-    file.ignore(4);     // file size
-    file.read(riff, 4); // "WAVE"
-
-    char chunkId[4];
-    file.read(chunkId, 4); // "fmt "
-    uint32_t chunkSize;
-    file.read(reinterpret_cast<char *>(&chunkSize), 4);
-
-    uint16_t audioFormat, channels, blockAlign, bitsPerSample;
-    uint32_t sampleRate, byteRate;
-
-    file.read(reinterpret_cast<char *>(&audioFormat), 2);
-    file.read(reinterpret_cast<char *>(&channels), 2);
-    file.read(reinterpret_cast<char *>(&sampleRate), 4);
-    file.read(reinterpret_cast<char *>(&byteRate), 4);
-    file.read(reinterpret_cast<char *>(&blockAlign), 2);
-    file.read(reinterpret_cast<char *>(&bitsPerSample), 2);
-
-    // Skip any extra fmt bytes
-    if (chunkSize > 16)
-        file.ignore(chunkSize - 16);
-
-    // Find "data" chunk
-    char dataId[4];
-    uint32_t dataSize = 0;
-    while (true)
+    if (context_)
     {
-        file.read(dataId, 4);
-        file.read(reinterpret_cast<char *>(&dataSize), 4);
-        if (std::strncmp(dataId, "data", 4) == 0)
-            break;
-        file.ignore(dataSize);
+        alcMakeContextCurrent(nullptr);
+        alcDestroyContext(context_);
+        context_ = nullptr;
     }
 
-    std::vector<char> data(dataSize);
-    file.read(data.data(), dataSize);
+    if (device_)
+    {
+        alcCloseDevice(device_);
+        device_ = nullptr;
+    }
 
-    // Determine format
-    if (channels == 1 && bitsPerSample == 8)
-        format = AL_FORMAT_MONO8;
-    else if (channels == 1 && bitsPerSample == 16)
-        format = AL_FORMAT_MONO16;
-    else if (channels == 2 && bitsPerSample == 8)
-        format = AL_FORMAT_STEREO8;
-    else if (channels == 2 && bitsPerSample == 16)
-        format = AL_FORMAT_STEREO16;
-    else
-        return false;
-
-    freq = sampleRate;
-
-    alBufferData(buffer, format, data.data(), dataSize, freq);
-
-    return true;
+    initialized_ = false;
 }

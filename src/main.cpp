@@ -224,6 +224,21 @@ int main()
           }
       }
 
+      if (game->getGameMode() == GAME) {
+          ImVec2 center((float)vkFbW * 0.5f, (float)vkFbH * 0.5f);
+          ImU32 outlineCol = IM_COL32(15, 15, 15, 255);
+          ImU32 crosshairCol = IM_COL32(255, 255, 255, 255);
+          float arm = 9.0f;
+          float outlineThickness = 4.0f;
+          float thickness = 2.0f;
+          auto* fg = ImGui::GetForegroundDrawList();
+          fg->AddLine(ImVec2(center.x - arm, center.y), ImVec2(center.x + arm, center.y), outlineCol, outlineThickness);
+          fg->AddLine(ImVec2(center.x, center.y - arm), ImVec2(center.x, center.y + arm), outlineCol, outlineThickness);
+          fg->AddLine(ImVec2(center.x - arm, center.y), ImVec2(center.x + arm, center.y), crosshairCol, thickness);
+          fg->AddLine(ImVec2(center.x, center.y - arm), ImVec2(center.x, center.y + arm), crosshairCol, thickness);
+          fg->AddCircleFilled(center, 1.5f, crosshairCol);
+      }
+
       // ── Parabolic trajectory (world → screen projection) ──────────────────
       if (game->getScene()->ball && renderManager->getRenderTrajectory()) {
           glm::vec3 start  = game->getScene()->ball->position;
@@ -327,7 +342,7 @@ int main()
     uiManager->screenHeight = game->SCR_HEIGHT;
     uiManager->screenWidth = game->SCR_WIDTH;
     glm::vec3 lastFrameCameraPos = game->camera.Position;
-    float near_plane = 1.10f;
+    float near_plane = (game->getGameMode() == GAME) ? 0.03f : 1.10f;
     float far_plane = 1000.0f;
     glm::mat4 model;
     glm::mat4 projection =
@@ -406,6 +421,22 @@ int main()
       }
 
       levelEditor->renderImGuiEditor();
+    }
+
+    if (game->getGameMode() == GAME)
+    {
+      ImVec2 center(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
+      ImU32 outlineCol = IM_COL32(15, 15, 15, 255);
+      ImU32 crosshairCol = IM_COL32(255, 255, 255, 255);
+      float arm = 9.0f;
+      float outlineThickness = 4.0f;
+      float thickness = 2.0f;
+      auto *fg = ImGui::GetForegroundDrawList();
+      fg->AddLine(ImVec2(center.x - arm, center.y), ImVec2(center.x + arm, center.y), outlineCol, outlineThickness);
+      fg->AddLine(ImVec2(center.x, center.y - arm), ImVec2(center.x, center.y + arm), outlineCol, outlineThickness);
+      fg->AddLine(ImVec2(center.x - arm, center.y), ImVec2(center.x + arm, center.y), crosshairCol, thickness);
+      fg->AddLine(ImVec2(center.x, center.y - arm), ImVec2(center.x, center.y + arm), crosshairCol, thickness);
+      fg->AddCircleFilled(center, 1.5f, crosshairCol);
     }
     verticesDrawn = 0;
     trianglesDrawn = 0;

@@ -73,10 +73,32 @@ public:
     // Transform methods for ImGuizmo integration
     glm::mat4 GetTransform() const;
     void SetTransform(const glm::mat4 &transform);
+    void SetTransformOverride(const glm::mat4 &transform)
+    {
+        transformOverride = transform;
+        useTransformOverride = true;
+    }
+    void ClearTransformOverride()
+    {
+        useTransformOverride = false;
+        transformOverride = glm::mat4(1.0f);
+    }
 
-    void SetPosition(glm::vec3 objPosition) { position = objPosition; };
-    void SetRotation(glm::vec3 objRotation) { rotation = objRotation; };
-    void SetScale(glm::vec3 objScale) { scale = objScale; };
+    void SetPosition(glm::vec3 objPosition)
+    {
+        ClearTransformOverride();
+        position = objPosition;
+    };
+    void SetRotation(glm::vec3 objRotation)
+    {
+        ClearTransformOverride();
+        rotation = objRotation;
+    };
+    void SetScale(glm::vec3 objScale)
+    {
+        ClearTransformOverride();
+        scale = objScale;
+    };
 
     // Helper method to get transform matrix as float array for ImGuizmo
     void GetTransformFloat16(float *matrix) const;
@@ -105,6 +127,9 @@ public:
 
     glm::mat4 getModelMatrix() const
     {
+        if (useTransformOverride)
+            return transformOverride;
+
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
         // 1. Apply translation
@@ -129,4 +154,6 @@ private:
     // Cached local AABB (calculated once after model loading)
     mutable AABB localAABB;
     mutable bool aabbCalculated = false;
+    glm::mat4 transformOverride = glm::mat4(1.0f);
+    bool useTransformOverride = false;
 };

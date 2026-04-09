@@ -1,4 +1,5 @@
 #include "game_entity.h"
+#include "projectile_bounce_utils.h"
 #include "scene.h"
 #include <thread>
 #include <chrono>
@@ -485,45 +486,7 @@ void GameEntity::updateBallFlight(float deltaTime)
 
 bool GameEntity::sphereAABBCollision(glm::vec3 sphereCenter, float radius, const AABB &box, glm::vec3 &hitNormal)
 {
-    if (!box.IsValid())
-        return false;
-
-    // Find closest point on AABB to sphere center
-    glm::vec3 closestPoint;
-    closestPoint.x = glm::clamp(sphereCenter.x, box.min.x, box.max.x);
-    closestPoint.y = glm::clamp(sphereCenter.y, box.min.y, box.max.y);
-    closestPoint.z = glm::clamp(sphereCenter.z, box.min.z, box.max.z);
-
-    // Check if closest point is within sphere radius
-    float distanceSq = glm::distance(sphereCenter, closestPoint);
-
-    if (distanceSq < radius)
-    {
-        // Calculate hit normal (from closest point to sphere center)
-        if (distanceSq > 0.0001f)
-        {
-            hitNormal = glm::normalize(sphereCenter - closestPoint);
-        }
-        else
-        {
-            // Sphere center is inside AABB, find which face is closest
-            glm::vec3 toCenter = sphereCenter - box.GetCenter();
-            glm::vec3 halfSize = box.GetSize() * 0.5f;
-
-            // Find axis with smallest penetration
-            glm::vec3 penetration = halfSize - glm::abs(toCenter);
-
-            if (penetration.x < penetration.y && penetration.x < penetration.z)
-                hitNormal = glm::vec3(toCenter.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-            else if (penetration.y < penetration.z)
-                hitNormal = glm::vec3(0.0f, toCenter.y > 0 ? 1.0f : -1.0f, 0.0f);
-            else
-                hitNormal = glm::vec3(0.0f, 0.0f, toCenter.z > 0 ? 1.0f : -1.0f);
-        }
-        return true;
-    }
-
-    return false;
+    return ProjectileBounceUtils::sphereIntersectsAabb(sphereCenter, radius, box, hitNormal);
 }
 
 bool GameEntity::checkBallCollision(glm::vec3 ballPos, float ballRadius, glm::vec3 &hitNormal)

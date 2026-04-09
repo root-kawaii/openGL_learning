@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <limits>
 #include <../json/single_include/nlohmann/json.hpp>
@@ -27,12 +29,32 @@ Game::~Game()
     cleanup();
 }
 
+namespace
+{
+    std::string toLowerCopy(std::string value)
+    {
+        std::transform(
+            value.begin(),
+            value.end(),
+            value.begin(),
+            [](unsigned char c)
+            { return static_cast<char>(std::tolower(c)); });
+        return value;
+    }
+}
+
 bool Game::isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const
 {
     if (!obj)
         return false;
 
+    if (obj == firstPersonWeaponObject)
+        return false;
+
     if (obj->name.rfind("Light_", 0) == 0)
+        return false;
+
+    if (obj->name.rfind("__runtime_", 0) == 0)
         return false;
 
     if (obj->name == "ball")
@@ -59,7 +81,12 @@ void Game::enterFirstPersonGameMode()
 {
     firstPersonEnabled = true;
     firstPersonGrounded = false;
+    firstPersonJumpPressedLastFrame = false;
     firstPersonVerticalVelocity = 0.0f;
+    firstPersonAimBlend = 0.0f;
+    firstPersonShootCooldown = 0.0f;
+    firstPersonShootAnimTime = 0.0f;
+    clearFirstPersonProjectiles();
 
     if (auto spawn = findGameplaySpawnPoint())
     {
@@ -68,12 +95,22 @@ void Game::enterFirstPersonGameMode()
 
     camera.Yaw = -90.0f;
     camera.Pitch = 0.0f;
+    camera.gameModeYawCenter = camera.Yaw;
     camera.ProcessMouseMovement(0.0f, 0.0f);
     firstMouse = true;
 
     GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
     if (activeWindow)
         glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+
+    bool grounded = false;
+    float groundHeight = -std::numeric_limits<float>::infinity();
+    camera.Position = resolveFirstPersonCollisions(camera.Position, camera.Position,
+                                                   grounded, groundHeight);
+    firstPersonGrounded = grounded;
+    previousAudioListenerPosition = camera.Position;
+    audioListenerPrimed = true;
+    audioManager.updateListener(camera.Position, camera.Front, glm::vec3(0.0f), camera.Up);
 }
 
 glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
@@ -84,6 +121,7 @@ glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
     glm::vec3 resolved = targetCameraPos;
     grounded = false;
     groundHeight = -std::numeric_limits<float>::infinity();
+    bool movingUp = targetCameraPos.y > currentCameraPos.y + 1e-4f;
 
     if (!scene)
         return resolved;
@@ -159,7 +197,8 @@ glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
             resolved.z >= expandedMinZ && resolved.z <= expandedMaxZ)
         {
             float top = aabb.max.y;
-            if (feet >= top - firstPersonGroundSnap &&
+            if (!movingUp &&
+                feet >= top - firstPersonGroundSnap &&
                 feet <= top + firstPersonStepHeight &&
                 top > groundHeight)
             {
@@ -182,7 +221,7 @@ glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
         }
     }
 
-    if (grounded)
+    if (grounded && !movingUp)
         resolved.y = groundHeight + firstPersonEyeHeight;
 
     return resolved;
@@ -225,11 +264,13 @@ void Game::updateFirstPersonController()
         speed *= 1.35f;
     }
 
-    if (firstPersonGrounded && glfwGetKey(activeWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+    bool jumpPressed = glfwGetKey(activeWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
+    if (firstPersonGrounded && jumpPressed && !firstPersonJumpPressedLastFrame)
     {
         firstPersonVerticalVelocity = firstPersonJumpVelocity;
         firstPersonGrounded = false;
     }
+    firstPersonJumpPressedLastFrame = jumpPressed;
 
     firstPersonVerticalVelocity -= firstPersonGravity * deltaTime;
 
@@ -241,11 +282,409 @@ void Game::updateFirstPersonController()
     float groundHeight = -std::numeric_limits<float>::infinity();
     glm::vec3 resolved = resolveFirstPersonCollisions(target, camera.Position, grounded, groundHeight);
 
+    float finalY = resolved.y;
     if (grounded && firstPersonVerticalVelocity <= 0.0f)
+    {
         firstPersonVerticalVelocity = 0.0f;
+        if (camera.Position.y > resolved.y + 0.001f)
+        {
+            float landingAlpha = std::clamp(deltaTime * 18.0f, 0.0f, 1.0f);
+            finalY = glm::mix(camera.Position.y, resolved.y, landingAlpha);
+            if (std::abs(finalY - resolved.y) < 0.01f)
+                finalY = resolved.y;
+        }
+    }
 
     firstPersonGrounded = grounded;
     camera.Position = resolved;
+    camera.Position.y = finalY;
+}
+
+void Game::createFirstPersonWeapon()
+{
+    if (firstPersonWeaponObject || !scene)
+        return;
+
+    firstPersonWeaponObject = std::make_shared<GameObject>(
+        "__runtime_fps_steampunk_revolver",
+        "assets/steampunk_revolver.glb",
+        glm::vec3(0.0f, -1000.0f, 0.0f),
+        glm::vec3(0.0f),
+        glm::vec3(1.15f),
+        0.0f,
+        "pbr_model_textured",
+        glm::vec3(1.0f));
+    scene->addGameObject(firstPersonWeaponObject);
+    hideFirstPersonWeapon();
+}
+
+void Game::hideFirstPersonWeapon()
+{
+    if (!firstPersonWeaponObject)
+        return;
+
+    firstPersonWeaponObject->ClearTransformOverride();
+    firstPersonWeaponObject->position = glm::vec3(0.0f, -1000.0f, 0.0f);
+}
+
+void Game::clearFirstPersonProjectiles()
+{
+    if (scene)
+    {
+        for (auto &projectile : firstPersonProjectiles)
+        {
+            if (projectile.object)
+                scene->removeGameObject(projectile.object->ID);
+        }
+    }
+    firstPersonProjectiles.clear();
+}
+
+bool Game::shouldAttachTorchAudio(const std::shared_ptr<GameObject> &obj) const
+{
+    if (!obj)
+        return false;
+
+    const std::string lowerName = toLowerCopy(obj->name);
+    const std::string lowerModelPath = toLowerCopy(obj->modelPath);
+
+    if (lowerName.rfind("__runtime_", 0) == 0)
+        return false;
+
+    return lowerName.find("torch") != std::string::npos ||
+           lowerModelPath.find("torch") != std::string::npos ||
+           obj->name.rfind("Light_", 0) == 0;
+}
+
+void Game::clearTorchAudioEmitters()
+{
+    for (auto &emitter : torchAudioEmitters)
+    {
+        if (emitter.source)
+            emitter.source->stop();
+    }
+    torchAudioEmitters.clear();
+}
+
+void Game::rebuildTorchAudioEmitters()
+{
+    clearTorchAudioEmitters();
+
+    if (!scene || !torchAmbientClip)
+        return;
+
+    AudioAttenuationSettings attenuation;
+    attenuation.referenceDistance = 300.0f;
+    attenuation.maxDistance = 300.0f;
+    attenuation.rolloffFactor = 0.0f;
+
+    int torchIndex = 0;
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!shouldAttachTorchAudio(obj))
+            continue;
+
+        auto source = audioManager.createSpatialSource(torchAmbientClip, obj->position, attenuation);
+        if (!source)
+            continue;
+
+        source->setLooping(true);
+        source->setGain(0.0f);
+        source->setPitch(0.96f + 0.02f * static_cast<float>(torchIndex % 3));
+        torchAudioEmitters.push_back({obj, source});
+        ++torchIndex;
+    }
+}
+
+void Game::updateTorchAudioEmitters()
+{
+    if (torchAudioEmitters.empty())
+        return;
+
+    torchAudioEmitters.erase(
+        std::remove_if(
+            torchAudioEmitters.begin(),
+            torchAudioEmitters.end(),
+            [](const TorchAudioEmitter &emitter)
+            {
+                return emitter.object.expired() || !emitter.source;
+            }),
+        torchAudioEmitters.end());
+
+    constexpr float kTorchAudibleDistance = 20.0f;
+    constexpr float kTorchAudibleDistanceSq = kTorchAudibleDistance * kTorchAudibleDistance;
+    constexpr float kTorchMaxGain = 0.64f;
+
+    TorchAudioEmitter *nearestEmitter = nullptr;
+    float nearestDistanceSq = std::numeric_limits<float>::max();
+
+    for (auto &emitter : torchAudioEmitters)
+    {
+        auto obj = emitter.object.lock();
+        if (!obj || !emitter.source)
+            continue;
+
+        const float distanceSq = glm::distance2(obj->position, camera.Position);
+        if (distanceSq < nearestDistanceSq)
+        {
+            nearestDistanceSq = distanceSq;
+            nearestEmitter = &emitter;
+        }
+    }
+
+    for (auto &emitter : torchAudioEmitters)
+    {
+        auto obj = emitter.object.lock();
+        if (!obj || !emitter.source)
+            continue;
+
+        emitter.source->setPosition(obj->position);
+        emitter.source->setDirection(glm::vec3(0.0f, 1.0f, 0.0f));
+        emitter.source->setGain(0.0f);
+        emitter.source->pause();
+    }
+
+    if (!nearestEmitter || nearestDistanceSq > kTorchAudibleDistanceSq)
+        return;
+
+    auto nearestObject = nearestEmitter->object.lock();
+    if (!nearestObject || !nearestEmitter->source)
+        return;
+
+    const float distance = std::sqrt(nearestDistanceSq);
+    const float falloff = 1.0f - std::clamp(distance / kTorchAudibleDistance, 0.0f, 1.0f);
+    nearestEmitter->source->setPosition(nearestObject->position);
+    nearestEmitter->source->setGain(kTorchMaxGain * falloff * falloff);
+    if (!nearestEmitter->source->isPlaying())
+        nearestEmitter->source->play();
+}
+
+void Game::spawnFirstPersonProjectile(const glm::vec3 &origin, const glm::vec3 &velocity)
+{
+    if (!scene)
+        return;
+
+    if (!firstPersonProjectileModel)
+        firstPersonProjectileModel = std::make_shared<Model>(std::filesystem::path("assets/ball.obj"));
+
+    auto projectileObject = std::make_shared<GameObject>(
+        "__runtime_fps_projectile_" + std::to_string(firstPersonProjectileCounter++),
+        firstPersonProjectileModel,
+        origin,
+        glm::vec3(0.0f),
+        glm::vec3(0.11f),
+        0.0f,
+        "pbr_model_textured",
+        glm::vec3(1.0f, 0.82f, 0.45f));
+
+    scene->addGameObject(projectileObject);
+    firstPersonProjectiles.push_back({projectileObject, velocity, 3.0f, false, 3});
+}
+
+void Game::updateFirstPersonProjectiles()
+{
+    if (!scene || firstPersonProjectiles.empty())
+        return;
+
+    constexpr float kProjectileRadius = 0.11f;
+    constexpr float kProjectileGravity = 8.5f;
+    ProjectileBounceConfig bounceConfig;
+
+    std::vector<size_t> expiredIndices;
+
+    for (size_t i = 0; i < firstPersonProjectiles.size(); ++i)
+    {
+        auto &projectile = firstPersonProjectiles[i];
+        if (!projectile.object)
+        {
+            expiredIndices.push_back(i);
+            continue;
+        }
+
+        projectile.lifetime -= deltaTime;
+        if (projectile.lifetime <= 0.0f)
+        {
+            expiredIndices.push_back(i);
+            continue;
+        }
+
+        if (projectile.impacted)
+            continue;
+
+        projectile.velocity.y -= kProjectileGravity * deltaTime;
+
+        glm::vec3 currentPos = projectile.object->position;
+        glm::vec3 totalMove = projectile.velocity * deltaTime;
+        int substeps = std::max(1, static_cast<int>(std::ceil(glm::length(totalMove) / 0.2f)));
+        glm::vec3 stepMove = totalMove / static_cast<float>(substeps);
+
+        for (int step = 0; step < substeps; ++step)
+        {
+            glm::vec3 candidate = currentPos + stepMove;
+            auto hit = ProjectileBounceUtils::sweepSphereAgainstObjects(
+                currentPos,
+                candidate,
+                kProjectileRadius,
+                scene->getGameObjects(),
+                [this](const std::shared_ptr<GameObject> &obj)
+                { return isFirstPersonSolid(obj); });
+
+            if (hit)
+            {
+                currentPos = ProjectileBounceUtils::resolveBouncePosition(*hit, bounceConfig);
+                projectile.velocity = ProjectileBounceUtils::computeBounceVelocity(
+                    projectile.velocity, hit->normal, bounceConfig);
+                projectile.remainingBounces--;
+
+                if (projectile.remainingBounces < 0 || glm::length(projectile.velocity) <= 0.001f)
+                {
+                    projectile.impacted = true;
+                    projectile.lifetime = 0.18f;
+                    projectile.velocity = glm::vec3(0.0f);
+                    projectile.object->position = hit->point;
+                    projectile.object->scale = glm::vec3(0.14f);
+                    break;
+                }
+
+                continue;
+            }
+            currentPos = candidate;
+        }
+
+        projectile.object->position = currentPos;
+
+        if (currentPos.y < -10.0f)
+            expiredIndices.push_back(i);
+    }
+
+    for (auto it = expiredIndices.rbegin(); it != expiredIndices.rend(); ++it)
+    {
+        auto &projectile = firstPersonProjectiles[*it];
+        if (projectile.object)
+            scene->removeGameObject(projectile.object->ID);
+        firstPersonProjectiles.erase(firstPersonProjectiles.begin() + *it);
+    }
+}
+
+void Game::updateFirstPersonWeapon()
+{
+    if (!firstPersonWeaponObject)
+        return;
+
+    if (mode != GAME || !firstPersonEnabled)
+    {
+        hideFirstPersonWeapon();
+        return;
+    }
+
+    GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+    if (!activeWindow)
+        return;
+
+    const bool aimPressed =
+        glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+    const bool shootPressed =
+        glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    float aimStep = deltaTime * 8.0f;
+    if (aimPressed)
+        firstPersonAimBlend = std::min(1.0f, firstPersonAimBlend + aimStep);
+    else
+        firstPersonAimBlend = std::max(0.0f, firstPersonAimBlend - aimStep);
+
+    if (firstPersonShootCooldown > 0.0f)
+        firstPersonShootCooldown = std::max(0.0f, firstPersonShootCooldown - deltaTime);
+
+    constexpr float kShootAnimDuration = 0.12f;
+    if (shootPressed && firstPersonShootCooldown <= 0.0f)
+    {
+        firstPersonShootAnimTime = kShootAnimDuration;
+        firstPersonShootCooldown = 0.14f;
+        glm::vec3 shotOrigin = camera.Position + camera.Front * 0.22f;
+        glm::vec3 shotVelocity = camera.Front * 52.0f;
+        spawnFirstPersonProjectile(shotOrigin, shotVelocity);
+
+        if (firstPersonShotClip)
+        {
+            AudioAttenuationSettings attenuation;
+            attenuation.referenceDistance = 1.5f;
+            attenuation.maxDistance = 28.0f;
+            attenuation.rolloffFactor = 1.1f;
+
+            AudioDirectionalCone cone;
+            cone.innerAngleDegrees = 18.0f;
+            cone.outerAngleDegrees = 70.0f;
+            cone.outerGain = 0.35f;
+
+            auto shotSource = audioManager.createDirectionalSource(
+                firstPersonShotClip,
+                shotOrigin,
+                camera.Front,
+                attenuation,
+                cone);
+            if (shotSource)
+            {
+                shotSource->setVelocity(shotVelocity * 0.1f);
+                shotSource->setGain(0.65f);
+                shotSource->setPitch(1.0f);
+                shotSource->setAutoDestroy(true);
+                shotSource->play();
+            }
+        }
+    }
+    else if (firstPersonShootAnimTime > 0.0f)
+    {
+        firstPersonShootAnimTime = std::max(0.0f, firstPersonShootAnimTime - deltaTime);
+    }
+
+    glm::vec3 hipOffset(0.12f, -0.24f, -0.42f);
+    glm::vec3 aimOffset(0.03f, -0.16f, -0.34f);
+    glm::vec3 localOffset = glm::mix(hipOffset, aimOffset, firstPersonAimBlend);
+
+    float recoilT = 0.0f;
+    if (firstPersonShootAnimTime > 0.0f)
+    {
+        recoilT = 1.0f - (firstPersonShootAnimTime / kShootAnimDuration);
+        recoilT = std::sin(recoilT * 3.14159265f);
+    }
+
+    localOffset.z += recoilT * 0.08f;
+    localOffset.x += recoilT * 0.01f;
+    localOffset.y -= recoilT * 0.02f;
+
+    glm::vec3 baseEulerDegrees(4.0f, -92.0f, -8.0f);
+    glm::vec3 aimEulerDegrees(0.0f, -90.0f, -2.0f);
+    glm::vec3 localEuler = glm::mix(baseEulerDegrees, aimEulerDegrees, firstPersonAimBlend);
+    localEuler.x -= recoilT * 18.0f;
+    localEuler.z += recoilT * 6.0f;
+
+    glm::vec3 worldPos = camera.Position +
+                         camera.Right * localOffset.x +
+                         camera.Up * localOffset.y +
+                         (-camera.Front) * localOffset.z;
+
+    glm::mat4 cameraRotationMatrix(1.0f);
+    cameraRotationMatrix[0] = glm::vec4(camera.Right, 0.0f);
+    cameraRotationMatrix[1] = glm::vec4(camera.Up, 0.0f);
+    cameraRotationMatrix[2] = glm::vec4(-camera.Front, 0.0f);
+
+    glm::quat cameraRotation = glm::quat_cast(cameraRotationMatrix);
+    glm::quat localRotation = glm::quat(glm::radians(localEuler));
+    glm::quat correctionRotation =
+        glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
+        glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+        glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::quat worldRotation = cameraRotation * localRotation * correctionRotation;
+
+    glm::mat4 weaponTransform =
+        glm::translate(glm::mat4(1.0f), worldPos) *
+        glm::mat4_cast(worldRotation) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.15f));
+
+    // Keep position updated for culling/debug, but render from the exact matrix
+    // so the viewmodel is not reinterpreted through the generic Euler path.
+    firstPersonWeaponObject->position = worldPos;
+    firstPersonWeaponObject->SetTransformOverride(weaponTransform);
 }
 
 bool Game::initialize()
@@ -267,6 +706,14 @@ bool Game::initialize()
     scene->setUIManager(uiManager.get());
     renderManager.setGame(this);
     renderManager.setUIManager(uiManager.get());
+    createFirstPersonWeapon();
+    audioManager.setMasterVolume(settings.masterVolume);
+    firstPersonShotClip = audioManager.loadClip("assets/audio_1.wav");
+    torchAmbientClip = audioManager.loadClipMono("assets/fire_sound.mp3");
+    previousAudioListenerPosition = camera.Position;
+    audioListenerPrimed = true;
+    audioManager.updateListener(camera.Position, camera.Front, glm::vec3(0.0f), camera.Up);
+    rebuildTorchAudioEmitters();
 
     vnManager.init(&renderManager, &camera);
 
@@ -300,6 +747,18 @@ void Game::update()
 
     inputManager.processInput(this, inputWindow ? inputWindow : window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
     updateFirstPersonController();
+    updateFirstPersonWeapon();
+    updateFirstPersonProjectiles();
+    updateTorchAudioEmitters();
+
+    glm::vec3 listenerVelocity(0.0f);
+    if (audioListenerPrimed && deltaTime > 1e-4f)
+        listenerVelocity = (camera.Position - previousAudioListenerPosition) / deltaTime;
+
+    audioManager.updateListener(camera.Position, camera.Front, listenerVelocity, camera.Up);
+    audioManager.update(deltaTime);
+    previousAudioListenerPosition = camera.Position;
+    audioListenerPrimed = true;
 
     // --- Phase 1: Object Movement (pre-collision) ---
     auto gameObjects = scene->getGameObjects();
@@ -328,8 +787,10 @@ void Game::update()
         bool ballInFlight = false;
         for (auto &entity : scene->getGameEntities())
         {
-            if (entity->getHasBall()) ballOwned = true;
-            if (entity->isBallInFlight()) ballInFlight = true;
+            if (entity->getHasBall())
+                ballOwned = true;
+            if (entity->isBallInFlight())
+                ballInFlight = true;
         }
         if (!ballOwned && !ballInFlight)
         {
@@ -499,6 +960,9 @@ void Game::render()
 
 void Game::cleanup()
 {
+    clearTorchAudioEmitters();
+    clearFirstPersonProjectiles();
+    hideFirstPersonWeapon();
     // TODO: Cleanup all resources
     // TODO: Destroy managers
     // TODO: Close window and terminate GLFW
@@ -659,7 +1123,14 @@ void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime,
 
 void Game::setLevel(std::string levelName)
 {
+    clearTorchAudioEmitters();
+
     scene = std::make_unique<Scene>(levelName);
+    scene->setGame(this);
+    scene->setUIManager(uiManager.get());
+    scene->setRenderManager(&renderManager);
+    renderManager.setScene(scene.get());
+    rebuildTorchAudioEmitters();
 }
 
 std::unordered_map<int, bool> previousKeyStates;
@@ -729,17 +1200,33 @@ void Game::handleInput()
     auto sel = scene->getSelectedGameObject();
     if (sel)
     {
-        TransformState before = { sel->position, sel->rotation, sel->scale, sel->color };
+        TransformState before = {sel->position, sel->rotation, sel->scale, sel->color};
         bool moved = false;
 
-        if (wasKeyJustPressed(GLFW_KEY_LEFT,  window)) { sel->position.x -= 1.0f; moved = true; }
-        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window)) { sel->position.x += 1.0f; moved = true; }
-        if (wasKeyJustPressed(GLFW_KEY_UP,    window)) { sel->position.z -= 1.0f; moved = true; }
-        if (wasKeyJustPressed(GLFW_KEY_DOWN,  window)) { sel->position.z += 1.0f; moved = true; }
+        if (wasKeyJustPressed(GLFW_KEY_LEFT, window))
+        {
+            sel->position.x -= 1.0f;
+            moved = true;
+        }
+        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window))
+        {
+            sel->position.x += 1.0f;
+            moved = true;
+        }
+        if (wasKeyJustPressed(GLFW_KEY_UP, window))
+        {
+            sel->position.z -= 1.0f;
+            moved = true;
+        }
+        if (wasKeyJustPressed(GLFW_KEY_DOWN, window))
+        {
+            sel->position.z += 1.0f;
+            moved = true;
+        }
 
         if (moved)
         {
-            TransformState after = { sel->position, sel->rotation, sel->scale, sel->color };
+            TransformState after = {sel->position, sel->rotation, sel->scale, sel->color};
             scene->pushTransformCommand(sel->ID, before, after);
         }
     }
@@ -787,8 +1274,6 @@ void Game::handleInput()
             }
         }
     }
-
-
 }
 
 void Game::handleTurn()
