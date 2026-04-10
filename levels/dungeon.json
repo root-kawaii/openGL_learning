@@ -142,6 +142,32 @@
                 "y": 3.0,
                 "z": -8.0
             }
+        },
+        {
+            "color": {
+                "b": 0.949999988079071,
+                "g": 0.7799999713897705,
+                "r": 0.550000011920929
+            },
+            "intensity": 7.0,
+            "position": {
+                "x": -6.0,
+                "y": 3.0999999046325684,
+                "z": 27.0
+            }
+        },
+        {
+            "color": {
+                "b": 0.949999988079071,
+                "g": 0.7799999713897705,
+                "r": 0.550000011920929
+            },
+            "intensity": 7.0,
+            "position": {
+                "x": 6.0,
+                "y": 3.0999999046325684,
+                "z": 27.0
+            }
         }
     ],
     "materials": {
@@ -262,7 +288,7 @@
             "position": {
                 "x": 0.0,
                 "y": 3.0,
-                "z": 29.0
+                "z": 37.0
             },
             "rotation": {
                 "x": 0.0,
@@ -291,7 +317,7 @@
             "position": {
                 "x": -29.0,
                 "y": 3.0,
-                "z": 0.0
+                "z": 4.0
             },
             "rotation": {
                 "x": 0.0,
@@ -301,7 +327,7 @@
             "scale": {
                 "x": 2.0,
                 "y": 6.0,
-                "z": 60.0
+                "z": 76.0
             },
             "shader_name": "pbr_textured"
         },
@@ -320,7 +346,7 @@
             "position": {
                 "x": 29.0,
                 "y": 3.0,
-                "z": 0.0
+                "z": 4.0
             },
             "rotation": {
                 "x": 0.0,
@@ -330,7 +356,7 @@
             "scale": {
                 "x": 2.0,
                 "y": 6.0,
-                "z": 60.0
+                "z": 76.0
             },
             "shader_name": "pbr_textured"
         },
@@ -494,7 +520,7 @@
             "position": {
                 "x": 0.0,
                 "y": 2.5,
-                "z": 20.0
+                "z": 30.0
             },
             "rotation": {
                 "x": 0.0,
@@ -502,7 +528,123 @@
                 "z": 0.0
             },
             "scale": {
-                "x": 22.0,
+                "x": 26.0,
+                "y": 5.0,
+                "z": 2.0
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.6299999952316284,
+                "g": 0.6600000262260437,
+                "r": 0.6800000071525574
+            },
+            "id": "south_chamber_west",
+            "material_name": "rusted_iron",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -12.0,
+                "y": 2.5,
+                "z": 26.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 2.0,
+                "y": 5.0,
+                "z": 14.0
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.6299999952316284,
+                "g": 0.6600000262260437,
+                "r": 0.6800000071525574
+            },
+            "id": "south_chamber_east",
+            "material_name": "rusted_iron",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 12.0,
+                "y": 2.5,
+                "z": 26.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 2.0,
+                "y": 5.0,
+                "z": 14.0
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.6299999952316284,
+                "g": 0.6600000262260437,
+                "r": 0.6800000071525574
+            },
+            "id": "south_room_crossbar_left",
+            "material_name": "rusted_iron",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": -8.0,
+                "y": 2.5,
+                "z": 24.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 6.0,
+                "y": 5.0,
+                "z": 2.0
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.6299999952316284,
+                "g": 0.6600000262260437,
+                "r": 0.6800000071525574
+            },
+            "id": "south_room_crossbar_right",
+            "material_name": "rusted_iron",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 8.0,
+                "y": 2.5,
+                "z": 24.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 6.0,
                 "y": 5.0,
                 "z": 2.0
             },
@@ -687,6 +829,171 @@
                 "v": 0.0
             },
             "color": {
+                "b": 0.18000000715255737,
+                "g": 0.49000000953674316,
+                "r": 0.800000011920929
+            },
+            "gameplay": {
+                "key_id": "bronze_gate",
+                "type": "key"
+            },
+            "id": "bronze_key_pickup",
+            "path": "assets/arrow.obj",
+            "position": {
+                "x": -2.0,
+                "y": 0.550000011920929,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 1.5707963705062866,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.3499999940395355,
+                "y": 0.3499999940395355,
+                "z": 0.3499999940395355
+            },
+            "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.30000001192092896,
+                "g": 0.5099999904632568,
+                "r": 0.8199999928474426
+            },
+            "gameplay": {
+                "loot": [
+                    "shield_cell",
+                    "scrap_bundle"
+                ],
+                "type": "chest"
+            },
+            "id": "spawn_supply_chest",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 2.75,
+                "y": 0.550000011920929,
+                "z": 2.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.6499999761581421,
+                "y": 0.6499999761581421,
+                "z": 0.6499999761581421
+            },
+            "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.18000000715255737,
+                "g": 0.49000000953674316,
+                "r": 0.800000011920929
+            },
+            "gameplay": {
+                "requires_key_id": "bronze_gate",
+                "type": "door"
+            },
+            "id": "bronze_gate_door",
+            "material_name": "rusted_iron",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.0,
+                "y": 2.5,
+                "z": 8.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 4.0,
+                "y": 5.0,
+                "z": 1.399999976158142
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.23999999463558197,
+                "g": 0.6200000047683716,
+                "r": 0.8799999952316284
+            },
+            "gameplay": {
+                "loot": [
+                    "weapon:cerberus",
+                    "health_kit",
+                    "ammo_cache"
+                ],
+                "type": "chest"
+            },
+            "id": "reward_chest_south",
+            "path": "assets/stone_cube.glb",
+            "position": {
+                "x": 0.0,
+                "y": 0.550000011920929,
+                "z": 26.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.75,
+                "y": 0.75,
+                "z": 0.75
+            },
+            "shader_name": "pbr_model_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.2800000011920929,
+                "g": 0.5600000023841858,
+                "r": 0.8799999952316284
+            },
+            "id": "south_reward_plinth",
+            "material_name": "cobblestone",
+            "path": "assets/cube.obj",
+            "position": {
+                "x": 0.0,
+                "y": 0.5,
+                "z": 26.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 3.5,
+                "y": 1.0,
+                "z": 3.5
+            },
+            "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
                 "b": 0.6200000047683716,
                 "g": 0.6200000047683716,
                 "r": 0.6200000047683716
@@ -768,6 +1075,35 @@
                 "z": 2.0
             },
             "shader_name": "pbr_textured"
+        },
+        {
+            "collision_radius": {
+                "v": 0.0
+            },
+            "color": {
+                "b": 0.0,
+                "g": 0.0,
+                "r": 1.0
+            },
+            "entity": "enemy",
+            "id": "mech_drone_red_dungeon",
+            "path": "assets/mech_drone.glb",
+            "position": {
+                "x": 8.474564552307129,
+                "y": 0.5,
+                "z": 9.450202941894531
+            },
+            "rotation": {
+                "x": -0.984654426574707,
+                "y": -1.4913642406463623,
+                "z": -2.1419358253479004
+            },
+            "scale": {
+                "x": 2.0310491890995763e-05,
+                "y": 1.591724867466837e-05,
+                "z": 1.8047057892545126e-05
+            },
+            "shader_name": "pbr_model_textured"
         },
         {
             "collision_radius": {

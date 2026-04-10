@@ -51,6 +51,7 @@ struct LightUBO {
 // Per-object push constant — model matrix (updated per draw call, no rebind)
 struct ModelPushConstant {
     glm::mat4 model;
+    glm::vec4 albedoTint;
 };
 
 // ID buffer push constant — model matrix + object ID for mouse picking
@@ -66,6 +67,7 @@ struct PBRPushConstant {
     float     roughnessVal;
     uint32_t  hasNormalMap;
     uint32_t  _pad;
+    glm::vec4 albedoTint;
 };
 
 // Bone matrices UBO — one per skeleton, shared across all meshes of a model

@@ -25,6 +25,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include <chrono>
 #include <thread>
@@ -73,6 +74,23 @@ enum GameModeEnum
     VISUAL_NOVEL,
 };
 
+struct GameplayNoiseEvent
+{
+    glm::vec3 position = glm::vec3(0.0f);
+    float loudness = 0.0f;
+    float remainingTime = 0.0f;
+    std::string source;
+    int playerId = -1;
+};
+
+struct GameplayObjectRuntimeState
+{
+    bool collected = false;
+    bool opened = false;
+    bool looted = false;
+    bool unlocked = false;
+};
+
 class Game
 {
 private:
@@ -113,6 +131,7 @@ private:
     bool  firstPersonEnabled = false;
     bool  firstPersonGrounded = false;
     bool  firstPersonJumpPressedLastFrame = false;
+    bool  firstPersonCrouching = false;
     float firstPersonVerticalVelocity = 0.0f;
     float firstPersonEyeHeight = 2.0f;
     float firstPersonRadius = 0.35f;
@@ -125,14 +144,33 @@ private:
     float firstPersonAimBlend = 0.0f;
     float firstPersonShootCooldown = 0.0f;
     float firstPersonShootAnimTime = 0.0f;
+    float firstPersonSwordSwingTime = 0.0f;
+    float firstPersonSwordCooldown = 0.0f;
+    bool firstPersonSwordBlocking = false;
     float firstPersonWeaponBobTime = 0.0f;
+    float firstPersonNoiseLevel = 0.0f;
+    float firstPersonFootstepLoopFade = 0.0f;
     std::shared_ptr<GameObject> firstPersonWeaponObject;
+    std::shared_ptr<GameObject> firstPersonRevolverObject;
+    std::shared_ptr<GameObject> firstPersonSwordObject;
     std::shared_ptr<Model> firstPersonProjectileModel;
     std::shared_ptr<AudioClip> firstPersonShotClip;
+    std::shared_ptr<AudioClip> firstPersonFootstepClip;
     std::shared_ptr<AudioClip> torchAmbientClip;
+    std::shared_ptr<AudioSource3D> firstPersonFootstepSource;
     uint32_t firstPersonProjectileCounter = 0;
     glm::vec3 previousAudioListenerPosition = glm::vec3(0.0f);
+    glm::vec3 currentPlayerVelocity = glm::vec3(0.0f);
     bool audioListenerPrimed = false;
+
+    enum class FirstPersonMovementMode
+    {
+        Idle,
+        Walk,
+        Run,
+        CrouchWalk
+    };
+    FirstPersonMovementMode firstPersonMovementMode = FirstPersonMovementMode::Idle;
 
     struct TorchAudioEmitter
     {
@@ -140,14 +178,25 @@ private:
         std::shared_ptr<AudioSource3D> source;
     };
     std::vector<TorchAudioEmitter> torchAudioEmitters;
+    std::vector<GameplayNoiseEvent> gameplayNoiseEvents;
+    std::unordered_map<uint32_t, GameplayObjectRuntimeState> gameplayObjectStates;
+    std::shared_ptr<GameObject> focusedGameplayObject;
+    std::shared_ptr<GameObject> activeChestObject;
+    std::string gameplayInteractionPrompt;
+    bool inventoryScreenOpen = false;
 
     struct FirstPersonProjectile
     {
         std::shared_ptr<GameObject> object;
         glm::vec3 velocity = glm::vec3(0.0f);
+        glm::vec3 lastBouncePoint = glm::vec3(0.0f);
         float lifetime = 0.0f;
+        float radius = 0.11f;
         bool impacted = false;
+        bool hostileToPlayer = false;
         int remainingBounces = 0;
+        uint32_t lastHitObjectId = 0;
+        int repeatedBounceCount = 0;
     };
     std::vector<FirstPersonProjectile> firstPersonProjectiles;
 
@@ -156,21 +205,47 @@ private:
     void enterFirstPersonGameMode();
     void updateFirstPersonController();
     void createFirstPersonWeapon();
+    void hideRuntimeWeaponObject(const std::shared_ptr<GameObject> &weaponObject);
     void spawnFirstPersonProjectile(const glm::vec3 &origin, const glm::vec3 &velocity);
+    void spawnRuntimeProjectile(const glm::vec3 &origin,
+                                const glm::vec3 &velocity,
+                                const glm::vec3 &color,
+                                float scale,
+                                int bounceCount,
+                                bool hostileToPlayer = false);
     void updateFirstPersonProjectiles();
     void clearFirstPersonProjectiles();
     void updateFirstPersonWeapon();
     void hideFirstPersonWeapon();
+    void updateFirstPersonMovementAudio(bool movingOnGround, FirstPersonMovementMode movementMode);
     void rebuildTorchAudioEmitters();
     void updateTorchAudioEmitters();
     void clearTorchAudioEmitters();
+    void initializeGameplayObjects();
+    void updateGameplayInteractions();
+    void updateGameplayObjectVisuals();
+    std::shared_ptr<GameObject> findFocusedGameplayObject() const;
+    GameplayObjectRuntimeState &getGameplayObjectState(const std::shared_ptr<GameObject> &obj);
+    const GameplayObjectRuntimeState *findGameplayObjectState(const std::shared_ptr<GameObject> &obj) const;
+    void interactWithFocusedGameplayObject();
+    void pickupKeyObject(const std::shared_ptr<GameObject> &obj);
+    void tryOpenDoor(const std::shared_ptr<GameObject> &obj);
+    void openChestUI(const std::shared_ptr<GameObject> &obj);
+    void closeChestUI();
+    void setGameplayCursorCaptured(bool captured);
+    void updateGameplayNoiseEvents();
+    void updateEnemyAI();
     bool shouldAttachTorchAudio(const std::shared_ptr<GameObject> &obj) const;
+    bool isGameplayInteractable(const std::shared_ptr<GameObject> &obj) const;
+    bool isGameplayObjectHidden(const std::shared_ptr<GameObject> &obj) const;
+    bool isGameplayDoorOpen(const std::shared_ptr<GameObject> &obj) const;
     glm::vec3 resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
                                            const glm::vec3 &currentCameraPos,
                                            bool &grounded,
                                            float &groundHeight) const;
     std::optional<glm::vec3> findGameplaySpawnPoint() const;
     bool isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const;
+    void syncEquippedFirstPersonWeapon();
 
     int turn = 0;
     // int turnClock = 0; // from 0 to 24
@@ -219,7 +294,7 @@ public:
         glfwSetWindowUserPointer(w, this);
         glfwSetCursorPosCallback(w, mouse_callback);
         glfwSetScrollCallback(w, scroll_callback);
-        glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     // Switch which window keyboard polling and cursor reads come from
@@ -247,9 +322,9 @@ public:
             if (previousMode == PAUSE)
             {
                 firstPersonEnabled = true;
-                GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
-                if (activeWindow)
-                    glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+                inventoryScreenOpen = false;
+                activeChestObject.reset();
+                setGameplayCursorCaptured(true);
             }
             else
             {
@@ -261,21 +336,77 @@ public:
             camera.gameMode = false;
             firstPersonEnabled = false;
             firstPersonGrounded = false;
+            firstPersonCrouching = false;
             firstPersonJumpPressedLastFrame = false;
             firstPersonVerticalVelocity = 0.0f;
             firstPersonAimBlend = 0.0f;
             firstPersonShootCooldown = 0.0f;
             firstPersonShootAnimTime = 0.0f;
+            firstPersonSwordSwingTime = 0.0f;
+            firstPersonSwordCooldown = 0.0f;
+            firstPersonNoiseLevel = 0.0f;
+            firstPersonFootstepLoopFade = 0.0f;
+            firstPersonMovementMode = FirstPersonMovementMode::Idle;
+            gameplayNoiseEvents.clear();
+            inventoryScreenOpen = false;
+            activeChestObject.reset();
+            focusedGameplayObject.reset();
+            gameplayInteractionPrompt.clear();
+            setGameplayCursorCaptured(false);
+            if (firstPersonFootstepSource)
+            {
+                firstPersonFootstepSource->setGain(0.0f);
+                firstPersonFootstepSource->pause();
+            }
             hideFirstPersonWeapon();
             clearFirstPersonProjectiles();
         }
         if (modeEnum == PAUSE)
         {
             firstPersonVerticalVelocity = 0.0f;
+            firstPersonNoiseLevel = 0.0f;
+            firstPersonFootstepLoopFade = 0.0f;
+            firstPersonSwordSwingTime = 0.0f;
+            firstPersonSwordCooldown = 0.0f;
+            firstPersonMovementMode = FirstPersonMovementMode::Idle;
+            gameplayNoiseEvents.clear();
+            setGameplayCursorCaptured(false);
+            if (firstPersonFootstepSource)
+            {
+                firstPersonFootstepSource->setGain(0.0f);
+                firstPersonFootstepSource->pause();
+            }
         }
     };
     GameModeEnum getGameMode() { return mode; };
     VNManager&   getVNManager() { return vnManager; }
+    float getPlayerNoiseLevel() const { return firstPersonNoiseLevel; }
+    bool isPlayerCrouching() const { return firstPersonCrouching; }
+    Player &getPrimaryPlayer() { return players.front(); }
+    const Player &getPrimaryPlayer() const { return players.front(); }
+    void emitGameplayNoise(const glm::vec3 &position,
+                           float loudness,
+                           const std::string &source,
+                           float duration = 0.18f,
+                           int playerId = -1);
+    const std::vector<GameplayNoiseEvent> &getActiveGameplayNoiseEvents() const
+    {
+        return gameplayNoiseEvents;
+    }
+    int getPrimaryPlayerId() const { return 0; }
+    glm::vec3 getPlayerWorldPosition(int playerId) const;
+    glm::vec3 getPlayerVelocity(int playerId) const;
+    void spawnEnemyProjectile(const glm::vec3 &origin, const glm::vec3 &velocity);
+    bool isInventoryOpen() const { return inventoryScreenOpen; }
+    bool isChestOpen() const { return activeChestObject != nullptr; }
+    bool isGameplayUIModalOpen() const { return inventoryScreenOpen || activeChestObject != nullptr; }
+    void toggleInventoryScreen();
+    void lootActiveChest();
+    void closeGameplayModalUI();
+    const std::string &getGameplayInteractionPrompt() const { return gameplayInteractionPrompt; }
+    std::shared_ptr<GameObject> getFocusedGameplayObject() const { return focusedGameplayObject; }
+    std::shared_ptr<GameObject> getActiveChestObject() const { return activeChestObject; }
+    std::vector<std::string> getActiveChestLoot() const;
 
     // Turn-based gameplay methods
     void endPlayerTurn();
@@ -360,7 +491,7 @@ public:
         glfwSetScrollCallback(window, scroll_callback);
 
         // tell GLFW to capture our mouse
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         // glad: load all OpenGL function pointers
         // ---------------------------------------
@@ -434,6 +565,13 @@ public:
             lastX = xpos;
             lastY = ypos;
             firstMouse = false;
+        }
+
+        if (mode == GAME && isGameplayUIModalOpen())
+        {
+            lastX = xpos;
+            lastY = ypos;
+            return;
         }
 
         float xoffset = xpos - lastX;

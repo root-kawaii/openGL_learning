@@ -74,6 +74,16 @@ GameObject::GameObject(std::shared_ptr<GameObject> gameObject)
       ,
       name(gameObject->name) // Copy name
       ,
+      gameEntity(gameObject->gameEntity)
+      ,
+      gameplayType(gameObject->gameplayType)
+      ,
+      keyId(gameObject->keyId)
+      ,
+      requiresKeyId(gameObject->requiresKeyId)
+      ,
+      lootItems(gameObject->lootItems)
+      ,
       VAO(gameObject->VAO) // Copy VAO
       ,
       VBO(gameObject->VBO) // Copy VBO

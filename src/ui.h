@@ -77,6 +77,7 @@ private:
 
     std::map<char, Character> characters;
     std::vector<UIElement> uiElements;
+    bool leftMousePressedLastFrame = false;
 
     Shader uiShader;
     Shader textShader;
@@ -121,6 +122,9 @@ public:
     void onWaitPressed(std::string value);
     void onEndTurnPressed(std::string value);
     void onExecuteTurnPressed(std::string value);
+    void onToggleInventoryPressed(std::string value);
+    void onLootChestPressed(std::string value);
+    void onCloseGameplayPanelPressed(std::string value);
 
     // Setters
     void setWindow(GLFWwindow *gameWindow) { window = gameWindow; }
@@ -148,6 +152,10 @@ public:
     void buildGameMenu();
     void buildActionBufferUI();
     void buildBottomCenterMenu();
+    void buildGameplayHUD();
+    void buildInventoryPanel();
+    void buildChestLootPanel();
+    void buildCurrentUI();
     void renderAllUIElements(float mouseX, float mouseY);
     void clearUIElements();
     const std::vector<UIElement>& getUIElements() const { return uiElements; }

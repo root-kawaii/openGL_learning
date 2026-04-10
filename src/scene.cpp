@@ -5,12 +5,35 @@
 #include <memory>
 #include <future>
 #include <unordered_map>
+#include <algorithm>
+#include <cctype>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
 namespace
 {
 const char *kDefaultLevelFile = "levels/dungeon.json";
+
+std::string toLowerCopy(std::string value)
+{
+  std::transform(
+      value.begin(),
+      value.end(),
+      value.begin(),
+      [](unsigned char c)
+      { return static_cast<char>(std::tolower(c)); });
+  return value;
+}
+
+bool isNumericTag(const std::string &value)
+{
+  return !value.empty() &&
+         std::all_of(
+             value.begin(),
+             value.end(),
+             [](unsigned char c)
+             { return std::isdigit(c) != 0; });
+}
 }
 
 void discretizePosition(glm::vec3 &position)
@@ -197,16 +220,45 @@ void Scene::buildFromSerializer(const std::string &levelFile, bool setStartupSta
     go->terrainType = i.terrainType;
     go->materialName = i.materialName; // named PBR material reference
     go->modelPath = i.path;            // preserve path so saveScene writes it correctly
+    go->gameEntity = i.entityTag;
+    go->gameplayType = i.gameplayType;
+    go->keyId = i.keyId;
+    go->requiresKeyId = i.requiresKeyId;
+    go->lootItems = i.lootItems;
 
     if (i.gameEntity)
     {
       EntityClassType classType = EntityClassType::DEFAULT;
-      if (go->name == "capsule")
-        classType = EntityClassType::STRIKER;
-      else if (go->name == "capsule2")
-        classType = EntityClassType::DEFENDER;
+      std::string entityTag = i.entityTag;
+      const std::string lowerName = toLowerCopy(go->name);
+      const std::string lowerPath = toLowerCopy(go->modelPath);
+      if ((entityTag.empty() || isNumericTag(entityTag)) &&
+          (lowerName.find("enemy") != std::string::npos ||
+           lowerName.find("drone") != std::string::npos ||
+           lowerPath.find("enemy") != std::string::npos ||
+           lowerPath.find("mech_drone") != std::string::npos))
+      {
+        entityTag = "enemy";
+      }
 
-      auto ge = std::make_shared<GameEntity>(std::to_string(entityCounter), go, classType);
+      if (go->name == "capsule")
+      {
+        classType = EntityClassType::STRIKER;
+        if (entityTag.empty())
+          entityTag = "player";
+      }
+      else if (go->name == "capsule2")
+      {
+        classType = EntityClassType::DEFENDER;
+        if (entityTag.empty())
+          entityTag = "ally";
+      }
+      else if (entityTag.empty())
+      {
+        entityTag = "entity";
+      }
+
+      auto ge = std::make_shared<GameEntity>(std::to_string(entityCounter), go, classType, entityTag);
       discretizePosition(ge->object->position);
       ge->setScene(this);
 

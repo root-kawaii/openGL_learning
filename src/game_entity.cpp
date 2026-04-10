@@ -1,26 +1,235 @@
 #include "game_entity.h"
+#include "game.h"
 #include "projectile_bounce_utils.h"
 #include "scene.h"
 #include <thread>
 #include <chrono>
 #include <random>
+#include <algorithm>
+#include <cctype>
+#include <limits>
+
+namespace
+{
+std::string toLowerCopy(std::string value)
+{
+    std::transform(
+        value.begin(),
+        value.end(),
+        value.begin(),
+        [](unsigned char c)
+        { return static_cast<char>(std::tolower(c)); });
+    return value;
+}
+
+bool isNumericTag(const std::string &value)
+{
+    return !value.empty() &&
+           std::all_of(
+               value.begin(),
+               value.end(),
+               [](unsigned char c)
+               { return std::isdigit(c) != 0; });
+}
+
+float randomSignedFloat(float magnitude)
+{
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> dist(-magnitude, magnitude);
+    return dist(rng);
+}
+
+bool isEnemyMovementBlocked(Scene *scene,
+                            const std::shared_ptr<GameObject> &self,
+                            const glm::vec3 &candidatePosition,
+                            float radius)
+{
+    if (!scene)
+        return false;
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!obj || obj == self)
+            continue;
+        if (obj->name == "ball")
+            continue;
+        if (obj->name.rfind("Light_", 0) == 0)
+            continue;
+        if (obj->name.rfind("__runtime_", 0) == 0)
+            continue;
+
+        AABB aabb = obj->GetWorldAABB();
+        if (!aabb.IsValid())
+            continue;
+
+        glm::vec3 hitNormal(0.0f);
+        if (ProjectileBounceUtils::sphereIntersectsAabb(candidatePosition, radius, aabb, hitNormal))
+            return true;
+    }
+
+    return false;
+}
+}
 
 GameEntity::GameEntity()
 {
 }
 
-GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject)
+GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, const std::string &entityTagValue)
 {
     object = gameObject;
-    object->gameEntity = entityName;
+    runtimeEntityName = entityName;
+    if (object && object->gameEntity.empty())
+        object->gameEntity = entityTagValue;
     entityClass = EntityClass::fromType(EntityClassType::DEFAULT);
+    configureBehaviorFromTag(entityTagValue);
 }
 
-GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType)
+GameEntity::GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType, const std::string &entityTagValue)
 {
     object = gameObject;
-    object->gameEntity = entityName;
+    runtimeEntityName = entityName;
+    if (object && object->gameEntity.empty())
+        object->gameEntity = entityTagValue;
     entityClass = EntityClass::fromType(classType);
+    configureBehaviorFromTag(entityTagValue);
+}
+
+void GameEntity::configureBehaviorFromTag(const std::string &tag)
+{
+    entityTag = tag;
+    enemy = false;
+    hearing = 1.0f;
+    hearingRadius = 12.0f;
+    aiMoveSpeed = 1.6f;
+    aiPreferredRange = 8.0f;
+    aiShootCooldown = 0.0f;
+
+    std::string lowerTag = toLowerCopy(tag);
+    if (lowerTag.empty() || isNumericTag(lowerTag))
+        return;
+
+    if (lowerTag.find("enemy") != std::string::npos ||
+        lowerTag.find("hostile") != std::string::npos)
+    {
+        enemy = true;
+        hearing = 1.0f;
+        hearingRadius = 14.0f;
+        aiMoveSpeed = 1.45f;
+        aiPreferredRange = 7.5f;
+        return;
+    }
+
+    if (lowerTag.find("boss") != std::string::npos)
+    {
+        enemy = true;
+        hearing = 1.35f;
+        hearingRadius = 18.0f;
+        aiMoveSpeed = 1.1f;
+        aiPreferredRange = 10.0f;
+    }
+}
+
+void GameEntity::addAggroPlayerId(int playerId)
+{
+    if (playerId < 0)
+        return;
+
+    if (std::find(aggroPlayerIds.begin(), aggroPlayerIds.end(), playerId) == aggroPlayerIds.end())
+        aggroPlayerIds.push_back(playerId);
+}
+
+void GameEntity::runEnemyAI(Game &game, float deltaTime)
+{
+    if (!enemy || !object)
+        return;
+
+    const auto &noiseEvents = game.getActiveGameplayNoiseEvents();
+    if (noiseEvents.empty())
+        return;
+
+    const float currentTime = static_cast<float>(glfwGetTime());
+    const GameplayNoiseEvent *bestEvent = nullptr;
+    float bestScore = -std::numeric_limits<float>::infinity();
+    float bestDistance = 0.0f;
+
+    for (const auto &noise : noiseEvents)
+    {
+        const float distance = glm::distance(object->position, noise.position);
+        const float audibleDistance = std::max(0.1f, hearingRadius * hearing * noise.loudness);
+        if (distance > audibleDistance)
+            continue;
+
+        if (noise.playerId >= 0)
+            addAggroPlayerId(noise.playerId);
+
+        const float proximity = 1.0f - std::clamp(distance / audibleDistance, 0.0f, 1.0f);
+        const float score = noise.loudness * 2.0f + proximity;
+        if (score > bestScore)
+        {
+            bestScore = score;
+            bestEvent = &noise;
+            bestDistance = distance;
+        }
+    }
+
+    if (bestEvent)
+    {
+        const bool sourceChanged = bestEvent->source != lastHeardSource;
+        const bool cooldownExpired = (currentTime - lastHeardLogTime) >= 0.75f;
+        if (sourceChanged || cooldownExpired)
+        {
+            std::cout << "[EnemyAI] " << object->name
+                      << " heard '" << bestEvent->source << "'"
+                      << " at distance " << bestDistance
+                      << " (loudness=" << bestEvent->loudness
+                      << ", hearing=" << hearing << ")"
+                      << std::endl;
+            lastHeardLogTime = currentTime;
+            lastHeardSource = bestEvent->source;
+        }
+    }
+
+    if (aggroPlayerIds.empty())
+        return;
+
+    aiShootCooldown = std::max(0.0f, aiShootCooldown - deltaTime);
+
+    const int targetPlayerId = aggroPlayerIds.back();
+    const glm::vec3 playerPos = game.getPlayerWorldPosition(targetPlayerId);
+    const glm::vec3 playerVelocity = game.getPlayerVelocity(targetPlayerId);
+    glm::vec3 toPlayer = playerPos - object->position;
+    float distanceToPlayer = glm::length(toPlayer);
+    if (distanceToPlayer > 1e-4f)
+    {
+        glm::vec3 moveDir = glm::normalize(glm::vec3(toPlayer.x, 0.0f, toPlayer.z));
+        if (distanceToPlayer > aiPreferredRange)
+        {
+            glm::vec3 candidatePosition = object->position + moveDir * aiMoveSpeed * deltaTime;
+            candidatePosition.y = object->position.y;
+            if (!isEnemyMovementBlocked(scene, object, candidatePosition, 0.45f))
+                object->position = candidatePosition;
+        }
+    }
+
+    if (distanceToPlayer > 18.0f || aiShootCooldown > 0.0f)
+        return;
+
+    glm::vec3 predictedAim = playerPos +
+                             playerVelocity * (0.12f + std::max(0.0f, distanceToPlayer) * 0.01f) +
+                             glm::vec3(
+                                 randomSignedFloat(0.85f),
+                                 randomSignedFloat(0.18f),
+                                 randomSignedFloat(0.85f));
+    glm::vec3 shotDirection = predictedAim - object->position;
+    if (glm::length(shotDirection) < 1e-4f)
+        return;
+
+    shotDirection = glm::normalize(shotDirection);
+    glm::vec3 shotOrigin = object->position + glm::vec3(0.0f, 0.9f, 0.0f) + shotDirection * 0.45f;
+    game.spawnEnemyProjectile(shotOrigin, shotDirection * 21.0f);
+    game.emitGameplayNoise(shotOrigin, 1.35f, "enemy_shot", 0.32f, -1);
+    aiShootCooldown = 1.35f + std::max(0.0f, randomSignedFloat(0.22f));
 }
 
 void GameEntity::queueMovement(glm::vec3 destination)
@@ -325,6 +534,9 @@ void GameEntity::shootBall(glm::vec3 target)
     if (!hasBall || !scene || !scene->ball)
         return;
 
+    if (Game *game = scene->getGame())
+        game->emitGameplayNoise(object->position, 1.4f, "ball_shot", 0.45f);
+
     // Release the ball
     hasBall = false;
     isBallFlying = true;
@@ -372,6 +584,9 @@ void GameEntity::passBall(GameEntity *targetEntity)
 {
     if (!hasBall || !scene || !scene->ball || !targetEntity)
         return;
+
+    if (Game *game = scene->getGame())
+        game->emitGameplayNoise(object->position, 0.75f, "ball_pass", 0.35f);
 
     // Release the ball
     hasBall = false;

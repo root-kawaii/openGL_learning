@@ -34,6 +34,11 @@ struct SceneObject
     glm::vec3 scale;
     float collisionRadius;
     bool gameEntity;
+    std::string entityTag;
+    std::string gameplayType;
+    std::string keyId;
+    std::string requiresKeyId;
+    std::vector<std::string> lootItems;
     int terrainType = 0; // 0=stone, 1=grass, 2=dirt, 3=moss
 };
 
@@ -158,6 +163,11 @@ public:
         obj.collisionRadius = 0;
         obj.shader_name = "default";
         obj.gameEntity = false;
+        obj.entityTag.clear();
+        obj.gameplayType.clear();
+        obj.keyId.clear();
+        obj.requiresKeyId.clear();
+        obj.lootItems.clear();
 
         try
         {
@@ -222,12 +232,48 @@ public:
             }
             if (objData.contains("entity"))
             {
-                obj.gameEntity = true;
+                const auto &entityData = objData["entity"];
+                if (entityData.is_string())
+                {
+                    obj.entityTag = entityData.get<std::string>();
+                    obj.gameEntity = !obj.entityTag.empty();
+                }
+                else if (entityData.is_boolean())
+                {
+                    obj.gameEntity = entityData.get<bool>();
+                    if (obj.gameEntity)
+                        obj.entityTag = "entity";
+                }
+                else if (entityData.is_number_integer())
+                {
+                    obj.entityTag = std::to_string(entityData.get<int>());
+                    obj.gameEntity = true;
+                }
+                else
+                {
+                    obj.gameEntity = true;
+                    obj.entityTag = "entity";
+                }
             }
             // Extract terrain type
             if (objData.contains("terrain_type"))
             {
                 obj.terrainType = objData["terrain_type"];
+            }
+            if (objData.contains("gameplay") && objData["gameplay"].is_object())
+            {
+                const auto &gameplay = objData["gameplay"];
+                obj.gameplayType = gameplay.value("type", "");
+                obj.keyId = gameplay.value("key_id", "");
+                obj.requiresKeyId = gameplay.value("requires_key_id", "");
+                if (gameplay.contains("loot") && gameplay["loot"].is_array())
+                {
+                    for (const auto &lootEntry : gameplay["loot"])
+                    {
+                        if (lootEntry.is_string())
+                            obj.lootItems.push_back(lootEntry.get<std::string>());
+                    }
+                }
             }
             // Extract collision radius
             if (objData.contains("collision_radius"))
@@ -344,6 +390,22 @@ public:
                 if (obj.gameEntity != "")
                 {
                     objData["entity"] = obj.gameEntity;
+                }
+                if (!obj.gameplayType.empty() ||
+                    !obj.keyId.empty() ||
+                    !obj.requiresKeyId.empty() ||
+                    !obj.lootItems.empty())
+                {
+                    nlohmann::json gameplayData;
+                    if (!obj.gameplayType.empty())
+                        gameplayData["type"] = obj.gameplayType;
+                    if (!obj.keyId.empty())
+                        gameplayData["key_id"] = obj.keyId;
+                    if (!obj.requiresKeyId.empty())
+                        gameplayData["requires_key_id"] = obj.requiresKeyId;
+                    if (!obj.lootItems.empty())
+                        gameplayData["loot"] = obj.lootItems;
+                    objData["gameplay"] = gameplayData;
                 }
 
                 objData["position"] = {

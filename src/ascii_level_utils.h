@@ -32,6 +32,7 @@ struct AsciiLevelSymbolDef
     glm::vec3 positionOffset = glm::vec3(0.0f);
     float collisionRadius = 0.0f;
     bool gameEntity = false;
+    std::string entityTag;
     bool emitLight = false;
     Light lightTemplate{};
 };

@@ -33,6 +33,7 @@ layout(set = 0, binding = 3) uniform BoneUBO {
 // ── Per-object data (push constant) ─────────────────────────────────────────
 layout(push_constant) uniform PushConstants {
     mat4 model;
+    vec4 albedoTint;
 } push;
 
 void main() {

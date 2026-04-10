@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <string>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include "../src/game_object.h" // Includes AABB
 #include "entity_class.h"
@@ -12,6 +13,7 @@
 // Forward declaration to avoid circular dependency
 class Scene;
 class GameEntity;
+class Game;
 
 // Action types for the buffered action system
 enum class ActionType
@@ -45,6 +47,17 @@ private:
     float timeSinceMovement = 0;
 
     Scene *scene = nullptr;
+    std::string runtimeEntityName;
+    std::string entityTag;
+    bool enemy = false;
+    float hearing = 1.0f;
+    float hearingRadius = 12.0f;
+    float aiMoveSpeed = 1.6f;
+    float aiPreferredRange = 8.0f;
+    float aiShootCooldown = 0.0f;
+    float lastHeardLogTime = -1000.0f;
+    std::string lastHeardSource;
+    std::vector<int> aggroPlayerIds;
 
     bool hasBall = false;
 
@@ -61,8 +74,8 @@ private:
 
 public:
     GameEntity();
-    GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject);
-    GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType);
+    GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, const std::string &entityTag = "");
+    GameEntity(std::string entityName, std::shared_ptr<GameObject> gameObject, EntityClassType classType, const std::string &entityTag = "");
 
     std::shared_ptr<GameObject> object;
     EntityClass entityClass;
@@ -100,6 +113,14 @@ public:
 
     // Scene reference for collision detection
     void setScene(Scene *scenePtr) { scene = scenePtr; }
+    const std::string &getEntityTag() const { return entityTag; }
+    bool isEnemy() const { return enemy; }
+    float getHearing() const { return hearing; }
+    void setHearing(float newHearing) { hearing = std::max(0.0f, newHearing); }
+    const std::vector<int> &getAggroPlayerIds() const { return aggroPlayerIds; }
+    void addAggroPlayerId(int playerId);
+    void configureBehaviorFromTag(const std::string &tag);
+    void runEnemyAI(Game &game, float deltaTime);
 
     // Movement helpers
     int  getEffectiveMovementSpeed() const;

@@ -27,6 +27,11 @@ layout(set = 0, binding = 0) uniform FrameUBO {
 layout(set = 0, binding = 1) uniform sampler2D diffuseTexture;
 layout(set = 0, binding = 2) uniform sampler2D shadowMap;  // manual comparison (MoltenVK)
 
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec4 albedoTint;
+} push;
+
 // ── Shadow calculation (3x3 PCF, manual depth comparison) ───────────────────
 float calcShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     // Perspective divide
@@ -59,7 +64,7 @@ float calcShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
 void main() {
     vec3 lightDir = normalize(frame.lightPos.xyz - fragWorldPos);
     vec3 normal   = normalize(fragNormal);
-    vec3 texColor = texture(diffuseTexture, fragTexCoord).rgb;
+    vec3 texColor = texture(diffuseTexture, fragTexCoord).rgb * push.albedoTint.rgb;
 
     // Shadow
     vec4 fragPosLightSpace = frame.lightSpaceMatrix * vec4(fragWorldPos, 1.0);

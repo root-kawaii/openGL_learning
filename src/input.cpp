@@ -26,8 +26,15 @@ void InputManager::processInput(Game *game, GLFWwindow *window, Camera *camera, 
 {
     if (game->getGameMode() == GAME)
     {
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        if (wasKeyJustPressed(GLFW_KEY_ESCAPE, window))
+        {
+            if (game->isGameplayUIModalOpen())
+            {
+                game->closeGameplayModalUI();
+                return;
+            }
             glfwSetWindowShouldClose(window, true);
+        }
 
         if (wasKeyJustPressed(GLFW_KEY_M, window))
         {

@@ -4,6 +4,35 @@
 #include "../tracy/public/tracy/Tracy.hpp"
 #include "../tracy/public/tracy/TracyOpenGL.hpp"
 
+#include <algorithm>
+#include <cctype>
+
+namespace
+{
+std::string formatUiLabel(std::string value)
+{
+    const size_t colonPos = value.find(':');
+    if (colonPos != std::string::npos)
+        value = value.substr(colonPos + 1);
+
+    bool capitalize = true;
+    for (char &c : value)
+    {
+        if (c == '_' || c == '-' || c == ':')
+        {
+            c = ' ';
+            capitalize = true;
+            continue;
+        }
+
+        c = capitalize ? static_cast<char>(std::toupper(static_cast<unsigned char>(c)))
+                       : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        capitalize = std::isspace(static_cast<unsigned char>(c)) != 0;
+    }
+    return value;
+}
+}
+
 // =============================================================================
 // CALLBACKS
 // =============================================================================
@@ -75,6 +104,24 @@ void UIManager::onExecuteTurnPressed(std::string value)
     passTargetEntity = nullptr;
 
     gameInstance->startTurnExecution();
+}
+
+void UIManager::onToggleInventoryPressed(std::string value)
+{
+    if (gameInstance)
+        gameInstance->toggleInventoryScreen();
+}
+
+void UIManager::onLootChestPressed(std::string value)
+{
+    if (gameInstance)
+        gameInstance->lootActiveChest();
+}
+
+void UIManager::onCloseGameplayPanelPressed(std::string value)
+{
+    if (gameInstance)
+        gameInstance->closeGameplayModalUI();
 }
 
 // =============================================================================
@@ -567,6 +614,282 @@ void UIManager::buildBottomCenterMenu()
     addText("End Turn", btnX + 15, endTurnY + 8, 0.4f, textWhite.r, textWhite.g, textWhite.b);
 }
 
+void UIManager::buildGameplayHUD()
+{
+    if (!gameInstance)
+        return;
+
+    const Player &player = gameInstance->getPrimaryPlayer();
+    const glm::vec3 panelColor(0.08f, 0.10f, 0.13f);
+    const glm::vec3 accent(0.92f, 0.82f, 0.30f);
+    const glm::vec3 white(1.0f, 1.0f, 1.0f);
+    const glm::vec3 muted(0.72f, 0.74f, 0.78f);
+
+    float statusX = 28.0f;
+    float statusY = 1260.0f;
+    float statusW = 320.0f;
+    float statusH = 132.0f;
+    addBox(statusW, statusH, statusX, statusY, panelColor.r, panelColor.g, panelColor.b, 0.88f);
+    addBox(statusW, 3.0f, statusX, statusY + statusH - 3.0f, accent.r, accent.g, accent.b, 1.0f);
+    addText(player.getName(), statusX + 18.0f, statusY + 92.0f, 0.46f, white.r, white.g, white.b);
+
+    float barX = statusX + 18.0f;
+    float healthBarY = statusY + 58.0f;
+    float shieldBarY = statusY + 26.0f;
+    float barW = statusW - 36.0f;
+    float barH = 16.0f;
+    float healthFill = player.getMaxHealth() > 0.0f ? player.getHealth() / player.getMaxHealth() : 0.0f;
+    float shieldFill = player.getMaxShields() > 0.0f ? player.getShields() / player.getMaxShields() : 0.0f;
+
+    addText("Health", barX, healthBarY + 20.0f, 0.28f, muted.r, muted.g, muted.b);
+    addBox(barW, barH, barX, healthBarY, 0.18f, 0.18f, 0.20f, 1.0f);
+    addBox(barW * std::clamp(healthFill, 0.0f, 1.0f), barH, barX, healthBarY, 0.78f, 0.20f, 0.20f, 1.0f);
+    addText(std::to_string(static_cast<int>(player.getHealth())) + " / " +
+                std::to_string(static_cast<int>(player.getMaxHealth())),
+            barX + 4.0f, healthBarY + 2.0f, 0.24f, white.r, white.g, white.b);
+
+    addText("Shields", barX, shieldBarY + 20.0f, 0.28f, muted.r, muted.g, muted.b);
+    addBox(barW, barH, barX, shieldBarY, 0.18f, 0.18f, 0.20f, 1.0f);
+    addBox(barW * std::clamp(shieldFill, 0.0f, 1.0f), barH, barX, shieldBarY, 0.22f, 0.55f, 0.92f, 1.0f);
+    addText(std::to_string(static_cast<int>(player.getShields())) + " / " +
+                std::to_string(static_cast<int>(player.getMaxShields())),
+            barX + 4.0f, shieldBarY + 2.0f, 0.24f, white.r, white.g, white.b);
+
+    float keysX = 1090.0f;
+    float keysY = 1228.0f;
+    float keysW = 322.0f;
+    float keysH = std::max(102.0f, 54.0f + 28.0f * static_cast<float>(player.getKeys().size()));
+    addBox(keysW, keysH, keysX, keysY, panelColor.r, panelColor.g, panelColor.b, 0.88f);
+    addBox(keysW, 3.0f, keysX, keysY + keysH - 3.0f, accent.r, accent.g, accent.b, 1.0f);
+    addText("Keys", keysX + 18.0f, keysY + keysH - 30.0f, 0.40f, white.r, white.g, white.b);
+
+    float keyRowY = keysY + keysH - 62.0f;
+    if (player.getKeys().empty())
+    {
+        addText("No keys collected", keysX + 18.0f, keyRowY, 0.28f, muted.r, muted.g, muted.b);
+    }
+    else
+    {
+        int shown = 0;
+        for (const auto &[keyId, count] : player.getKeys())
+        {
+            addText(formatUiLabel(keyId) + "  x" + std::to_string(count),
+                    keysX + 18.0f, keyRowY - shown * 28.0f, 0.28f, white.r, white.g, white.b);
+            shown++;
+            if (shown >= 6)
+                break;
+        }
+    }
+
+    const WeaponSlot *equipped = player.getEquippedWeapon();
+    std::string weaponLabel = equipped ? equipped->displayName : "Unarmed";
+    addBox(330.0f, 54.0f, 28.0f, 70.0f, panelColor.r, panelColor.g, panelColor.b, 0.82f);
+    addText("Weapon", 46.0f, 102.0f, 0.28f, muted.r, muted.g, muted.b);
+    addText(weaponLabel, 46.0f, 78.0f, 0.36f, white.r, white.g, white.b);
+
+    addBox(150.0f, 44.0f, 1262.0f, 70.0f, 0.14f, 0.18f, 0.24f, 0.90f,
+           [this](std::string v)
+           { onToggleInventoryPressed(v); });
+    addText("I  Inventory", 1282.0f, 84.0f, 0.34f, white.r, white.g, white.b);
+
+    std::string prompt = gameInstance->getGameplayInteractionPrompt();
+    if (!prompt.empty())
+    {
+        float promptW = 440.0f;
+        float promptH = 54.0f;
+        float promptX = (1440.0f - promptW) * 0.5f;
+        float promptY = 84.0f;
+        addBox(promptW, promptH, promptX, promptY, panelColor.r, panelColor.g, panelColor.b, 0.86f);
+        addBox(promptW, 3.0f, promptX, promptY + promptH - 3.0f, accent.r, accent.g, accent.b, 1.0f);
+        addText(prompt, promptX + 20.0f, promptY + 16.0f, 0.34f, white.r, white.g, white.b);
+    }
+
+    addText("1 Revolver  |  2 Sword  |  Shift Run  |  Ctrl Crouch  |  M Engine", 28.0f, 28.0f, 0.24f,
+            muted.r, muted.g, muted.b);
+}
+
+void UIManager::buildInventoryPanel()
+{
+    if (!gameInstance)
+        return;
+
+    const Player &player = gameInstance->getPrimaryPlayer();
+    const glm::vec3 overlay(0.02f, 0.03f, 0.05f);
+    const glm::vec3 panel(0.08f, 0.10f, 0.13f);
+    const glm::vec3 accent(0.92f, 0.82f, 0.30f);
+    const glm::vec3 white(1.0f, 1.0f, 1.0f);
+    const glm::vec3 muted(0.72f, 0.74f, 0.78f);
+
+    addBox(1440.0f, 1440.0f, 0.0f, 0.0f, overlay.r, overlay.g, overlay.b, 0.62f);
+
+    float panelW = 900.0f;
+    float panelH = 860.0f;
+    float panelX = (1440.0f - panelW) * 0.5f;
+    float panelY = (1440.0f - panelH) * 0.5f;
+    addBox(panelW, panelH, panelX, panelY, panel.r, panel.g, panel.b, 0.96f);
+    addBox(panelW, 3.0f, panelX, panelY + panelH - 3.0f, accent.r, accent.g, accent.b, 1.0f);
+    addText("Inventory", panelX + 28.0f, panelY + panelH - 46.0f, 0.62f, white.r, white.g, white.b);
+    addText("ESC or I to close", panelX + 30.0f, panelY + panelH - 82.0f, 0.24f, muted.r, muted.g, muted.b);
+
+    addBox(120.0f, 42.0f, panelX + panelW - 150.0f, panelY + panelH - 70.0f,
+           0.22f, 0.18f, 0.18f, 1.0f,
+           [this](std::string v)
+           { onCloseGameplayPanelPressed(v); });
+    addText("Close", panelX + panelW - 122.0f, panelY + panelH - 58.0f, 0.32f, white.r, white.g, white.b);
+
+    float leftX = panelX + 32.0f;
+    float rightX = panelX + panelW * 0.56f;
+    float topY = panelY + panelH - 150.0f;
+
+    addText("Vitals", leftX, topY, 0.40f, accent.r, accent.g, accent.b);
+    addText("Health: " + std::to_string(static_cast<int>(player.getHealth())) + " / " +
+                std::to_string(static_cast<int>(player.getMaxHealth())),
+            leftX, topY - 42.0f, 0.30f, white.r, white.g, white.b);
+    addText("Shields: " + std::to_string(static_cast<int>(player.getShields())) + " / " +
+                std::to_string(static_cast<int>(player.getMaxShields())),
+            leftX, topY - 76.0f, 0.30f, white.r, white.g, white.b);
+
+    addText("Weapons", leftX, topY - 150.0f, 0.40f, accent.r, accent.g, accent.b);
+    float weaponY = topY - 192.0f;
+    if (player.getWeapons().empty())
+    {
+        addText("No weapons collected", leftX, weaponY, 0.28f, muted.r, muted.g, muted.b);
+    }
+    else
+    {
+        int shown = 0;
+        for (const auto &weapon : player.getWeapons())
+        {
+            std::string line = weapon.displayName;
+            if (weapon.equipped)
+                line += "  [Equipped]";
+            if (weapon.ammo >= 0)
+                line += "  Ammo " + std::to_string(weapon.ammo);
+            addText(line, leftX, weaponY - shown * 30.0f, 0.28f, white.r, white.g, white.b);
+            shown++;
+            if (shown >= 8)
+                break;
+        }
+    }
+
+    addText("Keys", rightX, topY, 0.40f, accent.r, accent.g, accent.b);
+    float keyY = topY - 42.0f;
+    if (player.getKeys().empty())
+    {
+        addText("No keys collected", rightX, keyY, 0.28f, muted.r, muted.g, muted.b);
+    }
+    else
+    {
+        int shown = 0;
+        for (const auto &[keyId, count] : player.getKeys())
+        {
+            addText(formatUiLabel(keyId) + "  x" + std::to_string(count),
+                    rightX, keyY - shown * 30.0f, 0.28f, white.r, white.g, white.b);
+            shown++;
+            if (shown >= 8)
+                break;
+        }
+    }
+
+    addText("Items", rightX, topY - 210.0f, 0.40f, accent.r, accent.g, accent.b);
+    float itemY = topY - 252.0f;
+    if (player.getInventory().empty())
+    {
+        addText("Inventory empty", rightX, itemY, 0.28f, muted.r, muted.g, muted.b);
+    }
+    else
+    {
+        int shown = 0;
+        for (const auto &item : player.getInventory())
+        {
+            addText(item.displayName + "  x" + std::to_string(item.count),
+                    rightX, itemY - shown * 30.0f, 0.28f, white.r, white.g, white.b);
+            shown++;
+            if (shown >= 10)
+                break;
+        }
+    }
+}
+
+void UIManager::buildChestLootPanel()
+{
+    if (!gameInstance)
+        return;
+
+    const glm::vec3 overlay(0.02f, 0.03f, 0.05f);
+    const glm::vec3 panel(0.08f, 0.10f, 0.13f);
+    const glm::vec3 accent(0.92f, 0.82f, 0.30f);
+    const glm::vec3 white(1.0f, 1.0f, 1.0f);
+    const glm::vec3 muted(0.72f, 0.74f, 0.78f);
+
+    addBox(1440.0f, 1440.0f, 0.0f, 0.0f, overlay.r, overlay.g, overlay.b, 0.54f);
+
+    float panelW = 640.0f;
+    float panelH = 420.0f;
+    float panelX = (1440.0f - panelW) * 0.5f;
+    float panelY = (1440.0f - panelH) * 0.5f;
+    addBox(panelW, panelH, panelX, panelY, panel.r, panel.g, panel.b, 0.96f);
+    addBox(panelW, 3.0f, panelX, panelY + panelH - 3.0f, accent.r, accent.g, accent.b, 1.0f);
+    addText("Chest Loot", panelX + 26.0f, panelY + panelH - 44.0f, 0.56f, white.r, white.g, white.b);
+    addText("E or button to take all", panelX + 28.0f, panelY + panelH - 80.0f, 0.24f, muted.r, muted.g, muted.b);
+
+    auto loot = gameInstance->getActiveChestLoot();
+    float listY = panelY + panelH - 132.0f;
+    if (loot.empty())
+    {
+        addText("Chest is empty", panelX + 28.0f, listY, 0.32f, muted.r, muted.g, muted.b);
+    }
+    else
+    {
+        int shown = 0;
+        for (const auto &item : loot)
+        {
+            addText("- " + formatUiLabel(item), panelX + 28.0f, listY - shown * 34.0f,
+                    0.32f, white.r, white.g, white.b);
+            shown++;
+            if (shown >= 7)
+                break;
+        }
+    }
+
+    addBox(190.0f, 46.0f, panelX + 26.0f, panelY + 28.0f,
+           0.18f, 0.32f, 0.20f, 1.0f,
+           [this](std::string v)
+           { onLootChestPressed(v); });
+    addText("Take All", panelX + 74.0f, panelY + 42.0f, 0.34f, white.r, white.g, white.b);
+
+    addBox(150.0f, 46.0f, panelX + panelW - 176.0f, panelY + 28.0f,
+           0.22f, 0.18f, 0.18f, 1.0f,
+           [this](std::string v)
+           { onCloseGameplayPanelPressed(v); });
+    addText("Close", panelX + panelW - 132.0f, panelY + 42.0f, 0.34f, white.r, white.g, white.b);
+}
+
+void UIManager::buildCurrentUI()
+{
+    clearUIElements();
+
+    if (!gameInstance)
+        return;
+
+    if (gameInstance->getGameMode() == GAME)
+    {
+        buildGameplayHUD();
+        if (gameInstance->isInventoryOpen())
+            buildInventoryPanel();
+        if (gameInstance->isChestOpen())
+            buildChestLootPanel();
+        return;
+    }
+
+    if (gameInstance->getGameMode() == ENGINE)
+    {
+        buildGameMenu();
+        buildActionBufferUI();
+        buildBottomCenterMenu();
+    }
+}
+
 // =============================================================================
 // MAIN RENDER LOOP
 // =============================================================================
@@ -574,9 +897,11 @@ void UIManager::renderAllUIElements(float mouseX, float mouseY)
 {
     ZoneScoped;
 
-    buildGameMenu();
-    buildActionBufferUI();
-    buildBottomCenterMenu();
+    buildCurrentUI();
+
+    bool mouseDown = window && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    bool justClicked = mouseDown && !leftMousePressedLastFrame;
+    leftMousePressedLastFrame = mouseDown;
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -590,12 +915,12 @@ void UIManager::renderAllUIElements(float mouseX, float mouseY)
             bool hovered = isMouseOver(mouseX, mouseY, element.width, element.height,
                                        element.x_pos, element.y_pos);
 
-            if (hovered && isPressed(element))
+            if (hovered && element.functionPtr && justClicked)
             {
                 executeUI(element);
             }
 
-            if (hovered)
+            if (hovered && element.functionPtr)
             {
                 // Highlight color when hovered
                 renderBoxScreen(element.x_pos, element.y_pos, element.width, element.height,

@@ -25,7 +25,8 @@ SceneObject makeSceneObject(const std::string &id,
                             const std::string &materialName,
                             const glm::vec3 &color,
                             float collisionRadius,
-                            bool gameEntity)
+                            bool gameEntity,
+                            const std::string &entityTag = "")
 {
     SceneObject obj;
     obj.id = id;
@@ -39,6 +40,7 @@ SceneObject makeSceneObject(const std::string &id,
     obj.color = color;
     obj.collisionRadius = collisionRadius;
     obj.gameEntity = gameEntity;
+    obj.entityTag = entityTag;
     return obj;
 }
 }
@@ -73,6 +75,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f),
         0.0f,
         false,
+        "",
         false,
         {}};
 
@@ -88,6 +91,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f, -0.35f, 0.0f),
         0.55f,
         false,
+        "",
         false,
         {}};
 
@@ -103,6 +107,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f, 0.35f, 0.0f),
         0.65f,
         true,
+        "enemy",
         false,
         {}};
 
@@ -122,6 +127,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f, 0.0f, 0.0f),
         0.0f,
         false,
+        "",
         true,
         torchLight};
 
@@ -141,6 +147,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f),
         0.0f,
         false,
+        "",
         true,
         lightOnly};
 
@@ -156,6 +163,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f, -0.45f, 0.0f),
         0.7f,
         false,
+        "",
         false,
         {}};
 
@@ -171,6 +179,7 @@ AsciiLevelBuildConfig AsciiLevelUtils::defaultDungeonConfig()
         glm::vec3(0.0f, 0.35f, 0.0f),
         0.0f,
         false,
+        "",
         false,
         {}};
 
@@ -316,7 +325,8 @@ AsciiLevelBuildResult AsciiLevelUtils::buildLevelFromText(const std::string &tex
                 def.materialName,
                 def.color,
                 def.collisionRadius,
-                def.gameEntity));
+                def.gameEntity,
+                def.entityTag));
 
             if (def.kind == AsciiLevelSymbolDef::Kind::Spawn)
                 result.playerSpawn = position;
@@ -362,7 +372,9 @@ nlohmann::json AsciiLevelUtils::buildJsonDocument(const AsciiLevelBuildResult &r
         entry["shader_name"] = obj.shader_name;
         if (!obj.materialName.empty())
             entry["material_name"] = obj.materialName;
-        if (obj.gameEntity)
+        if (!obj.entityTag.empty())
+            entry["entity"] = obj.entityTag;
+        else if (obj.gameEntity)
             entry["entity"] = obj.id;
         entry["position"] = {{"x", obj.position.x}, {"y", obj.position.y}, {"z", obj.position.z}};
         entry["rotation"] = {{"x", obj.rotation.x}, {"y", obj.rotation.y}, {"z", obj.rotation.z}};

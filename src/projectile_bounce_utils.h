@@ -22,7 +22,7 @@ struct ProjectileBounceConfig
     float restitution = 0.62f;
     float tangentialDamping = 0.92f;
     float minBounceSpeed = 6.0f;
-    float separationEpsilon = 0.08f;
+    float separationEpsilon = 0.12f;
 };
 
 class ProjectileBounceUtils

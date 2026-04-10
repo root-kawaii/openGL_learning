@@ -578,11 +578,11 @@ bool createModelPipeline(
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments    = &colorBlendAttachment;
 
-    // Push constant for per-object model matrix (64 bytes = 1 mat4)
+    // Push constant for per-object model matrix + tint (80 bytes)
     VkPushConstantRange pushRange{};
-    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushRange.offset     = 0;
-    pushRange.size       = sizeof(float) * 16; // mat4
+    pushRange.size       = sizeof(float) * 20; // mat4 + vec4
 
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1542,7 +1542,7 @@ bool createGridPipeline(
 // ─── PBR Pipeline (Phase 14) ─────────────────────────────────────────────────
 //
 // Cook-Torrance BRDF pipeline with normal mapping and PCF shadows.
-// Same vertex layout as model pipeline. Push constant: PBRPushConstant (80 bytes).
+// Same vertex layout as model pipeline. Push constant: PBRPushConstant (96 bytes).
 // Descriptor layout: FrameUBO (0), albedo (1), normal (2), metallic (3),
 //                    roughness (4), shadow (5), BoneUBO (6).
 
@@ -1650,11 +1650,11 @@ bool createPBRPipeline(
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments    = &colorBlendAttachment;
 
-    // Push constant: PBRPushConstant = mat4 (64) + float (4) + float (4) + uint (4) + uint (4) = 80 bytes
+    // Push constant: PBRPushConstant = mat4 (64) + float (4) + float (4) + uint (4) + uint (4) + vec4 (16) = 96 bytes
     VkPushConstantRange pushRange{};
     pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushRange.offset     = 0;
-    pushRange.size       = 80;
+    pushRange.size       = 96;
 
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

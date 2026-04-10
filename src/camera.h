@@ -100,20 +100,6 @@ public:
                 Pitch = -89.0f;
         }
 
-        if (gameMode)
-        {
-            float yawDelta = Yaw - gameModeYawCenter;
-            while (yawDelta > 180.0f)
-                yawDelta -= 360.0f;
-            while (yawDelta < -180.0f)
-                yawDelta += 360.0f;
-
-            if (yawDelta > gameModeYawLimit)
-                Yaw = gameModeYawCenter + gameModeYawLimit;
-            if (yawDelta < -gameModeYawLimit)
-                Yaw = gameModeYawCenter - gameModeYawLimit;
-        }
-
         // update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
     }

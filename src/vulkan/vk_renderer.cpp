@@ -2,6 +2,7 @@
 #include "vk_renderer.h"
 #include "vk_pipeline.h"
 #include "vk_texture.h"
+#include "../game.h"
 #include "../model.h"
 #include "../scene.h"
 #include <assimp/scene.h>    // aiTexture — for embedded GLB texture access
@@ -31,6 +32,43 @@ struct QuadMVPUniform {
     glm::mat4 view;
     glm::mat4 proj;
 };
+
+namespace
+{
+bool shouldRenderLegacyGroundPlane(Scene *scene)
+{
+    if (!scene)
+        return true;
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!obj)
+            continue;
+
+        std::string loweredName = obj->name;
+        std::transform(
+            loweredName.begin(),
+            loweredName.end(),
+            loweredName.begin(),
+            [](unsigned char c)
+            { return static_cast<char>(std::tolower(c)); });
+
+        if (loweredName.find("floor") == std::string::npos &&
+            loweredName.find("ground") == std::string::npos)
+            continue;
+
+        const AABB aabb = obj->GetWorldAABB();
+        if (!aabb.IsValid())
+            continue;
+
+        const glm::vec3 size = aabb.GetSize();
+        if (size.x > 10.0f && size.z > 10.0f)
+            return false;
+    }
+
+    return true;
+}
+}
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -1000,7 +1038,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         }
 
         // Ground plane in shadow pass (identity transform)
-        if (groundVertexBuffer.buffer) {
+        if (groundVertexBuffer.buffer && shouldRenderLegacyGroundPlane(currentScene)) {
             ModelPushConstant groundPush{};
             groundPush.model = glm::mat4(1.0f);
             vkCmdPushConstants(cmd, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
@@ -1159,6 +1197,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
                     pbrPush.metallicVal  = 1.0f;
                     pbrPush.roughnessVal = 1.0f;
                     pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
+                    pbrPush.albedoTint   = glm::vec4(obj->color, 1.0f);
                     vkCmdPushConstants(cmd, pbrPipelineLayout,
                                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(PBRPushConstant), &pbrPush);
@@ -1173,8 +1212,10 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
                                             0, 1, &ds, 0, nullptr);
 
                     ModelPushConstant push{};
-                    push.model = objTransform;
-                    vkCmdPushConstants(cmd, modelPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                    push.model      = objTransform;
+                    push.albedoTint = glm::vec4(obj->color, 1.0f);
+                    vkCmdPushConstants(cmd, modelPipelineLayout,
+                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(ModelPushConstant), &push);
                 }
                 uint32_t ic = meshGPU.buffers->getIndexCount();
@@ -1189,7 +1230,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         }  // end obj loop
 
         // Ground plane — always simple pipeline
-        if (groundVertexBuffer.buffer) {
+        if (groundVertexBuffer.buffer && shouldRenderLegacyGroundPlane(currentScene)) {
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
             ModelPushConstant groundPush{};
             groundPush.model = glm::mat4(1.0f);
@@ -1349,7 +1390,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
             }
 
             // Draw ground plane (ID = 1)
-            if (groundVertexBuffer.buffer) {
+            if (groundVertexBuffer.buffer && shouldRenderLegacyGroundPlane(currentScene)) {
                 IDPushConstant groundPush{};
                 groundPush.model    = glm::mat4(1.0f);
                 groundPush.objectID = 1;
@@ -1431,81 +1472,87 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
         ImGuizmo::SetOrthographic(false);
 
-        ImGui::Begin("Vulkan Info");
-        ImGui::Text("Renderer: Vulkan");
+        bool showRendererDebugUi = true;
+        if (currentScene && currentScene->getGame())
+            showRendererDebugUi = currentScene->getGame()->getGameMode() == ENGINE;
 
-        // ── Performance stats ───────────────────────────────────────────────
-        ImGui::Separator();
-        ImGui::Text("FPS: %.1f  (%.2f ms)", displayFPS, displayFPS > 0 ? 1000.0f / displayFPS : 0.0f);
-        ImGui::Text("Draw calls: %u", vkDrawCalls);
-        ImGui::Text("Triangles:  %u", trianglesDrawn);
-        ImGui::Text("Vertices:   %u", verticesDrawn);
+        if (showRendererDebugUi) {
+            ImGui::Begin("Vulkan Info");
+            ImGui::Text("Renderer: Vulkan");
 
-        // ── MSAA ───────────────────────────────────────────────────────────
-        ImGui::Separator();
-        {
-            bool msaaOn = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
-            if (ImGui::Checkbox("MSAA", &msaaOn))
-                pendingMSAAToggle = true;
-            ImGui::SameLine();
-            ImGui::Text("(%dx)", static_cast<int>(msaaSamples));
-        }
-
-        // ── Scene stats ────────────────────────────────────────────────────
-        if (!sceneModels.empty()) {
+            // ── Performance stats ───────────────────────────────────────────────
             ImGui::Separator();
-            int totalMeshes = 0, pbrCount = 0;
-            for (auto& [model, data] : sceneModels)
-                for (const auto& m : data->meshes) { totalMeshes++; if (m.hasPBR) pbrCount++; }
-            ImGui::Text("Models: %zu  Meshes: %d  PBR: %d", sceneModels.size(), totalMeshes, pbrCount);
-            ImGui::Text("Scene objects: %zu", currentScene ? currentScene->getGameObjects().size() : 0);
+            ImGui::Text("FPS: %.1f  (%.2f ms)", displayFPS, displayFPS > 0 ? 1000.0f / displayFPS : 0.0f);
+            ImGui::Text("Draw calls: %u", vkDrawCalls);
+            ImGui::Text("Triangles:  %u", trianglesDrawn);
+            ImGui::Text("Vertices:   %u", verticesDrawn);
+
+            // ── MSAA ───────────────────────────────────────────────────────────
+            ImGui::Separator();
+            {
+                bool msaaOn = (msaaSamples != VK_SAMPLE_COUNT_1_BIT);
+                if (ImGui::Checkbox("MSAA", &msaaOn))
+                    pendingMSAAToggle = true;
+                ImGui::SameLine();
+                ImGui::Text("(%dx)", static_cast<int>(msaaSamples));
+            }
+
+            // ── Scene stats ────────────────────────────────────────────────────
+            if (!sceneModels.empty()) {
+                ImGui::Separator();
+                int totalMeshes = 0, pbrCount = 0;
+                for (auto& [model, data] : sceneModels)
+                    for (const auto& m : data->meshes) { totalMeshes++; if (m.hasPBR) pbrCount++; }
+                ImGui::Text("Models: %zu  Meshes: %d  PBR: %d", sceneModels.size(), totalMeshes, pbrCount);
+                ImGui::Text("Scene objects: %zu", currentScene ? currentScene->getGameObjects().size() : 0);
+            }
+
+            // ── Scene toggles ──────────────────────────────────────────────────
+            ImGui::Separator();
+            ImGui::Checkbox("Show Grid", &showGrid);
+            ImGui::Checkbox("Show Grass", &showGrass);
+            if (grassPipeline)
+                ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Grass: %u inst, %u idx", grassInstanceCount, grassBladeIndexCount);
+            else
+                ImGui::TextColored({1.0f,0.4f,0.4f,1.0f}, "Grass: pipeline NULL");
+            ImGui::Checkbox("Show Water", &showWater);
+            ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
+
+            // ── Pixel art ──────────────────────────────────────────────────────
+            ImGui::Separator();
+            ImGui::Checkbox("Pixel Art", &pixelArtEnabled);
+            if (pixelArtEnabled) {
+                ImGui::SameLine();
+                ImGui::Text("(%dx)", pixelArtScale);
+                ImGui::SliderFloat("Palette", &paletteSize, 4.0f, 64.0f, "%.0f");
+            }
+
+            // ── Picking + gizmo ────────────────────────────────────────────────
+            ImGui::Separator();
+            ImGui::Text("Click to pick entity");
+            if (selectedObjectIndex >= 0) {
+                ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Selected: obj %d", selectedObjectIndex);
+                // Gizmo operation selector
+                if (ImGui::RadioButton("Translate", gizmoOp == GizmoOp::Translate)) gizmoOp = GizmoOp::Translate;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Rotate",    gizmoOp == GizmoOp::Rotate))    gizmoOp = GizmoOp::Rotate;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Scale",     gizmoOp == GizmoOp::Scale))     gizmoOp = GizmoOp::Scale;
+                if (ImGui::RadioButton("World",     gizmoWorld))  gizmoWorld = true;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Local",     !gizmoWorld)) gizmoWorld = false;
+            } else {
+                ImGui::TextDisabled("No entity selected");
+            }
+
+            ImGui::End();
         }
-
-        // ── Scene toggles ──────────────────────────────────────────────────
-        ImGui::Separator();
-        ImGui::Checkbox("Show Grid", &showGrid);
-        ImGui::Checkbox("Show Grass", &showGrass);
-        if (grassPipeline)
-            ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Grass: %u inst, %u idx", grassInstanceCount, grassBladeIndexCount);
-        else
-            ImGui::TextColored({1.0f,0.4f,0.4f,1.0f}, "Grass: pipeline NULL");
-        ImGui::Checkbox("Show Water", &showWater);
-        ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
-
-        // ── Pixel art ──────────────────────────────────────────────────────
-        ImGui::Separator();
-        ImGui::Checkbox("Pixel Art", &pixelArtEnabled);
-        if (pixelArtEnabled) {
-            ImGui::SameLine();
-            ImGui::Text("(%dx)", pixelArtScale);
-            ImGui::SliderFloat("Palette", &paletteSize, 4.0f, 64.0f, "%.0f");
-        }
-
-        // ── Picking + gizmo ────────────────────────────────────────────────
-        ImGui::Separator();
-        ImGui::Text("Click to pick entity");
-        if (selectedObjectIndex >= 0) {
-            ImGui::TextColored({0.4f,1.0f,0.4f,1.0f}, "Selected: obj %d", selectedObjectIndex);
-            // Gizmo operation selector
-            if (ImGui::RadioButton("Translate", gizmoOp == GizmoOp::Translate)) gizmoOp = GizmoOp::Translate;
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Rotate",    gizmoOp == GizmoOp::Rotate))    gizmoOp = GizmoOp::Rotate;
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Scale",     gizmoOp == GizmoOp::Scale))     gizmoOp = GizmoOp::Scale;
-            if (ImGui::RadioButton("World",     gizmoWorld))  gizmoWorld = true;
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Local",     !gizmoWorld)) gizmoWorld = false;
-        } else {
-            ImGui::TextDisabled("No entity selected");
-        }
-
-        ImGui::End();
 
         // ── External ENGINE / UI / pause content from main.cpp ────────────
         if (engineCallback) engineCallback();
 
         // ── ImGuizmo entity manipulation ───────────────────────────────────
-        if (selectedObjectIndex >= 0 && currentScene) {
+        if (showRendererDebugUi && selectedObjectIndex >= 0 && currentScene) {
             auto objs = currentScene->getGameObjects();
             if (selectedObjectIndex < static_cast<int>(objs.size())) {
                 auto& obj = objs[selectedObjectIndex];
@@ -4510,7 +4557,7 @@ uint32_t VulkanRenderer::getObjectIdAtPixel(int x, int y) {
     }
 
     // Draw ground plane (ID = 1)
-    if (groundVertexBuffer.buffer) {
+    if (groundVertexBuffer.buffer && shouldRenderLegacyGroundPlane(currentScene)) {
         IDPushConstant groundPush{};
         groundPush.model    = glm::mat4(1.0f);
         groundPush.objectID = 1;

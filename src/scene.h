@@ -140,6 +140,7 @@ public:
   }
 
   void setGame(Game *game) { gameInstance = game; }
+  Game *getGame() const { return gameInstance; }
   void setUIManager(UIManager *ui) { uiManager = ui; }
 
   // Occupancy map for entity collision tracking

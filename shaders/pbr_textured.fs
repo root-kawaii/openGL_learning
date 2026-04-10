@@ -19,6 +19,7 @@ uniform sampler2D normalMap;
 uniform sampler2D metallicMap;   
 uniform sampler2D roughnessMap;  
 uniform sampler2D aoMap;         
+uniform vec3 objectColor;
 
 // ── 3. LIGHTS AND CAMERA ─────────────────────────────────────────────────────
 
@@ -135,7 +136,7 @@ void main()
     uv = fract(uv);
 
     // ── 6b. Material Sampling ──
-    vec3  albedo    = pow(texture(albedoMap, uv).rgb, vec3(2.2));
+    vec3  albedo    = pow(texture(albedoMap, uv).rgb, vec3(2.2)) * objectColor;
     vec3  tangentNormal = texture(normalMap, uv).rgb * 2.0 - 1.0;
     vec3  N = (tangentNormal.z > 0.1) ? normalize(fs_in.TBN * tangentNormal) : normalize(fs_in.Normal);
 

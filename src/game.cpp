@@ -41,6 +41,72 @@ namespace
             { return static_cast<char>(std::tolower(c)); });
         return value;
     }
+
+    std::string formatGameplayLabel(std::string value)
+    {
+        const size_t colonPos = value.find(':');
+        if (colonPos != std::string::npos)
+            value = value.substr(colonPos + 1);
+
+        bool capitalize = true;
+        for (char &c : value)
+        {
+            if (c == '_' || c == '-')
+            {
+                c = ' ';
+                capitalize = true;
+                continue;
+            }
+            c = capitalize ? static_cast<char>(std::toupper(static_cast<unsigned char>(c)))
+                           : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            capitalize = std::isspace(static_cast<unsigned char>(c)) != 0;
+        }
+        return value;
+    }
+
+    std::optional<glm::vec3> findKeyColorForId(Scene *scene, const std::string &keyId)
+    {
+        if (!scene || keyId.empty())
+            return std::nullopt;
+
+        for (const auto &obj : scene->getGameObjects())
+        {
+            if (!obj || obj->gameplayType != "key")
+                continue;
+
+            const std::string objKeyId = obj->keyId.empty() ? obj->name : obj->keyId;
+            if (objKeyId == keyId)
+                return obj->color;
+        }
+
+        return std::nullopt;
+    }
+
+    float findCeilingClearanceY(Scene *scene)
+    {
+        if (!scene)
+            return 8.0f;
+
+        float highestCeilingTop = -std::numeric_limits<float>::infinity();
+        for (const auto &obj : scene->getGameObjects())
+        {
+            if (!obj)
+                continue;
+
+            const std::string loweredName = toLowerCopy(obj->name);
+            if (loweredName.find("ceiling") == std::string::npos)
+                continue;
+
+            const AABB aabb = obj->GetWorldAABB();
+            if (aabb.IsValid())
+                highestCeilingTop = std::max(highestCeilingTop, aabb.max.y);
+        }
+
+        if (highestCeilingTop > -std::numeric_limits<float>::infinity())
+            return highestCeilingTop;
+
+        return 8.0f;
+    }
 }
 
 bool Game::isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const
@@ -60,12 +126,337 @@ bool Game::isFirstPersonSolid(const std::shared_ptr<GameObject> &obj) const
     if (obj->name == "ball")
         return false;
 
+    if (isGameplayObjectHidden(obj))
+        return false;
+
+    if (obj->gameplayType == "door" && isGameplayDoorOpen(obj))
+        return false;
+
     AABB aabb = obj->GetWorldAABB();
     if (!aabb.IsValid())
         return false;
 
     glm::vec3 size = aabb.GetSize();
     return size.x > 0.05f && size.y > 0.05f && size.z > 0.05f;
+}
+
+GameplayObjectRuntimeState &Game::getGameplayObjectState(const std::shared_ptr<GameObject> &obj)
+{
+    return gameplayObjectStates[obj ? static_cast<uint32_t>(obj->ID) : 0];
+}
+
+const GameplayObjectRuntimeState *Game::findGameplayObjectState(const std::shared_ptr<GameObject> &obj) const
+{
+    if (!obj)
+        return nullptr;
+
+    auto it = gameplayObjectStates.find(static_cast<uint32_t>(obj->ID));
+    return it != gameplayObjectStates.end() ? &it->second : nullptr;
+}
+
+bool Game::isGameplayInteractable(const std::shared_ptr<GameObject> &obj) const
+{
+    return obj &&
+           (obj->gameplayType == "key" ||
+            obj->gameplayType == "door" ||
+            obj->gameplayType == "chest");
+}
+
+bool Game::isGameplayObjectHidden(const std::shared_ptr<GameObject> &obj) const
+{
+    const GameplayObjectRuntimeState *state = findGameplayObjectState(obj);
+    return state && state->collected;
+}
+
+bool Game::isGameplayDoorOpen(const std::shared_ptr<GameObject> &obj) const
+{
+    const GameplayObjectRuntimeState *state = findGameplayObjectState(obj);
+    return state && state->unlocked;
+}
+
+void Game::setGameplayCursorCaptured(bool captured)
+{
+    GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+    if (!activeWindow)
+        return;
+
+    glfwSetInputMode(activeWindow, GLFW_CURSOR, captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    firstMouse = true;
+}
+
+void Game::initializeGameplayObjects()
+{
+    gameplayObjectStates.clear();
+    focusedGameplayObject.reset();
+    activeChestObject.reset();
+    gameplayInteractionPrompt.clear();
+    inventoryScreenOpen = false;
+
+    if (!scene)
+        return;
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!isGameplayInteractable(obj))
+            continue;
+
+        gameplayObjectStates.emplace(static_cast<uint32_t>(obj->ID), GameplayObjectRuntimeState{});
+        obj->ClearTransformOverride();
+    }
+}
+
+void Game::updateGameplayObjectVisuals()
+{
+    if (!scene)
+        return;
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!isGameplayInteractable(obj))
+            continue;
+
+        const GameplayObjectRuntimeState *state = findGameplayObjectState(obj);
+        if (!state)
+            continue;
+
+        if (obj->gameplayType == "door")
+        {
+            const std::string requiredKey = obj->requiresKeyId.empty() ? obj->keyId : obj->requiresKeyId;
+            if (auto keyColor = findKeyColorForId(scene.get(), requiredKey))
+                obj->color = *keyColor;
+        }
+
+        if (state->collected)
+        {
+            glm::mat4 hiddenTransform =
+                glm::translate(glm::mat4(1.0f), glm::vec3(obj->position.x, -1000.0f, obj->position.z)) *
+                glm::scale(glm::mat4(1.0f), glm::vec3(0.001f));
+            obj->SetTransformOverride(hiddenTransform);
+            continue;
+        }
+
+        if (obj->gameplayType == "door" && state->unlocked)
+        {
+            const AABB aabb = obj->GetWorldAABB();
+            const float ceilingTop = findCeilingClearanceY(scene.get());
+            const float doorHalfHeight = aabb.IsValid() ? (aabb.GetSize().y * 0.5f)
+                                                        : std::max(0.5f, obj->scale.y * 0.5f);
+            const float targetCenterY = std::max(obj->position.y + 2.5f, ceilingTop + doorHalfHeight + 1.0f);
+            const float lift = targetCenterY - obj->position.y;
+            glm::mat4 openTransform =
+                glm::translate(glm::mat4(1.0f), obj->position + glm::vec3(0.0f, lift, 0.0f)) *
+                glm::mat4_cast(glm::quat(obj->rotation)) *
+                glm::scale(glm::mat4(1.0f), obj->scale);
+            obj->SetTransformOverride(openTransform);
+            continue;
+        }
+
+        obj->ClearTransformOverride();
+    }
+}
+
+std::shared_ptr<GameObject> Game::findFocusedGameplayObject() const
+{
+    if (!scene)
+        return nullptr;
+
+    std::shared_ptr<GameObject> bestObject = nullptr;
+    float bestScore = -std::numeric_limits<float>::infinity();
+
+    for (const auto &obj : scene->getGameObjects())
+    {
+        if (!isGameplayInteractable(obj))
+            continue;
+        if (isGameplayObjectHidden(obj))
+            continue;
+        if (obj->gameplayType == "door" && isGameplayDoorOpen(obj))
+            continue;
+
+        glm::vec3 center = obj->GetWorldAABB().IsValid() ? obj->GetWorldAABB().GetCenter() : obj->position;
+        glm::vec3 toObject = center - camera.Position;
+        float distance = glm::length(toObject);
+        if (distance > 3.2f || distance < 1e-4f)
+            continue;
+
+        glm::vec3 direction = glm::normalize(toObject);
+        float facing = glm::dot(camera.Front, direction);
+        if (facing < 0.25f)
+            continue;
+
+        float score = facing * 3.0f - distance * 0.35f;
+        if (score > bestScore)
+        {
+            bestScore = score;
+            bestObject = obj;
+        }
+    }
+
+    return bestObject;
+}
+
+void Game::pickupKeyObject(const std::shared_ptr<GameObject> &obj)
+{
+    if (!obj)
+        return;
+
+    auto &player = getPrimaryPlayer();
+    const std::string keyId = obj->keyId.empty() ? obj->name : obj->keyId;
+    player.addKey(keyId);
+    getGameplayObjectState(obj).collected = true;
+    gameplayInteractionPrompt = "Picked up " + formatGameplayLabel(keyId);
+    updateGameplayObjectVisuals();
+}
+
+void Game::tryOpenDoor(const std::shared_ptr<GameObject> &obj)
+{
+    if (!obj)
+        return;
+
+    auto &player = getPrimaryPlayer();
+    auto &state = getGameplayObjectState(obj);
+    const std::string requiredKey = obj->requiresKeyId.empty() ? obj->keyId : obj->requiresKeyId;
+    if (requiredKey.empty() || player.hasKey(requiredKey))
+    {
+        state.unlocked = true;
+        state.opened = true;
+        gameplayInteractionPrompt = "Opened " + formatGameplayLabel(obj->name);
+        emitGameplayNoise(obj->position, 0.8f, "door_open", 0.24f, getPrimaryPlayerId());
+        updateGameplayObjectVisuals();
+    }
+    else
+    {
+        gameplayInteractionPrompt = "Needs " + formatGameplayLabel(requiredKey);
+    }
+}
+
+void Game::openChestUI(const std::shared_ptr<GameObject> &obj)
+{
+    if (!obj)
+        return;
+
+    activeChestObject = obj;
+    inventoryScreenOpen = false;
+    setGameplayCursorCaptured(false);
+}
+
+void Game::closeChestUI()
+{
+    activeChestObject.reset();
+    if (mode == GAME)
+        setGameplayCursorCaptured(true);
+}
+
+void Game::lootActiveChest()
+{
+    if (!activeChestObject)
+        return;
+
+    auto &state = getGameplayObjectState(activeChestObject);
+    if (state.looted)
+    {
+        closeChestUI();
+        return;
+    }
+
+    auto &player = getPrimaryPlayer();
+    for (const std::string &loot : activeChestObject->lootItems)
+    {
+        if (loot.rfind("key:", 0) == 0)
+        {
+            player.addKey(loot.substr(4));
+        }
+        else if (loot.rfind("weapon:", 0) == 0)
+        {
+            player.addWeapon(loot.substr(7), -1, false);
+        }
+        else
+        {
+            player.addItem(loot);
+        }
+    }
+
+    state.opened = true;
+    state.looted = true;
+    gameplayInteractionPrompt = "Looted " + formatGameplayLabel(activeChestObject->name);
+    emitGameplayNoise(activeChestObject->position, 0.45f, "chest_loot", 0.20f, getPrimaryPlayerId());
+    closeChestUI();
+}
+
+void Game::toggleInventoryScreen()
+{
+    inventoryScreenOpen = !inventoryScreenOpen;
+    if (inventoryScreenOpen)
+        activeChestObject.reset();
+    setGameplayCursorCaptured(!(inventoryScreenOpen || activeChestObject));
+}
+
+void Game::closeGameplayModalUI()
+{
+    inventoryScreenOpen = false;
+    activeChestObject.reset();
+    if (mode == GAME)
+        setGameplayCursorCaptured(true);
+}
+
+std::vector<std::string> Game::getActiveChestLoot() const
+{
+    if (!activeChestObject)
+        return {};
+
+    const GameplayObjectRuntimeState *state = findGameplayObjectState(activeChestObject);
+    if (state && state->looted)
+        return {};
+
+    return activeChestObject->lootItems;
+}
+
+void Game::interactWithFocusedGameplayObject()
+{
+    if (!focusedGameplayObject)
+        return;
+
+    if (focusedGameplayObject->gameplayType == "key")
+        pickupKeyObject(focusedGameplayObject);
+    else if (focusedGameplayObject->gameplayType == "door")
+        tryOpenDoor(focusedGameplayObject);
+    else if (focusedGameplayObject->gameplayType == "chest")
+        openChestUI(focusedGameplayObject);
+}
+
+void Game::updateGameplayInteractions()
+{
+    focusedGameplayObject = nullptr;
+    gameplayInteractionPrompt.clear();
+
+    if (mode != GAME || !scene)
+        return;
+
+    updateGameplayObjectVisuals();
+
+    if (isGameplayUIModalOpen())
+        return;
+
+    focusedGameplayObject = findFocusedGameplayObject();
+    if (!focusedGameplayObject)
+        return;
+
+    if (focusedGameplayObject->gameplayType == "key")
+    {
+        const std::string keyLabel = focusedGameplayObject->keyId.empty() ? focusedGameplayObject->name : focusedGameplayObject->keyId;
+        gameplayInteractionPrompt = "E Pick Up " + formatGameplayLabel(keyLabel);
+    }
+    else if (focusedGameplayObject->gameplayType == "door")
+    {
+        const std::string requiredKey = focusedGameplayObject->requiresKeyId.empty() ? focusedGameplayObject->keyId : focusedGameplayObject->requiresKeyId;
+        gameplayInteractionPrompt = requiredKey.empty()
+                                        ? "E Open Door"
+                                        : "E Unlock Door (" + formatGameplayLabel(requiredKey) + ")";
+    }
+    else if (focusedGameplayObject->gameplayType == "chest")
+    {
+        const GameplayObjectRuntimeState *state = findGameplayObjectState(focusedGameplayObject);
+        gameplayInteractionPrompt = (state && state->looted) ? "Chest Empty" : "E Open Chest";
+    }
 }
 
 std::optional<glm::vec3> Game::findGameplaySpawnPoint() const
@@ -82,11 +473,20 @@ void Game::enterFirstPersonGameMode()
     firstPersonEnabled = true;
     firstPersonGrounded = false;
     firstPersonJumpPressedLastFrame = false;
+    firstPersonCrouching = false;
     firstPersonVerticalVelocity = 0.0f;
     firstPersonAimBlend = 0.0f;
     firstPersonShootCooldown = 0.0f;
     firstPersonShootAnimTime = 0.0f;
+    firstPersonSwordSwingTime = 0.0f;
+    firstPersonSwordCooldown = 0.0f;
+    firstPersonSwordBlocking = false;
+    firstPersonNoiseLevel = 0.0f;
+    firstPersonFootstepLoopFade = 0.0f;
+    firstPersonMovementMode = FirstPersonMovementMode::Idle;
+    gameplayNoiseEvents.clear();
     clearFirstPersonProjectiles();
+    initializeGameplayObjects();
 
     if (auto spawn = findGameplaySpawnPoint())
     {
@@ -101,7 +501,7 @@ void Game::enterFirstPersonGameMode()
 
     GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
     if (activeWindow)
-        glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        glfwSetInputMode(activeWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     bool grounded = false;
     float groundHeight = -std::numeric_limits<float>::infinity();
@@ -111,6 +511,7 @@ void Game::enterFirstPersonGameMode()
     previousAudioListenerPosition = camera.Position;
     audioListenerPrimed = true;
     audioManager.updateListener(camera.Position, camera.Front, glm::vec3(0.0f), camera.Up);
+    syncEquippedFirstPersonWeapon();
 }
 
 glm::vec3 Game::resolveFirstPersonCollisions(const glm::vec3 &targetCameraPos,
@@ -236,6 +637,14 @@ void Game::updateFirstPersonController()
     if (!activeWindow)
         return;
 
+    if (isGameplayUIModalOpen())
+    {
+        firstPersonMovementMode = FirstPersonMovementMode::Idle;
+        firstPersonNoiseLevel = 0.0f;
+        updateFirstPersonMovementAudio(false, FirstPersonMovementMode::Idle);
+        return;
+    }
+
     glm::vec3 flatFront(camera.Front.x, 0.0f, camera.Front.z);
     if (glm::length(flatFront) < 1e-4f)
         flatFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -257,11 +666,33 @@ void Game::updateFirstPersonController()
     if (glm::length(moveDir) > 1e-4f)
         moveDir = glm::normalize(moveDir);
 
+    const bool crouchHeld =
+        glfwGetKey(activeWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+        glfwGetKey(activeWindow, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+    const bool runHeld =
+        glfwGetKey(activeWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+        glfwGetKey(activeWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+
+    firstPersonCrouching = crouchHeld;
     float speed = firstPersonMoveSpeed;
-    if (glfwGetKey(activeWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-        glfwGetKey(activeWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)
+    FirstPersonMovementMode movementMode = FirstPersonMovementMode::Idle;
+    const bool wasGrounded = firstPersonGrounded;
+    const float preStepVerticalVelocity = firstPersonVerticalVelocity;
+    if (crouchHeld)
+    {
+        speed *= 0.45f;
+        if (glm::length(moveDir) > 1e-4f)
+            movementMode = FirstPersonMovementMode::CrouchWalk;
+    }
+    else if (runHeld)
     {
         speed *= 1.35f;
+        if (glm::length(moveDir) > 1e-4f)
+            movementMode = FirstPersonMovementMode::Run;
+    }
+    else if (glm::length(moveDir) > 1e-4f)
+    {
+        movementMode = FirstPersonMovementMode::Walk;
     }
 
     bool jumpPressed = glfwGetKey(activeWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -269,6 +700,7 @@ void Game::updateFirstPersonController()
     {
         firstPersonVerticalVelocity = firstPersonJumpVelocity;
         firstPersonGrounded = false;
+        emitGameplayNoise(camera.Position, crouchHeld ? 0.18f : 0.34f, "player_jump", 0.24f, getPrimaryPlayerId());
     }
     firstPersonJumpPressedLastFrame = jumpPressed;
 
@@ -286,6 +718,13 @@ void Game::updateFirstPersonController()
     if (grounded && firstPersonVerticalVelocity <= 0.0f)
     {
         firstPersonVerticalVelocity = 0.0f;
+        if (!wasGrounded && preStepVerticalVelocity < -1.25f)
+        {
+            float landingLoudness = std::clamp(std::abs(preStepVerticalVelocity) / 7.5f, 0.18f, 0.9f);
+            if (firstPersonCrouching)
+                landingLoudness *= 0.55f;
+            emitGameplayNoise(camera.Position, landingLoudness, "player_land", 0.28f, getPrimaryPlayerId());
+        }
         if (camera.Position.y > resolved.y + 0.001f)
         {
             float landingAlpha = std::clamp(deltaTime * 18.0f, 0.0f, 1.0f);
@@ -298,33 +737,145 @@ void Game::updateFirstPersonController()
     firstPersonGrounded = grounded;
     camera.Position = resolved;
     camera.Position.y = finalY;
+
+    const bool movingOnGround =
+        grounded &&
+        glm::length(moveDir) > 1e-4f &&
+        speed > 0.01f &&
+        std::abs(firstPersonVerticalVelocity) < 0.5f;
+    firstPersonMovementMode = movingOnGround ? movementMode : FirstPersonMovementMode::Idle;
+    updateFirstPersonMovementAudio(movingOnGround, firstPersonMovementMode);
 }
 
 void Game::createFirstPersonWeapon()
 {
-    if (firstPersonWeaponObject || !scene)
+    if (!scene)
         return;
 
-    firstPersonWeaponObject = std::make_shared<GameObject>(
-        "__runtime_fps_steampunk_revolver",
-        "assets/steampunk_revolver.glb",
-        glm::vec3(0.0f, -1000.0f, 0.0f),
-        glm::vec3(0.0f),
-        glm::vec3(1.15f),
-        0.0f,
-        "pbr_model_textured",
-        glm::vec3(1.0f));
-    scene->addGameObject(firstPersonWeaponObject);
+    if (!firstPersonRevolverObject)
+    {
+        firstPersonRevolverObject = std::make_shared<GameObject>(
+            "__runtime_fps_steampunk_revolver",
+            "assets/steampunk_revolver.glb",
+            glm::vec3(0.0f, -1000.0f, 0.0f),
+            glm::vec3(0.0f),
+            glm::vec3(1.15f),
+            0.0f,
+            "pbr_model_textured",
+            glm::vec3(1.0f));
+        scene->addGameObject(firstPersonRevolverObject);
+    }
+
+    if (!firstPersonSwordObject)
+    {
+        firstPersonSwordObject = std::make_shared<GameObject>(
+            "__runtime_fps_ancient_sword",
+            "assets/ancient_sword.glb",
+            glm::vec3(0.0f, -1000.0f, 0.0f),
+            glm::vec3(0.0f),
+            glm::vec3(0.72f),
+            0.0f,
+            "pbr_model_textured",
+            glm::vec3(1.0f));
+        scene->addGameObject(firstPersonSwordObject);
+    }
+
+    syncEquippedFirstPersonWeapon();
     hideFirstPersonWeapon();
+}
+
+void Game::hideRuntimeWeaponObject(const std::shared_ptr<GameObject> &weaponObject)
+{
+    if (!weaponObject)
+        return;
+
+    weaponObject->ClearTransformOverride();
+    weaponObject->position = glm::vec3(0.0f, -1000.0f, 0.0f);
 }
 
 void Game::hideFirstPersonWeapon()
 {
-    if (!firstPersonWeaponObject)
+    hideRuntimeWeaponObject(firstPersonRevolverObject);
+    hideRuntimeWeaponObject(firstPersonSwordObject);
+}
+
+void Game::syncEquippedFirstPersonWeapon()
+{
+    firstPersonWeaponObject.reset();
+    hideRuntimeWeaponObject(firstPersonRevolverObject);
+    hideRuntimeWeaponObject(firstPersonSwordObject);
+
+    if (!scene)
         return;
 
-    firstPersonWeaponObject->ClearTransformOverride();
-    firstPersonWeaponObject->position = glm::vec3(0.0f, -1000.0f, 0.0f);
+    const WeaponSlot *equippedWeapon = getPrimaryPlayer().getEquippedWeapon();
+    if (!equippedWeapon)
+        return;
+
+    if (equippedWeapon->id == "ancient_sword")
+        firstPersonWeaponObject = firstPersonSwordObject;
+    else
+        firstPersonWeaponObject = firstPersonRevolverObject;
+}
+
+void Game::updateFirstPersonMovementAudio(bool movingOnGround, FirstPersonMovementMode movementMode)
+{
+    if (!firstPersonFootstepSource)
+    {
+        firstPersonNoiseLevel = 0.0f;
+        return;
+    }
+
+    float targetGain = 0.0f;
+    float targetPitch = 1.0f;
+    float targetNoise = 0.0f;
+
+    switch (movementMode)
+    {
+    case FirstPersonMovementMode::Run:
+        targetGain = 0.15f;
+        targetPitch = 1.12f;
+        targetNoise = 1.0f;
+        break;
+    case FirstPersonMovementMode::Walk:
+        targetGain = 0.09f;
+        targetPitch = 0.97f;
+        targetNoise = 0.45f;
+        break;
+    case FirstPersonMovementMode::CrouchWalk:
+        targetGain = 0.04f;
+        targetPitch = 0.82f;
+        targetNoise = 0.14f;
+        break;
+    case FirstPersonMovementMode::Idle:
+    default:
+        targetGain = 0.0f;
+        targetPitch = 0.9f;
+        targetNoise = 0.0f;
+        break;
+    }
+
+    const float fadeSpeed = movingOnGround ? 10.0f : 8.0f;
+    const float alpha = std::clamp(deltaTime * fadeSpeed, 0.0f, 1.0f);
+    firstPersonFootstepLoopFade = glm::mix(firstPersonFootstepLoopFade, targetGain, alpha);
+    firstPersonNoiseLevel = glm::mix(firstPersonNoiseLevel, targetNoise, alpha);
+
+    firstPersonFootstepSource->setRelativeToListener(true);
+    firstPersonFootstepSource->setPosition(glm::vec3(0.0f, -0.2f, -0.1f));
+    firstPersonFootstepSource->setVelocity(glm::vec3(0.0f));
+    firstPersonFootstepSource->setGain(firstPersonFootstepLoopFade);
+    firstPersonFootstepSource->setPitch(targetPitch);
+
+    if (firstPersonFootstepLoopFade > 0.005f)
+    {
+        if (!firstPersonFootstepSource->isPlaying())
+            firstPersonFootstepSource->play();
+    }
+    else
+    {
+        firstPersonFootstepSource->pause();
+        firstPersonNoiseLevel = 0.0f;
+    }
 }
 
 void Game::clearFirstPersonProjectiles()
@@ -364,6 +915,61 @@ void Game::clearTorchAudioEmitters()
             emitter.source->stop();
     }
     torchAudioEmitters.clear();
+}
+
+void Game::emitGameplayNoise(const glm::vec3 &position,
+                             float loudness,
+                             const std::string &source,
+                             float duration,
+                             int playerId)
+{
+    if (loudness <= 0.001f || duration <= 0.0f)
+        return;
+
+    for (auto &event : gameplayNoiseEvents)
+    {
+        if (event.source == source &&
+            event.playerId == playerId &&
+            glm::distance2(event.position, position) < 0.25f)
+        {
+            event.position = position;
+            event.loudness = std::max(event.loudness, loudness);
+            event.remainingTime = std::max(event.remainingTime, duration);
+            return;
+        }
+    }
+
+    gameplayNoiseEvents.push_back({position, loudness, duration, source, playerId});
+}
+
+void Game::updateGameplayNoiseEvents()
+{
+    for (auto &event : gameplayNoiseEvents)
+        event.remainingTime -= deltaTime;
+
+    gameplayNoiseEvents.erase(
+        std::remove_if(
+            gameplayNoiseEvents.begin(),
+            gameplayNoiseEvents.end(),
+            [](const GameplayNoiseEvent &event)
+            {
+                return event.remainingTime <= 0.0f || event.loudness <= 0.001f;
+            }),
+        gameplayNoiseEvents.end());
+}
+
+void Game::updateEnemyAI()
+{
+    if (!scene)
+        return;
+
+    for (const auto &entity : scene->getGameEntities())
+    {
+        if (!entity || !entity->isEnemy())
+            continue;
+
+        entity->runEnemyAI(*this, deltaTime);
+    }
 }
 
 void Game::rebuildTorchAudioEmitters()
@@ -461,6 +1067,16 @@ void Game::updateTorchAudioEmitters()
 
 void Game::spawnFirstPersonProjectile(const glm::vec3 &origin, const glm::vec3 &velocity)
 {
+    spawnRuntimeProjectile(origin, velocity, glm::vec3(1.0f, 0.82f, 0.45f), 0.11f, 3, false);
+}
+
+void Game::spawnRuntimeProjectile(const glm::vec3 &origin,
+                                  const glm::vec3 &velocity,
+                                  const glm::vec3 &color,
+                                  float scale,
+                                  int bounceCount,
+                                  bool hostileToPlayer)
+{
     if (!scene)
         return;
 
@@ -472,13 +1088,42 @@ void Game::spawnFirstPersonProjectile(const glm::vec3 &origin, const glm::vec3 &
         firstPersonProjectileModel,
         origin,
         glm::vec3(0.0f),
-        glm::vec3(0.11f),
+        glm::vec3(scale),
         0.0f,
         "pbr_model_textured",
-        glm::vec3(1.0f, 0.82f, 0.45f));
+        color);
 
     scene->addGameObject(projectileObject);
-    firstPersonProjectiles.push_back({projectileObject, velocity, 3.0f, false, 3});
+    FirstPersonProjectile projectile;
+    projectile.object = projectileObject;
+    projectile.velocity = velocity;
+    projectile.lifetime = 3.0f;
+    projectile.radius = std::max(0.05f, scale);
+    projectile.impacted = false;
+    projectile.hostileToPlayer = hostileToPlayer;
+    projectile.remainingBounces = bounceCount;
+    projectile.lastHitObjectId = 0;
+    projectile.repeatedBounceCount = 0;
+    firstPersonProjectiles.push_back(projectile);
+}
+
+glm::vec3 Game::getPlayerWorldPosition(int playerId) const
+{
+    if (playerId == 0)
+        return camera.Position;
+    return camera.Position;
+}
+
+glm::vec3 Game::getPlayerVelocity(int playerId) const
+{
+    if (playerId == 0)
+        return currentPlayerVelocity;
+    return glm::vec3(0.0f);
+}
+
+void Game::spawnEnemyProjectile(const glm::vec3 &origin, const glm::vec3 &velocity)
+{
+    spawnRuntimeProjectile(origin, velocity, glm::vec3(1.0f, 0.22f, 0.22f), 0.13f, 2, true);
 }
 
 void Game::updateFirstPersonProjectiles()
@@ -486,7 +1131,6 @@ void Game::updateFirstPersonProjectiles()
     if (!scene || firstPersonProjectiles.empty())
         return;
 
-    constexpr float kProjectileRadius = 0.11f;
     constexpr float kProjectileGravity = 8.5f;
     ProjectileBounceConfig bounceConfig;
 
@@ -511,6 +1155,38 @@ void Game::updateFirstPersonProjectiles()
         if (projectile.impacted)
             continue;
 
+        if (projectile.hostileToPlayer && firstPersonSwordBlocking)
+        {
+            const glm::vec3 blockCenter =
+                camera.Position + camera.Front * 0.95f + camera.Right * 0.24f + camera.Up * -0.05f;
+            const glm::vec3 blockNormal =
+                glm::normalize(camera.Front * 0.92f + camera.Right * 0.24f + camera.Up * 0.12f);
+            const glm::vec3 nextPosEstimate = projectile.object->position + projectile.velocity * deltaTime;
+            const glm::vec3 segment = nextPosEstimate - projectile.object->position;
+            const float segmentLengthSq = glm::dot(segment, segment);
+            float closestT = 0.0f;
+            if (segmentLengthSq > 1e-6f)
+                closestT = std::clamp(glm::dot(blockCenter - projectile.object->position, segment) / segmentLengthSq, 0.0f, 1.0f);
+            const glm::vec3 closestPoint = projectile.object->position + segment * closestT;
+            const float blockRadius = 0.72f + projectile.radius;
+            const glm::vec3 toBlock = closestPoint - blockCenter;
+            const float facing = glm::dot(glm::normalize(closestPoint - camera.Position), camera.Front);
+
+            if (glm::dot(projectile.velocity, blockNormal) < -0.05f &&
+                glm::dot(toBlock, toBlock) <= blockRadius * blockRadius &&
+                facing > 0.12f)
+            {
+                projectile.object->position = blockCenter + blockNormal * (blockRadius + 0.04f);
+                projectile.velocity = glm::reflect(projectile.velocity, blockNormal) * 0.92f +
+                                      blockNormal * 6.0f + camera.Up * 1.8f;
+                projectile.hostileToPlayer = false;
+                projectile.remainingBounces = std::max(projectile.remainingBounces, 1);
+                projectile.lifetime = std::max(projectile.lifetime, 1.2f);
+                emitGameplayNoise(blockCenter, 0.75f, "sword_block", 0.16f, getPrimaryPlayerId());
+                continue;
+            }
+        }
+
         projectile.velocity.y -= kProjectileGravity * deltaTime;
 
         glm::vec3 currentPos = projectile.object->position;
@@ -524,7 +1200,7 @@ void Game::updateFirstPersonProjectiles()
             auto hit = ProjectileBounceUtils::sweepSphereAgainstObjects(
                 currentPos,
                 candidate,
-                kProjectileRadius,
+                projectile.radius,
                 scene->getGameObjects(),
                 [this](const std::shared_ptr<GameObject> &obj)
                 { return isFirstPersonSolid(obj); });
@@ -532,14 +1208,44 @@ void Game::updateFirstPersonProjectiles()
             if (hit)
             {
                 currentPos = ProjectileBounceUtils::resolveBouncePosition(*hit, bounceConfig);
+                emitGameplayNoise(
+                    hit->point,
+                    std::clamp(0.25f + glm::length(projectile.velocity) * 0.015f, 0.25f, 1.15f),
+                    "projectile_impact",
+                    0.20f);
                 projectile.velocity = ProjectileBounceUtils::computeBounceVelocity(
                     projectile.velocity, hit->normal, bounceConfig);
                 projectile.remainingBounces--;
 
+                const uint32_t hitObjectId =
+                    hit->object ? static_cast<uint32_t>(hit->object->ID) : 0u;
+                const bool repeatedSameSpot =
+                    hitObjectId != 0u &&
+                    hitObjectId == projectile.lastHitObjectId &&
+                    glm::distance2(hit->point, projectile.lastBouncePoint) < 0.05f;
+
+                if (repeatedSameSpot)
+                    projectile.repeatedBounceCount++;
+                else
+                    projectile.repeatedBounceCount = 0;
+
+                projectile.lastHitObjectId = hitObjectId;
+                projectile.lastBouncePoint = hit->point;
+
+                if (projectile.repeatedBounceCount >= 2)
+                {
+                    projectile.impacted = true;
+                    projectile.lifetime = std::max(projectile.lifetime, 1.2f);
+                    projectile.velocity = glm::vec3(0.0f);
+                    projectile.object->position = hit->point + hit->normal * 0.05f;
+                    projectile.object->scale = glm::vec3(std::max(projectile.radius, 0.14f));
+                    break;
+                }
+
                 if (projectile.remainingBounces < 0 || glm::length(projectile.velocity) <= 0.001f)
                 {
                     projectile.impacted = true;
-                    projectile.lifetime = 0.18f;
+                    projectile.lifetime = std::max(projectile.lifetime, 1.2f);
                     projectile.velocity = glm::vec3(0.0f);
                     projectile.object->position = hit->point;
                     projectile.object->scale = glm::vec3(0.14f);
@@ -568,6 +1274,8 @@ void Game::updateFirstPersonProjectiles()
 
 void Game::updateFirstPersonWeapon()
 {
+    syncEquippedFirstPersonWeapon();
+
     if (!firstPersonWeaponObject)
         return;
 
@@ -581,81 +1289,155 @@ void Game::updateFirstPersonWeapon()
     if (!activeWindow)
         return;
 
-    const bool aimPressed =
+    const bool rightPressed =
+        !isGameplayUIModalOpen() &&
         glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-    const bool shootPressed =
+    const bool leftPressed =
+        !isGameplayUIModalOpen() &&
         glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-    float aimStep = deltaTime * 8.0f;
-    if (aimPressed)
+    const WeaponSlot *equippedWeapon = getPrimaryPlayer().getEquippedWeapon();
+    const std::string equippedWeaponId = equippedWeapon ? equippedWeapon->id : std::string();
+    const bool usingSword = equippedWeaponId == "ancient_sword";
+    const bool usingRevolver = !usingSword;
+    firstPersonSwordBlocking = usingSword && rightPressed && firstPersonAimBlend > 0.35f;
+
+    if (firstPersonShootCooldown > 0.0f)
+        firstPersonShootCooldown = std::max(0.0f, firstPersonShootCooldown - deltaTime);
+    if (firstPersonSwordCooldown > 0.0f)
+        firstPersonSwordCooldown = std::max(0.0f, firstPersonSwordCooldown - deltaTime);
+
+    constexpr float kShootAnimDuration = 0.12f;
+    constexpr float kSwordSwingDuration = 0.24f;
+
+    float aimStep = deltaTime * (usingSword ? 10.0f : 8.0f);
+    if (rightPressed)
         firstPersonAimBlend = std::min(1.0f, firstPersonAimBlend + aimStep);
     else
         firstPersonAimBlend = std::max(0.0f, firstPersonAimBlend - aimStep);
 
-    if (firstPersonShootCooldown > 0.0f)
-        firstPersonShootCooldown = std::max(0.0f, firstPersonShootCooldown - deltaTime);
-
-    constexpr float kShootAnimDuration = 0.12f;
-    if (shootPressed && firstPersonShootCooldown <= 0.0f)
+    if (usingRevolver)
     {
-        firstPersonShootAnimTime = kShootAnimDuration;
-        firstPersonShootCooldown = 0.14f;
-        glm::vec3 shotOrigin = camera.Position + camera.Front * 0.22f;
-        glm::vec3 shotVelocity = camera.Front * 52.0f;
-        spawnFirstPersonProjectile(shotOrigin, shotVelocity);
-
-        if (firstPersonShotClip)
+        if (leftPressed && firstPersonShootCooldown <= 0.0f)
         {
-            AudioAttenuationSettings attenuation;
-            attenuation.referenceDistance = 1.5f;
-            attenuation.maxDistance = 28.0f;
-            attenuation.rolloffFactor = 1.1f;
+            firstPersonShootAnimTime = kShootAnimDuration;
+            firstPersonShootCooldown = 0.14f;
+            glm::vec3 shotOrigin = camera.Position + camera.Front * 0.22f;
+            glm::vec3 shotVelocity = camera.Front * 52.0f;
+            spawnFirstPersonProjectile(shotOrigin, shotVelocity);
+            emitGameplayNoise(shotOrigin, 2.6f, "player_gunshot", 0.45f, getPrimaryPlayerId());
 
-            AudioDirectionalCone cone;
-            cone.innerAngleDegrees = 18.0f;
-            cone.outerAngleDegrees = 70.0f;
-            cone.outerGain = 0.35f;
-
-            auto shotSource = audioManager.createDirectionalSource(
-                firstPersonShotClip,
-                shotOrigin,
-                camera.Front,
-                attenuation,
-                cone);
-            if (shotSource)
+            if (firstPersonShotClip)
             {
-                shotSource->setVelocity(shotVelocity * 0.1f);
-                shotSource->setGain(0.65f);
-                shotSource->setPitch(1.0f);
-                shotSource->setAutoDestroy(true);
-                shotSource->play();
+                AudioAttenuationSettings attenuation;
+                attenuation.referenceDistance = 1.5f;
+                attenuation.maxDistance = 28.0f;
+                attenuation.rolloffFactor = 1.1f;
+
+                AudioDirectionalCone cone;
+                cone.innerAngleDegrees = 18.0f;
+                cone.outerAngleDegrees = 70.0f;
+                cone.outerGain = 0.35f;
+
+                auto shotSource = audioManager.createDirectionalSource(
+                    firstPersonShotClip,
+                    shotOrigin,
+                    camera.Front,
+                    attenuation,
+                    cone);
+                if (shotSource)
+                {
+                    shotSource->setVelocity(shotVelocity * 0.1f);
+                    shotSource->setGain(0.65f);
+                    shotSource->setPitch(1.0f);
+                    shotSource->setAutoDestroy(true);
+                    shotSource->play();
+                }
             }
         }
+        else if (firstPersonShootAnimTime > 0.0f)
+        {
+            firstPersonShootAnimTime = std::max(0.0f, firstPersonShootAnimTime - deltaTime);
+        }
     }
-    else if (firstPersonShootAnimTime > 0.0f)
+    else
     {
-        firstPersonShootAnimTime = std::max(0.0f, firstPersonShootAnimTime - deltaTime);
+        firstPersonShootAnimTime = 0.0f;
+        if (leftPressed && firstPersonSwordCooldown <= 0.0f)
+        {
+            firstPersonSwordSwingTime = kSwordSwingDuration;
+            firstPersonSwordCooldown = 0.32f;
+            emitGameplayNoise(camera.Position + camera.Front * 0.8f, 1.25f, "player_sword_swing", 0.18f, getPrimaryPlayerId());
+        }
+        else if (firstPersonSwordSwingTime > 0.0f)
+        {
+            firstPersonSwordSwingTime = std::max(0.0f, firstPersonSwordSwingTime - deltaTime);
+        }
     }
 
-    glm::vec3 hipOffset(0.12f, -0.24f, -0.42f);
-    glm::vec3 aimOffset(0.03f, -0.16f, -0.34f);
+    glm::vec3 hipOffset;
+    glm::vec3 aimOffset;
+    glm::vec3 baseEulerDegrees;
+    glm::vec3 aimEulerDegrees;
+    float scale = 1.15f;
+
+    if (usingSword)
+    {
+        hipOffset = glm::vec3(0.22f, -0.18f, -0.58f);
+        aimOffset = glm::vec3(0.10f, -0.08f, -0.52f);
+        baseEulerDegrees = glm::vec3(16.0f, -12.0f, 22.0f);
+        aimEulerDegrees = glm::vec3(26.0f, -28.0f, 34.0f);
+        scale = 0.72f;
+    }
+    else
+    {
+        hipOffset = glm::vec3(0.12f, -0.24f, -0.42f);
+        aimOffset = glm::vec3(0.03f, -0.16f, -0.34f);
+        baseEulerDegrees = glm::vec3(4.0f, -92.0f, -8.0f);
+        aimEulerDegrees = glm::vec3(0.0f, -90.0f, -2.0f);
+        scale = 1.15f;
+    }
+
     glm::vec3 localOffset = glm::mix(hipOffset, aimOffset, firstPersonAimBlend);
-
-    float recoilT = 0.0f;
-    if (firstPersonShootAnimTime > 0.0f)
-    {
-        recoilT = 1.0f - (firstPersonShootAnimTime / kShootAnimDuration);
-        recoilT = std::sin(recoilT * 3.14159265f);
-    }
-
-    localOffset.z += recoilT * 0.08f;
-    localOffset.x += recoilT * 0.01f;
-    localOffset.y -= recoilT * 0.02f;
-
-    glm::vec3 baseEulerDegrees(4.0f, -92.0f, -8.0f);
-    glm::vec3 aimEulerDegrees(0.0f, -90.0f, -2.0f);
     glm::vec3 localEuler = glm::mix(baseEulerDegrees, aimEulerDegrees, firstPersonAimBlend);
-    localEuler.x -= recoilT * 18.0f;
-    localEuler.z += recoilT * 6.0f;
+
+    float actionT = 0.0f;
+    if (usingSword)
+    {
+        if (firstPersonSwordSwingTime > 0.0f)
+        {
+            actionT = 1.0f - (firstPersonSwordSwingTime / kSwordSwingDuration);
+            actionT = std::sin(actionT * 3.14159265f);
+            localOffset.x += actionT * 0.18f;
+            localOffset.y -= actionT * 0.06f;
+            localOffset.z += actionT * 0.12f;
+            localEuler.y += actionT * 72.0f;
+            localEuler.z -= actionT * 34.0f;
+            localEuler.x -= actionT * 28.0f;
+        }
+        if (rightPressed)
+        {
+            localOffset.x -= firstPersonAimBlend * 0.10f;
+            localOffset.y += firstPersonAimBlend * 0.08f;
+            localOffset.z -= firstPersonAimBlend * 0.03f;
+            localEuler.x += firstPersonAimBlend * 18.0f;
+            localEuler.y -= firstPersonAimBlend * 22.0f;
+            localEuler.z += firstPersonAimBlend * 10.0f;
+        }
+    }
+    else
+    {
+        if (firstPersonShootAnimTime > 0.0f)
+        {
+            actionT = 1.0f - (firstPersonShootAnimTime / kShootAnimDuration);
+            actionT = std::sin(actionT * 3.14159265f);
+        }
+
+        localOffset.z += actionT * 0.08f;
+        localOffset.x += actionT * 0.01f;
+        localOffset.y -= actionT * 0.02f;
+        localEuler.x -= actionT * 18.0f;
+        localEuler.z += actionT * 6.0f;
+    }
 
     glm::vec3 worldPos = camera.Position +
                          camera.Right * localOffset.x +
@@ -669,17 +1451,19 @@ void Game::updateFirstPersonWeapon()
 
     glm::quat cameraRotation = glm::quat_cast(cameraRotationMatrix);
     glm::quat localRotation = glm::quat(glm::radians(localEuler));
-    glm::quat correctionRotation =
-        glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
-        glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
-        glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-        glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::quat correctionRotation = usingSword
+        ? glm::angleAxis(glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+              glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))
+        : glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
+              glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) *
+              glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+              glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     glm::quat worldRotation = cameraRotation * localRotation * correctionRotation;
 
     glm::mat4 weaponTransform =
         glm::translate(glm::mat4(1.0f), worldPos) *
         glm::mat4_cast(worldRotation) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.15f));
+        glm::scale(glm::mat4(1.0f), glm::vec3(scale));
 
     // Keep position updated for culling/debug, but render from the exact matrix
     // so the viewmodel is not reinterpreted through the generic Euler path.
@@ -691,7 +1475,10 @@ bool Game::initialize()
 {
     // Load settings first
     loadSettings();
-    players.push_back(Player("Player 1"));
+    players.clear();
+    players.emplace_back(0, "Player 1");
+    players.front().addWeapon("steampunk_revolver", -1, true);
+    players.front().addWeapon("ancient_sword", -1, false);
     SCR_HEIGHT = settings.resolutionHeight;
     SCR_WIDTH = settings.resolutionWidth;
     std::cout << "Initializing game with resolution: " << SCR_WIDTH << "x" << SCR_HEIGHT << std::endl;
@@ -707,9 +1494,23 @@ bool Game::initialize()
     renderManager.setGame(this);
     renderManager.setUIManager(uiManager.get());
     createFirstPersonWeapon();
+    initializeGameplayObjects();
     audioManager.setMasterVolume(settings.masterVolume);
     firstPersonShotClip = audioManager.loadClip("assets/audio_1.wav");
+    firstPersonFootstepClip = audioManager.loadClipMono("assets/audio_1.wav");
     torchAmbientClip = audioManager.loadClipMono("assets/fire_sound.mp3");
+    if (firstPersonFootstepClip)
+    {
+        firstPersonFootstepSource = audioManager.createSource(firstPersonFootstepClip);
+        if (firstPersonFootstepSource)
+        {
+            firstPersonFootstepSource->setLooping(true);
+            firstPersonFootstepSource->setRelativeToListener(true);
+            firstPersonFootstepSource->setPosition(glm::vec3(0.0f, -0.2f, -0.1f));
+            firstPersonFootstepSource->setGain(0.0f);
+            firstPersonFootstepSource->setPitch(0.9f);
+        }
+    }
     previousAudioListenerPosition = camera.Position;
     audioListenerPrimed = true;
     audioManager.updateListener(camera.Position, camera.Front, glm::vec3(0.0f), camera.Up);
@@ -747,13 +1548,27 @@ void Game::update()
 
     inputManager.processInput(this, inputWindow ? inputWindow : window, &camera, deltaTime, MULTISAMPLE, seed, &renderManager);
     updateFirstPersonController();
+    updateGameplayInteractions();
     updateFirstPersonWeapon();
     updateFirstPersonProjectiles();
     updateTorchAudioEmitters();
+    if (mode == GAME && firstPersonNoiseLevel > 0.01f)
+    {
+        std::string movementNoiseSource = "player_walk";
+        if (firstPersonMovementMode == FirstPersonMovementMode::Run)
+            movementNoiseSource = "player_run";
+        else if (firstPersonMovementMode == FirstPersonMovementMode::CrouchWalk)
+            movementNoiseSource = "player_crouch_walk";
+
+        emitGameplayNoise(camera.Position, firstPersonNoiseLevel, movementNoiseSource, 0.16f, getPrimaryPlayerId());
+    }
+    updateEnemyAI();
+    updateGameplayNoiseEvents();
 
     glm::vec3 listenerVelocity(0.0f);
     if (audioListenerPrimed && deltaTime > 1e-4f)
         listenerVelocity = (camera.Position - previousAudioListenerPosition) / deltaTime;
+    currentPlayerVelocity = listenerVelocity;
 
     audioManager.updateListener(camera.Position, camera.Front, listenerVelocity, camera.Up);
     audioManager.update(deltaTime);
@@ -962,6 +1777,9 @@ void Game::cleanup()
 {
     clearTorchAudioEmitters();
     clearFirstPersonProjectiles();
+    gameplayNoiseEvents.clear();
+    if (firstPersonFootstepSource)
+        firstPersonFootstepSource->stop();
     hideFirstPersonWeapon();
     // TODO: Cleanup all resources
     // TODO: Destroy managers
@@ -1124,12 +1942,14 @@ void Game::processGameInput(GLFWwindow *window, Camera *camera, float deltaTime,
 void Game::setLevel(std::string levelName)
 {
     clearTorchAudioEmitters();
+    gameplayNoiseEvents.clear();
 
     scene = std::make_unique<Scene>(levelName);
     scene->setGame(this);
     scene->setUIManager(uiManager.get());
     scene->setRenderManager(&renderManager);
     renderManager.setScene(scene.get());
+    initializeGameplayObjects();
     rebuildTorchAudioEmitters();
 }
 
@@ -1147,8 +1967,12 @@ bool wasKeyJustPressed(int key, GLFWwindow *window)
 
 void Game::handleInput()
 {
+    GLFWwindow *activeWindow = inputWindow ? inputWindow : window;
+    if (!activeWindow)
+        return;
+
     // TAB — enter VN mode (test shortcut)
-    if (wasKeyJustPressed(GLFW_KEY_TAB, window) && mode == GAME)
+    if (wasKeyJustPressed(GLFW_KEY_TAB, activeWindow) && mode == GAME && !isGameplayUIModalOpen())
     {
         mode = VISUAL_NOVEL;
         vnManager.enter();
@@ -1157,43 +1981,96 @@ void Game::handleInput()
     // VN mode controls — consume input and return early
     if (mode == VISUAL_NOVEL)
     {
-        if (wasKeyJustPressed(GLFW_KEY_SPACE, window) || wasKeyJustPressed(GLFW_KEY_ENTER, window))
+        if (wasKeyJustPressed(GLFW_KEY_SPACE, activeWindow) || wasKeyJustPressed(GLFW_KEY_ENTER, activeWindow))
             vnManager.onAdvance();
-        if (wasKeyJustPressed(GLFW_KEY_ESCAPE, window))
+        if (wasKeyJustPressed(GLFW_KEY_ESCAPE, activeWindow))
         {
             vnManager.exit();
             mode = GAME;
         }
-        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window))
+        if (wasKeyJustPressed(GLFW_KEY_RIGHT, activeWindow))
             vnManager.onNextLocation();
-        if (wasKeyJustPressed(GLFW_KEY_LEFT, window))
+        if (wasKeyJustPressed(GLFW_KEY_LEFT, activeWindow))
             vnManager.onPrevLocation();
         return;
     }
 
-    bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-                     glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    if (mode == GAME)
+    {
+        if (!isGameplayUIModalOpen() && wasKeyJustPressed(GLFW_KEY_1, activeWindow))
+        {
+            if (getPrimaryPlayer().equipWeapon("steampunk_revolver"))
+            {
+                firstPersonAimBlend = 0.0f;
+                firstPersonShootAnimTime = 0.0f;
+                firstPersonSwordSwingTime = 0.0f;
+                syncEquippedFirstPersonWeapon();
+            }
+            return;
+        }
+
+        if (!isGameplayUIModalOpen() && wasKeyJustPressed(GLFW_KEY_2, activeWindow))
+        {
+            if (getPrimaryPlayer().equipWeapon("ancient_sword"))
+            {
+                firstPersonAimBlend = 0.0f;
+                firstPersonShootAnimTime = 0.0f;
+                firstPersonSwordSwingTime = 0.0f;
+                syncEquippedFirstPersonWeapon();
+            }
+            return;
+        }
+
+        if (wasKeyJustPressed(GLFW_KEY_I, activeWindow))
+        {
+            toggleInventoryScreen();
+            return;
+        }
+
+        if (wasKeyJustPressed(GLFW_KEY_ESCAPE, activeWindow) && isGameplayUIModalOpen())
+        {
+            closeGameplayModalUI();
+            return;
+        }
+
+        if (isChestOpen() && wasKeyJustPressed(GLFW_KEY_E, activeWindow))
+        {
+            lootActiveChest();
+            return;
+        }
+
+        if (!isGameplayUIModalOpen() && wasKeyJustPressed(GLFW_KEY_E, activeWindow))
+        {
+            interactWithFocusedGameplayObject();
+            return;
+        }
+
+        return;
+    }
+
+    bool shiftHeld = glfwGetKey(activeWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                     glfwGetKey(activeWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 
     // Shift+C — copy selected object to clipboard
-    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_C, window))
+    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_C, activeWindow))
     {
         scene->copyToClipboard();
     }
 
     // Shift+V — paste clipboard as new object (auto-selected)
-    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_V, window))
+    if (shiftHeld && wasKeyJustPressed(GLFW_KEY_V, activeWindow))
     {
         scene->pasteFromClipboard();
     }
 
     // Ctrl+Z — undo
-    bool ctrlHeld = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-                    glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-    if (ctrlHeld && !shiftHeld && wasKeyJustPressed(GLFW_KEY_Z, window))
+    bool ctrlHeld = glfwGetKey(activeWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+                    glfwGetKey(activeWindow, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+    if (ctrlHeld && !shiftHeld && wasKeyJustPressed(GLFW_KEY_Z, activeWindow))
         scene->undo();
 
     // Ctrl+Y — redo
-    if (ctrlHeld && wasKeyJustPressed(GLFW_KEY_Y, window))
+    if (ctrlHeld && wasKeyJustPressed(GLFW_KEY_Y, activeWindow))
         scene->redo();
 
     // Arrow keys — move selected object 1 unit at a time (X / Z plane)
@@ -1203,22 +2080,22 @@ void Game::handleInput()
         TransformState before = {sel->position, sel->rotation, sel->scale, sel->color};
         bool moved = false;
 
-        if (wasKeyJustPressed(GLFW_KEY_LEFT, window))
+        if (wasKeyJustPressed(GLFW_KEY_LEFT, activeWindow))
         {
             sel->position.x -= 1.0f;
             moved = true;
         }
-        if (wasKeyJustPressed(GLFW_KEY_RIGHT, window))
+        if (wasKeyJustPressed(GLFW_KEY_RIGHT, activeWindow))
         {
             sel->position.x += 1.0f;
             moved = true;
         }
-        if (wasKeyJustPressed(GLFW_KEY_UP, window))
+        if (wasKeyJustPressed(GLFW_KEY_UP, activeWindow))
         {
             sel->position.z -= 1.0f;
             moved = true;
         }
-        if (wasKeyJustPressed(GLFW_KEY_DOWN, window))
+        if (wasKeyJustPressed(GLFW_KEY_DOWN, activeWindow))
         {
             sel->position.z += 1.0f;
             moved = true;
@@ -1232,7 +2109,7 @@ void Game::handleInput()
     }
 
     // Shoot ball with 'F' key
-    if (wasKeyJustPressed(GLFW_KEY_F, window))
+    if (wasKeyJustPressed(GLFW_KEY_F, activeWindow))
     {
         // Find entity with the ball and shoot
         for (auto &entity : scene->getGameEntities())
@@ -1246,7 +2123,7 @@ void Game::handleInput()
     }
 
     // Pass ball with 'G' key
-    if (wasKeyJustPressed(GLFW_KEY_G, window))
+    if (wasKeyJustPressed(GLFW_KEY_G, activeWindow))
     {
         // Find entity with the ball
         std::shared_ptr<GameEntity> ballHolder = nullptr;

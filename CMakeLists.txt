@@ -162,6 +162,7 @@ set(PROJECT_SOURCES
     src/stb_image.cpp
     src/scene.cpp
     src/game.cpp
+    src/player.cpp
     src/projectile_bounce_utils.cpp
     src/render_manager.cpp
     src/texture.cpp

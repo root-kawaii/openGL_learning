@@ -39,6 +39,7 @@ layout(push_constant) uniform PBRPush {
     float roughnessVal;
     uint  hasNormalMap;
     uint  _pad;
+    vec4  albedoTint;
 } push;
 
 // ── PBR math ───────────────────────────────────────────────────────────────
@@ -105,7 +106,7 @@ float calcShadow(vec4 fragPosLS, vec3 N, vec3 lightDir) {
 
 void main() {
     // Albedo — linearize from sRGB
-    vec3 albedo = pow(texture(albedoMap, fragTexCoord).rgb, vec3(2.2));
+    vec3 albedo = pow(texture(albedoMap, fragTexCoord).rgb, vec3(2.2)) * push.albedoTint.rgb;
 
     // Normal
     vec3 N;

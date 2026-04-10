@@ -140,6 +140,13 @@ int main()
   auto vulkanEngineCallback = [&]() {
       int vkFbW = 1, vkFbH = 1;
       glfwGetFramebufferSize(vulkanContext.getWindow(), &vkFbW, &vkFbH);
+      int vkWinW = 1, vkWinH = 1;
+      glfwGetWindowSize(vulkanContext.getWindow(), &vkWinW, &vkWinH);
+      ImGuiIO &vkIo = ImGui::GetIO();
+      const float uiW = vkIo.DisplaySize.x > 0.0f ? vkIo.DisplaySize.x : static_cast<float>(vkWinW);
+      const float uiH = vkIo.DisplaySize.y > 0.0f ? vkIo.DisplaySize.y : static_cast<float>(vkWinH);
+      uiManager->screenWidth = static_cast<unsigned int>(std::max(1.0f, uiW));
+      uiManager->screenHeight = static_cast<unsigned int>(std::max(1.0f, uiH));
 
       if (game->getGameMode() == ENGINE) {
           ImGui::Text("Camera  %.2f  %.2f  %.2f",
@@ -159,26 +166,20 @@ int main()
 
           ImGui::Separator();
           levelEditor->renderImGuiEditor();
-      }
-
-      // Vulkan toggle (visible regardless of game mode)
-      ImGui::Separator();
-      bool prev = useVulkan;
-      ImGui::Checkbox("Use Vulkan Renderer", &useVulkan);
-      if (useVulkan != prev && !useVulkan && vulkanContext.ownsWindow()) {
-          // Switching back to OpenGL (second-window mode only)
-          vulkanContext.hideWindow();
-          glfwShowWindow(game->getWindow());
-          game->setInputWindow(nullptr);
-          glfwSetInputMode(game->getWindow(), GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+          ImGui::Separator();
+          bool prev = useVulkan;
+          ImGui::Checkbox("Use Vulkan Renderer", &useVulkan);
+          if (useVulkan != prev && !useVulkan && vulkanContext.ownsWindow()) {
+              // Switching back to OpenGL (second-window mode only)
+              vulkanContext.hideWindow();
+              glfwShowWindow(game->getWindow());
+              game->setInputWindow(nullptr);
+              glfwSetInputMode(game->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+          }
       }
 
       // ── UI elements: build, click detection, render ───────────────────────
-      // Must call the build functions every frame — they clear + repopulate uiElements.
-      uiManager->clearUIElements();
-      uiManager->buildGameMenu();
-      uiManager->buildActionBufferUI();
-      uiManager->buildBottomCenterMenu();
+      uiManager->buildCurrentUI();
 
       // Click detection. UIManager stores Y in OpenGL bottom-left space;
       // isMouseOver flips the raw GLFW mouse Y internally.
@@ -211,21 +212,23 @@ int main()
               (int)(elem.r * 255), (int)(elem.g * 255),
               (int)(elem.b * 255), (int)(elem.a * 255));
           if (elem.elementType == BOX) {
-              float iy = (float)vkFbH - elem.y_pos - elem.height;
+              float iy = uiH - elem.y_pos - elem.height;
               dl->AddRectFilled(
                   ImVec2(elem.x_pos, iy),
                   ImVec2(elem.x_pos + elem.width, iy + elem.height),
                   col);
           } else if (elem.elementType == TEXT && !elem.text.empty()) {
-              float fontSize = std::max(8.0f, elem.scale * 20.0f);
-              float iy = (float)vkFbH - elem.y_pos - fontSize;
+              // Match the OpenGL UI text scale much more closely.
+              // The controller UI stores a glyph scale, not a raw pixel size.
+              float fontSize = std::max(14.0f, elem.scale * 48.0f);
+              float iy = uiH - elem.y_pos - fontSize;
               dl->AddText(font, fontSize,
                   ImVec2(elem.x_pos, iy), col, elem.text.c_str());
           }
       }
 
-      if (game->getGameMode() == GAME) {
-          ImVec2 center((float)vkFbW * 0.5f, (float)vkFbH * 0.5f);
+      if (game->getGameMode() == GAME && !game->isGameplayUIModalOpen()) {
+          ImVec2 center(uiW * 0.5f, uiH * 0.5f);
           ImU32 outlineCol = IM_COL32(15, 15, 15, 255);
           ImU32 crosshairCol = IM_COL32(255, 255, 255, 255);
           float arm = 9.0f;
@@ -273,7 +276,7 @@ int main()
 
       // ── Pause menu ────────────────────────────────────────────────────────
       if (game->getGameMode() == PAUSE) {
-          float sw = (float)vkFbW, sh = (float)vkFbH;
+          float sw = uiW, sh = uiH;
           float panelW = sw * 0.4f, panelH = sh * 0.6f;
           float panelX = (sw - panelW) * 0.5f, panelY = (sh - panelH) * 0.5f;
           float scale  = sh / 1440.0f;
@@ -413,7 +416,7 @@ int main()
             vulkanContext.hideWindow();
             glfwShowWindow(game->getWindow());
             game->setInputWindow(nullptr);
-            glfwSetInputMode(game->getWindow(), GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            glfwSetInputMode(game->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
           }
         }
       } else {
@@ -423,7 +426,7 @@ int main()
       levelEditor->renderImGuiEditor();
     }
 
-    if (game->getGameMode() == GAME)
+    if (game->getGameMode() == GAME && !game->isGameplayUIModalOpen())
     {
       ImVec2 center(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
       ImU32 outlineCol = IM_COL32(15, 15, 15, 255);

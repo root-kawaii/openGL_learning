@@ -10,6 +10,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <float.h>
 #include "shader_m.h"
+#include <vector>
 
 // AABB (Axis-Aligned Bounding Box) structure
 struct AABB
@@ -122,6 +123,10 @@ public:
     float ID;
     std::string name;
     std::string gameEntity;
+    std::string gameplayType;
+    std::string keyId;
+    std::string requiresKeyId;
+    std::vector<std::string> lootItems;
     std::string materialName; // named PBR material from the level's "materials" section
     int terrainType = 0; // 0=stone, 1=grass, 2=dirt, 3=moss
 

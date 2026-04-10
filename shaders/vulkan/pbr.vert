@@ -38,6 +38,7 @@ layout(push_constant) uniform PBRPush {
     float roughnessVal;
     uint  hasNormalMap;
     uint  _pad;
+    vec4  albedoTint;
 } push;
 
 void main() {
