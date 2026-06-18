@@ -18,12 +18,15 @@
 #include <unordered_map>
 #include <set>
 #include <algorithm>
+#include <cmath>
+#include <chrono>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../globals.h"
+#include <stb_image.h>
 
 // Legacy MVP struct used by the textured quad fallback path (Phase 4).
 // Model rendering uses FrameUBO + ModelPushConstant instead (Phase 6).
@@ -68,6 +71,49 @@ bool shouldRenderLegacyGroundPlane(Scene *scene)
 
     return true;
 }
+
+// View-frustum for conservative AABB culling. Planes are extracted from a
+// view-projection matrix (Gribb–Hartmann) and stored as ax+by+cz+d, normal
+// pointing inward; a box is culled only when fully on the negative side.
+struct Frustum
+{
+    glm::vec4 planes[6];
+
+    explicit Frustum(const glm::mat4 &m)
+    {
+        // Rows of the column-major matrix.
+        const glm::vec4 r0(m[0][0], m[1][0], m[2][0], m[3][0]);
+        const glm::vec4 r1(m[0][1], m[1][1], m[2][1], m[3][1]);
+        const glm::vec4 r2(m[0][2], m[1][2], m[2][2], m[3][2]);
+        const glm::vec4 r3(m[0][3], m[1][3], m[2][3], m[3][3]);
+        planes[0] = r3 + r0; // left
+        planes[1] = r3 - r0; // right
+        planes[2] = r3 + r1; // bottom
+        planes[3] = r3 - r1; // top
+        planes[4] = r3 + r2; // near
+        planes[5] = r3 - r2; // far
+        for (auto &p : planes)
+        {
+            const float len = glm::length(glm::vec3(p));
+            if (len > 0.0f)
+                p /= len;
+        }
+    }
+
+    bool intersectsAABB(const glm::vec3 &mn, const glm::vec3 &mx) const
+    {
+        for (const auto &p : planes)
+        {
+            // Positive vertex: the AABB corner furthest along the plane normal.
+            const glm::vec3 pv(p.x >= 0.0f ? mx.x : mn.x,
+                               p.y >= 0.0f ? mx.y : mn.y,
+                               p.z >= 0.0f ? mx.z : mn.z);
+            if (glm::dot(glm::vec3(p), pv) + p.w < 0.0f)
+                return false; // fully outside this plane
+        }
+        return true;
+    }
+};
 }
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
@@ -92,6 +138,7 @@ bool VulkanRenderer::init(VulkanContext* context) {
     if (!createCommandPool())        return false;
     if (!createCommandBuffers())     return false;
     if (!createSyncObjects())        return false;
+    if (!createFrameTimingQueries()) return false;
     if (!createTriangleResources())  return false;
     if (!createDescriptorSets())     return false;
     if (!createShadowResources())    return false;
@@ -186,6 +233,10 @@ void VulkanRenderer::cleanup() {
     // Grass resources (Phase 17)
     cleanupGrassResources();
 
+    // Atmospheric particles (Tier 3)
+    cleanupParticleResources();
+    cleanupGlowResources();
+
     // Water resources (Phase 16)
     cleanupWaterResources();
 
@@ -194,6 +245,7 @@ void VulkanRenderer::cleanup() {
 
     // Pixel art post-process
     cleanupPixelArtResources();
+    cleanupLUTResources();  // LUT survives resize, destroyed only at shutdown
 
     // ImGui resources (Phase 11)
     cleanupImGui();
@@ -223,6 +275,11 @@ void VulkanRenderer::cleanup() {
     if (commandPool) {
         vkDestroyCommandPool(device, commandPool, nullptr);
         commandPool = nullptr;
+    }
+
+    if (frameTimingQueryPool) {
+        vkDestroyQueryPool(device, frameTimingQueryPool, nullptr);
+        frameTimingQueryPool = nullptr;
     }
 
     cleanupFramebuffers();
@@ -644,10 +701,10 @@ bool VulkanRenderer::recreateForMSAAChange(VkSampleCountFlagBits newSamples) {
                                pipelineLayout, pipeline, msaaSamples);
     if (modelDescriptorSetLayout)
         createModelPipeline(device, renderPass, modelDescriptorSetLayout,
-                            modelPipelineLayout, modelPipeline, msaaSamples);
+                            modelPipelineLayout, modelPipeline, msaaSamples, pointShadowSampleLayout);
     if (pbrDescriptorSetLayout)
         createPBRPipeline(device, renderPass, pbrDescriptorSetLayout,
-                          pbrPipelineLayout, pbrPipeline, msaaSamples);
+                          pbrPipelineLayout, pbrPipeline, msaaSamples, pointShadowSampleLayout);
     if (skyboxDescriptorSetLayout)
         createSkyboxPipeline(device, renderPass, skyboxDescriptorSetLayout,
                              skyboxPipelineLayout, skyboxPipeline, msaaSamples);
@@ -854,6 +911,45 @@ bool VulkanRenderer::createSyncObjects() {
     return true;
 }
 
+bool VulkanRenderer::createFrameTimingQueries() {
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(ctx->getPhysicalDevice(), &props);
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(ctx->getPhysicalDevice(), &queueFamilyCount, nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(ctx->getPhysicalDevice(), &queueFamilyCount, queueFamilies.data());
+
+    const uint32_t graphicsFamily = ctx->getGraphicsQueueFamily();
+    const bool hasTimestampBits = graphicsFamily < queueFamilies.size() &&
+                                  queueFamilies[graphicsFamily].timestampValidBits > 0;
+
+    frameTimingStats.gpuSupported = props.limits.timestampComputeAndGraphics == VK_TRUE &&
+                                    props.limits.timestampPeriod > 0.0f &&
+                                    hasTimestampBits;
+
+    if (!frameTimingStats.gpuSupported) {
+        std::cout << "[Vulkan] GPU timestamps unavailable on this device/queue" << std::endl;
+        gpuTimestampsSupported = false;
+        return true;
+    }
+
+    VkQueryPoolCreateInfo queryInfo{};
+    queryInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    queryInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    queryInfo.queryCount = MAX_FRAMES_IN_FLIGHT * 2;
+
+    if (vkCreateQueryPool(ctx->getDevice(), &queryInfo, nullptr, &frameTimingQueryPool) != VK_SUCCESS) {
+        std::cerr << "[Vulkan] Failed to create frame timing query pool" << std::endl;
+        return false;
+    }
+
+    gpuTimestampsSupported = true;
+    gpuTimestampPeriodNs = static_cast<double>(props.limits.timestampPeriod);
+    std::cout << "[Vulkan] GPU timestamps enabled (" << gpuTimestampPeriodNs << " ns/tick)" << std::endl;
+    return true;
+}
+
 // ─── Draw Frame ──────────────────────────────────────────────────────────────
 //
 // This is the core frame loop. Every frame follows this sequence:
@@ -867,8 +963,112 @@ bool VulkanRenderer::createSyncObjects() {
 // The semaphores ensure GPU-side ordering (acquire → render → present).
 // The fence ensures the CPU doesn't overwrite a command buffer still in use.
 
+// Draws every scene model with the given pipelines. Shared by the main scene pass
+// (pbrPipeline/modelPipeline, frustum cull, stats) and the water reflection capture
+// (reflPbrPipeline/reflModelPipeline, no cull, no stats). The bound descriptors read
+// modelUniformBuffers, so each caller controls the camera by what it uploads there.
+void VulkanRenderer::drawSceneModels(VkCommandBuffer cmd, VkPipeline pbrPipe,
+                                     VkPipeline modelPipe, bool enableCull,
+                                     bool collectStats) {
+    if (!currentScene) return;
+
+    // Camera frustum for culling (standard GL-clip proj, no Vulkan Y-flip).
+    const bool    doCull = enableCull && frustumCullEnabled;
+    const Frustum frustum(currentProj * currentView);
+
+    int objIdx = 0;
+    for (auto& obj : currentScene->getGameObjects()) {
+        if (!obj->model) { objIdx++; continue; }
+
+        auto it = sceneModels.find(obj->model.get());
+        if (it == sceneModels.end()) {
+            loadModel(obj->model.get());
+            it = sceneModels.find(obj->model.get());
+            if (it == sceneModels.end()) { objIdx++; continue; }
+            if (obj->model->IsAnimated() && !instanceData.count(objIdx))
+                createInstanceData(objIdx, obj->model.get());
+        }
+
+        // Conservative frustum cull: skip objects whose world AABB is fully outside
+        // the camera frustum. Invalid bounds are never culled.
+        if (doCull) {
+            const AABB worldAABB = obj->GetWorldAABB();
+            if (worldAABB.IsValid() &&
+                !frustum.intersectsAABB(worldAABB.min, worldAABB.max)) {
+                if (collectStats) culledObjects++;
+                objIdx++;
+                continue;
+            }
+        }
+
+        const glm::mat4 objTransform = obj->getModelMatrix();
+        auto instIt = instanceData.find(objIdx);
+
+        // Draw each mesh — choose PBR or simple pipeline per mesh, preferring the
+        // per-instance descriptor set (bone matrices) when the model is animated.
+        uint32_t meshIdx = 0;
+        for (auto& meshGPU : it->second->meshes) {
+            VkBuffer     vbuffers[] = { meshGPU.buffers->vertexBuffer.buffer };
+            VkDeviceSize voffsets[] = { 0 };
+            vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
+            vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+            if (meshGPU.hasPBR && pbrPipe && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipe);
+                VkDescriptorSet pbrDS = (instIt != instanceData.end() &&
+                                         meshIdx < instIt->second->pbrDescSets.size())
+                    ? instIt->second->pbrDescSets[meshIdx][currentFrame]
+                    : meshGPU.pbrDescriptorSets[currentFrame];
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
+                                        0, 1, &pbrDS, 0, nullptr);
+                if (pointShadowSampleSet)
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
+                                            1, 1, &pointShadowSampleSet, 0, nullptr);
+                PBRPushConstant pbrPush{};
+                pbrPush.model        = objTransform;
+                pbrPush.metallicVal  = 1.0f;
+                pbrPush.roughnessVal = 1.0f;
+                pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
+                pbrPush.albedoTint   = glm::vec4(obj->color, 1.0f);
+                vkCmdPushConstants(cmd, pbrPipelineLayout,
+                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                   0, sizeof(PBRPushConstant), &pbrPush);
+            } else {
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipe);
+                VkDescriptorSet ds = (instIt != instanceData.end() &&
+                                      meshIdx < instIt->second->meshDescSets.size())
+                    ? instIt->second->meshDescSets[meshIdx][currentFrame]
+                    : meshGPU.descriptorSets[currentFrame];
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                        0, 1, &ds, 0, nullptr);
+                if (pointShadowSampleSet)
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                            1, 1, &pointShadowSampleSet, 0, nullptr);
+                ModelPushConstant push{};
+                push.model      = objTransform;
+                push.albedoTint = glm::vec4(obj->color, 1.0f);
+                vkCmdPushConstants(cmd, modelPipelineLayout,
+                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                   0, sizeof(ModelPushConstant), &push);
+            }
+
+            const uint32_t ic = meshGPU.buffers->getIndexCount();
+            vkCmdDrawIndexed(cmd, ic, 1, 0, 0, 0);
+            if (collectStats) {
+                vkDrawCalls++;
+                drawCalls++;
+                trianglesDrawn += ic / 3;
+                verticesDrawn  += ic;
+            }
+            meshIdx++;
+        }
+        objIdx++;
+    }
+}
+
 bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     VkDevice device = ctx->getDevice();
+    using clock = std::chrono::steady_clock;
 
     // FPS calculation
     {
@@ -876,6 +1076,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         double dt  = now - lastFrameTime;
         lastFrameTime = now;
         displayFPS = (dt > 0.0) ? static_cast<float>(1.0 / dt) : 0.0f;
+        frameTimingStats.wallFrameMs = (dt > 0.0) ? static_cast<float>(dt * 1000.0) : 0.0f;
     }
     // Reset per-frame counters (shared globals, same as OpenGL path)
     vkDrawCalls = 0;
@@ -891,6 +1092,30 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     // 1. Wait for previous frame using this slot
     vkWaitForFences(device, 1, &inFlightFences[currentFrame],
                     VK_TRUE, std::numeric_limits<uint64_t>::max());
+
+    if (gpuTimestampsSupported && frameTimingQueryPool && frameTimingQueryReady[currentFrame]) {
+        uint64_t timestamps[2] = {};
+        const VkResult timingResult = vkGetQueryPoolResults(
+            device,
+            frameTimingQueryPool,
+            currentFrame * 2,
+            2,
+            sizeof(timestamps),
+            timestamps,
+            sizeof(uint64_t),
+            VK_QUERY_RESULT_64_BIT);
+
+        if (timingResult == VK_SUCCESS && timestamps[1] >= timestamps[0]) {
+            const uint64_t delta = timestamps[1] - timestamps[0];
+            frameTimingStats.gpuFrameMs = static_cast<float>(
+                (static_cast<double>(delta) * gpuTimestampPeriodNs) / 1'000'000.0);
+            frameTimingStats.gpuValid = true;
+        } else {
+            frameTimingStats.gpuValid = false;
+        }
+    } else {
+        frameTimingStats.gpuValid = false;
+    }
 
     // 2. Acquire next swapchain image
     uint32_t imageIndex;
@@ -909,6 +1134,8 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     // Only reset fence after we know we'll submit work (avoid deadlock)
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
+    const auto cpuSubmitStart = clock::now();
+
     // 3. Record command buffer
     VkCommandBuffer cmd = commandBuffers[currentFrame];
     vkResetCommandBuffer(cmd, 0);
@@ -916,6 +1143,12 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     vkBeginCommandBuffer(cmd, &beginInfo);
+
+    if (gpuTimestampsSupported && frameTimingQueryPool) {
+        const uint32_t queryBase = currentFrame * 2;
+        vkCmdResetQueryPool(cmd, frameTimingQueryPool, queryBase, 2);
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, frameTimingQueryPool, queryBase);
+    }
 
     // ── Bone animation — per-instance ────────────────────────────────────────
     // Each animated scene object has its own VulkanInstanceData with bone UBOs,
@@ -942,9 +1175,19 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         }
     }
 
+    // ── Time-of-day: recompute sun direction, sky + fog colors for this frame ─
+    {
+        static double lastTODTime = glfwGetTime();
+        double nowTOD = glfwGetTime();
+        updateTimeOfDay(static_cast<float>(nowTOD - lastTODTime));
+        lastTODTime = nowTOD;
+    }
+
     // ── Shadow pass (Phase 7) ───────────────────────────────────────────────
     // Compute light-space matrix (directional light, matching OpenGL setup)
-    glm::vec3 lightPos(-1.0f, 4.0f, 1.0f);
+    // Sun position derives from time-of-day (sunDirWorld points toward the sun).
+    glm::vec3 lightPos = look.todEnabled ? (sunDirWorld * 6.0f)
+                                         : glm::vec3(-1.0f, 4.0f, 1.0f);
     float near_plane = 1.0f, far_plane = 75.5f;
     glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
     // Convert GLM [-1,1] depth to Vulkan [0,1] depth
@@ -953,6 +1196,52 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     lightProjection[1][1] *= -1; // Vulkan NDC Y-flip
     glm::mat4 lightView       = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+    // ── Point-light (spot) shadow: pick the nearest point light and build its
+    //    perspective light-space matrix. Sorted here so the FrameUBO below reuses
+    //    the same order (shadow light index stays consistent).
+    std::vector<Light> sortedSceneLights;
+    pointShadowCount = 0;
+    if (currentScene) {
+        sortedSceneLights = currentScene->getLights();
+        glm::vec3 camPos = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
+        std::sort(sortedSceneLights.begin(), sortedSceneLights.end(),
+                  [&camPos](const Light& a, const Light& b) {
+                      return glm::dot(a.position - camPos, a.position - camPos)
+                           < glm::dot(b.position - camPos, b.position - camPos);
+                  });
+        if (pointShadowEnabled) {
+            // Candidates = lights in the FrameUBO set, culled to those within range of
+            // the camera, then the strongest fill the shadow budget. With a 16-slot
+            // budget every torch in a room casts a shadow; in larger scenes only the
+            // nearest/strongest do.
+            int nLights = std::min<int>(static_cast<int>(sortedSceneLights.size()), MAX_POINT_LIGHTS);
+            float maxD2 = pointShadowMaxDist * pointShadowMaxDist;
+            std::vector<int> idx;
+            for (int i = 0; i < nLights; i++) {
+                if (sortedSceneLights[i].intensity <= 0.0f) continue;
+                glm::vec3 d = sortedSceneLights[i].position - camPos;
+                if (glm::dot(d, d) <= maxD2) idx.push_back(i);  // distance cull
+            }
+            std::sort(idx.begin(), idx.end(), [&](int a, int b) {
+                return sortedSceneLights[a].intensity > sortedSceneLights[b].intensity;
+            });
+            int count = std::min<int>(static_cast<int>(idx.size()), MAX_POINT_SHADOWS);
+            for (int L = 0; L < count; L++) {
+                int li = idx[L];
+                glm::vec3 lp     = sortedSceneLights[li].position;
+                glm::vec3 target = glm::vec3(lp.x, 0.0f, lp.z);   // aim downward into the room
+                glm::mat4 proj   = glm::perspective(glm::radians(120.0f), 1.0f, 0.3f, 45.0f);
+                proj[2][2] = 0.5f * proj[2][2] + 0.5f * proj[2][3]; // GL→Vulkan [0,1] depth
+                proj[3][2] = 0.5f * proj[3][2] + 0.5f * proj[3][3];
+                proj[1][1] *= -1;                                   // Vulkan Y-flip
+                glm::mat4 view = glm::lookAt(lp, target, glm::vec3(0.0f, 0.0f, 1.0f));
+                pointLightSpaceMatrices[L] = proj * view;
+                pointShadowLightIdx[L]     = li;
+            }
+            pointShadowCount = count;
+        }
+    }
 
     if (!sceneModels.empty() && shadowRenderPass && currentScene) {
         // Update shadow UBO
@@ -1054,15 +1343,112 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         vkCmdEndRenderPass(cmd);
     }
 
-    // ── Reflection clear pass (Phase 16) ────────────────────────────────────
-    // Begin + immediately end the reflection render pass so the image gets
-    // cleared to sky-blue and transitioned to SHADER_READ_ONLY_OPTIMAL.
-    // A full scene re-render into reflectionFramebuffer would go here.
-    if (showWater && reflectionRenderPass && reflectionFramebuffer) {
-        VkExtent2D refExt = { std::max(1u, ctx->getSwapchainExtent().width  / 2),
-                              std::max(1u, ctx->getSwapchainExtent().height / 2) };
+    // ── Point-light shadow passes (one per layer) ────────────────────────────
+    // Render every layer each frame so all stay in READ_ONLY layout for sampling.
+    // Active layers (< pointShadowCount) draw occluders; the rest just clear.
+    if (pointShadowImage && shadowPipeline && pointShadowRenderSets[0][0] != VK_NULL_HANDLE &&
+        !sceneModels.empty() && currentScene && pointShadowCount > 0) {
+        for (int L = 0; L < pointShadowCount; L++) {  // only active layers
+            LightUBO pLightUbo{};
+            pLightUbo.lightSpaceMatrix = pointLightSpaceMatrices[L];
+            void* pm;
+            vmaMapMemory(allocator, pointShadowUBOs[L][currentFrame].allocation, &pm);
+            memcpy(pm, &pLightUbo, sizeof(pLightUbo));
+            vmaUnmapMemory(allocator, pointShadowUBOs[L][currentFrame].allocation);
+
+            VkClearValue pClear{}; pClear.depthStencil = {1.0f, 0};
+            VkRenderPassBeginInfo pRP{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+            pRP.renderPass        = shadowRenderPass;
+            pRP.framebuffer       = pointShadowFramebuffers[L];
+            pRP.renderArea.extent = {POINT_SHADOW_SIZE, POINT_SHADOW_SIZE};
+            pRP.clearValueCount   = 1;
+            pRP.pClearValues      = &pClear;
+            vkCmdBeginRenderPass(cmd, &pRP, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport pvp{ 0, 0, (float)POINT_SHADOW_SIZE, (float)POINT_SHADOW_SIZE, 0.0f, 1.0f };
+            VkRect2D   psc{ {0,0}, {POINT_SHADOW_SIZE, POINT_SHADOW_SIZE} };
+            vkCmdSetViewport(cmd, 0, 1, &pvp);
+            vkCmdSetScissor(cmd, 0, 1, &psc);
+
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipeline);
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowPipelineLayout,
+                                    0, 1, &pointShadowRenderSets[L][currentFrame], 0, nullptr);
+            for (auto& obj : currentScene->getGameObjects()) {
+                if (obj->name.rfind("__runtime_", 0) == 0) continue;
+                if (!obj->model) continue;
+                auto it = sceneModels.find(obj->model.get());
+                if (it == sceneModels.end()) continue;
+                ModelPushConstant pPush{};
+                pPush.model = obj->getModelMatrix();
+                vkCmdPushConstants(cmd, shadowPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                                   0, sizeof(ModelPushConstant), &pPush);
+                for (auto& meshGPU : it->second->meshes) {
+                    VkBuffer vb[] = {meshGPU.buffers->vertexBuffer.buffer};
+                    VkDeviceSize vo[] = {0};
+                    vkCmdBindVertexBuffers(cmd, 0, 1, vb, vo);
+                    vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+                    vkCmdDrawIndexed(cmd, meshGPU.buffers->getIndexCount(), 1, 0, 0, 0);
+                }
+            }
+            vkCmdEndRenderPass(cmd);
+        }
+    }
+
+    // ── Reflection pass (Phase 16) — render scene with reflected camera ─────
+    if (showWater && reflectionRenderPass && reflectionFramebuffer &&
+        reflModelPipeline && !sceneModels.empty() && currentScene) {
+
+        VkExtent2D refExt = { std::max(1u, ctx->getSwapchainExtent().width),
+                              std::max(1u, ctx->getSwapchainExtent().height) };
+
+        // Scene-capture FrameUBO: render the scene from the NORMAL camera (not a
+        // mirror). reflectionTex then holds scene color (rgb) + linear depth (alpha,
+        // = dist/depthMax from model.frag), which the water shader ray-marches for
+        // true screen-space reflections.
+        FrameUBO reflUbo{};
+        {
+            reflUbo.view              = currentView;
+            reflUbo.proj              = currentProj;
+            reflUbo.proj[1][1]       *= -1; // Vulkan Y-flip (same as main scene)
+            reflUbo.lightSpaceMatrix  = lightSpaceMatrix;
+            reflUbo.lightPos          = glm::vec4(lightPos,
+                directionalLightEnabled ? (look.todEnabled ? sunIntensity : 1.0f) : 0.0f);
+            reflUbo.viewPos           = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
+            reflUbo.viewPos.w         = ambientStrength;
+            reflUbo.numPointLights    = 0;
+            for (const auto& light : sortedSceneLights) {
+                if (reflUbo.numPointLights >= MAX_POINT_LIGHTS) break;
+                auto& pl = reflUbo.pointLights[reflUbo.numPointLights++];
+                pl.position = glm::vec4(light.position, 1.0f);
+                pl.color    = glm::vec4(light.color, light.intensity);
+            }
+            const float t = static_cast<float>(glfwGetTime());
+            reflUbo.fogColor   = glm::vec4(look.fogColor, look.fogEnabled ? look.fogStrength : 0.0f);
+            reflUbo.fogParams  = glm::vec4(look.fogDistNear, look.fogDistFar,
+                                           look.fogHeightStart, look.fogHeightFalloff);
+            reflUbo.skyTop     = glm::vec4(skyTopColor, 1.0f);
+            reflUbo.skyHorizon = glm::vec4(skyHorizColor, look.skyStylize);
+            reflUbo.sunDir     = glm::vec4(sunDirWorld, t);
+            reflUbo.style      = glm::vec4(static_cast<float>(look.lightingMode), look.bands,
+                                           look.rimStrength, look.depthMax);
+            reflUbo.rimColor   = glm::vec4(look.rimColor, look.windStrength);
+        }
+
+        // Write reflected UBO into the buffer via command stream
+        vkCmdUpdateBuffer(cmd, modelUniformBuffers[currentFrame].buffer, 0,
+                          sizeof(FrameUBO), &reflUbo);
+        VkMemoryBarrier uboBarrier{};
+        uboBarrier.sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+        uboBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        uboBarrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             0, 1, &uboBarrier, 0, nullptr, 0, nullptr);
+
+        // Begin reflection render pass. Clear to the sky color so open space above the
+        // water reflects as sky (cheap stand-in for a full skybox in the reflection).
         std::array<VkClearValue, 2> refClear{};
-        refClear[0].color        = {{ 0.53f, 0.81f, 0.92f, 1.0f }};  // sky blue
+        refClear[0].color        = {{ skyHorizColor.r, skyHorizColor.g, skyHorizColor.b, 1.0f }};
         refClear[1].depthStencil = { 1.0f, 0 };
 
         VkRenderPassBeginInfo refBegin{};
@@ -1073,7 +1459,72 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         refBegin.clearValueCount   = 2;
         refBegin.pClearValues      = refClear.data();
         vkCmdBeginRenderPass(cmd, &refBegin, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdEndRenderPass(cmd);  // just clears and transitions the image
+
+        // Standard viewport — the water shader projects ray steps through the same
+        // VP used here, so screen UVs index this texture self-consistently.
+        VkViewport refVp{};
+        refVp.width    = static_cast<float>(refExt.width);
+        refVp.height   = static_cast<float>(refExt.height);
+        refVp.minDepth = 0.0f;
+        refVp.maxDepth = 1.0f;
+        vkCmdSetViewport(cmd, 0, 1, &refVp);
+        VkRect2D refScissor{};
+        refScissor.extent = refExt;
+        vkCmdSetScissor(cmd, 0, 1, &refScissor);
+
+        // Capture the scene into reflectionTex (no cull, no stats). Mirrors the main
+        // pass so animated enemies, projectiles, etc. are reflected.
+        drawSceneModels(cmd, reflPbrPipeline, reflModelPipeline, false, false);
+
+        vkCmdEndRenderPass(cmd);
+
+        // Restore normal UBO for the main scene pass
+        FrameUBO normalUbo{};
+        normalUbo.view              = currentView;
+        normalUbo.proj              = currentProj;
+        normalUbo.proj[1][1]       *= -1;
+        normalUbo.lightSpaceMatrix  = lightSpaceMatrix;
+        normalUbo.lightPos          = reflUbo.lightPos;
+        normalUbo.viewPos           = reflUbo.viewPos;
+        normalUbo.numPointLights    = reflUbo.numPointLights;
+        for (int i = 0; i < reflUbo.numPointLights; ++i)
+            normalUbo.pointLights[i] = reflUbo.pointLights[i];
+        normalUbo.fogColor   = reflUbo.fogColor;
+        normalUbo.fogParams  = reflUbo.fogParams;
+        normalUbo.skyTop     = reflUbo.skyTop;
+        normalUbo.skyHorizon = reflUbo.skyHorizon;
+        normalUbo.sunDir     = reflUbo.sunDir;
+        normalUbo.style      = reflUbo.style;
+        normalUbo.rimColor   = reflUbo.rimColor;
+        for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+            bool active = (L < pointShadowCount);
+            normalUbo.pointLightSpace[L] = active ? pointLightSpaceMatrices[L] : glm::mat4(1.0f);
+            normalUbo.pointShadowInfo[L] = glm::vec4(active ? static_cast<float>(pointShadowLightIdx[L]) : -1.0f,
+                                                     active ? 1.0f : 0.0f, 0.0f, 0.0f);
+        }
+        normalUbo.pointShadowMeta = glm::vec4(static_cast<float>(pointShadowCount), 0.0015f, 0.0f, 0.0f);
+
+        vkCmdUpdateBuffer(cmd, modelUniformBuffers[currentFrame].buffer, 0,
+                          sizeof(FrameUBO), &normalUbo);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             0, 1, &uboBarrier, 0, nullptr, 0, nullptr);
+    } else if (showWater && reflectionRenderPass && reflectionFramebuffer) {
+        // Fallback: just clear the reflection image if pipelines aren't ready
+        VkExtent2D refExt = { std::max(1u, ctx->getSwapchainExtent().width),
+                              std::max(1u, ctx->getSwapchainExtent().height) };
+        std::array<VkClearValue, 2> refClear{};
+        refClear[0].color        = {{ 0.05f, 0.05f, 0.08f, 1.0f }};
+        refClear[1].depthStencil = { 1.0f, 0 };
+        VkRenderPassBeginInfo refBegin{};
+        refBegin.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        refBegin.renderPass        = reflectionRenderPass;
+        refBegin.framebuffer       = reflectionFramebuffer;
+        refBegin.renderArea.extent = refExt;
+        refBegin.clearValueCount   = 2;
+        refBegin.pClearValues      = refClear.data();
+        vkCmdBeginRenderPass(cmd, &refBegin, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdEndRenderPass(cmd);
     }
 
     // ── Scene render pass ────────────────────────────────────────────────────
@@ -1128,21 +1579,17 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         frameUbo.proj             = currentProj;
         frameUbo.proj[1][1]      *= -1; // Vulkan NDC Y-flip
         frameUbo.lightSpaceMatrix = lightSpaceMatrix;
-        frameUbo.lightPos         = glm::vec4(lightPos, directionalLightEnabled ? 1.0f : 0.0f);
+        frameUbo.lightPos         = glm::vec4(lightPos,
+            directionalLightEnabled ? (look.todEnabled ? sunIntensity : 1.0f) : 0.0f);
         // Camera position in world space = last column of inverse view
         frameUbo.viewPos = glm::inverse(currentView) * glm::vec4(0, 0, 0, 1);
         frameUbo.viewPos.w = ambientStrength;
 
-        // Scene lights
+        // Scene lights — reuse the order computed for the point shadow above so the
+        // shadow light index stays consistent.
         frameUbo.numPointLights = 0;
-        auto sceneLights = currentScene->getLights();
         const glm::vec3 cameraWorldPos(frameUbo.viewPos);
-        std::sort(sceneLights.begin(), sceneLights.end(),
-                  [&cameraWorldPos](const Light& a, const Light& b) {
-                      const glm::vec3 deltaA = a.position - cameraWorldPos;
-                      const glm::vec3 deltaB = b.position - cameraWorldPos;
-                      return glm::dot(deltaA, deltaA) < glm::dot(deltaB, deltaB);
-                  });
+        const std::vector<Light>& sceneLights = sortedSceneLights;
         for (const auto& light : sceneLights) {
             if (frameUbo.numPointLights >= MAX_POINT_LIGHTS) {
                 break;
@@ -1153,81 +1600,44 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
             pointLight.color = glm::vec4(light.color, light.intensity);
         }
 
+        // ── Stylized atmosphere block ────────────────────────────────────────
+        const float t = static_cast<float>(glfwGetTime());
+        frameUbo.fogColor   = glm::vec4(look.fogColor, look.fogEnabled ? look.fogStrength : 0.0f);
+        frameUbo.fogParams  = glm::vec4(look.fogDistNear, look.fogDistFar,
+                                        look.fogHeightStart, look.fogHeightFalloff);
+        frameUbo.skyTop     = glm::vec4(skyTopColor, 1.0f);
+        frameUbo.skyHorizon = glm::vec4(skyHorizColor, look.skyStylize);
+        frameUbo.sunDir     = glm::vec4(sunDirWorld, t);
+        frameUbo.style      = glm::vec4(static_cast<float>(look.lightingMode), look.bands,
+                                        look.rimStrength, look.depthMax);
+        frameUbo.rimColor   = glm::vec4(look.rimColor, look.windStrength);
+        for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+            bool active = (L < pointShadowCount);
+            frameUbo.pointLightSpace[L] = active ? pointLightSpaceMatrices[L] : glm::mat4(1.0f);
+            frameUbo.pointShadowInfo[L] = glm::vec4(active ? static_cast<float>(pointShadowLightIdx[L]) : -1.0f,
+                                                    active ? 1.0f : 0.0f, 0.0f, 0.0f);
+        }
+        frameUbo.pointShadowMeta = glm::vec4(static_cast<float>(pointShadowCount), 0.0015f, 0.0f, 0.0f);
+
+        // Project the sun onto the screen for the god-ray pass (clip → NDC → UV)
+        {
+            glm::mat4 vp = frameUbo.proj * currentView; // proj already Y-flipped
+            glm::vec4 clip = vp * glm::vec4(cameraWorldPos + sunDirWorld * 1000.0f, 1.0f);
+            if (clip.w > 0.0f) {
+                glm::vec2 ndc = glm::vec2(clip) / clip.w;
+                sunScreenPos = ndc * 0.5f + 0.5f;
+            }
+        }
+
         void* mapped;
         vmaMapMemory(allocator, modelUniformBuffers[currentFrame].allocation, &mapped);
         memcpy(mapped, &frameUbo, sizeof(frameUbo));
         vmaUnmapMemory(allocator, modelUniformBuffers[currentFrame].allocation);
 
-        // Draw all scene objects
-        int objIdx = 0;
-        for (auto& obj : currentScene->getGameObjects()) {
-            if (!obj->model) { objIdx++; continue; }
-            auto it = sceneModels.find(obj->model.get());
-            if (it == sceneModels.end()) {
-                loadModel(obj->model.get());
-                it = sceneModels.find(obj->model.get());
-                if (it == sceneModels.end()) { objIdx++; continue; }
-                if (obj->model->IsAnimated() && !instanceData.count(objIdx))
-                    createInstanceData(objIdx, obj->model.get());
-            }
+        culledObjects = 0;
 
-            glm::mat4 objTransform = obj->getModelMatrix();
-            auto instIt = instanceData.find(objIdx);
-
-            // Draw each mesh — choose PBR or simple pipeline per mesh
-            uint32_t meshIdx = 0;
-            for (auto& meshGPU : it->second->meshes) {
-                VkBuffer vbuffers[] = {meshGPU.buffers->vertexBuffer.buffer};
-                VkDeviceSize voffsets[] = {0};
-                vkCmdBindVertexBuffers(cmd, 0, 1, vbuffers, voffsets);
-                vkCmdBindIndexBuffer(cmd, meshGPU.buffers->indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-                if (meshGPU.hasPBR && pbrPipeline && meshGPU.pbrDescriptorSets[currentFrame] != VK_NULL_HANDLE) {
-                    // PBR path — use per-instance desc set if available
-                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
-                    VkDescriptorSet pbrDS = (instIt != instanceData.end() &&
-                                            meshIdx < instIt->second->pbrDescSets.size())
-                        ? instIt->second->pbrDescSets[meshIdx][currentFrame]
-                        : meshGPU.pbrDescriptorSets[currentFrame];
-                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout,
-                                            0, 1, &pbrDS, 0, nullptr);
-
-                    PBRPushConstant pbrPush{};
-                    pbrPush.model        = objTransform;
-                    pbrPush.metallicVal  = 1.0f;
-                    pbrPush.roughnessVal = 1.0f;
-                    pbrPush.hasNormalMap = meshGPU.normalTexture.image ? 1u : 0u;
-                    pbrPush.albedoTint   = glm::vec4(obj->color, 1.0f);
-                    vkCmdPushConstants(cmd, pbrPipelineLayout,
-                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                       0, sizeof(PBRPushConstant), &pbrPush);
-                } else {
-                    // Simple diffuse path — use per-instance desc set if available
-                    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipeline);
-                    VkDescriptorSet ds = (instIt != instanceData.end() &&
-                                         meshIdx < instIt->second->meshDescSets.size())
-                        ? instIt->second->meshDescSets[meshIdx][currentFrame]
-                        : meshGPU.descriptorSets[currentFrame];
-                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
-                                            0, 1, &ds, 0, nullptr);
-
-                    ModelPushConstant push{};
-                    push.model      = objTransform;
-                    push.albedoTint = glm::vec4(obj->color, 1.0f);
-                    vkCmdPushConstants(cmd, modelPipelineLayout,
-                                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                       0, sizeof(ModelPushConstant), &push);
-                }
-                uint32_t ic = meshGPU.buffers->getIndexCount();
-                vkCmdDrawIndexed(cmd, ic, 1, 0, 0, 0);
-                vkDrawCalls++;
-                drawCalls++;
-                trianglesDrawn += ic / 3;
-                verticesDrawn  += ic;
-                meshIdx++;
-            }
-            objIdx++;
-        }  // end obj loop
+        // Draw all scene objects (with frustum cull + per-frame draw stats).
+        drawSceneModels(cmd, pbrPipeline, modelPipeline, true, true);
 
         // Ground plane — always simple pipeline
         if (groundVertexBuffer.buffer && shouldRenderLegacyGroundPlane(currentScene)) {
@@ -1238,6 +1648,9 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
                                0, sizeof(ModelPushConstant), &groundPush);
             vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
                                     0, 1, &groundDescriptorSets[currentFrame], 0, nullptr);
+            if (pointShadowSampleSet)
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, modelPipelineLayout,
+                                        1, 1, &pointShadowSampleSet, 0, nullptr);
             VkBuffer gvb[] = {groundVertexBuffer.buffer};
             VkDeviceSize gvo[] = {0};
             vkCmdBindVertexBuffers(cmd, 0, 1, gvb, gvo);
@@ -1283,8 +1696,15 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         glm::mat4 skyProj = currentProj;
         skyProj[1][1] *= -1; // Vulkan Y-flip
         glm::mat4 viewProj = skyProj * skyView;
-        vkCmdPushConstants(cmd, skyboxPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                           0, sizeof(glm::mat4), &viewProj);
+        struct { glm::mat4 vp; glm::vec4 top, horiz, sun, sunCol; } skyPush;
+        skyPush.vp    = viewProj;
+        skyPush.top   = glm::vec4(skyTopColor, 1.0f);
+        skyPush.horiz = glm::vec4(skyHorizColor, look.skyStylize);
+        skyPush.sun   = glm::vec4(sunDirWorld, 0.0f);
+        skyPush.sunCol= glm::vec4(sunColor, 1.0f);
+        vkCmdPushConstants(cmd, skyboxPipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(skyPush), &skyPush);
 
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipelineLayout,
                                 0, 1, &skyboxDescriptorSet, 0, nullptr);
@@ -1304,7 +1724,7 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         struct GrassPush { float time, windStrength, windSpeed, grassHeight; } gp;
         static float grassTime = 0.0f;
         grassTime += 0.016f;
-        gp = { grassTime, 0.3f, 1.2f, 0.0f };
+        gp = { grassTime, 0.3f * look.windStrength, 1.2f, 0.0f };
         vkCmdPushConstants(cmd, grassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(gp), &gp);
 
         VkBuffer     vbufs[2]  = { grassBladeVertexBuffer.buffer, grassInstanceBuffer.buffer };
@@ -1320,10 +1740,10 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, waterPipelineLayout,
                                 0, 1, &waterDescriptorSets[currentFrame], 0, nullptr);
 
-        struct WaterPush { float time; float waveHeight; float waveSpeed; float waterLevel; } wp;
+        struct WaterPush { float time; float waveHeight; float waveSpeed; float waterLevelVal; } wp;
         static float waterTime = 0.0f;
-        waterTime += 0.016f;  // ~60fps accumulation; real dt could be passed instead
-        wp = { waterTime, 0.4f, 0.3f, -1.5f };  // waterLevel=-1.5 keeps water below ground/grass
+        waterTime += 0.016f;
+        wp = { waterTime, 0.08f, 0.25f, waterLevel };
         vkCmdPushConstants(cmd, waterPipelineLayout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                            0, sizeof(wp), &wp);
@@ -1333,6 +1753,44 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         vkCmdBindVertexBuffers(cmd, 0, 1, &wb, &woff);
         vkCmdBindIndexBuffer(cmd, waterIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(cmd, waterIndexCount, 1, 0, 0, 0);
+    }
+
+    // ── Atmospheric dust motes (Tier 3) — drawn after opaque, additive ────────
+    if (showParticles && particlePipeline && particleInstanceBuffer.buffer && particleCount > 0) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, particlePipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, particlePipelineLayout,
+                                0, 1, &particleDescriptorSets[currentFrame], 0, nullptr);
+        VkBuffer pib = particleInstanceBuffer.buffer;
+        VkDeviceSize poff = 0;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &pib, &poff);
+        vkCmdDraw(cmd, 6, particleCount, 0, 0);  // 6 verts/quad, instanced
+    }
+
+    // ── Emissive light glow (Tier 3) — additive warm billboards at each light ─
+    if (showLightGlow && glowPipeline && glowInstanceBuffer.buffer && currentScene) {
+        // Refill instances from the scene lights (position, size by intensity, color)
+        struct GI { float px, py, pz, size, r, g, b, intensity; };
+        void* mapped; vmaMapMemory(allocator, glowInstanceBuffer.allocation, &mapped);
+        GI* gi = (GI*)mapped;
+        glowCount = 0;
+        for (const auto& light : currentScene->getLights()) {
+            if (glowCount >= MAX_GLOWS) break;
+            float s = glowSize * (0.4f + 0.12f * std::sqrt(std::max(light.intensity, 0.0f)));
+            gi[glowCount++] = { light.position.x, light.position.y, light.position.z, s,
+                                light.color.r, light.color.g, light.color.b,
+                                glowIntensity };
+        }
+        vmaUnmapMemory(allocator, glowInstanceBuffer.allocation);
+
+        if (glowCount > 0) {
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, glowPipeline);
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, glowPipelineLayout,
+                                    0, 1, &particleDescriptorSets[currentFrame], 0, nullptr);
+            VkBuffer gib = glowInstanceBuffer.buffer;
+            VkDeviceSize goff = 0;
+            vkCmdBindVertexBuffers(cmd, 0, 1, &gib, &goff);
+            vkCmdDraw(cmd, 6, glowCount, 0, 0);
+        }
     }
 
     // ── Infinite grid (Phase 12) ─────────────────────────────────────────────
@@ -1443,12 +1901,34 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         vkCmdSetViewport(cmd, 0, 1, &blitVP);
         vkCmdSetScissor(cmd,  0, 1, &blitSc);
 
+        // Fill volumetric UBO for shadow-map-based light shafts
+        {
+            glm::vec3 camPos = glm::vec3(glm::inverse(currentView) * glm::vec4(0, 0, 0, 1));
+            VolumetricUBO vol{};
+            vol.invViewProj = glm::inverse(currentProj * currentView);
+            vol.lightSpaceMatrix = lightSpaceMatrix;
+            vol.camPos = glm::vec4(camPos, look.depthMax);
+            vol.sunDir = glm::vec4(sunDirWorld, look.godrayStrength);
+            void* data;
+            vmaMapMemory(allocator, volUBOBuffers[currentFrame].allocation, &data);
+            memcpy(data, &vol, sizeof(VolumetricUBO));
+            vmaUnmapMemory(allocator, volUBOBuffers[currentFrame].allocation);
+        }
+
         // Upscale pixel art image with NEAREST + posterize
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, blitPipeline);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, blitPipelineLayout,
                                 0, 1, &blitDescSets[currentFrame], 0, nullptr);
+        BlitPush bp{};
+        bp.p0 = glm::vec4(paletteSize, look.ditherStrength, look.saturation, look.contrast);
+        bp.p1 = glm::vec4(look.brightness, look.temperature, look.tint, look.vignette);
+        bp.p2 = glm::vec4(look.outlineStrength, look.godrayStrength, look.bloomStrength, look.dofStrength);
+        bp.outlineColor = glm::vec4(look.outlineColor, look.aoStrength);
+        bp.p4 = glm::vec4(sunScreenPos, static_cast<float>(glfwGetTime()),
+                          static_cast<float>(pixelArtScale));
+        bp.p5 = glm::vec4(look.lutStrength, sunColor.r, sunColor.g, sunColor.b);
         vkCmdPushConstants(cmd, blitPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT,
-                           0, sizeof(float), &paletteSize);
+                           0, sizeof(BlitPush), &bp);
         vkCmdDraw(cmd, 3, 1, 0, 0);  // fullscreen triangle — no vertex buffer needed
     }
 
@@ -1482,7 +1962,17 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
 
             // ── Performance stats ───────────────────────────────────────────────
             ImGui::Separator();
-            ImGui::Text("FPS: %.1f  (%.2f ms)", displayFPS, displayFPS > 0 ? 1000.0f / displayFPS : 0.0f);
+            ImGui::Text("Presented: %.1f FPS  (%.2f ms)", displayFPS, frameTimingStats.wallFrameMs);
+            ImGui::Text("CPU submit: %.2f ms", frameTimingStats.cpuSubmitMs);
+            if (frameTimingStats.gpuSupported) {
+                if (frameTimingStats.gpuValid)
+                    ImGui::Text("GPU frame:  %.2f ms", frameTimingStats.gpuFrameMs);
+                else
+                    ImGui::TextDisabled("GPU frame:  waiting...");
+            } else {
+                ImGui::TextDisabled("GPU frame:  unsupported on this device");
+            }
+            ImGui::Text("Present call: %.2f ms", frameTimingStats.presentMs);
             ImGui::Text("Draw calls: %u", vkDrawCalls);
             ImGui::Text("Triangles:  %u", trianglesDrawn);
             ImGui::Text("Vertices:   %u", verticesDrawn);
@@ -1509,6 +1999,8 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
 
             // ── Scene toggles ──────────────────────────────────────────────────
             ImGui::Separator();
+            ImGui::Checkbox("Frustum cull", &frustumCullEnabled);
+            ImGui::SameLine(); ImGui::TextDisabled("(culled %u)", culledObjects);
             ImGui::Checkbox("Show Grid", &showGrid);
             ImGui::Checkbox("Show Grass", &showGrass);
             if (grassPipeline)
@@ -1516,6 +2008,8 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
             else
                 ImGui::TextColored({1.0f,0.4f,0.4f,1.0f}, "Grass: pipeline NULL");
             ImGui::Checkbox("Show Water", &showWater);
+            if (showWater)
+                ImGui::SliderFloat("Water Level", &waterLevel, -2.0f, 2.0f);
             ImGui::Checkbox("Show ID Debug Overlay", &showIDDebugOverlay);
 
             // ── Pixel art ──────────────────────────────────────────────────────
@@ -1525,6 +2019,66 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
                 ImGui::SameLine();
                 ImGui::Text("(%dx)", pixelArtScale);
                 ImGui::SliderFloat("Palette", &paletteSize, 4.0f, 64.0f, "%.0f");
+            }
+
+            // ── Look / Atmosphere ──────────────────────────────────────────────
+            ImGui::Separator();
+            if (ImGui::CollapsingHeader("Look / Atmosphere", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::TreeNode("Time of Day")) {
+                    ImGui::Checkbox("Enabled", &look.todEnabled);
+                    ImGui::SameLine(); ImGui::Checkbox("Auto", &look.todAuto);
+                    ImGui::SliderFloat("Time", &look.timeOfDay, 0.0f, 1.0f, "%.2f");
+                    ImGui::SliderFloat("Speed", &look.todSpeed, 0.0f, 0.2f, "%.3f");
+                    ImGui::Text("Sun int %.2f  amb %.3f", sunIntensity, ambientStrength);
+                    ImGui::TreePop();
+                }
+                if (ImGui::TreeNode("Fog")) {
+                    ImGui::Checkbox("Enabled##fog", &look.fogEnabled);
+                    ImGui::ColorEdit3("Color##fog", &look.fogColor.x);
+                    ImGui::SliderFloat("Strength##fog", &look.fogStrength, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Dist near", &look.fogDistNear, 0.0f, 60.0f);
+                    ImGui::SliderFloat("Dist far",  &look.fogDistFar, 5.0f, 200.0f);
+                    ImGui::SliderFloat("Height start", &look.fogHeightStart, -10.0f, 30.0f);
+                    ImGui::SliderFloat("Height falloff", &look.fogHeightFalloff, 0.0f, 1.0f);
+                    ImGui::TreePop();
+                }
+                if (ImGui::TreeNode("Lighting / Sky")) {
+                    ImGui::Combo("Mode", &look.lightingMode, "Realistic\0Banded (toon)\0");
+                    ImGui::SliderFloat("Bands", &look.bands, 2.0f, 8.0f, "%.0f");
+                    ImGui::SliderFloat("Rim", &look.rimStrength, 0.0f, 1.5f);
+                    ImGui::ColorEdit3("Rim color", &look.rimColor.x);
+                    ImGui::SliderFloat("Sky stylize", &look.skyStylize, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Wind", &look.windStrength, 0.0f, 3.0f);
+                    ImGui::Checkbox("Light shadows", &pointShadowEnabled);
+                    ImGui::SameLine(); ImGui::Text("(%d/%d)", pointShadowCount, MAX_POINT_SHADOWS);
+                    ImGui::SliderFloat("Shadow range", &pointShadowMaxDist, 10.0f, 150.0f, "%.0f");
+                    ImGui::TreePop();
+                }
+                if (ImGui::TreeNode("Post Process")) {
+                    ImGui::SliderFloat("Dither", &look.ditherStrength, 0.0f, 1.5f);
+                    ImGui::SliderFloat("Saturation", &look.saturation, 0.0f, 2.0f);
+                    ImGui::SliderFloat("Contrast", &look.contrast, 0.5f, 2.0f);
+                    ImGui::SliderFloat("Brightness", &look.brightness, -0.3f, 0.3f);
+                    ImGui::SliderFloat("Temperature", &look.temperature, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Tint", &look.tint, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Vignette", &look.vignette, 0.0f, 1.0f);
+                    ImGui::SliderFloat("LUT grade", &look.lutStrength, 0.0f, 1.0f);
+                    ImGui::SameLine();
+                    ImGui::TextDisabled(lutFromFile ? "(file)" : "(identity)");
+                    ImGui::SliderFloat("AO", &look.aoStrength, 0.0f, 1.5f);
+                    ImGui::SliderFloat("Outline", &look.outlineStrength, 0.0f, 1.5f);
+                    ImGui::ColorEdit3("Outline color", &look.outlineColor.x);
+                    ImGui::SliderFloat("God rays", &look.godrayStrength, 0.0f, 1.5f);
+                    ImGui::SliderFloat("Bloom", &look.bloomStrength, 0.0f, 1.5f);
+                    ImGui::SliderFloat("DoF", &look.dofStrength, 0.0f, 1.0f);
+                    ImGui::TreePop();
+                }
+                ImGui::Checkbox("Dust particles", &showParticles);
+                ImGui::Checkbox("Light glow", &showLightGlow);
+                if (showLightGlow) {
+                    ImGui::SliderFloat("Glow size", &glowSize, 0.2f, 4.0f);
+                    ImGui::SliderFloat("Glow intensity", &glowIntensity, 0.0f, 3.0f);
+                }
             }
 
             // ── Picking + gizmo ────────────────────────────────────────────────
@@ -1580,6 +2134,10 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     }
 
     vkCmdEndRenderPass(cmd);
+    if (gpuTimestampsSupported && frameTimingQueryPool) {
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, frameTimingQueryPool, currentFrame * 2 + 1);
+        frameTimingQueryReady[currentFrame] = true;
+    }
     vkEndCommandBuffer(cmd);
 
     // 4. Submit command buffer
@@ -1602,6 +2160,9 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
         return false;
     }
 
+    frameTimingStats.cpuSubmitMs = static_cast<float>(
+        std::chrono::duration<double, std::milli>(clock::now() - cpuSubmitStart).count());
+
     // 5. Present
     VkSwapchainKHR swapchains[] = {ctx->getSwapchain()};
 
@@ -1613,7 +2174,10 @@ bool VulkanRenderer::drawFrame(std::function<void()> engineCallback) {
     presentInfo.pSwapchains        = swapchains;
     presentInfo.pImageIndices      = &imageIndex;
 
+    const auto presentStart = clock::now();
     result = vkQueuePresentKHR(ctx->getPresentQueue(), &presentInfo);
+    frameTimingStats.presentMs = static_cast<float>(
+        std::chrono::duration<double, std::milli>(clock::now() - presentStart).count());
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         return false; // Caller should recreate swapchain
@@ -1636,6 +2200,8 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
     cleanupIDBufferResources();  // Recreated lazily at new size
     cleanupGridResources();
     cleanupGrassResources();
+    cleanupParticleResources();
+    cleanupGlowResources();
     cleanupWaterResources();
     cleanupUIResources();
     cleanupPixelArtResources();
@@ -1668,6 +2234,8 @@ bool VulkanRenderer::handleResize(uint32_t width, uint32_t height) {
     if (modelUniformBuffers[0].buffer) {
         if (waterIndexCount == 0)       createWaterResources();
         if (grassBladeIndexCount == 0)  createGrassResources();
+        if (!particlePipeline)          createParticleResources();
+        if (!glowPipeline)              createGlowResources();
     }
     createPixelArtResources();
 
@@ -1945,7 +2513,7 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
 
     // Create model pipeline
     if (!createModelPipeline(device, renderPass, modelDescriptorSetLayout,
-                             modelPipelineLayout, modelPipeline, msaaSamples)) {
+                             modelPipelineLayout, modelPipeline, msaaSamples, pointShadowSampleLayout)) {
         return false;
     }
 
@@ -1953,7 +2521,7 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         modelUniformBuffers[i] = createBuffer(
             allocator, sizeof(FrameUBO),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VkBufferUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
             VMA_MEMORY_USAGE_CPU_TO_GPU);
         if (!modelUniformBuffers[i].buffer) return false;
 
@@ -1996,6 +2564,20 @@ bool VulkanRenderer::createModelPipelineAndDescriptors() {
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(shadowWrites.size()),
                                    shadowWrites.data(), 0, nullptr);
+        }
+    }
+
+    // Point-light shadow render sets — bind each layer's light-space UBO + bones
+    if (pointShadowRenderSets[0][0] != VK_NULL_HANDLE) {
+        for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+            for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+                VkDescriptorBufferInfo lightInfo{ pointShadowUBOs[L][i].buffer, 0, sizeof(LightUBO) };
+                VkDescriptorBufferInfo boneInfo{ boneUniformBuffers[i].buffer, 0, sizeof(BoneUBO) };
+                std::array<VkWriteDescriptorSet, 2> w{};
+                w[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, pointShadowRenderSets[L][i], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &lightInfo, nullptr };
+                w[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, pointShadowRenderSets[L][i], 1, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &boneInfo, nullptr };
+                vkUpdateDescriptorSets(device, 2, w.data(), 0, nullptr);
+            }
         }
     }
 
@@ -2197,7 +2779,7 @@ bool VulkanRenderer::createPBRPipelineAndDescriptors() {
         return false;
     }
 
-    if (!createPBRPipeline(device, renderPass, pbrDescriptorSetLayout, pbrPipelineLayout, pbrPipeline, msaaSamples)) {
+    if (!createPBRPipeline(device, renderPass, pbrDescriptorSetLayout, pbrPipelineLayout, pbrPipeline, msaaSamples, pointShadowSampleLayout)) {
         return false;
     }
 
@@ -2577,13 +3159,147 @@ bool VulkanRenderer::createShadowResources() {
     }
 
     std::cout << "[Vulkan] Shadow resources created (" << SHADOW_MAP_SIZE << "x" << SHADOW_MAP_SIZE << ")" << std::endl;
+
+    if (!createPointShadowResources()) return false;
     return true;
+}
+
+// ─── Point-light (spot) shadow resources ──────────────────────────────────────
+// The strongest N point lights each render a perspective depth map into one layer
+// of a D32 2D-array (reuses shadowRenderPass + shadowPipeline). Sampled in
+// model/pbr via a shared set=1 sampler2DArray.
+bool VulkanRenderer::createPointShadowResources() {
+    VkDevice device = ctx->getDevice();
+
+    // 1. Depth array image (one layer per shadow-casting light)
+    VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    ii.imageType   = VK_IMAGE_TYPE_2D;
+    ii.extent      = { POINT_SHADOW_SIZE, POINT_SHADOW_SIZE, 1 };
+    ii.mipLevels   = 1; ii.arrayLayers = MAX_POINT_SHADOWS;
+    ii.format      = VK_FORMAT_D32_SFLOAT;
+    ii.tiling      = VK_IMAGE_TILING_OPTIMAL;
+    ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    ii.usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    ii.samples     = VK_SAMPLE_COUNT_1_BIT;
+    VmaAllocationCreateInfo ai{}; ai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    if (vmaCreateImage(allocator, &ii, &ai, &pointShadowImage, &pointShadowAlloc, nullptr) != VK_SUCCESS)
+        return false;
+
+    // One-time transition of ALL layers to READ_ONLY so layers never rendered this
+    // frame (beyond the active count) are still in a valid layout for sampling.
+    {
+        VkCommandBufferAllocateInfo cba{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        cba.commandPool = commandPool; cba.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; cba.commandBufferCount = 1;
+        VkCommandBuffer cb; vkAllocateCommandBuffers(device, &cba, &cb);
+        VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+        bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cb, &bi);
+        VkImageMemoryBarrier bar{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        bar.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        bar.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        bar.srcQueueFamilyIndex = bar.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        bar.image = pointShadowImage;
+        bar.subresourceRange = { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, (uint32_t)MAX_POINT_SHADOWS };
+        bar.srcAccessMask = 0; bar.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             0, 0, nullptr, 0, nullptr, 1, &bar);
+        vkEndCommandBuffer(cb);
+        VkSubmitInfo subInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO }; subInfo.commandBufferCount = 1; subInfo.pCommandBuffers = &cb;
+        vkQueueSubmit(ctx->getGraphicsQueue(), 1, &subInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(ctx->getGraphicsQueue());
+        vkFreeCommandBuffers(device, commandPool, 1, &cb);
+    }
+
+    // Array view for sampling (sampler2DArray)
+    VkImageViewCreateInfo av{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    av.image = pointShadowImage; av.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; av.format = VK_FORMAT_D32_SFLOAT;
+    av.subresourceRange = { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, (uint32_t)MAX_POINT_SHADOWS };
+    if (vkCreateImageView(device, &av, nullptr, &pointShadowArrayView) != VK_SUCCESS) return false;
+
+    VkSamplerCreateInfo si{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    si.magFilter = si.minFilter = VK_FILTER_LINEAR;
+    si.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    si.addressModeU = si.addressModeV = si.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    si.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE; // outside frustum = lit
+    if (vkCreateSampler(device, &si, nullptr, &pointShadowSampler) != VK_SUCCESS) return false;
+
+    // 2. Per-layer single-layer views + framebuffers (for rendering each layer)
+    for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+        VkImageViewCreateInfo lv{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        lv.image = pointShadowImage; lv.viewType = VK_IMAGE_VIEW_TYPE_2D; lv.format = VK_FORMAT_D32_SFLOAT;
+        lv.subresourceRange = { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, (uint32_t)L, 1 };
+        if (vkCreateImageView(device, &lv, nullptr, &pointShadowLayerViews[L]) != VK_SUCCESS) return false;
+
+        VkFramebufferCreateInfo fb{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+        fb.renderPass = shadowRenderPass; fb.attachmentCount = 1; fb.pAttachments = &pointShadowLayerViews[L];
+        fb.width = POINT_SHADOW_SIZE; fb.height = POINT_SHADOW_SIZE; fb.layers = 1;
+        if (vkCreateFramebuffer(device, &fb, nullptr, &pointShadowFramebuffers[L]) != VK_SUCCESS) return false;
+    }
+
+    // 3. Per-layer × per-frame light-space UBOs + render descriptor sets
+    for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            pointShadowUBOs[L][i] = createBuffer(allocator, sizeof(LightUBO),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+            if (!pointShadowUBOs[L][i].buffer) return false;
+        }
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> ls; ls.fill(shadowDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo da{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+        da.descriptorPool = shadowDescriptorPool; da.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; da.pSetLayouts = ls.data();
+        if (vkAllocateDescriptorSets(device, &da, pointShadowRenderSets[L].data()) != VK_SUCCESS) return false;
+        // Buffer bindings written later (createModelPipelineAndDescriptors), once bone buffers exist.
+    }
+
+    // 4. Sample descriptor (set=1): one sampler2DArray, fragment stage
+    VkDescriptorSetLayoutBinding sb = { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
+    VkDescriptorSetLayoutCreateInfo sl{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    sl.bindingCount = 1; sl.pBindings = &sb;
+    if (vkCreateDescriptorSetLayout(device, &sl, nullptr, &pointShadowSampleLayout) != VK_SUCCESS) return false;
+
+    VkDescriptorPoolSize sps = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 };
+    VkDescriptorPoolCreateInfo sp{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+    sp.poolSizeCount = 1; sp.pPoolSizes = &sps; sp.maxSets = 1;
+    if (vkCreateDescriptorPool(device, &sp, nullptr, &pointShadowSamplePool) != VK_SUCCESS) return false;
+
+    VkDescriptorSetAllocateInfo sa{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+    sa.descriptorPool = pointShadowSamplePool; sa.descriptorSetCount = 1; sa.pSetLayouts = &pointShadowSampleLayout;
+    if (vkAllocateDescriptorSets(device, &sa, &pointShadowSampleSet) != VK_SUCCESS) return false;
+
+    VkDescriptorImageInfo dii{};
+    dii.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+    dii.imageView   = pointShadowArrayView;
+    dii.sampler     = pointShadowSampler;
+    VkWriteDescriptorSet w{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+    w.dstSet = pointShadowSampleSet; w.dstBinding = 0; w.descriptorCount = 1;
+    w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; w.pImageInfo = &dii;
+    vkUpdateDescriptorSets(device, 1, &w, 0, nullptr);
+
+    std::cout << "[Vulkan] Point-light shadow resources created (" << POINT_SHADOW_SIZE
+              << ", " << MAX_POINT_SHADOWS << " layers)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupPointShadowResources() {
+    VkDevice device = ctx->getDevice();
+    if (!device) return;
+    for (int L = 0; L < MAX_POINT_SHADOWS; L++) {
+        if (pointShadowFramebuffers[L]) { vkDestroyFramebuffer(device, pointShadowFramebuffers[L], nullptr); pointShadowFramebuffers[L] = nullptr; }
+        if (pointShadowLayerViews[L])   { vkDestroyImageView(device, pointShadowLayerViews[L], nullptr); pointShadowLayerViews[L] = nullptr; }
+        for (auto& buf : pointShadowUBOs[L]) { if (buf.buffer) destroyBuffer(allocator, buf); }
+    }
+    if (pointShadowSampler)     { vkDestroySampler(device, pointShadowSampler, nullptr); pointShadowSampler = nullptr; }
+    if (pointShadowArrayView)   { vkDestroyImageView(device, pointShadowArrayView, nullptr); pointShadowArrayView = nullptr; }
+    if (pointShadowImage && allocator) { vmaDestroyImage(allocator, pointShadowImage, pointShadowAlloc); pointShadowImage = nullptr; }
+    if (pointShadowSamplePool)  { vkDestroyDescriptorPool(device, pointShadowSamplePool, nullptr); pointShadowSamplePool = nullptr; }
+    if (pointShadowSampleLayout){ vkDestroyDescriptorSetLayout(device, pointShadowSampleLayout, nullptr); pointShadowSampleLayout = nullptr; }
+    pointShadowSampleSet = VK_NULL_HANDLE;
 }
 
 void VulkanRenderer::cleanupShadowResources() {
     VkDevice device = ctx->getDevice();
     if (!device) return;
 
+    cleanupPointShadowResources();
     if (shadowPipeline)       { vkDestroyPipeline(device, shadowPipeline, nullptr); shadowPipeline = nullptr; }
     if (shadowPipelineLayout) { vkDestroyPipelineLayout(device, shadowPipelineLayout, nullptr); shadowPipelineLayout = nullptr; }
     if (shadowFramebuffer)    { vkDestroyFramebuffer(device, shadowFramebuffer, nullptr); shadowFramebuffer = nullptr; }
@@ -3132,6 +3848,115 @@ void VulkanRenderer::cleanupGrassResources() {
     showGrass = false;
 }
 
+// ─── Atmospheric dust-mote particles (Tier 3) ─────────────────────────────────
+bool VulkanRenderer::createParticleResources() {
+    VkDevice device = ctx->getDevice();
+
+    // ── 1. Instance buffer (CPU-visible) populated with drifting motes ───────
+    {
+        struct PI { float px, py, pz, size, phase, drift, bright, _pad; };
+        static_assert(sizeof(PI) == sizeof(float) * 8, "PI must be 32 bytes");
+
+        VkDeviceSize bufSize = MAX_PARTICLES * sizeof(PI);
+        VkBufferCreateInfo bufInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, bufSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT };
+        VmaAllocationCreateInfo ai{}; ai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; ai.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        if (vmaCreateBuffer(allocator, &bufInfo, &ai, &particleInstanceBuffer.buffer,
+                            &particleInstanceBuffer.allocation, nullptr) != VK_SUCCESS)
+            return false;
+
+        void* mapped; vmaMapMemory(allocator, particleInstanceBuffer.allocation, &mapped);
+        PI* p = (PI*)mapped;
+        srand(1337);
+        auto rnd = [&](float lo, float hi) { return lo + (float)rand() / RAND_MAX * (hi - lo); };
+        particleCount = 700;
+        if (particleCount > MAX_PARTICLES) particleCount = MAX_PARTICLES;
+        for (uint32_t i = 0; i < particleCount; ++i) {
+            p[i] = { rnd(-32.0f, 32.0f), rnd(0.5f, 14.0f), rnd(-32.0f, 32.0f),
+                     rnd(0.015f, 0.05f), rnd(0.0f, 6.28f), rnd(0.4f, 1.6f),
+                     rnd(0.25f, 0.7f), 0.0f };
+        }
+        vmaUnmapMemory(allocator, particleInstanceBuffer.allocation);
+    }
+
+    // ── 2. Descriptor set layout: FrameUBO (0) only ──────────────────────────
+    {
+        VkDescriptorSetLayoutBinding b = { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr };
+        VkDescriptorSetLayoutCreateInfo li{};
+        li.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        li.bindingCount = 1; li.pBindings = &b;
+        vkCreateDescriptorSetLayout(device, &li, nullptr, &particleDescriptorSetLayout);
+
+        VkDescriptorPoolSize sz = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT };
+        VkDescriptorPoolCreateInfo pi{};
+        pi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pi.poolSizeCount = 1; pi.pPoolSizes = &sz; pi.maxSets = MAX_FRAMES_IN_FLIGHT;
+        vkCreateDescriptorPool(device, &pi, nullptr, &particleDescriptorPool);
+
+        std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
+        layouts.fill(particleDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo ai{};
+        ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        ai.descriptorPool = particleDescriptorPool; ai.descriptorSetCount = MAX_FRAMES_IN_FLIGHT; ai.pSetLayouts = layouts.data();
+        vkAllocateDescriptorSets(device, &ai, particleDescriptorSets.data());
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            VkDescriptorBufferInfo uboInfo{ modelUniformBuffers[i].buffer, 0, sizeof(FrameUBO) };
+            VkWriteDescriptorSet w = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, particleDescriptorSets[i], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &uboInfo, nullptr };
+            vkUpdateDescriptorSets(device, 1, &w, 0, nullptr);
+        }
+    }
+
+    // ── 3. Pipeline ──────────────────────────────────────────────────────────
+    if (!createParticlePipeline(device, renderPass, particleDescriptorSetLayout,
+                                particlePipelineLayout, particlePipeline, msaaSamples))
+        return false;
+
+    std::cout << "[Vulkan] Particle resources created (" << particleCount << " motes)" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupParticleResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+    if (particlePipeline)            { vkDestroyPipeline(device, particlePipeline, nullptr);             particlePipeline = nullptr; }
+    if (particlePipelineLayout)      { vkDestroyPipelineLayout(device, particlePipelineLayout, nullptr); particlePipelineLayout = nullptr; }
+    if (particleDescriptorPool)      { vkDestroyDescriptorPool(device, particleDescriptorPool, nullptr); particleDescriptorPool = nullptr; }
+    if (particleDescriptorSetLayout) { vkDestroyDescriptorSetLayout(device, particleDescriptorSetLayout, nullptr); particleDescriptorSetLayout = nullptr; }
+    if (particleInstanceBuffer.buffer) { vmaDestroyBuffer(allocator, particleInstanceBuffer.buffer, particleInstanceBuffer.allocation); particleInstanceBuffer = {}; }
+    particleCount = 0;
+}
+
+// ─── Emissive light-glow sprites (Tier 3) ─────────────────────────────────────
+// Reuses the particle descriptor layout (FrameUBO) + the billboard pipeline with
+// glow shaders. Instance buffer is refilled from the scene lights each frame.
+bool VulkanRenderer::createGlowResources() {
+    VkDevice device = ctx->getDevice();
+
+    VkDeviceSize bufSize = MAX_GLOWS * sizeof(float) * 8;  // vec4 posSize + vec4 color
+    VkBufferCreateInfo bi{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, bufSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT };
+    VmaAllocationCreateInfo ai{}; ai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; ai.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    if (vmaCreateBuffer(allocator, &bi, &ai, &glowInstanceBuffer.buffer, &glowInstanceBuffer.allocation, nullptr) != VK_SUCCESS)
+        return false;
+
+    if (!createParticlePipeline(device, renderPass, particleDescriptorSetLayout,
+                                glowPipelineLayout, glowPipeline, msaaSamples,
+                                "shaders/vulkan/compiled/glow.vert.spv",
+                                "shaders/vulkan/compiled/glow.frag.spv"))
+        return false;
+
+    std::cout << "[Vulkan] Light-glow resources created" << std::endl;
+    return true;
+}
+
+void VulkanRenderer::cleanupGlowResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+    if (glowPipeline)       { vkDestroyPipeline(device, glowPipeline, nullptr);             glowPipeline = nullptr; }
+    if (glowPipelineLayout) { vkDestroyPipelineLayout(device, glowPipelineLayout, nullptr); glowPipelineLayout = nullptr; }
+    if (glowInstanceBuffer.buffer) { vmaDestroyBuffer(allocator, glowInstanceBuffer.buffer, glowInstanceBuffer.allocation); glowInstanceBuffer = {}; }
+    glowCount = 0;
+}
+
 // ─── Water Resources (Phase 16) ───────────────────────────────────────────────
 //
 // Creates:
@@ -3146,7 +3971,121 @@ void VulkanRenderer::cleanupGrassResources() {
 // so all existing pipelines are render-pass compatible — no pipeline recreation.
 // The only difference: finalLayout = SHADER_READ_ONLY_OPTIMAL for color/resolve.
 
+// ─── Color-grade 3D LUT ───────────────────────────────────────────────────────
+// Builds an N×N×N 3D texture used to remap scene color in the blit pass.
+// Loads a strip-format LUT PNG (assets/lut.png: N horizontal slices, so the image
+// is N*N wide × N tall). If absent, generates a neutral identity LUT so the blit
+// descriptor is always valid. Idempotent: only builds once.
+bool VulkanRenderer::createLUTResources() {
+    if (lutImage) return true;  // already built (survives swapchain resize)
+    VkDevice device = ctx->getDevice();
+
+    int N = 16;
+    std::vector<uint8_t> voxels;  // RGBA, N*N*N
+
+    int w = 0, h = 0, ch = 0;
+    stbi_uc* pixels = stbi_load("assets/lut.png", &w, &h, &ch, STBI_rgb_alpha);
+    if (pixels && h > 0 && w == h * h) {
+        // Strip layout: voxel(r,g,b) = pixel(x = b*N + r, y = g)
+        N = h;
+        voxels.resize(static_cast<size_t>(N) * N * N * 4);
+        for (int b = 0; b < N; ++b)
+            for (int g = 0; g < N; ++g)
+                for (int r = 0; r < N; ++r) {
+                    const int sx = b * N + r;
+                    const uint8_t* src = pixels + (static_cast<size_t>(g) * w + sx) * 4;
+                    uint8_t* dst = voxels.data() + (((static_cast<size_t>(b) * N + g) * N + r)) * 4;
+                    dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2]; dst[3] = 255;
+                }
+        lutFromFile = true;
+        std::cout << "[Vulkan] LUT loaded from assets/lut.png (" << N << "^3)" << std::endl;
+    } else {
+        // Identity LUT: voxel value == its normalized coordinate.
+        voxels.resize(static_cast<size_t>(N) * N * N * 4);
+        for (int b = 0; b < N; ++b)
+            for (int g = 0; g < N; ++g)
+                for (int r = 0; r < N; ++r) {
+                    uint8_t* dst = voxels.data() + (((static_cast<size_t>(b) * N + g) * N + r)) * 4;
+                    dst[0] = uint8_t(r * 255 / (N - 1));
+                    dst[1] = uint8_t(g * 255 / (N - 1));
+                    dst[2] = uint8_t(b * 255 / (N - 1));
+                    dst[3] = 255;
+                }
+        lutFromFile = false;
+    }
+    if (pixels) stbi_image_free(pixels);
+
+    const VkDeviceSize dataSize = voxels.size();
+
+    // Staging buffer
+    VkBufferCreateInfo sbi{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr, 0, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT };
+    VmaAllocationCreateInfo sai{}; sai.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    VkBuffer sb; VmaAllocation sa;
+    if (vmaCreateBuffer(allocator, &sbi, &sai, &sb, &sa, nullptr) != VK_SUCCESS) return false;
+    void* mp; vmaMapMemory(allocator, sa, &mp); memcpy(mp, voxels.data(), dataSize); vmaUnmapMemory(allocator, sa);
+
+    // 3D image
+    VkImageCreateInfo ii{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    ii.imageType = VK_IMAGE_TYPE_3D;
+    ii.extent = { (uint32_t)N, (uint32_t)N, (uint32_t)N };
+    ii.mipLevels = 1; ii.arrayLayers = 1;
+    ii.format = VK_FORMAT_R8G8B8A8_UNORM;
+    ii.tiling = VK_IMAGE_TILING_OPTIMAL;
+    ii.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    ii.samples = VK_SAMPLE_COUNT_1_BIT;
+    VmaAllocationCreateInfo gai{}; gai.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    if (vmaCreateImage(allocator, &ii, &gai, &lutImage, &lutAlloc, nullptr) != VK_SUCCESS) {
+        vmaDestroyBuffer(allocator, sb, sa); return false;
+    }
+
+    // Upload (UNDEFINED → TRANSFER_DST → copy → SHADER_READ_ONLY)
+    VkCommandBufferAllocateInfo cba{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1 };
+    VkCommandBuffer cb; vkAllocateCommandBuffers(device, &cba, &cb);
+    VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr };
+    vkBeginCommandBuffer(cb, &bi);
+    VkImageMemoryBarrier bar{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+    bar.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; bar.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    bar.srcQueueFamilyIndex = bar.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    bar.image = lutImage; bar.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+    bar.srcAccessMask = 0; bar.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+    VkBufferImageCopy region{};
+    region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+    region.imageExtent = { (uint32_t)N, (uint32_t)N, (uint32_t)N };
+    vkCmdCopyBufferToImage(cb, sb, lutImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    bar.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; bar.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    bar.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; bar.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &bar);
+    vkEndCommandBuffer(cb);
+    VkSubmitInfo subInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO }; subInfo.commandBufferCount = 1; subInfo.pCommandBuffers = &cb;
+    vkQueueSubmit(ctx->getGraphicsQueue(), 1, &subInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(ctx->getGraphicsQueue());
+    vkFreeCommandBuffers(device, commandPool, 1, &cb);
+    vmaDestroyBuffer(allocator, sb, sa);
+
+    VkImageViewCreateInfo vi{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    vi.image = lutImage; vi.viewType = VK_IMAGE_VIEW_TYPE_3D; vi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+    if (vkCreateImageView(device, &vi, nullptr, &lutView) != VK_SUCCESS) return false;
+
+    VkSamplerCreateInfo si{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    si.magFilter = si.minFilter = VK_FILTER_LINEAR;
+    si.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    si.addressModeU = si.addressModeV = si.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    if (vkCreateSampler(device, &si, nullptr, &lutSampler) != VK_SUCCESS) return false;
+    return true;
+}
+
+void VulkanRenderer::cleanupLUTResources() {
+    if (!ctx) return;
+    VkDevice device = ctx->getDevice();
+    if (lutSampler) { vkDestroySampler(device, lutSampler, nullptr); lutSampler = nullptr; }
+    if (lutView)    { vkDestroyImageView(device, lutView, nullptr); lutView = nullptr; }
+    if (lutImage && allocator) { vmaDestroyImage(allocator, lutImage, lutAlloc); lutImage = nullptr; }
+}
+
 bool VulkanRenderer::createPixelArtResources() {
+    if (!lutImage) createLUTResources();  // build LUT before the blit descriptor set
     VkDevice   device    = ctx->getDevice();
     VkExtent2D extent    = ctx->getSwapchainExtent();
     VkFormat   colorFmt  = ctx->getSwapchainFormat();
@@ -3317,18 +4256,33 @@ bool VulkanRenderer::createPixelArtResources() {
     }
 
     // ── 7. Blit descriptor layout + pool + sets ───────────────────────────────
+    //    binding 0 = low-res scene color, binding 1 = color-grade 3D LUT
+    //    binding 2 = shadow map (depth), binding 3 = volumetric UBO
     {
-        VkDescriptorSetLayoutBinding b{};
-        b.binding = 0; b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        b.descriptorCount = 1; b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutBinding b[4]{};
+        b[0].binding = 0; b[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        b[0].descriptorCount = 1; b[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        b[1].binding = 1; b[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        b[1].descriptorCount = 1; b[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        b[2].binding = 2; b[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        b[2].descriptorCount = 1; b[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        b[3].binding = 3; b[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        b[3].descriptorCount = 1; b[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         VkDescriptorSetLayoutCreateInfo li{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-        li.bindingCount = 1; li.pBindings = &b;
+        li.bindingCount = 4; li.pBindings = b;
         vkCreateDescriptorSetLayout(device, &li, nullptr, &blitDescLayout);
 
-        VkDescriptorPoolSize ps{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT };
+        VkDescriptorPoolSize poolSizes[2]{};
+        poolSizes[0] = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT * 3 };
+        poolSizes[1] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         MAX_FRAMES_IN_FLIGHT * 1 };
         VkDescriptorPoolCreateInfo pi{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-        pi.poolSizeCount = 1; pi.pPoolSizes = &ps; pi.maxSets = MAX_FRAMES_IN_FLIGHT;
+        pi.poolSizeCount = 2; pi.pPoolSizes = poolSizes; pi.maxSets = MAX_FRAMES_IN_FLIGHT;
         vkCreateDescriptorPool(device, &pi, nullptr, &blitDescPool);
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            volUBOBuffers[i] = createBuffer(allocator, sizeof(VolumetricUBO),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        }
 
         std::array<VkDescriptorSetLayout, MAX_FRAMES_IN_FLIGHT> layouts;
         layouts.fill(blitDescLayout);
@@ -3338,15 +4292,28 @@ bool VulkanRenderer::createPixelArtResources() {
         vkAllocateDescriptorSets(device, &ai, blitDescSets.data());
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkDescriptorImageInfo imgInfo{};
-            imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imgInfo.imageView   = paColorView;
-            imgInfo.sampler     = pixelArtSampler;
-            VkWriteDescriptorSet w{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-            w.dstSet = blitDescSets[i]; w.dstBinding = 0;
-            w.descriptorCount = 1; w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            w.pImageInfo = &imgInfo;
-            vkUpdateDescriptorSets(device, 1, &w, 0, nullptr);
+            VkDescriptorImageInfo sceneInfo{};
+            sceneInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            sceneInfo.imageView   = paColorView;
+            sceneInfo.sampler     = pixelArtSampler;
+            VkDescriptorImageInfo lutInfo{};
+            lutInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            lutInfo.imageView   = lutView;
+            lutInfo.sampler     = lutSampler;
+            VkDescriptorImageInfo shadowInfo{};
+            shadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            shadowInfo.imageView   = shadowImageView;
+            shadowInfo.sampler     = shadowSampler;
+            VkDescriptorBufferInfo volInfo{};
+            volInfo.buffer = volUBOBuffers[i].buffer;
+            volInfo.offset = 0;
+            volInfo.range  = sizeof(VolumetricUBO);
+            std::array<VkWriteDescriptorSet, 4> w{};
+            w[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, blitDescSets[i], 0, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &sceneInfo, nullptr, nullptr };
+            w[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, blitDescSets[i], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &lutInfo, nullptr, nullptr };
+            w[2] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, blitDescSets[i], 2, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowInfo, nullptr, nullptr };
+            w[3] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, blitDescSets[i], 3, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &volInfo, nullptr };
+            vkUpdateDescriptorSets(device, 4, w.data(), 0, nullptr);
         }
     }
 
@@ -3362,6 +4329,49 @@ bool VulkanRenderer::createPixelArtResources() {
     return true;
 }
 
+// ─── Time of day ─────────────────────────────────────────────────────────────
+// Drives sun direction, sun color/intensity, sky gradient colors, fog color and
+// ambient from a single 0..1 timeOfDay value. Stylized — not physically based.
+void VulkanRenderer::updateTimeOfDay(float dt) {
+    if (!look.todEnabled) return;
+    if (look.todAuto) {
+        look.timeOfDay += dt * look.todSpeed;
+        look.timeOfDay = look.timeOfDay - std::floor(look.timeOfDay); // wrap 0..1
+    }
+
+    const float TAU = 6.28318530718f;
+    float dayAngle = (look.timeOfDay - 0.25f) * TAU; // 0.25=sunrise, 0.5=noon, 0.75=sunset
+    float elev     = std::sin(dayAngle);             // -1..1, sun elevation
+    float az       = std::cos(dayAngle);
+
+    sunDirWorld = glm::normalize(glm::vec3(az * 0.85f, glm::max(elev, -0.25f), 0.4f));
+
+    float day     = glm::clamp((elev + 0.1f) / 0.4f, 0.0f, 1.0f);   // 0 night → 1 day
+    float sunsetness = std::exp(-(elev * elev) / (2.0f * 0.16f * 0.16f))
+                     * glm::clamp((elev + 0.25f) * 4.0f, 0.0f, 1.0f); // peak near horizon
+
+    // Sun color: warm at horizon, white at noon, dim bluish at night
+    glm::vec3 warmSun = glm::vec3(1.0f, 0.55f, 0.30f);
+    glm::vec3 noonSun = glm::vec3(1.0f, 0.97f, 0.92f);
+    glm::vec3 moon    = glm::vec3(0.35f, 0.45f, 0.7f);
+    glm::vec3 daySun  = glm::mix(warmSun, noonSun, glm::smoothstep(0.0f, 0.35f, elev));
+    sunColor      = glm::mix(moon, daySun, day);
+    sunIntensity  = glm::mix(0.12f, 1.0f, day);
+
+    // Sky gradient
+    glm::vec3 dayTop = glm::vec3(0.30f, 0.55f, 0.92f), dayHor = glm::vec3(0.78f, 0.86f, 0.96f);
+    glm::vec3 ntTop  = glm::vec3(0.02f, 0.03f, 0.09f), ntHor  = glm::vec3(0.05f, 0.07f, 0.16f);
+    glm::vec3 dkTop  = glm::vec3(0.25f, 0.22f, 0.45f), dkHor  = glm::vec3(1.00f, 0.50f, 0.28f);
+    skyTopColor   = glm::mix(ntTop, dayTop, day);
+    skyHorizColor = glm::mix(ntHor, dayHor, day);
+    skyTopColor   = glm::mix(skyTopColor,   dkTop, sunsetness * 0.7f);
+    skyHorizColor = glm::mix(skyHorizColor, dkHor, sunsetness * 0.85f);
+
+    // Fog follows the horizon haze; ambient brightens during the day
+    look.fogColor   = glm::mix(skyHorizColor, glm::vec3(0.5f), 0.15f);
+    ambientStrength = glm::mix(0.015f, 0.05f, day);
+}
+
 void VulkanRenderer::cleanupPixelArtResources() {
     if (!ctx) return;
     VkDevice device = ctx->getDevice();
@@ -3370,6 +4380,9 @@ void VulkanRenderer::cleanupPixelArtResources() {
     if (blitPipelineLayout) { vkDestroyPipelineLayout(device, blitPipelineLayout, nullptr); blitPipelineLayout = nullptr; }
     if (blitDescPool)       { vkDestroyDescriptorPool(device, blitDescPool, nullptr);       blitDescPool = nullptr; }
     if (blitDescLayout)     { vkDestroyDescriptorSetLayout(device, blitDescLayout, nullptr); blitDescLayout = nullptr; }
+    for (auto& buf : volUBOBuffers) {
+        if (buf.buffer) { vmaDestroyBuffer(allocator, buf.buffer, buf.allocation); buf = {}; }
+    }
     if (pixelArtSampler)    { vkDestroySampler(device, pixelArtSampler, nullptr);           pixelArtSampler = nullptr; }
     if (paFramebuffer)      { vkDestroyFramebuffer(device, paFramebuffer, nullptr);         paFramebuffer = nullptr; }
     if (paScenePass)        { vkDestroyRenderPass(device, paScenePass, nullptr);            paScenePass = nullptr; }
@@ -3391,8 +4404,8 @@ bool VulkanRenderer::createWaterResources() {
 
     // ── 1. Generate water mesh (XZ grid centered at origin) ─────────────────
     {
-        const int   GRID     = 100;       // quads per side
-        const float SIZE     = 40.0f;     // half-size (total 80m×80m)
+        const int   GRID     = 60;        // quads per side
+        const float SIZE     = 10.0f;     // half-size (total 20m×20m pool)
         const float STEP     = (SIZE * 2.0f) / GRID;
 
         struct WaterVertex { float x, y, z, u, v; };
@@ -3464,10 +4477,10 @@ bool VulkanRenderer::createWaterResources() {
         uploadBuffer(indices.data(), indices.size()  * sizeof(uint32_t),     VK_BUFFER_USAGE_INDEX_BUFFER_BIT,  waterIndexBuffer);
     }
 
-    // ── 2. Reflection offscreen image (half swapchain resolution) ────────────
+    // ── 2. Reflection offscreen image (full swapchain resolution) ────────────
     {
-        uint32_t rW = std::max(1u, extent.width  / 2);
-        uint32_t rH = std::max(1u, extent.height / 2);
+        uint32_t rW = std::max(1u, extent.width);
+        uint32_t rH = std::max(1u, extent.height);
 
         // Color image
         VkImageCreateInfo imgInfo{};
@@ -3719,7 +4732,20 @@ bool VulkanRenderer::createWaterResources() {
                               waterPipelineLayout, waterPipeline, msaaSamples))
         return false;
 
-    std::cout << "[Vulkan] Water resources created (" << waterIndexCount << " indices)" << std::endl;
+    // ── 6. Reflection-pass pipelines (1× MSAA, front-face cull for reflected winding) ──
+    {
+        VkPipelineLayout unusedLayout1 = nullptr, unusedLayout2 = nullptr;
+        createModelPipeline(device, reflectionRenderPass, modelDescriptorSetLayout,
+                            unusedLayout1, reflModelPipeline, VK_SAMPLE_COUNT_1_BIT,
+                            pointShadowSampleLayout, VK_CULL_MODE_NONE);
+        createPBRPipeline(device, reflectionRenderPass, pbrDescriptorSetLayout,
+                          unusedLayout2, reflPbrPipeline, VK_SAMPLE_COUNT_1_BIT,
+                          pointShadowSampleLayout, VK_CULL_MODE_NONE);
+        if (unusedLayout1) vkDestroyPipelineLayout(device, unusedLayout1, nullptr);
+        if (unusedLayout2) vkDestroyPipelineLayout(device, unusedLayout2, nullptr);
+    }
+
+    std::cout << "[Vulkan] Water resources created (" << waterIndexCount << " indices, reflection pipelines OK)" << std::endl;
     return true;
 }
 
@@ -3735,7 +4761,9 @@ void VulkanRenderer::cleanupWaterResources() {
     if (waterIndexBuffer.buffer)  { vmaDestroyBuffer(allocator, waterIndexBuffer.buffer,  waterIndexBuffer.allocation);  waterIndexBuffer  = {}; }
     waterIndexCount = 0;
 
-    // Reflection image
+    // Reflection pipelines + image
+    if (reflModelPipeline) { vkDestroyPipeline(device, reflModelPipeline, nullptr); reflModelPipeline = nullptr; }
+    if (reflPbrPipeline)   { vkDestroyPipeline(device, reflPbrPipeline, nullptr);   reflPbrPipeline   = nullptr; }
     if (reflectionFramebuffer) { vkDestroyFramebuffer(device, reflectionFramebuffer, nullptr);    reflectionFramebuffer = nullptr; }
     if (reflectionRenderPass)  { vkDestroyRenderPass(device, reflectionRenderPass, nullptr);       reflectionRenderPass  = nullptr; }
     if (reflectionDepthView)   { vkDestroyImageView(device, reflectionDepthView, nullptr);         reflectionDepthView   = nullptr; }
@@ -5175,6 +6203,39 @@ bool VulkanRenderer::createInstanceData(int objIdx, Model* model) {
 
 bool VulkanRenderer::loadScene(Scene* scene) {
     if (!scene) return false;
+
+    // Clean up previous scene's GPU resources before loading new one
+    if (!sceneModels.empty() && ctx) {
+        vkDeviceWaitIdle(ctx->getDevice());
+        VkDevice device = ctx->getDevice();
+        for (auto& [model, data] : sceneModels) {
+            std::set<VkImage> destroyedImages;
+            for (auto& meshGPU : data->meshes) {
+                if (meshGPU.diffuseTexture.image && destroyedImages.find(meshGPU.diffuseTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.diffuseTexture.image);
+                    destroyTexture(allocator, device, meshGPU.diffuseTexture);
+                }
+                if (meshGPU.normalTexture.image && destroyedImages.find(meshGPU.normalTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.normalTexture.image);
+                    destroyTexture(allocator, device, meshGPU.normalTexture);
+                }
+                if (meshGPU.metallicTexture.image && destroyedImages.find(meshGPU.metallicTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.metallicTexture.image);
+                    destroyTexture(allocator, device, meshGPU.metallicTexture);
+                }
+                if (meshGPU.roughnessTexture.image && destroyedImages.find(meshGPU.roughnessTexture.image) == destroyedImages.end()) {
+                    destroyedImages.insert(meshGPU.roughnessTexture.image);
+                    destroyTexture(allocator, device, meshGPU.roughnessTexture);
+                }
+            }
+        }
+        sceneModels.clear();
+        for (auto& [idx, inst] : instanceData)
+            for (auto& buf : inst->boneBuffers)
+                if (buf.buffer) vmaDestroyBuffer(allocator, buf.buffer, buf.allocation);
+        instanceData.clear();
+    }
+
     currentScene = scene;
 
     // Ensure model pipeline, pools, and UBOs exist
@@ -5204,6 +6265,8 @@ bool VulkanRenderer::loadScene(Scene* scene) {
 
     if (!waterPipeline)  createWaterResources();
     if (!grassPipeline)  createGrassResources();
+    if (!particlePipeline) createParticleResources();
+    if (!glowPipeline)     createGlowResources();
 
     // Ground plane (once)
     createGroundPlane();
